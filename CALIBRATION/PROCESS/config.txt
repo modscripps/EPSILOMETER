@@ -1,0 +1,13 @@
+Probe Version = 2
+Number of Samples = 10000
+Probe Serial Number = 0146
+Internal Capacitance of Charge Amp Feedback Path (pF) = 1000
+Shear Probe Capacitance (uF) = 312.0
+Static Head Pressure = 160
+Dial Indicator Throw = 0.5
+Sampling Frequency (Samples/sec) = 1000
+Sampling Amplitude (V) = 3
+Approximate Shear Probe Oscillation Frequency (cycles/sec) = 1
+Cutoff Frequency for Lowpass Butterworth Filter (cycles/sec) = 10
+Order for Lowpass Butterworth Filter = 8
+Approximate Shear Probe Oscillation Noise Frequency (cycles/sec) = 60

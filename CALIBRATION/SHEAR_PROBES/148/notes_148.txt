@@ -1,0 +1,3 @@
+10/29/18
+shear probe calibration
+looks like it has a bad connection. C reads very low unless you wiggle probe around = 760. Sv varied 77, 85, 73. Probably to do with capacitance

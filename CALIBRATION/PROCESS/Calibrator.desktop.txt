@@ -1,0 +1,3 @@
+#!/bin/sh
+cd /Applications/“Shear Probe Calibrator Programme”
+python calibrator.py
