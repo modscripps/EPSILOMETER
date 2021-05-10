@@ -57,6 +57,13 @@ classdef epsi_class
 %             cd(obj.Meta_Data.RAWpath)
 %             %list=dir("*.ascii");
             obj.filename=obj.Meta_Data.RAWpath;
+            %ALB copy the raw file inside the raw folder. 
+            list_rawfile=dir("*.ascii");
+            for f=1:length(list_rawfile)
+                copyfile(fullfile(list_rawfile(f).folder, ...
+                                  list_rawfile(f).name),  ...
+                                  "./raw/");
+            end
             obj.plot_properties.FontName='Sans';
             obj.plot_properties.FontSize=16;
             obj.plot_properties.LineWidth=2;
@@ -173,20 +180,20 @@ classdef epsi_class
             
             plot(ax(1),obj.epsi.epsitime,detrend(obj.epsi.t1_volt),'k','LineWidth',obj.plot_properties.LineWidth)
             hold(ax(1),'on')
-            plot(ax(1),obj.epsi.epsitime,detrend(obj.epsi.t2_volt,'m','LineWidth',obj.plot_properties.LineWidth)
+            plot(ax(1),obj.epsi.epsitime,detrend(obj.epsi.t2_volt),'m','LineWidth',obj.plot_properties.LineWidth)
             hold(ax(1),'on')
             
-            plot(ax(2),obj.epsi.epsitime,detrend(obj.epsi.s1_volt,'k','LineWidth',obj.plot_properties.LineWidth)
+            plot(ax(2),obj.epsi.epsitime,detrend(obj.epsi.s1_volt),'k','LineWidth',obj.plot_properties.LineWidth)
             hold(ax(2),'on')
-            plot(ax(2),obj.epsi.epsitime,detrend(obj.epsi.s2_volt,'m','LineWidth',obj.plot_properties.LineWidth)
+            plot(ax(2),obj.epsi.epsitime,detrend(obj.epsi.s2_volt),'m','LineWidth',obj.plot_properties.LineWidth)
             hold(ax(2),'on')
             
-            plot(ax(3),obj.epsi.epsitime,obj.epsi.a1_g,'k','LineWidth',obj.plot_properties.LineWidth)
+            plot(ax(3),obj.epsi.epsitime,detrend(obj.epsi.a1_g),'k','LineWidth',obj.plot_properties.LineWidth)
             hold(ax(3),'on')
-            plot(ax(3),obj.epsi.epsitime,obj.epsi.a2_g,'m','LineWidth',obj.plot_properties.LineWidth)
-            plot(ax(3),obj.epsi.epsitime,obj.epsi.a3_g,'c','LineWidth',obj.plot_properties.LineWidth)
+            plot(ax(3),obj.epsi.epsitime,detrend(obj.epsi.a2_g),'m','LineWidth',obj.plot_properties.LineWidth)
+            plot(ax(3),obj.epsi.epsitime,detrend(obj.epsi.a3_g),'c','LineWidth',obj.plot_properties.LineWidth)
             hold(ax(3),'on')
-            legend(ax(1),{'t1','t2'})
+            legend(ax(1),{sprintf('t1 %3.2f V',nanmean(obj.epsi.t1_volt)),sprintf('t1 %3.2f V',nanmean(obj.epsi.t1_volt))})
             legend(ax(2),{'s1','s2'})
             legend(ax(3),{'a1','a2','a3'})
             

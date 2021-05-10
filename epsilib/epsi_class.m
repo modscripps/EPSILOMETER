@@ -57,6 +57,13 @@ classdef epsi_class
 %             cd(obj.Meta_Data.RAWpath)
 %             %list=dir("*.ascii");
             obj.filename=obj.Meta_Data.RAWpath;
+            %ALB copy the raw file inside the raw folder. 
+            list_rawfile=dir("*.ascii");
+            for f=1:length(list_rawfile)
+                copyfile(fullfile(list_rawfile(f).folder, ...
+                                  list_rawfile(f).name),  ...
+                                  "./raw/");
+            end
             obj.plot_properties.FontName='Sans';
             obj.plot_properties.FontSize=16;
             obj.plot_properties.LineWidth=2;
@@ -186,9 +193,14 @@ classdef epsi_class
             plot(ax(3),obj.epsi.epsitime,detrend(obj.epsi.a2_g),'m','LineWidth',obj.plot_properties.LineWidth)
             plot(ax(3),obj.epsi.epsitime,detrend(obj.epsi.a3_g),'c','LineWidth',obj.plot_properties.LineWidth)
             hold(ax(3),'on')
-            legend(ax(1),{'t1','t2'})
-            legend(ax(2),{'s1','s2'})
-            legend(ax(3),{'a1','a2','a3'})
+            %ALB mean in legend
+            legend(ax(1),{sprintf('t1 %3.2f V',nanmean(obj.epsi.t1_volt)),...
+                          sprintf('t2 %3.2f V',nanmean(obj.epsi.t2_volt))})
+            legend(ax(2),{sprintf('s1 %3.2f V',nanmean(obj.epsi.s1_volt)),...
+                          sprintf('s2 %3.2f V',nanmean(obj.epsi.s2_volt))})
+            legend(ax(3),{sprintf('a1 %3.2f g',nanmean(obj.epsi.a1_g)),...
+                          sprintf('a2 %3.2f g',nanmean(obj.epsi.a2_g)),...
+                          sprintf('a3 %3.2f g',nanmean(obj.epsi.a3_g))})
             
             ax(1).XTickLabel='';
             ax(2).XTickLabel='';
