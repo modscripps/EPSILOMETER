@@ -57,13 +57,14 @@ classdef epsi_class
 %             cd(obj.Meta_Data.RAWpath)
 %             %list=dir("*.ascii");
             obj.filename=obj.Meta_Data.RAWpath;
-            %ALB copy the raw file inside the raw folder. 
-            list_rawfile=dir("*.ascii");
-            for f=1:length(list_rawfile)
-                copyfile(fullfile(list_rawfile(f).folder, ...
-                                  list_rawfile(f).name),  ...
-                                  "./raw/");
-            end
+            % NC moved this to inside fill_meta_data
+%             %ALB copy the raw file inside the raw folder. 
+%             list_rawfile=dir("*.ascii");
+%             for f=1:length(list_rawfile)
+%                 copyfile(fullfile(list_rawfile(f).folder, ...
+%                                   list_rawfile(f).name),  ...
+%                                   "./raw/");
+%             end
             obj.plot_properties.FontName='Sans';
             obj.plot_properties.FontSize=16;
             obj.plot_properties.LineWidth=2;

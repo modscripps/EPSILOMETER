@@ -59,6 +59,15 @@ end
 if ~exist(Meta_Data.RAWpath,'dir')
     % create path
     eval([ '!mkdir ' strrep(Meta_Data.RAWpath,' ','\ ')]);
+    
+    %NC move copy raw files here instead of epsi_class
+    %ALB copy the raw file inside the raw folder.
+    list_rawfile=dir("*.ascii");
+    for f=1:length(list_rawfile)
+        copyfile(fullfile(list_rawfile(f).folder, ...
+            list_rawfile(f).name),  ...
+            Meta_Data.RAWpath);
+    end
 end
 if ~exist(Meta_Data.SDRAWpath,'dir')
     % create path
