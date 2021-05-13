@@ -1,18 +1,17 @@
 function [] = figureStamp(scriptName,varargin)
 %
-% Usage: figureStamp(mfilename('fullpath'))
+% Usage: figureStamp(matlab.desktop.editor.getActiveFilename)
+%        figureStamp(getFilename) <-- getFilename.m is Bethan's easy way to
+%        get the current script name
 %
 % A script that will stamp the current script name and the
 % date at the bottom of a figure.
-%
-% It has to be a function, otherwise you'll end up labeling all your
-% figures 'couto_tools/figure_tools/figureStamp.m'
 % 
 % Nicole Couto | March 2019
 % -------------------------------------------------------------------------
 
 if numel(varargin)==0
-        strPosition = 'bottomleft';
+        strPosition = 'bottomright';
 elseif numel(varargin)==1
         strPosition = varargin{1};
 end
