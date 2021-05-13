@@ -6,12 +6,12 @@ function [] = figureStamp(scriptName,varargin)
 %
 % A script that will stamp the current script name and the
 % date at the bottom of a figure.
-% 
+%
 % Nicole Couto | March 2019
 % -------------------------------------------------------------------------
 
 if numel(varargin)==0
-        strPosition = 'bottomright';
+        strPosition = 'bottomleft';
 elseif numel(varargin)==1
         strPosition = varargin{1};
 end
@@ -32,7 +32,7 @@ printDate = date;
 
 printString = strrep([printName '.m  ' printDate],'_','\_');
 
-% Find the length of the string and the width of the axes so you can 
+% Find the length of the string and the width of the axes so you can
 % position the text box appropriately
 char_to_9pt_font_multiplier = 0.004;
 str_width_multiplier = 1.4;
@@ -61,6 +61,3 @@ pos = [left bottom width height];
 
 a = annotation('textbox',pos,'String',printString,'FontSize',9,...
     'EdgeColor','none','BackgroundColor','w','FitBoxToText','on');
-
-
-
