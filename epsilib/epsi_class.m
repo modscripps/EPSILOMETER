@@ -179,20 +179,20 @@ classdef epsi_class
             ax(2)=subplot(312);
             ax(3)=subplot(313);
             
-            plot(ax(1),obj.epsi.epsitime,detrend(obj.epsi.t1_volt),'k','LineWidth',obj.plot_properties.LineWidth)
+            plot(ax(1),obj.epsi.epsitime,detrend(obj.epsi.t1_volt,'constant'),'k','LineWidth',obj.plot_properties.LineWidth)
             hold(ax(1),'on')
-            plot(ax(1),obj.epsi.epsitime,detrend(obj.epsi.t2_volt),'m','LineWidth',obj.plot_properties.LineWidth)
+            plot(ax(1),obj.epsi.epsitime,detrend(obj.epsi.t2_volt,'constant'),'m','LineWidth',obj.plot_properties.LineWidth)
             hold(ax(1),'on')
             
-            plot(ax(2),obj.epsi.epsitime,detrend(obj.epsi.s1_volt),'k','LineWidth',obj.plot_properties.LineWidth)
+            plot(ax(2),obj.epsi.epsitime,detrend(obj.epsi.s1_volt,'constant'),'k','LineWidth',obj.plot_properties.LineWidth)
             hold(ax(2),'on')
-            plot(ax(2),obj.epsi.epsitime,detrend(obj.epsi.s2_volt),'m','LineWidth',obj.plot_properties.LineWidth)
+            plot(ax(2),obj.epsi.epsitime,detrend(obj.epsi.s2_volt,'constant'),'m','LineWidth',obj.plot_properties.LineWidth)
             hold(ax(2),'on')
             
-            plot(ax(3),obj.epsi.epsitime,detrend(obj.epsi.a1_g),'k','LineWidth',obj.plot_properties.LineWidth)
+            plot(ax(3),obj.epsi.epsitime,detrend(obj.epsi.a1_g,'constant'),'k','LineWidth',obj.plot_properties.LineWidth)
             hold(ax(3),'on')
-            plot(ax(3),obj.epsi.epsitime,detrend(obj.epsi.a2_g),'m','LineWidth',obj.plot_properties.LineWidth)
-            plot(ax(3),obj.epsi.epsitime,detrend(obj.epsi.a3_g),'c','LineWidth',obj.plot_properties.LineWidth)
+            plot(ax(3),obj.epsi.epsitime,detrend(obj.epsi.a2_g,'constant'),'m','LineWidth',obj.plot_properties.LineWidth)
+            plot(ax(3),obj.epsi.epsitime,detrend(obj.epsi.a3_g,'constant'),'c','LineWidth',obj.plot_properties.LineWidth)
             hold(ax(3),'on')
             %ALB mean in legend
             legend(ax(1),{sprintf('t1 %3.2f V',nanmean(obj.epsi.t1_volt)),...

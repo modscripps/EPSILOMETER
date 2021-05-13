@@ -51,11 +51,7 @@ if ~isstruct(CTD)
    CTD.ctdtime = [];
    CTD.dPdt = [];
 elseif isstruct(CTD)
-    ind0=(CTD.ctdtime==0);
-    if~isempty(ind0)
-        warning("there are 0s in the CTD time")
-    end
-    dPdt_interp = movmean(interp1(CTD.ctdtime(~ind0),CTD.dPdt(~ind0),EPSI.epsitime),100);
+    dPdt_interp = movmean(interp1(CTD.ctdtime,CTD.dPdt,EPSI.epsitime),100,'');
 
 end
 

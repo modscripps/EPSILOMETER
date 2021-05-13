@@ -103,10 +103,13 @@ fclose(fid);
 fileStruct = dir(filename);
 modifiedDate = fileStruct.datenum;
 
-if modifiedDate<datenum(2021,4,1)
+if modifiedDate==datenum(2008,1,1)
+    efe_block_version = 'v2'; %raw file from SD card after 2021,4,1 that was not initialized
+elseif modifiedDate<datenum(2021,4,1)
     efe_block_version = 'v1';
 elseif modifiedDate>=datenum(2021,4,1)
     efe_block_version = 'v2';
+ 
 end
 
 switch efe_block_version
