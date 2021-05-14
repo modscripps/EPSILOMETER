@@ -27,46 +27,43 @@ classdef epsi_class
 
             currDir = pwd;
             
-            repeat = 1; %NC Initialize repeat flag to use if Meta_Data path names were not made on this machine
+            repeat = 1;
             while repeat==1
-                switch checkMD
-                    case 2 %Meta_Data, epsi, and ctd .mat files already exist
-                        
-                        fprintf('Initializing epsi_class with previously created Meta_Data \n')
-                        load('Meta_Data.mat')
-                        obj.Meta_Data = Meta_Data;
-                        
-                        % NC - If Meta_Data exists, check to see if path to epsi data is
-                        % available. If not, epsi_class was last generated on a
-                        % different machine. Create a new Meta_Data.
-                        checkEpsi = exist(fullfile(obj.Meta_Data.Epsipath,['epsi_' obj.Meta_Data.deployment '.mat']),'file');
-                        if checkEpsi==0
-                            checkMD = 0;
-                        else
-                            repeat = 0;
-                        end
-                        
-                    case 0 %Meta_Data, epsi, and ctd .mat files do not already exist
-                        
-                        fprintf('Initializing epsi_class and creating new Meta_Data \n')
-                        setupfile=dir('*config*');
-                        repeat = 0;
-                        
-                        try
-                            setup=mod_som_read_setup(setupfile.name);
-                        catch
-                            disp('mod_som_read_setup failed')
-                        end
-                        
-                        try
-                            obj.Meta_Data = fill_meta_data(setup);
-                            %NC added temporatily to add extra Meta_Data
-                            obj = add_extra_meta_data(obj);
-                        catch
-                            disp('fill_meta_data failed')
-                            cd(currDir)
-                        end
-                end
+            switch checkMD
+                case 2 %Meta_Data, epsi, and ctd .mat files already exist
+                    
+                    fprintf('Initializing epsi_class with previously created Meta_Data \n')
+                    load('Meta_Data.mat')
+                    obj.Meta_Data = Meta_Data;
+                    
+                    % NC - If Meta_Data exists, check to see if path to epsi data is
+                    % available. If not, epsi_class was last generated on a
+                    % different machine. Create a new Meta_Data.
+                    checkEpsi = exist(fullfile(obj.Meta_Data.Epsipath,['epsi_' obj.Meta_Data.deployment '.mat']),'file');
+                    if checkEpsi==0
+                        checkMD = 0;
+                    end
+                    
+                case 0 %Meta_Data, epsi, and ctd .mat files do not already exist
+                    
+                    fprintf('Initializing epsi_class and creating new Meta_Data \n')
+                    setupfile=dir('*config*');
+                    
+                    try
+                        setup=mod_som_read_setup(setupfile.name);
+                    catch
+                        disp('mod_som_read_setup failed')
+                    end
+                    
+                    try 
+                        obj.Meta_Data = fill_meta_data(setup);
+                        %NC added temporatily to add extra Meta_Data
+                        obj = add_extra_meta_data(obj);
+                    catch
+                        disp('fill_meta_data failed')
+                        cd(currDir)
+                    end
+            end
             end
             
 %             % Change directory to raw data path and 
