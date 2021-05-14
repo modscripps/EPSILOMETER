@@ -8,7 +8,7 @@ classdef epsi_class
     % directory containing 1) an epsi config file, and 2) a directory
     % called 'raw' containing raw .ascii files
     %   >> obj = epsi_class
-
+    
     properties
         Meta_Data %read from config file
         filename
@@ -24,7 +24,7 @@ classdef epsi_class
             
             % Check to see if Meta_Data is already defined
             checkMD = exist('Meta_Data.mat','file');
-
+            
             currDir = pwd;
             
             repeat = 1; %NC Initialize repeat flag to use if Meta_Data path names were not made on this machine
@@ -60,8 +60,6 @@ classdef epsi_class
                         
                         try
                             obj.Meta_Data = fill_meta_data(setup);
-                            %NC added temporatily to add extra Meta_Data
-                            obj = add_extra_meta_data(obj);
                         catch
                             disp('fill_meta_data failed')
                             cd(currDir)
@@ -69,52 +67,59 @@ classdef epsi_class
                 end
             end
             
-%             % Change directory to raw data path and 
-%             cd(obj.Meta_Data.RAWpath)
-%             %list=dir("*.ascii");
+            % NC - check for s1 and s2 cal values. If they're
+            % 0, manually input all probe numbers
+            if obj.Meta_Data.AFE.s1.cal==0 || obj.Meta_Data.AFE.s2.cal==0
+                obj.Meta_Data = obj.f_getSNshear;
+                obj.Meta_data = obj.f_getSNtemp;
+            end
+            
+            %             % Change directory to raw data path and
+            %             cd(obj.Meta_Data.RAWpath)
+            %             %list=dir("*.ascii");
             obj.filename=obj.Meta_Data.RAWpath;
             % NC moved this to inside fill_meta_data
-%             %ALB copy the raw file inside the raw folder. 
-%             list_rawfile=dir("*.ascii");
-%             for f=1:length(list_rawfile)
-%                 copyfile(fullfile(list_rawfile(f).folder, ...
-%                                   list_rawfile(f).name),  ...
-%                                   "./raw/");
-%             end
-
-% NC - created subfunction to load default plot properties
-obj.plot_properties = obj.f_getPlotProperties;
-
-
+            %             %ALB copy the raw file inside the raw folder.
+            %             list_rawfile=dir("*.ascii");
+            %             for f=1:length(list_rawfile)
+            %                 copyfile(fullfile(list_rawfile(f).folder, ...
+            %                                   list_rawfile(f).name),  ...
+            %                                   "./raw/");
+            %             end
+            
+            % NC - created subfunction to load default plot properties
+            obj.plot_properties = obj.f_getPlotProperties;
+            
+            
             % NC moved this CTD cal section to inside fill_meta_data.m
-%             % TODO fix the SBE name bug I do not want (1:3)
-%             switch obj.Meta_Data.CTD.name
-%                 case{'SBE49','SBE','S49'}
-%                     try
-%                         obj.Meta_Data.CTD.cal=get_CalSBE(obj.Meta_Data.CTD.CALfile(obj.Meta_Data.CTD.CALpath,obj.Meta_Data.CTD.SN));
-%                         if(strcmp(obj.Meta_Data.CTD.SN,'0000'))
-%                             obj.Meta_Data.CTD.SN=input('SBE49 SN(e.g. 0237):','s');
-%                             obj.Meta_Data.CTD.cal=get_CalSBE(obj.Meta_Data.CTD.CALfile(obj.Meta_Data.CTD.CALpath,obj.Meta_Data.CTD.SN));
-%                         end
-%                     catch
-%                         obj.Meta_Data.CTD.SN=input('SBE49 SN(e.g. 0237):','s');
-%                         obj.Meta_Data.CTD.cal=get_CalSBE(obj.Meta_Data.CTD.CALfile(obj.Meta_Data.CTD.CALpath,obj.Meta_Data.CTD.SN));
-%                     end
-%                 case{'SBE41'}
-%             end
-
+            %             % TODO fix the SBE name bug I do not want (1:3)
+            %             switch obj.Meta_Data.CTD.name
+            %                 case{'SBE49','SBE','S49'}
+            %                     try
+            %                         obj.Meta_Data.CTD.cal=get_CalSBE(obj.Meta_Data.CTD.CALfile(obj.Meta_Data.CTD.CALpath,obj.Meta_Data.CTD.SN));
+            %                         if(strcmp(obj.Meta_Data.CTD.SN,'0000'))
+            %                             obj.Meta_Data.CTD.SN=input('SBE49 SN(e.g. 0237):','s');
+            %                             obj.Meta_Data.CTD.cal=get_CalSBE(obj.Meta_Data.CTD.CALfile(obj.Meta_Data.CTD.CALpath,obj.Meta_Data.CTD.SN));
+            %                         end
+            %                     catch
+            %                         obj.Meta_Data.CTD.SN=input('SBE49 SN(e.g. 0237):','s');
+            %                         obj.Meta_Data.CTD.cal=get_CalSBE(obj.Meta_Data.CTD.CALfile(obj.Meta_Data.CTD.CALpath,obj.Meta_Data.CTD.SN));
+            %                     end
+            %                 case{'SBE41'}
+            %             end
+            
             
             % Load epsi and ctd timeseries data into epsi class
-                if isfile(fullfile(obj.Meta_Data.Epsipath,['epsi_' obj.Meta_Data.deployment '.mat']))
-                    obj.epsi=obj.f_getEpsi();
-                    obj.ctd=obj.f_getCtd();
-                    obj.alt=obj.f_getAlt();
-                else
-                    obj.f_readData();
-                    obj.epsi=obj.f_getEpsi();
-                    obj.ctd=obj.f_getCtd();
-                    obj.alt=obj.f_getAlt();
-                end
+            if isfile(fullfile(obj.Meta_Data.Epsipath,['epsi_' obj.Meta_Data.deployment '.mat']))
+                obj.epsi=obj.f_getEpsi();
+                obj.ctd=obj.f_getCtd();
+                obj.alt=obj.f_getAlt();
+            else
+                obj.f_readData();
+                obj.epsi=obj.f_getEpsi();
+                obj.ctd=obj.f_getCtd();
+                obj.alt=obj.f_getAlt();
+            end
             
             cd(obj.Meta_Data.datapath)
         end
@@ -128,7 +133,7 @@ obj.plot_properties = obj.f_getPlotProperties;
             data=load(fullfile(obj.Meta_Data.Epsipath,['epsi_' obj.Meta_Data.deployment '.mat']));
             if isstruct(data.epsi)
                 obj=data.epsi;
-             else
+            else
                 obj=[];
             end
         end
@@ -144,16 +149,34 @@ obj.plot_properties = obj.f_getPlotProperties;
             data=load(fullfile(obj.Meta_Data.CTDpath,['alt_' obj.Meta_Data.deployment '.mat']));
             if isstruct(data.alt)
                 obj=data.alt;
-            else 
+            else
                 obj=[];
             end
         end
-        
-            function obj=f_getPlotProperties(obj)
-                
-                obj = set_epsi_plot_properties;
-
-            end
+        function obj=f_getPlotProperties(obj)
+            % Set default plot properties (fonts, colors, sizes)
+            obj = set_epsi_plot_properties;
+        end
+        function obj=f_getSNshear(obj)
+            % Input shear probe serial numbers into Meta_Data and get
+            % latest calibration values (Sv)
+            % 
+            % USAGE
+            %   obj.Meta_Data = f_getSNshear(obj)
+           
+            Meta_Data  = obj.Meta_Data;
+            obj = set_SN_shear(Meta_Data);
+        end
+        function obj=f_getSNtemp(obj)
+            % Input temperature probe serial numbers into Meta_Data and get
+            % latest calibration values (Sv)
+            % 
+            % USAGE
+            %   obj.Meta_Data = f_getSNtemp(obj)
+            
+            Meta_Data  = obj.Meta_Data;
+            obj = set_SN_temp(Meta_Data);
+        end
         function obj=f_checkEpsiTime(obj)
             check_epsi_time(obj.Meta_Data)
         end
@@ -207,18 +230,18 @@ obj.plot_properties = obj.f_getPlotProperties;
             hold(ax(3),'on')
             %ALB mean in legend
             legend(ax(1),{sprintf('t1 %3.2f V',nanmean(obj.epsi.t1_volt)),...
-                          sprintf('t2 %3.2f V',nanmean(obj.epsi.t2_volt))})
+                sprintf('t2 %3.2f V',nanmean(obj.epsi.t2_volt))})
             legend(ax(2),{sprintf('s1 %3.2f V',nanmean(obj.epsi.s1_volt)),...
-                          sprintf('s2 %3.2f V',nanmean(obj.epsi.s2_volt))})
+                sprintf('s2 %3.2f V',nanmean(obj.epsi.s2_volt))})
             legend(ax(3),{sprintf('a1 %3.2f g',nanmean(obj.epsi.a1_g)),...
-                          sprintf('a2 %3.2f g',nanmean(obj.epsi.a2_g)),...
-                          sprintf('a3 %3.2f g',nanmean(obj.epsi.a3_g))})
+                sprintf('a2 %3.2f g',nanmean(obj.epsi.a2_g)),...
+                sprintf('a3 %3.2f g',nanmean(obj.epsi.a3_g))})
             
             ax(1).XTickLabel='';
             ax(2).XTickLabel='';
             title(ax(1),sprintf('%s-%s-%s',strrep(obj.Meta_Data.mission,'_','\_'),...
                 strrep(obj.Meta_Data.vehicle_name,'_','\_'),...
-                strrep(obj.Meta_Data.deployment,'_','\_')));            
+                strrep(obj.Meta_Data.deployment,'_','\_')));
             ylabel(ax(1),'FPO7 [Volt]','Fontsize',obj.plot_properties.FontSize,'FontName',obj.plot_properties.FontName)
             ylabel(ax(2),'Shear [Volt]','Fontsize',obj.plot_properties.FontSize,'FontName',obj.plot_properties.FontName)
             ylabel(ax(3),'Accel [g]','Fontsize',obj.plot_properties.FontSize,'FontName',obj.plot_properties.FontName)
@@ -246,13 +269,13 @@ obj.plot_properties = obj.f_getPlotProperties;
         end
         function  [P11,f]=f_calibrateEpsi(obj,tmid,tscan,makeFig)
             % Plots 30-sec timeseries from all channels and spectra from
-            % user-defined tscan 
+            % user-defined tscan
             %
             % USAGE
             %   [P11,f] = obj.f_calibrateEpsi(tmid,tscan,makeFig)
             %   Equivalent to:
             %   [P11,f] = mod_som_calibrate_epsi_tMid(obj,tmid,tscan,makeFig);
-            % 
+            %
             % INPUTS
             %   tmid = midpoint of scan (seconds)
             %   tscan = length of scan (seconds)
@@ -287,9 +310,9 @@ obj.plot_properties = obj.f_getPlotProperties;
         function f_computeTurbulence(obj,profileIdx)
             Meta_Data = obj.Meta_Data;
             if nargin==1
-                 mod_epsilometer_batch_process_v2(Meta_Data)
+                mod_epsilometer_batch_process_v2(Meta_Data)
             elseif nargin==2
-            mod_epsilometer_batch_process_v2(Meta_Data,profileIdx)
+                mod_epsilometer_batch_process_v2(Meta_Data,profileIdx)
             end
         end
         function f_clearRawData(obj)
@@ -297,7 +320,7 @@ obj.plot_properties = obj.f_getPlotProperties;
             delete(fullfile(obj.Meta_Data.CTDpath,['alt_' obj.Meta_Data.deployment '.mat']))
             delete(fullfile(obj.Meta_Data.Epsipath,['epsi_' obj.Meta_Data.deployment '.mat']))
             delete(fullfile(obj.Meta_Data.datapath,'Meta_Data.mat'));
-        end   
+        end
         function f_plotShadeFiles(obj,timeOrSamplenum)
             if nargin==1
                 fprintf('Choose time or samplenum for x-axis')

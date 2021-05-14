@@ -181,11 +181,11 @@ switch Meta_Data.CTD.name
         try
             Meta_Data.CTD.cal=get_CalSBE(Meta_Data.CTD.CALfile(Meta_Data.CTD.CALpath,Meta_Data.CTD.SN));
             if(strcmp(Meta_Data.CTD.SN,'0000'))
-                Meta_Data.CTD.SN=input('SBE49 SN(e.g. 0237):','s');
+                Meta_Data.CTD.SN=input('**** SBE49 SN (e.g. 0237):','s');
                 Meta_Data.CTD.cal=get_CalSBE(Meta_Data.CTD.CALfile(Meta_Data.CTD.CALpath,Meta_Data.CTD.SN));
             end
         catch
-            Meta_Data.CTD.SN=input('SBE49 SN(e.g. 0237):','s');
+            Meta_Data.CTD.SN=input('**** SBE49 SN (e.g. 0237):','s');
             Meta_Data.CTD.cal=get_CalSBE(Meta_Data.CTD.CALfile(Meta_Data.CTD.CALpath,Meta_Data.CTD.SN));
         end
     case{'SBE41'}
