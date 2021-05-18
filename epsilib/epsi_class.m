@@ -71,7 +71,7 @@ classdef epsi_class
             % 0, manually input all probe numbers
             if obj.Meta_Data.AFE.s1.cal==0 || obj.Meta_Data.AFE.s2.cal==0
                 obj.Meta_Data = obj.f_getSNshear;
-                obj.Meta_data = obj.f_getSNtemp;
+                obj.Meta_Data = obj.f_getSNtemp;
             end
             
             %             % Change directory to raw data path and

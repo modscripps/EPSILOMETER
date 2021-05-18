@@ -74,11 +74,12 @@ set(ax(6),'Fontsize',obj.plot_properties.FontSize,'FontName',obj.plot_properties
 plot(ax(7),obj.ctd.ctdtime,movmean(obj.ctd.dPdt,100),'Color',cols.dPdt)
 ax(7).XLabel.String = 'ctdtime (sec)';
 ylabel(ax(7),'dPdt')
-ax(7).YLim = [-0.1 1.5];
+ax(7).YLim = [-0.1 max([1,max(movmean(obj.ctd.dPdt,100))])];
 
 %% AXES
 
 linkaxes(ax,'x')
+ax(1).XLim = [obj.epsi.epsitime(1)-15,obj.epsi.epsitime(end)+15];
 [ax(:).XGrid] = deal('on');
 
 
