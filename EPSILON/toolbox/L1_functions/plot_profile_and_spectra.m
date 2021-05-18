@@ -451,7 +451,7 @@ for k=scanNum
         axes(ax(1))
         hold on
         ax(1).XLim = [5e-11 min([1e-4,ax(1).XLim(2)])];
-        x = [1e-20 ax(1).XLim(2)];
+        x = [1e-20 1e0];
         f(1) = fill(x([1 1 2 2 1]),y([1 2 2 1 1]),'k');
         f(1).FaceAlpha = 0.2;
         f(1).EdgeColor = 'none';
@@ -459,7 +459,7 @@ for k=scanNum
         axes(ax(2))
         hold on
         ax(2).XLim = [5e-11 min([1e-4,ax(2).XLim(2)])];
-        x = [1e-20 ax(2).XLim(2)];
+        x = [1e-20 1e0];
         f(2) = fill(x([1 1 2 2 1]),y([1 2 2 1 1]),'k');
         f(2).FaceAlpha = 0.2;
         f(2).EdgeColor = 'none';
