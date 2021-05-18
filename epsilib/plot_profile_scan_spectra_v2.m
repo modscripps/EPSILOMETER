@@ -1,8 +1,8 @@
-function [ax,ax3,p5,p6,p7,p8,p9,p10,f] = plot_profile_scan_spectra(Profile,scanNum,saveFig)
-% [p5,p6,p7,p8,p9,p10,f] = plot_profile_scan_spectra(Meta_Data,Profile_or_profNum,scanNum)
+function [ax,ax3,p5,p6,p7,p8,p9,p10,f] = plot_profile_scan_data(Profile,scanNum,saveFig)
+% [ax,ax3,p5,p6,p7,p8,p9,p10,f] = plot_profile_scan_data(Meta_Data,Profile_or_profNum,scanNum)
 %
 % p5,p6,p7,p8,p9,p10,f are outputs needed to run this script when making a movie with
-% movie_profile_scan_spectra.m
+% movie_profile_scan_data.m
 %
 % INPUTS
 %   Profile - L1 'Profile' structure created with EPSILOMETER processing library
@@ -373,12 +373,6 @@ for k=scanNum
         ax(8).YLabel.String = 'Coherence';
         ax(8).XLabel.String = 'Hz';
         
-        % Set some common axes properties
-        [ax([5,7]).YLim] = deal([1e-10 1e-3]);
-        [ax([6,8]).YLim] = deal([0 1]);
-        [ax([5,6]).XTickLabel] = deal('');
-        [ax(5:8).XLim] = deal(Profile.f([1 end]));
-        [ax(5:8).XTick] = deal([1 10 100]);
         
         %% Wavenumber plots
         % ----------------------------------------------------------
@@ -411,7 +405,7 @@ for k=scanNum
             'T-noise','t1_{cutoff}','t2_{cutoff}',...
             'location','southwest','numcolumns',3);
         xlim([6e-1 400])
-        ylim([1e-10 1e-1])
+        ylim([1e-8 1e1])
         grid on
         xlabel('k (cpm)')
         ylabel('\phi^2_{TG} (C^2 m^{-2} / cpm)')
@@ -455,31 +449,31 @@ for k=scanNum
         
         axes(ax(1))
         hold on
-        ax(1).XLim = [5e-10 min([1e-4,ax(1).XLim(2)])];
-        x = [ax(1).XLim(1) ax(1).XLim(2)];
+        ax(1).XLim = [5e-11 min([1e-4,ax(1).XLim(2)])];
+        x = [1e-20 ax(1).XLim(2)];
         f(1) = fill(x([1 1 2 2 1]),y([1 2 2 1 1]),'k');
         f(1).FaceAlpha = 0.2;
         f(1).EdgeColor = 'none';
         
         axes(ax(2))
         hold on
-        ax(2).XLim = [5e-10 min([1e-4,ax(2).XLim(2)])];
-        x = [ax(2).XLim(1) ax(2).XLim(2)];
+        ax(2).XLim = [5e-11 min([1e-4,ax(2).XLim(2)])];
+        x = [1e-20 ax(2).XLim(2)];
         f(2) = fill(x([1 1 2 2 1]),y([1 2 2 1 1]),'k');
         f(2).FaceAlpha = 0.2;
         f(2).EdgeColor = 'none';
         
         axes(ax3(2))
         hold on
-        x = [ax3(2).XLim(1) ax3(2).XLim(2)];
+        x = [-3 40];
         f(3) = fill(x([1 1 2 2 1]),y([1 2 2 1 1]),'k');
         f(3).FaceAlpha = 0.2;
         f(3).EdgeColor = 'none';
         
         axes(ax(4))
         hold on
-        ax(4).XLim = [max([0.6,ax(4).XLim(1)]) ax(4).XLim(2)];
-        x = [ax(4).XLim(1) ax(4).XLim(2)];
+        ax(4).XLim = [max([0.5,ax(4).XLim(1)]) ax(4).XLim(2)];
+        x = [0 4];
         f(4) = fill(x([1 1 2 2 1]),y([1 2 2 1 1]),'k');
         f(4).FaceAlpha = 0.2;
         f(4).EdgeColor = 'none';
@@ -540,13 +534,29 @@ for k=scanNum
         % ----------------------------------------------------------
         drawnow
         
+        ax(1).XLim = [5e-11 max(max(Profile.chi))];
+        ax(2).XLim = [5e-11 min([1e-4,max(max(Profile.epsilon))])];
+        ax3(1).XLim = [min(Profile.s),max(Profile.s)];
+        ax3(2).XLim = [min(Profile.t),max(Profile.t)];
+        ax(4).XLim = [max([min(Profile.w),0.47]),max(Profile.w)];
+        [ax(5:8).XLim] = deal(Profile.f([1 end]));
+        [ax(5:8).XTick] = deal([1 10 100]);
+        [ax([5,6]).XTickLabel] = deal('');
         
+        [ax([1,2,4]).YLim] = deal([nanmin(Profile.pr),nanmax(Profile.pr)]);
+        [ax3(:).YLim] = deal([nanmin(Profile.pr),nanmax(Profile.pr)]);
+        ax(5).YLim = [1e-13 1e-3];
+        ax(7).YLim = [1e-11 1e-3];
+        [ax([6,8]).YLim] = deal([0 1]);
+ 
         ax(1).XLabel.Units = 'normalized';
         ax(1).XLabel.Position(2) = -0.05;
         ax(1).XTick = logspace(-10,-1,10);
+        ax(1).XTickLabel = log10(ax(1).XTick);
         ax(2).XLabel.Units = 'normalized';
         ax(2).XLabel.Position(2) = -0.05;
         ax(2).XTick = logspace(-10,-1,10);
+        ax(2).XTickLabel = log10(ax(2).XTick);
         ax3(1).XLabel.Units = 'normalized';
         ax3(1).XLabel.Position(2) = -0.05;
         ax3(2).XLabel.Units = 'normalized';

@@ -1,11 +1,11 @@
-function [Timeseries] = crop_timeseries(obj,tRange)
-% Timeseries = crop_timeseries(obj,tRange)
+function [Timeseries] = crop_timeseries(Meta_Data,tRange)
+% Timeseries = crop_timeseries(Meta_Data,[tMin,tMax])
 %
 % Get a short piece of timeseries structure that you can use to compute
 % turbulence variables.
 %
 % INPUTS:
-%   obj - epsi_class object
+%   Meta_Data
 %   tRange - range of epsitime [tMin tMax]
 %
 % OUTPUT:
@@ -14,8 +14,6 @@ function [Timeseries] = crop_timeseries(obj,tRange)
 
 
 %% Load ctd and epsi data
-Meta_Data = obj.Meta_Data;
-
 load(fullfile(Meta_Data.CTDpath,['ctd_' Meta_Data.deployment]));
 load(fullfile(Meta_Data.Epsipath,['epsi_' Meta_Data.deployment]));
 
@@ -54,3 +52,5 @@ if isfield(Timeseries,'P')
     Timeseries.P = filloutliers(Timeseries.P,'center','movmedian',1000);
 end
 Timeseries = structfun(@(x) fillmissing(x,'linear'),Timeseries,'Un',0);
+
+Timeseries.profNum = 0;

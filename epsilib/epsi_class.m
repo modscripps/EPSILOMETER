@@ -307,13 +307,51 @@ classdef epsi_class
                 obj.Meta_Data.PROCESS.Prcrit_prof,...
                 obj.Meta_Data.PROCESS.userConfirmsProfiles)
         end
-        function f_computeTurbulence(obj,profileIdx)
+        function obj = f_calibrateTemperature(obj,Profile)
+            % USAGE
+            %   obj.Meta_Data = f_calibrateTemperature(obj.Profile);
+            %
             Meta_Data = obj.Meta_Data;
-            if nargin==1
-                mod_epsilometer_batch_process_v2(Meta_Data)
-            elseif nargin==2
-                mod_epsilometer_batch_process_v2(Meta_Data,profileIdx)
-            end
+            obj = mod_epsi_temperature_spectra_v3(Meta_Data,Profile);
+        end
+        function obj = f_computeTurbulence(obj,Profile_or_profNum)
+            % Compute turbulence quantities (epsilon, chi, etc)
+            %
+            % USAGE
+            %   Profile = f_computeTurbulence(obj,Profile);
+            %
+            % INPUTS
+            %   Profile_or_profNum = Profile structure or number of profile
+            %   already saved as a structure in L1
+            % 
+            % OUTPUT
+            %   Profile = structure similar to input Profile structure, but
+            %   now with turbulence quantities added
+            Meta_Data = obj.Meta_Data;
+            obj = mod_epsilometer_calc_turbulence_v2(Meta_Data,Profile_or_profNum);
+        end
+        function obj = f_cropTimeseries(obj,tMin,tMax)
+            % Get a short piece of timeseries structure that you can use to compute
+            % turbulence variables.
+            %
+            % USAGE:
+            %   Timeseries = ec.f_cropTimeseries(tMin,tMax)
+            %
+            % INPUTS:
+            %   obj - epsi_class object
+            %   tMin - minimum epsitime (seconds)
+            %   tMax - maximum epsitime (seconds)
+            %
+            % OUTPUT:
+            %   Timeseries - structure of epsi and ctd data to process turbulence
+            %   variables
+            tRange = [tMin,tMax];
+            Meta_Data = obj.Meta_Data;
+            Timeseries = crop_timeseries(Meta_Data,tRange)
+            obj = Timeseries;
+        end
+        function f_plotProfileSpectra(obj,Profile,depth)
+            plot_profile_and_spectra(Profile,depth,0)
         end
         function f_clearRawData(obj)
             delete(fullfile(obj.Meta_Data.CTDpath,['ctd_' obj.Meta_Data.deployment '.mat']))

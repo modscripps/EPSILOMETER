@@ -42,7 +42,7 @@ switch Meta_Data.vehicle_name
         EPSI_Profiles = EpsiProfiles.datadown;
 end
 
-%% If no profiles specified, process them all
+%% If no profile is specified, process them all
 if nargin<2
     profileIdx = 1:length(CTD_Profiles);
 end

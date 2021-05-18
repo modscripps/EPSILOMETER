@@ -31,6 +31,21 @@ tscan = Meta_Data.PROCESS.tscan;
 limit_speed = .2; % limit speed 20 cm s^{-1}
 dz  =   Meta_Data.PROCESS.dz;
 
+[~,Meta_Data.PROCESS.fe]  =  pwelch(0*(1:Meta_Data.PROCESS.nfft),...
+    Meta_Data.PROCESS.nfft,[], ...
+    Meta_Data.PROCESS.nfft, ...
+    Meta_Data.AFE.FS,'psd');
+
+Meta_Data.PROCESS.h_freq = get_filters_SOM(Meta_Data,Meta_Data.PROCESS.fe);
+
+% get FPO7 channel average noise to compute chi
+switch Meta_Data.AFE.temp_circuit
+    case 'Tdiff'
+        Meta_Data.PROCESS.FPO7noise = load(fullfile(Meta_Data.CALIpath,'FPO7_noise.mat'),'n0','n1','n2','n3');
+    otherwise
+        Meta_Data.PROCESS.FPO7noise = load(fullfile(Meta_Data.CALIpath,'FPO7_notdiffnoise.mat'),'n0','n1','n2','n3');
+end
+
 %% Cut profile to compute coherence
 
 % Find max and min pressure
