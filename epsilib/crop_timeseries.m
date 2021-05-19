@@ -40,7 +40,8 @@ for iField=1:numel(epsiFields)
     switch epsiFields{iField}
         case 'timestamp'
             Timeseries.epsi_timestamp = epsi.(epsiFields{iField})(inRange);
-        case {'efe_badblocks','efe_time_sendout','efe_time_laptop'}
+        case {'efe_badblocks','efe_time_sendout','efe_time_laptop', ...
+              'efe_bad_blocks','efe_block_start'}
             
         otherwise
             Timeseries.(epsiFields{iField}) = epsi.(epsiFields{iField})(inRange);   

@@ -103,7 +103,7 @@ fclose(fid);
 fileStruct = dir(filename);
 modifiedDate = fileStruct.datenum;
 
-if modifiedDate==datenum(2008,1,1)
+if modifiedDate==datenum('31-Jan-2008 23:00:00')
     efe_block_version = 'v2'; %raw file from SD card after 2021,4,1 that was not initialized
 elseif modifiedDate<datenum(2021,4,1)
     efe_block_version = 'v1';
@@ -544,6 +544,44 @@ else
         alt.dst(i,1)=str2double(tmp_data_alt)*1e-5*alti.soundSpeed;
     end
 end
+
+%% ACTU
+
+[ind_actu_start,ind_actu_stop, ind_actu_tokens] = regexp(str,'\$ACT([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end','tokenExtents');
+if isempty(ind_actu_start)
+    disp('no actu data')
+    act=[];
+else
+    disp('actu data')
+    
+    
+    actu.data.n_block  = numel(ind_actu_start);
+    actu.data.n_recs   = numel(ind_actu_stop);
+        
+    actu.header.strvalue    = 'ACT'; % or SBE41
+    actu.header.offset = 2;
+    actu.header.length = strlength(actu.header.strvalue);
+    
+    actu.hextimestamp.strvalue  = "0000000000000000";
+    actu.hextimestamp.length    = strlength(actu.hextimestamp.strvalue);
+    actu.hextimestamp.offset    = actu.header.offset+actu.header.length;
+    
+    actu.data_offset = actu.hextimestamp.offset+actu.hextimestamp.length+1;
+    
+    act.alttime = [];
+    act.dst = [];
+    for i = 1:actu.data.n_block
+        % might want to check the length of data too!!! right now I am skipping
+        % that step
+        tmp_act_block = str(ind_actu_start(i):ind_actu_stop(i)); % +2 becasue now the header is SBE41 or SBE49 and not SBE
+        actu.hextimestamp.value=sparse_header(tmp_act_block,actu.hextimestamp);
+        
+        act.alttime(i,1)  = actu.hextimestamp.value./1000;
+        tmp_data_act=tmp_act_block(actu.data_offset:end-5);
+        act.dst(i,1)=str2double(tmp_data_act)*1e-5*alti.soundSpeed;
+    end
+end
+
 
 end
 

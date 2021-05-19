@@ -45,7 +45,7 @@ catch
     tempChoice = Meta_Data.AFE.temp_circuit;
 end
 
-if Meta_Data.MAP.adjustTemp
+if Meta_Data.PROCESS.adjustTemp
     
     FPO7noise = Meta_Data.MAP.Tnoise1;
     

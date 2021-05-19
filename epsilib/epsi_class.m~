@@ -311,8 +311,8 @@ classdef epsi_class
             % USAGE
             %   obj.Meta_Data = f_calibrateTemperature(obj.Profile);
             %
-            if ~isfield(obj.Meta_Data.PROCESS,'nfft')
-               obj.Meta_Data= obj.f_read_MetaProcess();
+            if ~isfield(test.Meta_Data.PROCESS,'nfft')
+            else
             end
             Meta_Data = obj.Meta_Data;
             obj = mod_epsi_temperature_spectra_v3(Meta_Data,Profile);
@@ -330,9 +330,6 @@ classdef epsi_class
             % OUTPUT
             %   Profile = structure similar to input Profile structure, but
             %   now with turbulence quantities added
-            if ~isfield(obj.Meta_Data.PROCESS,'nfft')
-               obj.Meta_Data= obj.f_read_MetaProcess();
-            end
             Meta_Data = obj.Meta_Data;
             obj = mod_epsilometer_calc_turbulence_v2(Meta_Data,Profile_or_profNum);
         end
