@@ -1,4 +1,8 @@
-function [] = plot_epsi_ctd(obj)
+function [] = plot_epsi_ctd(obj,saveFig)
+
+            if nargin<2
+                saveFig=0;
+            end
 
 %% Set up axes
 figure('units','inches','position',[0 0 10 13])
@@ -82,7 +86,8 @@ linkaxes(ax,'x')
 ax(1).XLim = [obj.epsi.epsitime(1)-15,obj.epsi.epsitime(end)+15];
 [ax(:).XGrid] = deal('on');
 
-
+if saveFig
 img = getframe(gcf);
 imwrite(img.cdata,fullfile(obj.Meta_Data.datapath,'figs/epsi_ctd_timeseries.png'));
 savefig(fullfile(obj.Meta_Data.datapath,'figs/epsi_ctd_timeseries.fig'));
+end

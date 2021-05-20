@@ -177,8 +177,11 @@ classdef epsi_class
 %             Meta_Data  = obj.Meta_Data;
             obj = set_SN_temp(obj.Meta_Data);
         end
-        function obj=f_checkEpsiTime(obj)
-            check_epsi_time(obj)
+        function obj=f_checkEpsiTime(obj,saveFig)
+            if nargin<2
+                saveFig=0;
+            end
+            check_epsi_time(obj,saveFig)
         end
         function f_plotCtd(obj)
             figure
@@ -261,8 +264,11 @@ classdef epsi_class
             xlabel('ctdtime (seconds)')
             ylabel('dPdt')
         end
-        function f_plotEpsiCtd(obj)
-            plot_epsi_ctd(obj)
+        function f_plotEpsiCtd(obj,saveFig)
+            if nargin<2
+                saveFig=0;
+            end
+            plot_epsi_ctd(obj,saveFig)
         end
         function  [P11,f]=f_calibrateEpsi(obj,tmid,tscan,makeFig)
             % Plots 30-sec timeseries from all channels and spectra from
@@ -353,8 +359,11 @@ classdef epsi_class
             Timeseries = crop_timeseries(Meta_Data,tRange);
             obj = Timeseries;
         end
-        function f_plotProfileSpectra(obj,Profile,depth)
-            plot_profile_and_spectra(Profile,depth,0)
+        function f_plotProfileSpectra(obj,Profile,depth,saveFig)
+            if nargin<2
+                saveFig=0;
+            end
+            plot_profile_and_spectra(Profile,depth,saveFig)
         end
         function f_clearRawData(obj)
             delete(fullfile(obj.Meta_Data.CTDpath,['ctd_' obj.Meta_Data.deployment '.mat']))

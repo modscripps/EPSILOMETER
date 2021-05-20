@@ -1,4 +1,8 @@
-function [] = check_epsi_time(obj)
+function [] = check_epsi_time(obj,saveFig)
+
+if nargin<2
+    saveFig = 0;
+end
 
 %% Get data
 epsi = obj.epsi;
@@ -38,6 +42,7 @@ ctd = obj.ctd;
     ylabel('ctdtime (sec)')
     xlabel('ctd sample num')
     
+    % Pressure
     ax(3) = subplot(3,1,3);
     plot(ctd.samplenum,ctd.P,'.k')
     ax(3).YDir = 'reverse';
@@ -46,7 +51,11 @@ ctd = obj.ctd;
     ylabel('pressure')
     xlabel('ctd sample num')
     
-    
+%% Save figure
+if saveFig
+    img = getframe(gcf);
+    imwrite(img.cdata,fullfile(obj.Meta_Data.datapath,'figs/check_time.png'));
+end
     
     
     
