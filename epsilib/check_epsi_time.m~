@@ -1,0 +1,35 @@
+function [] = check_epsi_time(Meta_Data)
+
+%% Load epsi data
+load(fullfile(Meta_Data.Epsipath,['epsi_' Meta_Data.deployment '.mat']));
+load(fullfile(Meta_Data.CTDpath,['ctd_' Meta_Data.deployment '.mat']));
+
+%% Does time ever go backwards?
+    epsi_back = diff(epsi.epsitime)<0;
+    ctd_back = diff(ctd.ctdtime)<0;
+    
+    %% Make the plot
+    figure('units','inches','position',[0 0 10 13])
+
+    % Epsitime
+    ax(1) = subplot(2,1,1);
+    plot(epsi.epsitime,'.b')
+    % Highlis
+    shade_different_files(epsi,'samplenum');
+    title('epsitime (sec. since power on)')
+    
+    %Ctdtime
+    ax(2) = subplot(2,1,2);
+    plot(ctd.ctdtime,'.r')
+    shade_different_files(ctd,'samplenum');
+    title('ctdtime (sec. since ???)')
+    
+   
+
+    
+
+    dt = mode(diff(epsi.epsitime));
+    n = numel(epsi.epsitime);
+    last_time = n*dt + epsi.epsitime(1) - dt;
+    new_epsitime = reshape(epsi.epsitime(1):dt:last_time,n,1);
+    

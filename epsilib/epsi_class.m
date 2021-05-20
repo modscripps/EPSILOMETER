@@ -178,10 +178,7 @@ classdef epsi_class
             obj = set_SN_temp(obj.Meta_Data);
         end
         function obj=f_checkEpsiTime(obj)
-            check_epsi_time(obj.Meta_Data)
-        end
-        function obj=f_checkCtdTime(obj)
-            check_ctd_time(obj.Meta_Data)
+            check_epsi_time(obj)
         end
         function f_plotCtd(obj)
             figure
@@ -367,7 +364,7 @@ classdef epsi_class
         end
         function f_plotShadeFiles(obj,timeOrSamplenum)
             if nargin==1
-                fprintf('Choose time or samplenum for x-axis')
+                fprintf('Choose time or samplenum for x-axis\n')
             end
             epsi = obj.epsi;
             shade_different_files(epsi,timeOrSamplenum);

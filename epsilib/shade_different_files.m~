@@ -32,14 +32,11 @@ fileDir = obj.filename;
 fileList = dir(fullfile(fileDir,'*.ascii'));
 fileNames = {fileList(:).name};
 
-%% Get axes limits
-ax = gca;
-ylims = ax.YLim;
-xlims = ax.XLim;
-
 %% Add the shading to every other file
 for ii=2:2:length(firsts)
+    ax = gca;
     hold on
+    ylims = ax.YLim;
     switch timeOrSample
         case 'epsitime'
             h(ii) = fill(dataStruct.epsitime([firsts(ii),firsts(ii),lasts(ii),lasts(ii),firsts(ii)]),...
@@ -64,18 +61,13 @@ for ii=2:2:length(firsts)
 end
 
 %% Label every file
-if strcmp(ax.YDir,'normal')
-    rotAng = 90;
-elseif strcmp(ax.YDir,'reverse')
-    rotAng = -90;
-end
 switch timeOrSample
     case 'epsisample'
-        for ii=1:length(firsts)
-            t(ii) = text(firsts(ii)+range(xlims)/40,ylims(1)+range(ylims)/20,strrep(fileNames{ii},'_','\_'),'rotation',rotAng,'fontsize',12);
-        end
+for ii=1:length(firsts)
+    t(ii) = text(firsts(ii)+2000,ylims(1)+1,fileNames{ii},'rotation',90); 
+end
     case 'ctdsample'
         for ii=1:length(firsts)
-    t(ii) = text(firsts(ii)+range(xlims)/40,ylims(1)+range(ylims)/20,strrep(fileNames{ii},'_','\_'),'rotation',rotAng,'fontsize',12); 
+    t(ii) = text(firsts(ii)+16,ylims(1)+1,fileNames{ii},'rotation',90); 
         end
 end
