@@ -42,6 +42,7 @@ if ischar(filename) % dir or file
                 if sum(cellfun(@length,epsi))>0
                     epsi = mod_combine_epsi(epsi{:});
                 end
+                ctd1=ctd;
                 if sum(cellfun(@length,ctd))>0
                     ctd = mod_combine_ctd(ctd{:});
                 end
@@ -469,14 +470,12 @@ epsi.efe_block_start = reshape(block_start,efe.n_recs*80,1);
 
 
 %% SBE 49
-[ind_sbe_start,ind_sbe_stop, ind_sbe_tokens] = regexp(str,'\$SB49([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end','tokenExtents');
+[ind_sbe_start,ind_sbe_stop, ind_sbe_tokens] = regexp(str,'\$S49([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end','tokenExtents');
 
 if isempty(ind_sbe_start)
-    [ind_sbe_start,ind_sbe_stop, ind_sbe_tokens] = regexp(str,'\$SB41([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end','tokenExtents');
-    if isempty(ind_sbe_start)
-        disp('no ctd data')
-        ctd=[];
-    end
+    [ind_sbe_start,ind_sbe_stop, ind_sbe_tokens] = regexp(str,'\$S49([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end','tokenExtents');
+    disp('no ctd data')
+    ctd=[];
 else
     
     sbe.data.n_block  = numel(ind_sbe_start);

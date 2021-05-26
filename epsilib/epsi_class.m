@@ -124,10 +124,21 @@ classdef epsi_class
             cd(obj.Meta_Data.datapath)
         end
         
-        function obj=f_readData(obj)
+        function obj=f_readData(obj,mode)
             % mod_som_read_epsi_files(obj.filename,obj.Meta_Data);
             %addpath /Volumes/GoogleDrive/'Shared drives'/MOD-data-Epsilometer/Library/EPSILOMETER/EPSILON/toolbox/seawater2/
-            mod_som_read_epsi_files_v2(obj.filename,obj.Meta_Data);
+            if nargin<2
+                mod_som_read_epsi_files_v2(obj.filename,obj.Meta_Data);
+            else
+                switch mode
+                    case 0
+                        mod_som_read_epsi_files_v2(obj.filename,obj.Meta_Data);
+                    case 1 % real time. get the latest file
+                        list=dir(fullfile(obj.Meta_Data.RAWpath,'*_raw'));
+                        obj.filename=fullfile(list(end).folder,list(end).name);
+                        mod_som_read_epsi_files_v2(obj.filename,obj.Meta_Data);
+                end
+            end
         end
         function obj=f_getEpsi(obj)
             data=load(fullfile(obj.Meta_Data.Epsipath,['epsi_' obj.Meta_Data.deployment '.mat']));
@@ -384,6 +395,13 @@ classdef epsi_class
                                   'Meta_Data_Process.txt');
             end
             obj = read_MetaProcess(obj.Meta_Data,filename);
+        end
+        function f_real_time(obj)
+            epsi_timer = timer;
+            epsi_timer.StartDelay = 3;
+            epsi_timer.TimerFcn = @(myTimerObj, thisEvent)disp('3 seconds have elapsed');
+            start(epsi_timer)
+%             obj.f_readData();
         end
     end
 end

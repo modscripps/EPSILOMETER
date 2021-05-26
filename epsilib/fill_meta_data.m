@@ -64,6 +64,7 @@ if ~exist(Meta_Data.RAWpath,'dir')
     %NC move copy raw files here instead of epsi_class
     %ALB copy the raw file inside the raw folder.
     list_rawfile=dir("*.ascii");
+    list_rawfile=[list_rawfile dir("*_raw")];
     for f=1:length(list_rawfile)
         copyfile(fullfile(list_rawfile(f).folder, ...
             list_rawfile(f).name),  ...
@@ -86,7 +87,7 @@ wh_CTL=Controlernames{wh_CTL{~cellfun(@isempty,wh_CTL)}};
 
 
 Meta_Data.CTL.name=wh_CTL;
-Meta_Data.CTL.rev='rev3'; %TODO get info from config file
+Meta_Data.CTL.rev='rev4'; %TODO get info from config file
 Meta_Data.CTL.SN='000';      %TODO get info from config file
 
 %% get analog front end (AFE) name
