@@ -39,8 +39,8 @@ Meta_Data.SDRAWpath  = fullfile(Meta_Data.datapath,'sd_raw');
 Meta_Data.CTDpath  = fullfile(Meta_Data.datapath,'ctd');
 Meta_Data.Epsipath = fullfile(Meta_Data.datapath,'epsi');
 Meta_Data.L1path   = fullfile(Meta_Data.datapath,'L1');
-
-figpath = fullfile(Meta_Data.datapath,'figs');
+Meta_Data.MATpath   = fullfile(Meta_Data.datapath,'mat');
+Meta_Data.FIGpath   = fullfile(Meta_Data.datapath,'figs');
 
 %% Define main names 
 disp('Creating the epsi, ctd, L1 and raw folders if not present ')
@@ -75,9 +75,13 @@ if ~exist(Meta_Data.SDRAWpath,'dir')
     % create path
     eval([ '!mkdir ' strrep(Meta_Data.SDRAWpath,' ','\ ')]);
 end
-if ~exist(figpath,'dir')
+if ~exist(Meta_Data.MATpath,'dir')
     % create path
-    eval([ '!mkdir ' strrep(figpath,' ','\ ')]);
+    eval([ '!mkdir ' strrep(Meta_Data.MATpath,' ','\ ')]);
+end
+if ~exist(Meta_Data.FIGpath,'dir')
+    % create path
+    eval([ '!mkdir ' strrep(Meta_Data.FIGpath,' ','\ ')]);
 end
 
 %% get controler (CTL) name

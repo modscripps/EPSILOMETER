@@ -77,9 +77,9 @@ else
     return
 end
 
-save(fullfile(Meta_Data.Epsipath,['epsi_' Meta_Data.deployment '.mat']),'epsi','-v7.3');
-save(fullfile(Meta_Data.CTDpath, ['ctd_' Meta_Data.deployment '.mat']),'ctd','-v7.3');
-save(fullfile(Meta_Data.CTDpath, ['alt_' Meta_Data.deployment '.mat']),'alt','-v7.3');
+% save(fullfile(Meta_Data.Epsipath,['epsi_' Meta_Data.deployment '.mat']),'epsi','-v7.3');
+% save(fullfile(Meta_Data.CTDpath, ['ctd_' Meta_Data.deployment '.mat']),'ctd','-v7.3');
+% save(fullfile(Meta_Data.CTDpath, ['alt_' Meta_Data.deployment '.mat']),'alt','-v7.3');
 
 end
 
@@ -111,7 +111,7 @@ elseif modifiedDate<datenum(2021,4,1)
 elseif (modifiedDate>=datenum(2021,4,1) && modifiedDate<=datenum(2021,5,23))
     efe_block_version = 'v2';
 elseif modifiedDate>=datenum(2021,5,23)
-    efe_block_version = 'v3';
+    efe_block_version = 'v2';
 end
 
 switch efe_block_version

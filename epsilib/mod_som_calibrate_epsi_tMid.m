@@ -1,4 +1,4 @@
-function [Phi,f1] = mod_som_calibrate_epsi_tMid(obj,tMid,tscan,makeFig)
+function [Phi,f1] = mod_som_calibrate_epsi_tMid(obj,tMid,tscan,makeFig,saveFig)
 
 %  script to calibrate the epsilometer electronics
 %  Good practice: It would great to keep SOM and front end together to keep
@@ -35,6 +35,9 @@ function [Phi,f1] = mod_som_calibrate_epsi_tMid(obj,tMid,tscan,makeFig)
 % If no makeFig flag, make figure by default
 if nargin<4
     makeFig = 1;
+end
+if nargin==4
+    saveFig = 1;
 end
 
 Meta_Data = obj.Meta_Data;
@@ -287,19 +290,39 @@ Phi.a3 = squeeze(nanmean(P11bis(7,:,:),2));
 % -----------------------------------------
 % -----------------------------------------------
 if makeFig
-
-fig4 = figure;
-% Set figure size based on screen size
-defaultFigWidth = 954;
-defaultFigHeight = 954;
-screenSize = get(0,'screensize');
-mult = round(min([screenSize(3)/defaultFigWidth,screenSize(4)/defaultFigHeight]),2);
-set(fig4,'Units','pixels','Position',[1 1 defaultFigWidth*mult defaultFigHeight*mult]);
-ax(1)=subplot('Position',[0.0900    0.8969    0.8200    0.0531]);
-ax(2)=subplot('Position',[0.0900    0.8317    0.8200    0.0531]);
-ax(3)=subplot('Position',[0.0900    0.7666    0.8200    0.0531]);
-ax(4)=subplot('Position',[0.0900    0.7014    0.8200    0.0531]);
-ax(5)=subplot('Position',[0.0900    0.6363    0.8200    0.0531]);
+    % Check if axes already exist. If they do, you're probably in realtime
+    % and want to update the plot. If they don't, you've either just
+    % started realtime or you're making a single plot so you need to
+    % initialize the figure
+    fig4 = gcf;
+    if numel(fig4.Children)==11
+        ax(1) = fig4.Children(11);
+        ax(2) = fig4.Children(9);
+        ax(3) = fig4.Children(7);
+        ax(4) = fig4.Children(5);
+        ax(5) = fig4.Children(3);
+        ax(6) = fig4.Children(2);
+        delete([ax(1).Children(:)]);
+        delete([ax(2).Children(:)]);
+        delete([ax(3).Children(:)]);
+        delete([ax(4).Children(:)]);
+        delete([ax(5).Children(:)]);
+        delete([ax(6).Children(:)]);
+        saveFig = 0;
+    else
+        fig4 = figure;
+        % Set figure size based on screen size
+        defaultFigWidth = 954;
+        defaultFigHeight = 954;
+        screenSize = get(0,'screensize');
+        mult = round(min([screenSize(3)/defaultFigWidth,screenSize(4)/defaultFigHeight]),2);
+        set(fig4,'Units','pixels','Position',[1 1 defaultFigWidth*mult defaultFigHeight*mult]);
+        ax(1)=subplot('Position',[0.0900    0.8969    0.8200    0.0531]);
+        ax(2)=subplot('Position',[0.0900    0.8317    0.8200    0.0531]);
+        ax(3)=subplot('Position',[0.0900    0.7666    0.8200    0.0531]);
+        ax(4)=subplot('Position',[0.0900    0.7014    0.8200    0.0531]);
+        ax(5)=subplot('Position',[0.0900    0.6363    0.8200    0.0531]);
+    end
 
 % Plot timeseries
 % --------------------
@@ -418,8 +441,10 @@ fig4.PaperPosition = [0 0 25 25];
 
 % Save figure
 % --------------------
-img = getframe(gcf);
-imwrite(img.cdata,fullfile(Meta_Data.datapath,['figs/epsi_' Meta_Data.deployment '_t' num2str(tMid) '.png']));
+if saveFig
+    img = getframe(gcf);
+    imwrite(img.cdata,fullfile(Meta_Data.datapath,['figs/epsi_' Meta_Data.deployment '_t' num2str(tMid) '.png']));
+end
 
 end % end if makeFig
 

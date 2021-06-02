@@ -252,9 +252,9 @@ xlim([1/15 170])
 set(gca,'fontsize',20)
 fig=gcf;fig.PaperPosition=[0 0 8 6];
 if isfield(Profile,'profNum')
-filename=sprintf('%sTctd_Tepsi_comp_cast%i_t2.png',Meta_Data.L1path,Profile.profNum);
+filename=sprintf('%s/Tctd_Tepsi_comp_cast%i_t2.png',Meta_Data.FIGpath,Profile.profNum);
 else
-    filename=sprintf('%sTctd_Tepsi_comp_t2.png',Meta_Data.L1path);
+    filename=sprintf('%s/Tctd_Tepsi_comp_t2.png',Meta_Data.FIGpath);
 end
 figureStamp(mfilename('fullpath'))
 print('-dpng2',filename)

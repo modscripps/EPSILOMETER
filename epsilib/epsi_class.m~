@@ -43,11 +43,14 @@ classdef epsi_class
                         load('Meta_Data.mat')
                         obj.Meta_Data = Meta_Data;
                         
-                        % NC - If Meta_Data exists, check to see if path to mat data is
+                        % NC - If Meta_Data exists, check to see if path to epsi data is
                         % available. If not, epsi_class was probably last generated on a
                         % different machine. Create a new Meta_Data.
-                        checkMat = exist(fullfile(obj.Meta_Data.MATpath,'Epsi_MATfile_TimeIndex.mat'),'file');
-                        if checkMat==0
+                        % TODO - If checkEpsi=0, save the CTD and
+                        % shear/temp serial numbers so you don't have to
+                        % add them again.
+                        checkEpsi = exist(fullfile(obj.Meta_Data.Epsipath,['epsi_' obj.Meta_Data.deployment '.mat']),'file');
+                        if checkEpsi==0
                             checkMD = 0;
                         else
                             repeat = 0;
@@ -158,7 +161,7 @@ classdef epsi_class
             obj.ctd = obj.f_getLastCtd;
             obj.alt = obj.f_getLastAlt;
         end
-        function obj = f_getAllData(obj);
+        function obj = f_getAlltData(obj);
             obj.f_mergeData;
             obj.epsi = obj.f_getAllEpsi;
             obj.ctd = obj.f_getAllCtd;
@@ -195,7 +198,7 @@ classdef epsi_class
             end
         end
         function obj=f_getAllEpsi(obj)
-            obj.f_mergeData;
+            obj.f_mergeData; 
             
             data=load(fullfile(obj.Meta_Data.Epsipath,['epsi_' obj.Meta_Data.deployment '.mat']));
             if isstruct(data.epsi)
@@ -205,29 +208,21 @@ classdef epsi_class
             end
         end
         function obj=f_getAllCtd(obj)
-            obj.f_mergeData;
-            if exist(fullfile(obj.Meta_Data.CTDpath,['ctd_' obj.Meta_Data.deployment '.mat']),'file')
-                data=load(fullfile(obj.Meta_Data.CTDpath,['ctd_' obj.Meta_Data.deployment '.mat']));
-                if isstruct(data.ctd)
-                    obj=data.ctd;
-                else
-                    obj=[];
-                end
+            obj.f_mergeData;             
+            data=load(fullfile(obj.Meta_Data.CTDpath,['ctd_' obj.Meta_Data.deployment '.mat']));
+            if isstruct(data.ctd)
+                obj=data.ctd;
             else
-                obj = [];
+                obj=[];
             end
         end
         function obj=f_getAllAlt(obj)
-            obj.f_mergeData;
-            if exist(fullfile(obj.Meta_Data.CTDpath,['alt_' obj.Meta_Data.deployment '.mat']),'file')
-                data=load(fullfile(obj.Meta_Data.CTDpath,['alt_' obj.Meta_Data.deployment '.mat']));
-                if isstruct(data.alt)
-                    obj=data.alt;
-                else
-                    obj=[];
-                end
+            obj.f_mergeData;             
+            data=load(fullfile(obj.Meta_Data.CTDpath,['alt_' obj.Meta_Data.deployment '.mat']));
+            if isstruct(data.alt)
+                obj=data.alt;
             else
-                obj = [];
+                obj=[];
             end
         end
         function obj=f_getPlotProperties(obj)
@@ -466,7 +461,7 @@ classdef epsi_class
             end
             obj = read_MetaProcess(obj.Meta_Data,filename);
         end
-        
+
         function obj=f_realtime_spectra(obj)
             x=2;
             while x<10
