@@ -447,9 +447,10 @@ classdef epsi_class
             plot_profile_and_spectra(Profile,depth,saveFig)
         end
         function f_clearRawData(obj)
-            delete(fullfile(obj.Meta_Data.CTDpath,['ctd_' obj.Meta_Data.deployment '.mat']))
-            delete(fullfile(obj.Meta_Data.CTDpath,['alt_' obj.Meta_Data.deployment '.mat']))
-            delete(fullfile(obj.Meta_Data.Epsipath,['epsi_' obj.Meta_Data.deployment '.mat']))
+            delete(fullfile(obj.Meta_Data.CTDpath,'*.mat'))
+            delete(fullfile(obj.Meta_Data.CTDpath,'*.mat'))
+            delete(fullfile(obj.Meta_Data.Epsipath,'*.mat'))
+            delete(fullfile(obj.Meta_Data.MATpath,'*.mat'))
             delete(fullfile(obj.Meta_Data.datapath,'Meta_Data.mat'));
         end
         function f_plotShadeFiles(obj,timeOrSamplenum)

@@ -460,12 +460,12 @@ epsi.epsitime=epsi.timestamp./1000;
 % data
 fieldsToExpand = {'bad_blocks','time_sendout','time_laptop'};
 for iField=1:length(fieldsToExpand)
-    a = repmat(efe.(fieldsToExpand{iField})(:).',80,1);
-    b = reshape(a,efe.n_recs*80,1);
+    a = repmat(efe.(fieldsToExpand{iField})(:).',nb_element,1);
+    b = reshape(a,efe.n_recs*nb_element,1);
     epsi.(['efe_' fieldsToExpand{iField}]) = b;
 end
-block_start = repmat([1;nan(79,1)],1,efe.n_recs);
-epsi.efe_block_start = reshape(block_start,efe.n_recs*80,1);
+block_start = repmat([1;nan(nb_element-1,1)],1,efe.n_recs);
+epsi.efe_block_start = reshape(block_start,efe.n_recs*nb_element,1);
 
 
 %% SBE 49
