@@ -1,4 +1,4 @@
-classdef epsi_class
+classdef epsi_class < handle
     %
     % epsi_class is a class of epsi data, processing functions, and
     % plotting functions
@@ -121,9 +121,9 @@ classdef epsi_class
             
             obj.f_readData();
             if lastOrAll==1
-                obj = obj.f_getLastData;
+                obj = obj.f_getLastData();
             elseif lastOrAll==2
-                obj = obj.f_getAllData;
+                obj = obj.f_getAllData();
             end
             cd(obj.Meta_Data.datapath)
         end
@@ -161,7 +161,7 @@ classdef epsi_class
             obj.alt = obj.f_getLastAlt();
         end
         function obj = f_getAllData(obj);
-           obj.f_mergeData;
+            obj.f_mergeData;
             obj.epsi = obj.f_getAllEpsi();
             obj.ctd = obj.f_getAllCtd();
             obj.alt = obj.f_getAllAlt();
