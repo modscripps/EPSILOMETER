@@ -449,21 +449,18 @@ end
 end % end if makeFig
 
 
-% Answer1='n';%input('Do you want to save?(y/n)','s');
+% Answer1=input('Do you want to save noise data in Meta_Data.L1path?(y/n)','s');
 % while 1
 %     switch Answer1
-%         case 'y'
-%             print(fullfile(Meta_Data.L1path,[Meta_Data.deployment 'AFP.png']),'-dpng')
+%         case 'y' 
 %             save(fullfile(Meta_Data.L1path,[Meta_Data.deployment '-FPO7_noise.mat']),'n0','n1','n2','n3')
 %             save(fullfile(Meta_Data.L1path,[Meta_Data.deployment '-shear_noise.mat']),'n0s','n1s','n2s','n3s')
 %             save(fullfile(Meta_Data.L1path,[Meta_Data.deployment '-spectrum_calib.mat']),'f1','P11')
-%             save(fullfile(Meta_Data.L1path, ...
-%                 ['Meta_' Meta_Data.mission '_' Meta_Data.deployment '.mat']),'Meta_Data')
 %             break;
 %         case 'n'
 %             break;
 %         otherwise
-%             Answer1=input('Do you want to save?(y/n)','s');
+%             Answer1=input('Do you want to save noise data in Meta_Data.L1path?(y/n)','s');
 %     end
 % end
 

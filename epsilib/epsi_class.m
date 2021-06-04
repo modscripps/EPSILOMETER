@@ -148,21 +148,23 @@ classdef epsi_class
         end
         function obj = f_mergeData(obj)
             [epsi,ctd,alt] = merge_new_mat_files(obj.Meta_Data);
-            obj.epsi = epsi;
-            obj.ctd = ctd;
-            obj.alt = alt;
+%             newObj = obj;
+%             newObj.epsi = epsi;
+%             newObj.ctd = ctd;
+%             newObj.alt = alt;
+%             obj = newObj;
         end
         function obj = f_getLastData(obj);
             obj.f_readData;
-            obj.epsi = obj.f_getLastEpsi;
-            obj.ctd = obj.f_getLastCtd;
-            obj.alt = obj.f_getLastAlt;
+            obj.epsi = obj.f_getLastEpsi();
+            obj.ctd = obj.f_getLastCtd();
+            obj.alt = obj.f_getLastAlt();
         end
         function obj = f_getAllData(obj);
-            obj.f_mergeData;
-            obj.epsi = obj.f_getAllEpsi;
-            obj.ctd = obj.f_getAllCtd;
-            obj.alt = obj.f_getAllAlt;
+           obj.f_mergeData;
+            obj.epsi = obj.f_getAllEpsi();
+            obj.ctd = obj.f_getAllCtd();
+            obj.alt = obj.f_getAllAlt();
         end
         function obj=f_getLastEpsi(obj)
             load(fullfile(obj.Meta_Data.MATpath,'Epsi_MATfile_TimeIndex'));
@@ -195,7 +197,7 @@ classdef epsi_class
             end
         end
         function obj=f_getAllEpsi(obj)
-            obj.f_mergeData;
+            %obj.f_mergeData;
             
             data=load(fullfile(obj.Meta_Data.Epsipath,['epsi_' obj.Meta_Data.deployment '.mat']));
             if isstruct(data.epsi)
@@ -205,7 +207,7 @@ classdef epsi_class
             end
         end
         function obj=f_getAllCtd(obj)
-            obj.f_mergeData;
+            %obj.f_mergeData;
             if exist(fullfile(obj.Meta_Data.CTDpath,['ctd_' obj.Meta_Data.deployment '.mat']),'file')
                 data=load(fullfile(obj.Meta_Data.CTDpath,['ctd_' obj.Meta_Data.deployment '.mat']));
                 if isstruct(data.ctd)
@@ -218,7 +220,7 @@ classdef epsi_class
             end
         end
         function obj=f_getAllAlt(obj)
-            obj.f_mergeData;
+            %obj.f_mergeData;
             if exist(fullfile(obj.Meta_Data.CTDpath,['alt_' obj.Meta_Data.deployment '.mat']),'file')
                 data=load(fullfile(obj.Meta_Data.CTDpath,['alt_' obj.Meta_Data.deployment '.mat']));
                 if isstruct(data.alt)
@@ -458,7 +460,7 @@ classdef epsi_class
                 fprintf('Choose time or samplenum for x-axis\n')
             end
             epsi = obj.epsi;
-            shade_different_files(epsi,timeOrSamplenum);
+            shade_different_files(obj,timeOrSamplenum);
         end
         function obj=f_read_MetaProcess(obj,filename)
             if nargin==1
@@ -473,7 +475,7 @@ classdef epsi_class
             while x<10
                 obj = obj.f_getLastData;
                 obj.f_calibrateEpsi(obj.epsi.epsitime(end)-15,6);
-                pause(5)
+                pause(2)
             end
         end
         function f_realtime_epsilon(obj)
