@@ -9,7 +9,7 @@ load([Meta_Data.MATpath '/' '/Epsi_MATfile_TimeIndex.mat']);
 try
     load([Meta_Data.Epsipath '/deployment_MATfile_TimeIndex.mat']);
 catch err
-    if strcmp(err.identifier,'MATLAB:nonExistentField')
+    if strcmp(err.identifier,'MATLAB:nonExistentField') || strcmp(err.identifier,'MATLAB:load:couldNotReadFile')
         deployment_MATfile_TimeIndex.timeStart = [];
         deployment_MATfile_TimeIndex.timeEnd = [];
         deployment_MATfile_TimeIndex.filenames = {};
