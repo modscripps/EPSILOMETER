@@ -36,19 +36,6 @@ else
     altOut = [];
 end
 
-if isstruct(ctdOut)
-    doCtd = 1;
-else
-    doCtd = 0;
-    ctdOut = [];
-end
-if isstruct(altOut)
-    doAlt = 1;
-else
-    doAlt = 0;
-    altOut = [];
-end
-
 % Define indices of new data
 if ~isempty(deployment_MATfile_TimeIndex.timeEnd)
     TimeMin = deployment_MATfile_TimeIndex.timeEnd(end);
@@ -89,7 +76,6 @@ end
 
 % Ctd
 % ---------------
-if doCtd
     
     if ~isempty(ind)
         for i = 1:length(ind)
@@ -111,14 +97,12 @@ if doCtd
         ctd = ctdOut;
         save(fullfile(Meta_Data.CTDpath, ['ctd_' Meta_Data.deployment '.mat']),'ctd','-v7.3');
     end
-end
 
 
 
 
 % Alt
 % ---------------
-if doAlt
     
     if ~isempty(ind)
         for i = 1:length(ind)
@@ -140,6 +124,5 @@ if doAlt
         alt = altOut;
         save(fullfile(Meta_Data.CTDpath, ['alt_' Meta_Data.deployment '.mat']),'alt','-v7.3');
     end
-end
 
 
