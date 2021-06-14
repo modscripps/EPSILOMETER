@@ -163,7 +163,7 @@ Meta_Data.AFE.shear='CAmp1.0'; %TODO get info from config file
 Meta_Data.Firmware.version='mod_som_som_eferev3_sdio_sampling_app_07152020.sls'; %TODO get info from config file
 
 %% add auxillary device field
-CTDnames={'SBE','SBE49','SBE41','RBR','S49'};% hard coded name of potential CTD we will use with epsi
+CTDnames={'SBE','SBE49','SBE41','RBR','S49','SB49'};% hard coded name of potential CTD we will use with epsi
 setup_fields=fieldnames(setup);
 % find the kind of CTD we used from the setup file. 
 wh_CTD=cellfun(@(y) find(cellfun(@(x) strcmp(x,y),CTDnames)),setup_fields,'un',0);

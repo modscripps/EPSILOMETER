@@ -104,6 +104,9 @@ fclose(fid);
 fileStruct = dir(filename);
 modifiedDate = fileStruct.datenum;
 
+
+[ind_efe_start, ind_efe_end,ind_efe_tokens] = regexp(str,'\$EFE([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end','tokenExtents');
+
 if modifiedDate==datenum('31-Jan-2008 23:00:00')
     efe_block_version = 'v2'; %raw file from SD card after 2021,4,1 that was not initialized
 elseif modifiedDate<datenum(2021,4,1)
@@ -111,16 +114,19 @@ elseif modifiedDate<datenum(2021,4,1)
 elseif (modifiedDate>=datenum(2021,4,1) && modifiedDate<=datenum(2021,5,23))
     efe_block_version = 'v2';
 elseif modifiedDate>=datenum(2021,5,23)
-    efe_block_version = 'v2';
+    efe_block_version = 'v3';
 end
 
+if (strcmp(str(ind_efe_start+30),"*")==0)
+    efe_block_version = 'v3';
+end
+    
 switch efe_block_version
     
     case 'v1'
         
         % token indices starts at ends at the square bracket
         % EFE[       1         ] [ 2  ]\r\n
-        [ind_efe_start, ind_efe_end,ind_efe_tokens] = regexp(str,'\$EFE([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end','tokenExtents');
         ind_efe_start=ind_efe_start+1;
         ind_efe_end=ind_efe_end+1;
         ind_efe_tokens=cellfun(@(x) (x+1),ind_efe_tokens,'un',0);
@@ -185,7 +191,6 @@ switch efe_block_version
         
         % token indices starts at ends at the square bracket
         % EFE[       1         ] [ 2  ]\r\n
-        [ind_efe_start, ind_efe_end,ind_efe_tokens] = regexp(str,'\$EFE([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end','tokenExtents');
         ind_efe_start=ind_efe_start+1;
         ind_efe_end=ind_efe_end+1;
         ind_efe_tokens=cellfun(@(x) (x+1),ind_efe_tokens,'un',0);
@@ -251,7 +256,6 @@ switch efe_block_version
         
         % token indices starts at ends at the square bracket
         % EFE[       1         ] [ 2  ]\r\n
-        [ind_efe_start, ind_efe_end,ind_efe_tokens] = regexp(str,'\$EFE([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end','tokenExtents');
         ind_efe_tokens=cellfun(@(x) (x+1),ind_efe_tokens,'un',0);
         
         % get the offsets to parse the str
@@ -483,33 +487,81 @@ if isempty(ind_sbe_start)
         ctd=[];
     end
 else
+
+    if (strcmp(str(ind_sbe_start+30),"*")==0)
+        sbe_block_version = 'v3';
+    else
+        sbe_block_version = 'v2';
+    end
     
     sbe.data.n_block  = numel(ind_sbe_start);
     sbe.data.n_recs   = numel(ind_sbe_start)*Meta_Data.CTD.sample_per_record;
-    
-    sbe.header.strvalue    = 'S49'; % or SBE41
-    sbe.header.offset = 2;
-    sbe.header.length = strlength(sbe.header.strvalue);
-    
-    sbe.hextimestamp.strvalue  = "0000000000000000";
-    sbe.hextimestamp.length    = strlength(sbe.hextimestamp.strvalue);
-    sbe.hextimestamp.offset    = sbe.header.offset+sbe.header.length;
-    
-    sbe.hexlengthblock.strvalue  = "0000";
-    sbe.hexlengthblock.length    = strlength(sbe.hexlengthblock.strvalue);
-    sbe.hexlengthblock.offset    = sbe.hextimestamp.offset+ ...
-        sbe.hextimestamp.length+1; % +1 beacuse of the coma ","
-    
-    sbe.hexelmntskip.strvalue  = "0000";
-    sbe.hexelmntskip.length    = strlength(sbe.hexelmntskip.strvalue);
-    sbe.hexelmntskip.offset    = sbe.hexlengthblock.offset+ ...
-        sbe.hexlengthblock.length+1; % +1 beacuse of the coma ","
-    
-    
-    sbe.data_offset = sbe.hexelmntskip.offset+sbe.hexelmntskip.length-1;
+    switch sbe_block_version
+        case {'v1','v2'}
+            
+            sbe.header.strvalue    = 'S49'; % or SBE41
+            sbe.header.offset = 2;
+            sbe.header.length = strlength(sbe.header.strvalue);
+            
+            sbe.hextimestamp.strvalue  = "0000000000000000";
+            sbe.hextimestamp.length    = strlength(sbe.hextimestamp.strvalue);
+            sbe.hextimestamp.offset    = sbe.header.offset+sbe.header.length;
+            
+            sbe.hexlengthblock.strvalue  = "0000";
+            sbe.hexlengthblock.length    = strlength(sbe.hexlengthblock.strvalue);
+            sbe.hexlengthblock.offset    = sbe.hextimestamp.offset+ ...
+                sbe.hextimestamp.length+1; % +1 beacuse of the coma ","
+            
+            sbe.hexelmntskip.strvalue  = "0000";
+            sbe.hexelmntskip.length    = strlength(sbe.hexelmntskip.strvalue);
+            sbe.hexelmntskip.offset    = sbe.hexlengthblock.offset+ ...
+                sbe.hexlengthblock.length+1; % +1 beacuse of the coma ","
+            
+            
+            sbe.data_offset = sbe.hexelmntskip.offset+sbe.hexelmntskip.length-1;
+        case 'v3'
+            
+            ind_sbe_tokens=cellfun(@(x) (x+1),ind_sbe_tokens,'un',0);
+            
+            % get the offsets to parse the str
+            sbe.sync.strvalue='$';
+            sbe.sync.offset=0;
+            sbe.sync.length=1;
+            % define blocks header offset
+            sbe.header.strvalue  = 'SB49';
+            sbe.header.length = length(sbe.header.strvalue)-1;
+            sbe.header.offset = sbe.sync.offset+sbe.sync.length+1;
+            
+            sbe.hextimestamp.strvalue  = "0000000000000000";
+            sbe.hextimestamp.length = strlength(sbe.hextimestamp.strvalue)-1;
+            sbe.hextimestamp.offset = sbe.header.offset+sbe.header.length+1;
+            
+            sbe.hexlengthblock.strvalue  = "00000000";
+            sbe.hexlengthblock.length = strlength(sbe.hexlengthblock.strvalue)-1;
+            sbe.hexlengthblock.offset = sbe.hextimestamp.offset+ ...
+                sbe.hextimestamp.length+1;
+            
+            sbe.headerchecksum.strvalue = "*FF";
+            sbe.headerchecksum.length   = strlength(sbe.headerchecksum.strvalue)-1;
+            sbe.headerchecksum.offset   = sbe.hexlengthblock.offset+ ...
+                sbe.hexlengthblock.length+1;
+            
+            sbe.chksum.strvalue = "FFFFF" ;
+            sbe.chksum.length   = strlength(sbe.chksum.strvalue);
+            
+            % NC added to get laptop time (data before $EFE)
+            sbe.laptoptime.strvalue = '0000000000';
+            sbe.laptoptime.offset = -10;
+            sbe.laptoptime.length = 10;
+            
+            
+            sbe.data_offset = sbe.headerchecksum.offset + ...
+                sbe.headerchecksum.length;
+            
+    end
     % TODO fix the SBE name bug
     switch Meta_Data.CTD.name
-        case{"SBE49","SBE","S49"}
+        case{"SBE49","SBE","S49","SB49"}
             sbe.data.format = 'eng';
             sbe.data.length=22;
             sbe.data.sample_freq = 16;
@@ -520,7 +572,7 @@ else
             ctd.C_raw      = NaN(sbe.data.n_recs,1);
             ctd.PT_raw     = NaN(sbe.data.n_recs,1);
             
-        case{"SBE41","S41"}
+        case{"SBE41","S41","SB41"}
             sbe.data.format = 'PTS';
             sbe.data.length=28;
             sbe.data.sample_freq = 1;
@@ -542,13 +594,27 @@ else
         % might want to check the length of data too!!! right now I am skipping
         % that step
         tmp_sbe_block = str(ind_sbe_start(i):ind_sbe_stop(i)); % +2 becasue now the header is SBE41 or SBE49 and not SBE
-        sbe.hextimestamp.value=sparse_header(tmp_sbe_block,sbe.hextimestamp);
-        sbe.hexlengthblock.value=sparse_header(tmp_sbe_block,sbe.hexlengthblock);
-        sbe.hexelmntskip.value=sparse_header(tmp_sbe_block,sbe.hexelmntskip);
-        
-        
-        sbe.block_time(i)  = sbe.hextimestamp.value./1000;
-        tmp_data_ctd=tmp_sbe_block(sbe.data_offset:end-5);
+        switch sbe_block_version
+            case {'v1','v2'}
+                sbe.hextimestamp.value=sparse_header(tmp_sbe_block,sbe.hextimestamp);
+                sbe.hexlengthblock.value=sparse_header(tmp_sbe_block,sbe.hexlengthblock);
+                sbe.hexelmntskip.value=sparse_header(tmp_sbe_block,sbe.hexelmntskip);
+                
+                sbe.block_time(i)  = sbe.hextimestamp.value./1000;
+            case 'v3'
+                sbe.hextimestamp.strvalue=header(sbe.hextimestamp.offset+ ...
+                    (0:sbe.hextimestamp.length));
+                sbe.hextimestamp.value=sparse_header(header,sbe.hextimestamp);
+                
+                sbe.hexlengthblock.strvalue=header(sbe.hexlengthblock.offset+ ...
+                    (0:sbe.hexlengthblock.length));
+                sbe.hexlengthblock.value=sparse_header(header,sbe.hexlengthblock);
+                
+%                 % compare the length of block from regexp and from the header
+%                 Lregexp=ind_sbe_end(i)-ind_sbe_start(i)-sbe.data_offset-5;
+                
+        end
+        tmp_data_ctd=tmp_sbe_block(sbe.data_offset+1:end-5);
         
         if (length(tmp_data_ctd)~=(24+16)*Meta_Data.CTD.sample_per_record)
             fprintf("not enough SBE sample in block %i\r\n",i)
@@ -605,21 +671,67 @@ if isempty(ind_alti_start)
     alt=[];
 else
     
+    if (strcmp(str(ind_alti_start+30),"*")==0)
+        alti_block_version = 'v3';
+    else
+        alti_block_version = 'v1';
+    end
     
     alti.data.n_block  = numel(ind_alti_start);
     alti.data.n_recs   = numel(ind_alti_stop);
     
     alti.soundSpeed    = 1500;
-    
-    alti.header.strvalue    = 'ALT'; % or SBE41
-    alti.header.offset = 2;
-    alti.header.length = strlength(alti.header.strvalue);
-    
-    alti.hextimestamp.strvalue  = "0000000000000000";
-    alti.hextimestamp.length    = strlength(alti.hextimestamp.strvalue);
-    alti.hextimestamp.offset    = alti.header.offset+alti.header.length;
-    
-    alti.data_offset = alti.hextimestamp.offset+alti.hextimestamp.length+1;
+
+    switch alti_block_version
+        case {"v1","v2"}
+            alti.header.strvalue    = 'ALT'; % or SBE41
+            alti.header.offset = 2;
+            alti.header.length = strlength(alti.header.strvalue);
+            
+            alti.hextimestamp.strvalue  = "0000000000000000";
+            alti.hextimestamp.length    = strlength(alti.hextimestamp.strvalue);
+            alti.hextimestamp.offset    = alti.header.offset+alti.header.length;
+            
+            alti.data_offset = alti.hextimestamp.offset+alti.hextimestamp.length+1;
+        case 'v3'
+            
+            % get the offsets to parse the str
+            alti.sync.strvalue='$';
+            alti.sync.offset=0;
+            alti.sync.length=1;
+            % define blocks header offset
+            alti.header.strvalue  = 'ALTI';
+            alti.header.length = length(alti.header.strvalue)-1;
+            alti.header.offset = alti.sync.offset+alti.sync.length+1;
+            
+            alti.hextimestamp.strvalue  = "0000000000000000";
+            alti.hextimestamp.length = strlength(alti.hextimestamp.strvalue)-1;
+            alti.hextimestamp.offset = alti.header.offset+alti.header.length+1;
+            
+            alti.hexlengthblock.strvalue  = "00000000";
+            alti.hexlengthblock.length = strlength(alti.hexlengthblock.strvalue)-1;
+            alti.hexlengthblock.offset = alti.hextimestamp.offset+ ...
+                alti.hextimestamp.length+1;
+            
+            alti.headerchecksum.strvalue = "*FF";
+            alti.headerchecksum.length   = strlength(alti.headerchecksum.strvalue)-1;
+            alti.headerchecksum.offset   = alti.hexlengthblock.offset+ ...
+                alti.hexlengthblock.length+1;
+            
+            alti.chksum.strvalue = "FFFFF" ;
+            alti.chksum.length   = strlength(sbe.chksum.strvalue);
+            
+            % NC added to get laptop time (data before $EFE)
+            alti.laptoptime.strvalue = '0000000000';
+            alti.laptoptime.offset = -10;
+            alti.laptoptime.length = 10;
+            
+            
+            alti.data_offset = sbe.hextimestamp.offset + ...
+                sbe.hextimestamp.length;
+
+            
+    end
     
     alt.alttime = [];
     alt.dst = [];

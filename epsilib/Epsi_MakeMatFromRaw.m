@@ -95,7 +95,8 @@ if rSync
     RawDir = RawDirDuplicate;
 end
     
-myASCIIfiles = dir([RawDir, '*.ascii']);
+% myASCIIfiles = dir([RawDir, '*.ascii']);
+myASCIIfiles = dir([RawDir, '*_raw']);
 
 for i=1:length(myASCIIfiles)
     base = myASCIIfiles(i).name(1:end-6);
