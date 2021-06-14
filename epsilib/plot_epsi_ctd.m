@@ -60,9 +60,21 @@ set(ax(3),'Fontsize',obj.plot_properties.FontSize,'FontName',obj.plot_properties
 
 %% CTD
 
-plot(ax(4),obj.ctd.ctdtime,obj.ctd.P,'Color',cols.P,'LineWidth',obj.plot_properties.LineWidth)
-plot(ax(5),obj.ctd.ctdtime,obj.ctd.T,'Color',cols.T,'LineWidth',obj.plot_properties.LineWidth)
-plot(ax(6),obj.ctd.ctdtime,obj.ctd.S,'Color',cols.S,'LineWidth',obj.plot_properties.LineWidth)
+if isfield(obj.ctd,'ctdtime')
+    
+    plot(ax(4),obj.ctd.ctdtime,obj.ctd.P,'Color',cols.P,'LineWidth',obj.plot_properties.LineWidth)
+    plot(ax(5),obj.ctd.ctdtime,obj.ctd.T,'Color',cols.T,'LineWidth',obj.plot_properties.LineWidth)
+    plot(ax(6),obj.ctd.ctdtime,obj.ctd.S,'Color',cols.S,'LineWidth',obj.plot_properties.LineWidth)
+    
+    %% FALL SPEED
+    
+    plot(ax(7),obj.ctd.ctdtime,movmean(obj.ctd.dPdt,100),'Color',cols.dPdt)
+    ax(7).YLim = [-0.1 max([1,max(movmean(obj.ctd.dPdt,100))])];
+
+end
+
+%% AXES
+
 ax(4).XTickLabel='';
 ax(5).XTickLabel='';
 ax(6).XTickLabel='';
@@ -73,14 +85,8 @@ set(ax(4),'Fontsize',obj.plot_properties.FontSize,'FontName',obj.plot_properties
 set(ax(5),'Fontsize',obj.plot_properties.FontSize,'FontName',obj.plot_properties.FontName)
 set(ax(6),'Fontsize',obj.plot_properties.FontSize,'FontName',obj.plot_properties.FontName)
 
-%% FALL SPEED
-
-plot(ax(7),obj.ctd.ctdtime,movmean(obj.ctd.dPdt,100),'Color',cols.dPdt)
 ax(7).XLabel.String = 'ctdtime (sec)';
 ylabel(ax(7),'dPdt')
-ax(7).YLim = [-0.1 max([1,max(movmean(obj.ctd.dPdt,100))])];
-
-%% AXES
 
 linkaxes(ax,'x')
 ax(1).XLim = [obj.epsi.epsitime(1)-15,obj.epsi.epsitime(end)+15];

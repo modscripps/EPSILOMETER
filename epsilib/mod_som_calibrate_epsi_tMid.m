@@ -1,4 +1,4 @@
-function [Phi,f1] = mod_som_calibrate_epsi_tMid(obj,tMid,tscan,makeFig,saveFig)
+function [Phi,f1,noise] = mod_som_calibrate_epsi_tMid(obj,tMid,tscan,makeFig,saveFig)
 
 %  script to calibrate the epsilometer electronics
 %  Good practice: It would great to keep SOM and front end together to keep
@@ -276,7 +276,7 @@ test_noise=n0+n1.*logf+n2.*logf.^2+n3.*logf.^3;
 test_snoise=n0s+n1s.*logf+n2s.*logf.^2+n3s.*logf.^3;
 
 
-%% Make output structure
+%% Make output structures
 Phi.t1 = squeeze(nanmean(P11bis(1,:,:),2));
 Phi.t2 = squeeze(nanmean(P11bis(2,:,:),2));
 Phi.s1 = squeeze(nanmean(P11bis(3,:,:),2));
@@ -285,6 +285,15 @@ Phi.a1 = squeeze(nanmean(P11bis(5,:,:),2));
 Phi.a2 = squeeze(nanmean(P11bis(6,:,:),2));
 Phi.a3 = squeeze(nanmean(P11bis(7,:,:),2));
 
+noise.fpo7.n0 = n0;
+noise.fpo7.n1 = n1;
+noise.fpo7.n2 = n2;
+noise.fpo7.n3 = n3;
+
+noise.shear.n0 = n0;
+noise.shear.n1 = n1;
+noise.shear.n2 = n2;
+noise.shear.n3 = n3;
 
 %% Make the figure
 % -----------------------------------------
@@ -294,22 +303,23 @@ if makeFig
     % and want to update the plot. If they don't, you've either just
     % started realtime or you're making a single plot so you need to
     % initialize the figure
-    fig4 = gcf;
-    if numel(fig4.Children)==11
-        ax(1) = fig4.Children(11);
-        ax(2) = fig4.Children(9);
-        ax(3) = fig4.Children(7);
-        ax(4) = fig4.Children(5);
-        ax(5) = fig4.Children(3);
-        ax(6) = fig4.Children(2);
-        delete([ax(1).Children(:)]);
-        delete([ax(2).Children(:)]);
-        delete([ax(3).Children(:)]);
-        delete([ax(4).Children(:)]);
-        delete([ax(5).Children(:)]);
-        delete([ax(6).Children(:)]);
-        saveFig = 0;
-    else
+%     fig4 = gcf;
+%     if numel(fig4.Children)==11
+%         ax(1) = fig4.Children(11);
+%         ax(2) = fig4.Children(9);
+%         ax(3) = fig4.Children(7);
+%         ax(4) = fig4.Children(5);
+%         ax(5) = fig4.Children(3);
+%         ax(6) = fig4.Children(2);
+%         delete([ax(1).Children(:)]);
+%         delete([ax(2).Children(:)]);
+%         delete([ax(3).Children(:)]);
+%         delete([ax(4).Children(:)]);
+%         delete([ax(5).Children(:)]);
+%         delete([ax(6).Children(:)]);
+%         saveFig = 0;
+%     else
+close all
         fig4 = figure;
         % Set figure size based on screen size
         defaultFigWidth = 954;
@@ -322,7 +332,7 @@ if makeFig
         ax(3)=subplot('Position',[0.0900    0.7666    0.8200    0.0531]);
         ax(4)=subplot('Position',[0.0900    0.7014    0.8200    0.0531]);
         ax(5)=subplot('Position',[0.0900    0.6363    0.8200    0.0531]);
-    end
+%     end
 
 % Plot timeseries
 % --------------------
