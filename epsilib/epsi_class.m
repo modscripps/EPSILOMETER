@@ -208,7 +208,7 @@ classdef epsi_class < handle
         end
         function obj=f_getAllCtd(obj)
             %obj.f_mergeData;
-            if exist(fullfile(obj.Meta_Data.CTDpath,['ctd_' obj.Meta_Data.deployment '.mat']),'file')
+            if exist(fullfile(obj.Meta_Data.CTDpath,['ctd_' obj.Meta_Data.deployment '.mat'])) == 2
                 data=load(fullfile(obj.Meta_Data.CTDpath,['ctd_' obj.Meta_Data.deployment '.mat']));
                 if isstruct(data.ctd)
                     obj=data.ctd;
@@ -221,7 +221,7 @@ classdef epsi_class < handle
         end
         function obj=f_getAllAlt(obj)
             %obj.f_mergeData;
-            if exist(fullfile(obj.Meta_Data.CTDpath,['alt_' obj.Meta_Data.deployment '.mat']),'file')
+            if exist(fullfile(obj.Meta_Data.CTDpath,['alt_' obj.Meta_Data.deployment '.mat'])) == 2
                 data=load(fullfile(obj.Meta_Data.CTDpath,['alt_' obj.Meta_Data.deployment '.mat']));
                 if isstruct(data.alt)
                     obj=data.alt;
@@ -349,7 +349,7 @@ classdef epsi_class < handle
             end
             plot_epsi_ctd(obj,saveFig)
         end
-        function  [P11,f]=f_calibrateEpsi(obj,tmid,tscan,makeFig,saveFig)
+        function  [P11,f,noise]=f_calibrateEpsi(obj,tmid,tscan,makeFig,saveFig)
             % Plots 30-sec timeseries from all channels and spectra from
             % user-defined tscan
             %
@@ -373,7 +373,7 @@ classdef epsi_class < handle
             if nargin==4
                 saveFig = 1;
             end
-            [P11,f] = mod_som_calibrate_epsi_tMid(obj,tmid,tscan,makeFig,saveFig);
+            [P11,f,noise] = mod_som_calibrate_epsi_tMid(obj,tmid,tscan,makeFig,saveFig);
         end
         function f_plotEpsitime(obj)
             figure
@@ -474,7 +474,7 @@ classdef epsi_class < handle
             x=2;
             while x<10
                 obj = obj.f_getLastData;
-                obj.f_calibrateEpsi(obj.epsi.epsitime(end)-15,6);
+                obj.f_calibrateEpsi(obj.epsi.epsitime(end)-2,4);
                 pause(2)
             end
         end

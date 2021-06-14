@@ -38,6 +38,7 @@ Meta_Data.RAWpath  = fullfile(Meta_Data.datapath,'raw');
 Meta_Data.SDRAWpath  = fullfile(Meta_Data.datapath,'sd_raw');
 Meta_Data.CTDpath  = fullfile(Meta_Data.datapath,'ctd');
 Meta_Data.Epsipath = fullfile(Meta_Data.datapath,'epsi');
+
 Meta_Data.L1path   = fullfile(Meta_Data.datapath,'L1');
 Meta_Data.MATpath   = fullfile(Meta_Data.datapath,'mat');
 Meta_Data.FIGpath   = fullfile(Meta_Data.datapath,'figs');
@@ -173,7 +174,7 @@ Meta_Data.CTD.name = setup.(wh_CTD).header;
 % Also use SBE in TPS and NOT engineer format.
 Meta_Data.CTD.SN   = num2str(str2double(setup.(wh_CTD).sn),'%04.0f');
 Meta_Data.CTD.sample_per_record   = setup.(wh_CTD).sample_data_per_record;
-Meta_Data.CTD.CALpath   = '/Volumes/GoogleDrive/Shared drives/MOD-data-Epsilometer/Library/EPSILOMETER/SBE49/';
+Meta_Data.CTD.CALpath   = fullfile(Meta_Data.processpath,'SBE49');
 
 Meta_Data.CTD.CALfile   = @(x,y) fullfile(x,[y '.cal']);
 
@@ -200,6 +201,8 @@ end
 Meta_Data.SDIO=setup.SDIO;
 
 % Meta_Data=mod_som_define_epsi_meta_data(Meta_Data);
+
+
 
 fprintf('Saving Meta_Data in datapath \n')
 save(fullfile(Meta_Data.datapath,'Meta_Data.mat'),'Meta_Data');
