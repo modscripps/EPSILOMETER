@@ -474,9 +474,9 @@ epsi.efe_block_start = reshape(block_start,efe.n_recs*nb_element,1);
 
 %% SBE 49
 switch efe_block_version
-    case 'v1'
+    case {'v1','v2'}
         [ind_sbe_start,ind_sbe_stop, ind_sbe_tokens] = regexp(str,'\$S49([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end','tokenExtents');
-    case 'v2'
+    case 'v3'
         [ind_sbe_start,ind_sbe_stop, ind_sbe_tokens] = regexp(str,'\$SB49([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end','tokenExtents');
 end
 
