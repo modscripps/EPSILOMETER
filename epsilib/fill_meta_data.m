@@ -184,7 +184,7 @@ Meta_Data.CTD.CALfile   = @(x,y) fullfile(x,[y '.cal']);
 % Meta_Data.CTD.cal = get_CalSBE(Meta_Data.CTD.CALfile(Meta_Data.CTD.CALpath,Meta_Data.CTD.SN));
 
 switch Meta_Data.CTD.name
-    case{'SBE49','SBE','S49'}
+    case{'SBE49','SBE','S49','SB49'}
         try
             Meta_Data.CTD.cal=get_CalSBE(Meta_Data.CTD.CALfile(Meta_Data.CTD.CALpath,Meta_Data.CTD.SN));
             if(strcmp(Meta_Data.CTD.SN,'0000'))

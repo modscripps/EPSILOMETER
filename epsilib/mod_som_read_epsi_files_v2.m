@@ -749,7 +749,7 @@ end
 
 %% ACTU
 
-[ind_actu_start,ind_actu_stop, ind_actu_tokens] = regexp(str,'\$ACT([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end','tokenExtents');
+[ind_actu_start,ind_actu_stop, ind_actu_tokens] = regexp(str,'\$ACTU([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end','tokenExtents');
 if isempty(ind_actu_start)
     disp('no actu data')
     act=[];
