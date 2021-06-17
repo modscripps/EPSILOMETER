@@ -257,6 +257,8 @@ ADXLAccelnoise=20e-6^2+0*f1;
 
 % polyfit the data
 logf=log10(f1);
+
+%% t1 and s1 noise
 Empnoise=log10(squeeze(nanmean(P11bis(1,:,:),2)));
 Empnoiseshear=log10(squeeze(nanmean(P11bis(3,:,:),2)));
 Emp_FPO7noise=polyfit(logf(2:end),Empnoise(2:end),3);
@@ -272,9 +274,47 @@ n2s=Emp_shearnoise(2);
 n1s=Emp_shearnoise(3);
 n0s=Emp_shearnoise(4);
 
-test_noise=n0+n1.*logf+n2.*logf.^2+n3.*logf.^3;
-test_snoise=n0s+n1s.*logf+n2s.*logf.^2+n3s.*logf.^3;
+test_noise1=n0+n1.*logf+n2.*logf.^2+n3.*logf.^3;
+test_snoise1=n0s+n1s.*logf+n2s.*logf.^2+n3s.*logf.^3;
 
+noise.t1.n0 = n0;
+noise.t1.n1 = n1;
+noise.t1.n2 = n2;
+noise.t1.n3 = n3;
+
+noise.s1.n0 = n0;
+noise.s1.n1 = n1;
+noise.s1.n2 = n2;
+noise.s1.n3 = n3;
+
+%% t2 and s2 noise
+Empnoise=log10(squeeze(nanmean(P11bis(2,:,:),2)));
+Empnoiseshear=log10(squeeze(nanmean(P11bis(4,:,:),2)));
+Emp_FPO7noise=polyfit(logf(2:end),Empnoise(2:end),3);
+Emp_shearnoise=polyfit(logf(2:end),Empnoiseshear(2:end),3);
+%test_noise=polyval(Emp_FPO7noise,logf);
+n3=Emp_FPO7noise(1);
+n2=Emp_FPO7noise(2);
+n1=Emp_FPO7noise(3);
+n0=Emp_FPO7noise(4);
+
+n3s=Emp_shearnoise(1);
+n2s=Emp_shearnoise(2);
+n1s=Emp_shearnoise(3);
+n0s=Emp_shearnoise(4);
+
+test_noise2=n0+n1.*logf+n2.*logf.^2+n3.*logf.^3;
+test_snoise2=n0s+n1s.*logf+n2s.*logf.^2+n3s.*logf.^3;
+
+noise.t2.n0 = n0;
+noise.t2.n1 = n1;
+noise.t2.n2 = n2;
+noise.t2.n3 = n3;
+
+noise.s2.n0 = n0;
+noise.s2.n1 = n1;
+noise.s2.n2 = n2;
+noise.s2.n3 = n3;
 
 %% Make output structures
 Phi.t1 = squeeze(nanmean(P11bis(1,:,:),2));
@@ -284,16 +324,6 @@ Phi.s2 = squeeze(nanmean(P11bis(4,:,:),2));
 Phi.a1 = squeeze(nanmean(P11bis(5,:,:),2));
 Phi.a2 = squeeze(nanmean(P11bis(6,:,:),2));
 Phi.a3 = squeeze(nanmean(P11bis(7,:,:),2));
-
-noise.fpo7.n0 = n0;
-noise.fpo7.n1 = n1;
-noise.fpo7.n2 = n2;
-noise.fpo7.n3 = n3;
-
-noise.shear.n0 = n0;
-noise.shear.n1 = n1;
-noise.shear.n2 = n2;
-noise.shear.n3 = n3;
 
 %% Make the figure
 % -----------------------------------------
@@ -319,7 +349,6 @@ if makeFig
 %         delete([ax(6).Children(:)]);
 %         saveFig = 0;
 %     else
-close all
         fig4 = figure;
         % Set figure size based on screen size
         defaultFigWidth = 954;
@@ -430,11 +459,11 @@ n24=loglog(ax(6),f1,f1*0+def_noise(24),'--','Color',[.1 .1 .1],'linewidth',2);
 n16=loglog(ax(6),f1,f1*0+def_noise(16),'.-','Color',[.3 .3 .3],'linewidth',2);
 An1=loglog(ax(6),f1,KionixAccelnoise,'--','Color',[.1 .1 .1],'linewidth',2);
 An2=loglog(ax(6),f1,ADXLAccelnoise,'--','Color',[.1 .6 .1],'linewidth',2);
-Emp=loglog(ax(6),f1,10.^test_noise,'m-','linewidth',2);
-Emps=loglog(ax(6),f1,10.^test_snoise,'c-','linewidth',2);
+Emp=loglog(ax(6),f1,10.^test_noise1,'m-','linewidth',2);
+Emps=loglog(ax(6),f1,10.^test_snoise1,'c-','linewidth',2);
 
 grid(ax(6),'on')
-legend([l0,l1 l2 l3 l4 l5 l6 l7 n24 n20 n16 An1 An2 Emp Emps],{'no TF','t1','t2','s1','s2','a1','a2','a3','24 bit','20 bit','16 bit','Kionix Accel noise','ADXL Accel noise','TF-noise','Sh-noise'},'location','SouthWest')
+legend([l0,l1 l2 l3 l4 l5 l6 l7 n24 n20 n16 An1 An2 Emp Emps],{'no TF','t1','t2','s1','s2','a1','a2','a3','24 bit','20 bit','16 bit','Kionix Accel noise','ADXL Accel noise','t1-noise','s1-noise'},'location','SouthWest')
 set(ax(6),'fontsize',14)
 ylabel(ax(6),'V^2 / Hz','fontsize',14)
 xlabel(ax(6),'Hz','fontsize',14)
@@ -448,6 +477,8 @@ title(ax(1),[Meta_Data.CTL.name '-' Meta_Data.CTL.rev '-' Meta_Data.CTL.SN '-' .
 
 fig4.PaperPosition = [0 0 25 25];
 % print(fullfile(Meta_Data.Epsipath,[Meta_Data.deployment '.png']),'-dpng')
+
+figureStamp(getFilename)
 
 % Save figure
 % --------------------

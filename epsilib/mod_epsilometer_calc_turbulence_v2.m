@@ -1,4 +1,4 @@
-function Profile = mod_epsilometer_calc_turbulence(Meta_Data,Profile_or_profNum)
+function Profile = mod_epsilometer_calc_turbulence(Meta_Data,Profile_or_profNum,saveData)
 % Profile = mod_epsilometer_calc_turbulence(Meta_Data,Profile_or_profNum)
 %  Profile structure for Micro Structure. Inside Profile you ll find
 %  temperature spectra in degC Hz^-1
@@ -7,6 +7,11 @@ function Profile = mod_epsilometer_calc_turbulence(Meta_Data,Profile_or_profNum)
 %
 %  Created by Arnaud Le Boyer on 7/28/18.
 %  Edited summer 2020 - Nicole Couto
+
+if nargin<3
+    saveData = 1;
+end
+
 
 %% Get Profile from Profile_or_profNum
 if isnumeric(Profile_or_profNum) && ~isstruct(Profile_or_profNum)
@@ -290,6 +295,16 @@ end
 % Sort Profile field names by order of varInfo as written above
 varFields = fields(Profile.varInfo);
 profFields = fields(Profile);
+
+% Save files
+if saveData
+    save_var_name = 'Profile';
+    save_file_name = sprintf('Profile%03i',Profile.profNum);
+    save_file = fullfile(Meta_Data.L1path, ...
+                        [save_file_name '.mat']);
+    eval(['save(''' save_file ''', ''' save_var_name ''');']);
+end
+
 
 % 
 

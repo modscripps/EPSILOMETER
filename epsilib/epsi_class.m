@@ -9,7 +9,7 @@ classdef epsi_class < handle
     % called 'raw' containing raw .ascii files
     %   >> obj = epsi_class(lastOrAll)
     %
-    % INPUTS:
+    % INPUTS:i
     %   lastOrAll: 1=(default) loads last (most recent) file,
     %              2=loads all data in deployment
     
@@ -86,44 +86,17 @@ classdef epsi_class < handle
                 obj.Meta_Data = obj.f_getSNtemp;
             end
             
-            %             % Change directory to raw data path and
-            %             cd(obj.Meta_Data.RAWpath)
-            %             %list=dir("*.ascii");
+            % Read PROCESS Meta_Data from default text file
+            obj.f_read_MetaProcess;
+            
+            % Define filename as path to raw data
             obj.filename=obj.Meta_Data.RAWpath;
-            % NC moved this to inside fill_meta_data
-            %             %ALB copy the raw file inside the raw folder.
-            %             list_rawfile=dir("*.ascii");
-            %             for f=1:length(list_rawfile)
-            %                 copyfile(fullfile(list_rawfile(f).folder, ...
-            %                                   list_rawfile(f).name),  ...
-            %                                   "./raw/");
-            %             end
             
-            % NC - created subfunction to load default plot properties
+            % Define plot properties
             obj.plot_properties = obj.f_getPlotProperties;
-            
-            
-            % NC moved this CTD cal section to inside fill_meta_data.m
-            %             % TODO fix the SBE name bug I do not want (1:3)
-            %             switch obj.Meta_Data.CTD.name
-            %                 case{'SBE49','SBE','S49'}
-            %                     try
-            %                         obj.Meta_Data.CTD.cal=get_CalSBE(obj.Meta_Data.CTD.CALfile(obj.Meta_Data.CTD.CALpath,obj.Meta_Data.CTD.SN));
-            %                         if(strcmp(obj.Meta_Data.CTD.SN,'0000'))
-            %                             obj.Meta_Data.CTD.SN=input('SBE49 SN(e.g. 0237):','s');
-            %                             obj.Meta_Data.CTD.cal=get_CalSBE(obj.Meta_Data.CTD.CALfile(obj.Meta_Data.CTD.CALpath,obj.Meta_Data.CTD.SN));
-            %                         end
-            %                     catch
-            %                         obj.Meta_Data.CTD.SN=input('SBE49 SN(e.g. 0237):','s');
-            %                         obj.Meta_Data.CTD.cal=get_CalSBE(obj.Meta_Data.CTD.CALfile(obj.Meta_Data.CTD.CALpath,obj.Meta_Data.CTD.SN));
-            %                     end
-            %                 case{'SBE41'}
-            %             end
-            
             
             % NC - Always check for new data by calling f_readData and then
             % load data into epsi class
-            
             obj.f_readData();
             if lastOrAll==1
                 obj = obj.f_getLastData();
@@ -132,32 +105,13 @@ classdef epsi_class < handle
             end
             cd(obj.Meta_Data.datapath)
         end
-        
         function obj=f_readData(obj)
-            % mod_som_read_epsi_files(obj.filename,obj.Meta_Data);
-            %addpath /Volumes/GoogleDrive/'Shared drives'/MOD-data-Epsilometer/Library/EPSILOMETER/EPSILON/toolbox/seawater2/
-            % NC - change to 3-step process to read only new data
-            % 1. Look for epsi_***.mat file inside epsi directory. Compare
-            % its last timestep to the timesteps in
-            % Epsi_MATFILE_TimeIndex.mat
-            % 2. If there are newer timesteps in the TimeIndex, check
-            % for new ascii files.
-            % 3. If there are newer ascii files:
-            %       - convert ascii to mat
-            %       - concatenate new mat files with epsi, ctd, alt
-            
             dirs = {obj.Meta_Data.RAWpath; obj.Meta_Data.RAWpath; obj.Meta_Data.MATpath};
-            
-%             % Convert ascii to mat
-             Epsi_MakeMatFromRaw(dirs,obj.Meta_Data);
+            % Convert ascii to mat
+            Epsi_MakeMatFromRaw(dirs,obj.Meta_Data);
         end
         function obj = f_mergeData(obj)
             [epsi,ctd,alt] = merge_new_mat_files(obj.Meta_Data);
-%             newObj = obj;
-%             newObj.epsi = epsi;
-%             newObj.ctd = ctd;
-%             newObj.alt = alt;
-%             obj = newObj;
         end
         function obj = f_getLastData(obj);
             obj.f_readData;
@@ -202,8 +156,6 @@ classdef epsi_class < handle
             end
         end
         function obj=f_getAllEpsi(obj)
-            %obj.f_mergeData;
-            
             data=load(fullfile(obj.Meta_Data.Epsipath,['epsi_' obj.Meta_Data.deployment '.mat']));
             if isstruct(data.epsi)
                 obj=data.epsi;
@@ -359,7 +311,7 @@ classdef epsi_class < handle
             % user-defined tscan
             %
             % USAGE
-            %   [P11,f] = obj.f_calibrateEpsi(tmid,tscan,makeFig)
+            %   [P11,f] = obj.f_calibrateEpsi(tmid,tscan,makeFig,saveFig)
             %   Equivalent to:
             %   [P11,f] = mod_som_calibrate_epsi_tMid(obj,tmid,tscan,makeFig);
             %
@@ -367,10 +319,12 @@ classdef epsi_class < handle
             %   tmid = midpoint of scan (seconds)
             %   tscan = length of scan (seconds)
             %   makeFig = (OPTIONAL, flag to plot figure [0/1], default=1)
+            %   saveFig = (OPTIONAL, flag to save figure [0/1], default=1)
             %
             % OUTPUTS (OPTIONAL)
             %   P11 = structure of frequency spectra for each channel
             %   f = frequency array
+            %   noise = structure of shear and fpo7 noise coefficients
             if nargin<4
                 makeFig=1;
                 saveFig=0;
@@ -397,18 +351,77 @@ classdef epsi_class < handle
                 obj.Meta_Data.PROCESS.Prmin_prof,...
                 obj.Meta_Data.PROCESS.Prcrit_prof,...
                 obj.Meta_Data.PROCESS.userConfirmsProfiles)
+            
+            load(fullfile(obj.Meta_Data.L1path,['Profiles_' obj.Meta_Data.deployment]));
+            
+            switch obj.Meta_Data.vehicle_name
+                case 'FISH'
+                    datachoice = 'datadown';
+                    idxchoice = 'down';
+                case 'WW'
+                    datachoice = 'dataup';
+                    idxchoice = 'up';
+                otherwise
+                    datachoice = 'datadown';
+                    idxchoice = 'down';
+            end
+            
+            for iProf=1:length(CTDProfiles.(datachoice))
+                EPSI = EpsiProfiles.(datachoice){iProf};
+                CTD = CTDProfiles.(datachoice){iProf};
+                Profile = mod_epsilometer_merge_profile(obj.Meta_Data,CTD,EPSI);
+                Profile.profNum = iProf;
+                save(fullfile(obj.Meta_Data.L1path,sprintf('Profile%03.0f',iProf)),'Profile','-v7.3');
+            end
         end
         function obj = f_calibrateTemperature(obj,Profile)
             % USAGE
-            %   obj.Meta_Data = f_calibrateTemperature(obj.Profile);
+            %   obj.Meta_Data = f_calibrateTemperature(obj,Profile);
             %
             if ~isfield(obj.Meta_Data.PROCESS,'nfft')
                 obj.Meta_Data= obj.f_read_MetaProcess();
             end
             Meta_Data = obj.Meta_Data;
-            obj = mod_epsi_temperature_spectra_v3(Meta_Data,Profile);
+            
+            try
+                load(fullfile(obj.Meta_Data.L1path,['Profiles_' Meta_Data.deployment]));
+            catch err
+                error('You need to create profiles before calibrating temperature for this deployment')
+            end
+            
+            switch obj.Meta_Data.vehicle_name
+                case 'FISH'
+                    datachoice = 'datadown';
+                    idxchoice = 'down';
+                case 'WW'
+                    datachoice = 'dataup';
+                    idxchoice = 'up';
+                otherwise
+                    datachoice = 'datadown';
+                    idxchoice = 'down';
+            end
+            
+            % For the temperature correction, we want a good chunk of data. Try
+            % tscan = 50 or if the profile is too short, find the longest profile
+            % in the deployment and set tscan to about 0.5-0.8 times the profile
+            % length
+            
+            % Use the longest profile to do the temperature calibration
+            [~,id_profile] = max(cellfun(@(C) length(C), EpsiProfiles.(idxchoice)));
+            tscanAlternate = floor(0.8*length(EpsiProfiles.(datachoice){id_profile}.epsitime)/320);
+            tscanDefault = 50;
+            tscan = min([tscanDefault,tscanAlternate]);
+            
+            display=0;
+            titleStr = strrep([obj.Meta_Data.mission ' ' obj.Meta_Data.vehicle_name ' ' obj.Meta_Data.deployment],'_','\_');
+            
+            obj.Meta_Data=mod_epsi_temperature_spectra_v2(obj.Meta_Data, ...
+                EpsiProfiles.(datachoice){id_profile}, ...
+                CTDProfiles.(datachoice){id_profile},...
+                titleStr,id_profile,display,tscan);
+                        
         end
-        function obj = f_computeTurbulence(obj,Profile_or_profNum)
+        function obj = f_computeTurbulence(obj,Profile_or_profNum,saveData)
             % Compute turbulence quantities (epsilon, chi, etc)
             %
             % USAGE
@@ -421,11 +434,14 @@ classdef epsi_class < handle
             % OUTPUT
             %   Profile = structure similar to input Profile structure, but
             %   now with turbulence quantities added
+            if nargin<3
+                saveData = 1;
+            end
             if ~isfield(obj.Meta_Data.PROCESS,'nfft')
                 obj.Meta_Data= obj.f_read_MetaProcess();
             end
             Meta_Data = obj.Meta_Data;
-            obj = mod_epsilometer_calc_turbulence_v2(Meta_Data,Profile_or_profNum);
+            obj = mod_epsilometer_calc_turbulence_v2(Meta_Data,Profile_or_profNum,saveData);
         end
         function obj = f_cropTimeseries(obj,tMin,tMax)
             % Get a short piece of timeseries structure that you can use to compute
