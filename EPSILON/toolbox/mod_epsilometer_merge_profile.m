@@ -1,6 +1,11 @@
 function Profile=mod_epsilometer_merge_profile(Meta_Data, CTDProfile,EpsiProfile,Prmin,Prmax)
 %  Profile=mod_epsilometer_merge_profile(CTDProfile,EpsiProfile,Prmin,Prmax)
 
+if nargin<4
+    Prmin = min(CTDProfile.P);
+    Prmax = max(CTDProfile.P);
+end
+
 Profile=structfun(@(x) x(CTDProfile.P>=Prmin & CTDProfile.P<=Prmax),CTDProfile,'un',0);
 
 for fields=fieldnames(EpsiProfile)'
