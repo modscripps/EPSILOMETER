@@ -10,4 +10,5 @@ Prmin_prof   = 3;
 Prcrit_prof  = 10;
 Prmin = @(x) nanmin(x) + 0.2*range(x);
 Prmax = @(x) nanmin(x) + 0.8*range(x);
+userConfirmsProfiles = 1;
 adjustTemp = false;
