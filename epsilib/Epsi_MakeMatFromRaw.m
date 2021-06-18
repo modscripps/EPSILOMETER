@@ -66,7 +66,7 @@ if rSync
     end
 else
     RawDir = [dirs{1}];
-    MatDir = [dirs{2}];
+    MatDir = [dirs{2}]; 
     if doGrid
         GridDir = [dirs{3}];
     end
