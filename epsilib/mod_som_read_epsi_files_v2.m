@@ -14,7 +14,7 @@ if ischar(filename) % dir or file
             my_epsi_file = [my_epsi_file; dir(fullfile(filename,'*_raw'))];
             if isempty(my_epsi_file)
                 epsi = [];
-                return
+          d      return
             else
                 % prepare to read all files
                 epsi = cell(size(my_epsi_file));
@@ -387,7 +387,7 @@ for i = 1:efe.data.n_recs
         efe.data.raw_bytes{i}=reshape(raw_bytes,efe.data.elementlength,nb_element).';
         
         efe.checksum.data(i) = hex2dec(str(ind_efe_start(i)+ ...
-            efe.data_offset+Lefeblock+1+(1:2)));
+            efe.data_offset+Lefeblock+(1:2)));
         
         % NC added to track hextimestamp (time_sendout) and laptop time
         % (time_laptop)
