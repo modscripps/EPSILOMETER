@@ -7,6 +7,7 @@ function Meta_Data=mod_som_get_shear_probe_calibration_v2(Meta_Data)
 %     now stored in Meta_Data.AFE
 
 shearcal_path = strrep([Meta_Data.processpath,'/CALIBRATION/SHEAR_PROBES'],'//','/');
+shearcal_path = strrep([Meta_Data.processpath,'/CALIBRATION/SHEAR_PROBES'],'\','/');
 
 path2file1 = sprintf([shearcal_path '/%s/Calibration_%s.txt'], Meta_Data.AFE.s1.SN, Meta_Data.AFE.s1.SN);
 path2file2 = sprintf([shearcal_path '/%s/Calibration_%s.txt'], Meta_Data.AFE.s2.SN, Meta_Data.AFE.s2.SN);

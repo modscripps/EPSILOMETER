@@ -602,6 +602,8 @@ else
                 
                 sbe.block_time(i)  = sbe.hextimestamp.value./1000;
             case 'v3'
+                % CAP note: this is not reading SBE blocks; it's reading EFE blocks
+                % will attempt to fix as I continue to go through
                 sbe.hextimestamp.strvalue=header(sbe.hextimestamp.offset+ ...
                     (0:sbe.hextimestamp.length));
                 sbe.hextimestamp.value=sparse_header(header,sbe.hextimestamp);

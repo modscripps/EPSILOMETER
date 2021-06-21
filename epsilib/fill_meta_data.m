@@ -202,7 +202,40 @@ Meta_Data.SDIO=setup.SDIO;
 
 % Meta_Data=mod_som_define_epsi_meta_data(Meta_Data);
 
-
+% correct all top level filepaths for Windows compatibility
+if (exist(Meta_Data.RAWpath) == 7)
+    Meta_Data.RAWpath = strrep(Meta_Data.RAWpath, '\', '/');
+end
+if (exist(Meta_Data.processpath) == 7)
+    Meta_Data.processpath = strrep(Meta_Data.processpath, '\', '/');
+end
+if (exist(Meta_Data.datapath) == 7)
+    Meta_Data.datapath = strrep(Meta_Data.datapath, '\', '/');
+end
+if (exist(Meta_Data.SDRAWpath) == 7)
+    Meta_Data.SDRAWpath = strrep(Meta_Data.SDRAWpath, '\', '/');
+end
+if (exist(Meta_Data.CTDpath) == 7)
+    Meta_Data.CTDpath = strrep(Meta_Data.CTDpath, '\', '/');
+end
+if (exist(Meta_Data.Epsipath) == 7)
+    Meta_Data.Epsipath = strrep(Meta_Data.Epsipath, '\', '/');
+end
+if (exist(Meta_Data.L1path) == 7)
+    Meta_Data.L1path = strrep(Meta_Data.L1path, '\', '/');
+end
+if (exist(Meta_Data.MATpath) == 7)
+    Meta_Data.MATpath = strrep(Meta_Data.MATpath, '\', '/');
+end
+if (exist(Meta_Data.FIGpath) == 7)
+    Meta_Data.FIGpath = strrep(Meta_Data.FIGpath, '\', '/');
+end
+if (exist(Meta_Data.CALIpath) == 7)
+    Meta_Data.CALIpath = strrep(Meta_Data.CALIpath, '\', '/');
+end
+if (exist(Meta_Data.CTD.CALpath) == 7)
+    Meta_Data.CTD.CALpath = strrep(Meta_Data.CTD.CALpath, '\', '/');
+end
 
 fprintf('Saving Meta_Data in datapath \n')
 save(fullfile(Meta_Data.datapath,'Meta_Data.mat'),'Meta_Data');

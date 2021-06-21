@@ -20,6 +20,8 @@ function Epsi_MakeMatFromRaw(dirs,Meta_Data,varargin)
 % NC - make sure all dirs have a / at the end
 for ii=1:numel(dirs)
     dirs{ii} = strrep([dirs{ii},'/'],'//','/');
+%     % make windows compatible
+%     dirs{ii} = strrep(dirs{ii}, '\', '/');
 end
 
 persistent argsNameToCheck;
@@ -95,8 +97,10 @@ if rSync
     RawDir = RawDirDuplicate;
 end
     
-% myASCIIfiles = dir([RawDir, '*.ascii']);
 myASCIIfiles = dir([RawDir, '*_raw']);
+if (isempty(myASCIIfiles))
+    myASCIIfiles = dir([RawDir, '*.ascii']);
+end
 
 for i=1:length(myASCIIfiles)
     base = myASCIIfiles(i).name(1:end-6);
