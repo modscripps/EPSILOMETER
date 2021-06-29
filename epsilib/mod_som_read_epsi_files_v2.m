@@ -117,10 +117,10 @@ elseif modifiedDate>=datenum(2021,5,23)
     efe_block_version = 'v3';
 end
 
-if (strcmp(str(ind_efe_start+30),"*")==0)
-    efe_block_version = 'v3';
-end
-    
+% if (strcmp(str(ind_efe_start+30),"*")==0)
+%     efe_block_version = 'v3';
+% end
+%     
 switch efe_block_version
     
     case 'v1'
@@ -488,11 +488,11 @@ if isempty(ind_sbe_start)
     end
 else
 
-    if (strcmp(str(ind_sbe_start+30),"*")==0)
-        sbe_block_version = 'v3';
-    else
-        sbe_block_version = 'v2';
-    end
+%     if (strcmp(str(ind_sbe_start+30),"*")==0)
+%         sbe_block_version = 'v3';
+%     else
+%         sbe_block_version = 'v2';
+%     end
     
     sbe.data.n_block  = numel(ind_sbe_start);
     sbe.data.n_recs   = numel(ind_sbe_start)*Meta_Data.CTD.sample_per_record;
@@ -518,7 +518,7 @@ else
                 sbe.hexlengthblock.length+1; % +1 beacuse of the coma ","
             
             
-            sbe.data_offset = sbe.hexelmntskip.offset+sbe.hexelmntskip.length-1;
+            sbe.data_offset = sbe.hexelmntskip.offset+sbe.hexelmntskip.length - 2;
         case 'v3'
             
             ind_sbe_tokens=cellfun(@(x) (x+1),ind_sbe_tokens,'un',0);
@@ -528,7 +528,7 @@ else
             sbe.sync.offset=0;
             sbe.sync.length=1;
             % define blocks header offset
-            sbe.header.strvalue  = 'SB49';
+            sbe.header.strvalue  = 'S49';
             sbe.header.length = length(sbe.header.strvalue)-1;
             sbe.header.offset = sbe.sync.offset+sbe.sync.length+1;
             
@@ -604,11 +604,11 @@ else
             case 'v3'
                 % CAP note: this is not reading SBE blocks; it's reading EFE blocks
                 % will attempt to fix as I continue to go through
-                sbe.hextimestamp.strvalue=header(sbe.hextimestamp.offset+ ...
+                sbe.hextimestamp.strvalue=tmp_sbe_block(sbe.hextimestamp.offset+ ...
                     (0:sbe.hextimestamp.length));
-                sbe.hextimestamp.value=sparse_header(header,sbe.hextimestamp);
+                sbe.hextimestamp.value=sparse_header(tmp_sbe_block,sbe.hextimestamp);
                 
-                sbe.hexlengthblock.strvalue=header(sbe.hexlengthblock.offset+ ...
+                sbe.hexlengthblock.strvalue=tmp_sbe_block(sbe.hexlengthblock.offset+ ...
                     (0:sbe.hexlengthblock.length));
                 sbe.hexlengthblock.value=sparse_header(header,sbe.hexlengthblock);
                 
