@@ -1,6 +1,7 @@
 %read config file
 function setup=mod_som_read_setup_from_raw(filepath)
 
+% filename='/Volumes/ALB/som_config';
 fid=fopen(filepath);
 total_str = fread(fid,'*char');
 

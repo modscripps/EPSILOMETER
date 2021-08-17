@@ -693,7 +693,6 @@ else
             alti.hextimestamp.offset    = alti.header.offset+alti.header.length;
             
             alti.data_offset = alti.hextimestamp.offset+alti.hextimestamp.length+1;
-            
         case 'v3'
             
             % get the offsets to parse the str
@@ -720,16 +719,18 @@ else
                 alti.hexlengthblock.length+1;
             
             alti.chksum.strvalue = "FFFFF" ;
-            alti.chksum.length   = strlength(alti.chksum.strvalue);
+            alti.chksum.length   = strlength(sbe.chksum.strvalue);
             
             % NC added to get laptop time (data before $EFE)
             alti.laptoptime.strvalue = '0000000000';
             alti.laptoptime.offset = -10;
             alti.laptoptime.length = 10;
             
-            alti.data_offset = alti.hextimestamp.offset + ...
-                alti.hextimestamp.length;
-        
+            
+            alti.data_offset = sbe.hextimestamp.offset + ...
+                sbe.hextimestamp.length;
+
+            
     end
     
     alt.alttime = [];

@@ -59,23 +59,21 @@ classdef epsi_class < handle
                         setupfile=dir('*config*');
                         repeat = 0;
                         
-                        % If there exists a config set up file, read that.
-                        % Otherwise read raw file header
                         try
-                            setup=mod_som_read_setup_from_config(setupfile.name);
+                            setup=mod_som_read_setup(setupfile.name);
                         catch
                             try
                                 setupfile=dir('*_raw*');
                                 setup=mod_som_read_setup_from_raw(setupfile(1).name);
                             catch
-                                error('mod_som_read_setup failed')
+                                disp('mod_som_read_setup failed')
                             end
                         end
                         
                         try
                             obj.Meta_Data = fill_meta_data(setup);
                         catch
-                            error('fill_meta_data failed')
+                            disp('fill_meta_data failed')
                             cd(currDir)
                         end
                 end
@@ -292,11 +290,7 @@ classdef epsi_class < handle
         end
         function f_plotAlti(obj)
             figure
-            if isfield(obj,'ctd')
-                plotyy(obj.alt.alttime,obj.alt.dst,obj.ctd.ctdtime,obj.ctd.P);
-            else
-                plot(obj.alt.alttime,obj.alt.dst);
-            end
+            plotyy(obj.alt.alttime,obj.alt.dst,obj.ctd.ctdtime,obj.ctd.P);
         end
         function f_plotFallSpeed(obj)
             figure
@@ -428,11 +422,10 @@ classdef epsi_class < handle
                         
         end
         function obj = f_computeTurbulence(obj,Profile_or_profNum,saveData)
-            % obj = f_computeTurbulence(obj,Profile_or_profNum,saveData)
             % Compute turbulence quantities (epsilon, chi, etc)
             %
             % USAGE
-            %   Profile = f_computeTurbulence(obj,Profile,saveData);
+            %   Profile = f_computeTurbulence(obj,Profile);
             %
             % INPUTS
             %   Profile_or_profNum = Profile structure or number of profile
