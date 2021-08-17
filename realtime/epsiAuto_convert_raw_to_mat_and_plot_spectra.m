@@ -1,17 +1,48 @@
-% autorunEpsiConvert.m
-% automation to convert .ASCII to .MAT
-% plot epsi channels timeseries and spectra
+% This script does the following on a timer:
+%   1. matData = epsiProcess_convert_new_raw_to_mat
+%               - converts all the raw files that don't already have a
+%               paired mat file to mat
+%               - the latest mat data are output in the structure 'matData'
+%   2. epsiAuto_get_updated_data
+%               - finds the newest matData that is not already stored in
+%               the strucuture 'obj'. As data are streaming in, the most
+%               recent data file is continuously updated. This function grabs
+%               the latest data for plotting
+%   3. epsiPlot_spectra_at_tMid
+%               - plots the latest 30 seconds of epsi channel output
+%               (t1,t2,s1,s2,a1,a2,a3), the latest 30 seconds of dPdt and
+%               frequency spectra of the epsi channels centered on 'nSec'
+%               seconds from the end 
+% EpsiConvert_timer.Period sets the number of seconds for the timer
 %
 % Nicole Couto adapted from autorunFastCTDConvert.m
-% May 2021
-% -------------------------------------------------------------------------
+% Summer 2021
+
+% --- USER CHOICES --------------------------------------------------------
 nSec = 2; %Seconds from the end of timeseries to center spectra around
 tscan = 4; %Length of scan in seconds
 
 % Directories for Epsi:
+% (No sync version. Look at epsiAuto_convert_raw_to_mat_and_plot to see how
+% to sync raw files to a new directory first)
 rawDir      = '/Volumes/Berry/epsi_raw/Copy_of_EPSI_RAW_0724/raw';
 matDir      = '/Volumes/Berry/epsi_raw/Copy_of_EPSI_RAW_0724/mat';
 dirs = {rawDir,matDir};
+
+% Choose a starting tMax value for getting new data
+% You need an initial starting point. You will be grabbing and plotting
+% all data that came in after this initial value. If you set the clock on
+% the SOM prior to starting epsi, the time array will be at datenum so
+% choose something like 'now - 1' for TMAX. If you did not set the clock on
+% the SOM, the time array will be in seconds since you powered on so choose
+% something like 0 for TMAX.
+TMAX = 0;
+%TMAX = now - 1;
+
+% --- END USER CHOICES ----------------------------------------------------
+
+
+
 
 % Create directories if they don't exist
 if ~exist(matDir,'dir')
@@ -47,10 +78,12 @@ obj.Meta_Data = epsiSetup_read_MetaProcess(obj.Meta_Data,...
 obj.Meta_Data.rawfileSuffix = '.raw';
 obj.Meta_Data.MATpath = matDir;
 
-% Choose a starting tMax value for getting new data
-tMax.epsi = now-100;
-tMax.ctd = now-100;
-tMax.alt = now-100;
+% Apply TMAX to structure tMax. Since the instruments sample at different
+% rates, these will become slightly different from each other in the loop
+% as new data come in.
+tMax.epsi = TMAX;
+tMax.ctd = TMAX;
+tMax.alt = TMAX;
 
 % Create an axes that will be the input for the first call to
 % epsiPlot_epsi_ctd_alt_timeseries. All subsequent calls will reuse the set

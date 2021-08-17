@@ -1,13 +1,6 @@
 function [obj,tMaxNow] = epsiAuto_get_updated_data(oldData,newData,tMaxPrevious)
 
-% Determine whether tMaxPrevious is a datenum or seconds since power on.
-% Depending on what you have, use either 'time_s' or 'dnum' as the
-% timestamp.
-if tMaxPrevious.epsi>1e9
-    timestamp = 'dnum';
-else
-    timesetamp = 'time_s';
-end
+% Determine whether tMaxPrevious is a datenum or seconds since power
 
 time_offset = 0; % SAN added to correct for current 12 hrs offset in
 %data July 3rd.
@@ -24,18 +17,19 @@ load(fullfile(obj.Meta_Data.MATpath,'TimeIndex'));
 data = newData;
 
 % SAN add offset just in case to correct for time offset
-data.epsi.(timestamp) = data.epsi.(timestamp)+time_offset;
-data.ctd.(timestamp) = data.ctd.(timestamp)+time_offset;
-data.alt.(timestamp) = data.alt.(timestamp)+time_offset;
-% Get last epsi timestamp
-tMaxNow.epsi = nanmax(data.epsi.(timestamp));
-tMaxNow.ctd = nanmax(data.ctd.(timestamp));
-tMaxNow.alt = nanmax(data.alt.(timestamp));
+data.epsi.dnum = data.epsi.dnum+time_offset;
+data.ctd.dnum = data.ctd.dnum+time_offset;
+data.alt.dnum = data.alt.dnum+time_offset;
+% Get last epsi dnum (TimeIndex.timeEnd is in seconds, not
+% datenum, and I'd rather work in datenum)
+tMaxNow.epsi = nanmax(data.epsi.dnum);
+tMaxNow.ctd = nanmax(data.ctd.dnum);
+tMaxNow.alt = nanmax(data.alt.dnum);
 
 % Get indices of old data (everything up until tMaxPrevious)
-idxOldEpsi = obj.epsi.(timestamp)<=tMaxPrevious.epsi;
-idxOldCtd = obj.ctd.(timestamp)<=tMaxPrevious.ctd;
-idxOldAlt = obj.alt.(timestamp)<=tMaxPrevious.alt;
+idxOldEpsi = obj.epsi.dnum<=tMaxPrevious.epsi;
+idxOldCtd = obj.ctd.dnum<=tMaxPrevious.ctd;
+idxOldAlt = obj.alt.dnum<=tMaxPrevious.alt;
 % Get length of old data (this is not the sum because there could be nans
 % in the middle!)
 nOldEpsi = sum(idxOldEpsi);
@@ -43,9 +37,9 @@ nOldCtd = sum(idxOldCtd);
 nOldAlt = sum(idxOldAlt);
 
 % Get indices of new data (everything after tMaxPrevious)
-idxNewEpsi = data.epsi.(timestamp)>tMaxPrevious.epsi;
-idxNewCtd = data.ctd.(timestamp)>tMaxPrevious.ctd;
-idxNewAlt = data.alt.(timestamp)>tMaxPrevious.alt;
+idxNewEpsi = data.epsi.dnum>tMaxPrevious.epsi;
+idxNewCtd = data.ctd.dnum>tMaxPrevious.ctd;
+idxNewAlt = data.alt.dnum>tMaxPrevious.alt;
 % Get length of new data (this is not the sum because there could be nans
 % in the middle!)
 nNewEpsi = sum(idxNewEpsi);

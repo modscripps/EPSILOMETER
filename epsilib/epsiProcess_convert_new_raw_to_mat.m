@@ -1,6 +1,5 @@
-
-function [matData] = epsiSetup_make_mat_from_new_raw_files(dirs,Meta_Data,varargin)
-% epsiSetup_make_mat_from_new_raw_files
+function [matData] = epsiProcess_convert_new_raw_to_mat(dirs,Meta_Data,varargin)
+% epsiProcess_convert_new_raw_to_mat
 %
 % Nicole Couto adapted from FCTD_MakeMatFromRaw.m
 % May-July 2021
