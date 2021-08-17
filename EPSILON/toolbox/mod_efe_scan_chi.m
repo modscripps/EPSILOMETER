@@ -3,8 +3,9 @@ function [Pt_volt_f,Pt_Tg_k,chi,f,k,fc,kc,flag_tg_fc]=mod_efe_scan_chi(scan,fpo7
 
 % -------------------------------------------------------------------------
 % Get constants and transfer functions
+% NC - Changed w to absolute value so this also works for upcasts
+w = abs(scan.w);
 
-w = scan.w;
 nfft=Meta_Data.PROCESS.nfft;
 try
 Fs=Meta_Data.PROCESS.Fs_epsi;
@@ -41,7 +42,7 @@ if nargin<5
     end
 end
 
-filter_TF=h_freq.FPO7(scan.w);
+filter_TF=h_freq.FPO7(w);
 
 % ---------------------------------------------------------------------
 % Calculate spectra and chi

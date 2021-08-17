@@ -52,44 +52,43 @@ switch Meta_Data.AFE.temp_circuit
 end
 
 %% Cut profile to compute coherence
-
 % Find max and min pressure
-Prmin = Meta_Data.PROCESS.Prmin(Profile.P);
-Prmax = Meta_Data.PROCESS.Prmax(Profile.P);
+Prmin = Meta_Data.PROCESS.Prmin(Profile.ctd.P);
+Prmax = Meta_Data.PROCESS.Prmax(Profile.ctd.P);
 
 % Find ctdtime values within this pressure range
-inRange = Profile.P>=Prmin & Profile.P<=Prmax;
-ctdtime = Profile.ctdtime(inRange);
+inRange = Profile.ctd.P>=Prmin & Profile.ctd.P<=Prmax;
+ctdtime = Profile.ctd.time_s(inRange);
 
 % Remove epsi values outside the time period defined by ctdtime
-keepEpsi = Profile.epsitime>=nanmin(ctdtime) & Profile.epsitime<=nanmax(ctdtime);
+keepEpsi = Profile.epsi.time_s>=nanmin(ctdtime) & Profile.epsi.time_s<=nanmax(ctdtime);
 for iChan=1:numel(channels)
     wh_channel = channels{iChan};
-    Profile_coh.(wh_channel) = Profile.(wh_channel)(keepEpsi);
+    Profile_coh.(wh_channel) = Profile.epsi.(wh_channel)(keepEpsi);
 end
 
 % compute coherence with a3 over the full profile.
 [Profile.Cs1a3_full,Profile.Cs2a3_full,...
         ~,~,~] = mod_efe_scan_coherence(Profile_coh,'a3_g',Meta_Data);
 
-
-%% Get dPdt
-switch Meta_Data.vehicle_name
-    case 'FISH'
-        Profile.dPdt  =  compute_fallrate_downcast(Profile);
-    case {'WW','Seacycler'}
-        % TODO: make the P from the WW CTD in the same unit as SEABIRD
-        Profile.dPdt  =  compute_speed_upcast(Profile);
-        Profile.dPdt  =  -Profile.dPdt/1e7;
-end
+% NC - Profile already has dPdt
+% %% Get dPdt
+% switch Meta_Data.vehicle_name
+%     case 'FISH'
+%         Profile.dPdt  =  compute_fallrate_downcast(Profile);
+%     case {'WW','Seacycler'}
+%         % TODO: make the P from the WW CTD in the same unit as SEABIRD
+%         Profile.dPdt  =  compute_speed_upcast(Profile);
+%         Profile.dPdt  =  -Profile.dPdt/1e7;
+% end
 
 %% define a Pressure axis to an which I will compute epsilon and chi.
 %  The spectra will be nfft long centered around P(z) +/- tscan/2.
 %
-Pr = ceil(min(Profile.P)):dz:floor(max(Profile.P));
+Pr = ceil(min(Profile.ctd.P)):dz:floor(max(Profile.ctd.P));
 nbscan = length(Pr);
 
-LCTD = length(Profile.P);% length of profile
+LCTD = length(Profile.ctd.P);% length of profile
 % number of samples for a scan. I make sure it is always even
 N_epsi = tscan.*Fs_epsi-mod(tscan*Fs_epsi,2);
 N_ctd = tscan.*Fs_ctd-mod(tscan*Fs_ctd,2);
@@ -158,7 +157,19 @@ Profile.Meta_Data = Meta_Data;
 
 % ------------------------------------------------
 % Loop through scans
+fprintf(['Processing ' num2str(nbscan) ' scans \n'])
 for p = 1:nbscan % p is the scan index.
+    
+    if mod(p,20)==0 && mod(p,100)~=0
+        %fprintf([num2str(p) ' of ' num2str(nbscan) '\n'])
+        fprintf(num2str(p))
+    elseif mod(p,100)==0
+        fprintf([num2str(p) '\n'])
+    elseif p==nbscan
+        fprintf('. \n')
+    else
+        fprintf('.')
+    end
     
     % Get spectral data for each scan
     scan  =  get_scan_spectra(Profile,p);
@@ -223,17 +234,15 @@ for p = 1:nbscan % p is the scan index.
     
 end
 
-%% Add some functions 
-Profile.functions.panchev = '[kpan,Ppan] = panchev(epsilon,kvis)';
-Profile.functions.avg_psd_in_frange = 'psdAvg = avg_psd_in_frange(psd,f,f1,f2)';
-Profile.functions.k_psd2f_psd= '';
-Profile.functions.f_psd2k_psd = ''; 
-
 %% Define varInfo and sort Profile fields
 % The order of the fields in varInfo will define the order of fields in
 % Profile, so make sure there are the same number of fields!
-Profile.varInfo.functions = {'some useful functions that take Profile fields as inputs',''};
-Profile.varInfo.ctdtime = {'CTD time','Matlab datenum'};
+if isfield(Profile.ctd,'dnum')
+    Profile.varInfo.dnum = {'datenum','Matlab datenum'};
+    Profile.varInfo.time_s = {'time','seconds since Jan 1 1970'};
+else
+    Profile.varInfo.time_s = {'time','seconds since power on'};
+end
 Profile.varInfo.P = {'CTD P','db'};
 Profile.varInfo.dPdt = {'CTD diff(P)/diff(ctdtime)','db s^{-1}'};
 Profile.varInfo.T = {'CTD temperature','C'};
@@ -241,7 +250,7 @@ Profile.varInfo.C = {'CTD conductivity',''};
 Profile.varInfo.S = {'CTD salinity','psu'};
 Profile.varInfo.sig = {'CTD potential density (sigma-theta)',''};
 %Profile.varInfo.EPSInbsample = {'',''};
-Profile.varInfo.epsitime = {'Epsi time','Matlab datenum'};
+%Profile.varInfo.epsitime = {'Epsi time','Matlab datenum'};
 Profile.varInfo.a1_g = {'acceleration sensor 1 timeseries in this scan','[g]'};
 Profile.varInfo.a2_g = {'acceleration sensor 2 timeseries in this scan','[g]'};
 Profile.varInfo.a3_g = {'acceleration sensor 3 timeseries in this scan','[g]'};
@@ -297,7 +306,7 @@ varFields = fields(Profile.varInfo);
 profFields = fields(Profile);
 
 % Save files
-if saveData
+if saveData && isfield(Profile,'profNum')
     save_var_name = 'Profile';
     save_file_name = sprintf('Profile%03i',Profile.profNum);
     save_file = fullfile(Meta_Data.L1path, ...

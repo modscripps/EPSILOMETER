@@ -16,11 +16,13 @@ Pp=P-vibration;
 Pp(Pp<=0)=nan;
 Pp=fillmissing(Pp,'linear');
 
-filter_TF=(h_freq.shear .* haf_oakey(fe,scan.w));
+% NC - Use absolute value of w so this also works for upcasts
+w = abs(scan.w);
+filter_TF=(h_freq.shear .* haf_oakey(fe,w));
 Pv   = Pp./filter_TF;
-Pvk   = Pv.*scan.w;
-ke=fe/scan.w;
+Pvk   = Pv.*w;
+ke=fe/w;
 Psk = Pvk.*(2*pi*ke).^2;
-kmax=fpump./scan.w;
+kmax=fpump./w;
 [epsilon,kc]=eps1_mmp(ke,Psk,scan.kvis,kmax);
-fc=kc.*scan.w;
+fc=kc.*w;

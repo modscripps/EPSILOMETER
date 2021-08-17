@@ -11,15 +11,30 @@ shearcal_path = strrep([Meta_Data.processpath,'/CALIBRATION/SHEAR_PROBES'],'//',
 path2file1 = sprintf([shearcal_path '/%s/Calibration_%s.txt'], Meta_Data.AFE.s1.SN, Meta_Data.AFE.s1.SN);
 path2file2 = sprintf([shearcal_path '/%s/Calibration_%s.txt'], Meta_Data.AFE.s2.SN, Meta_Data.AFE.s2.SN);
 
+try
 fid1=fopen(path2file1,'r');
 Cal1=textscan(fid1,'%s %f %f','Delimiter',',','headerline',1);
 Meta_Data.AFE.s1.cal=Cal1{2}(end);
+fclose(fid1);
+catch err
+    if strcmp(err.identifier,'MATLAB:FileIO:InvalidFid')
+        warning(['Cannot find ' path2file1])
+    else 
+        warning(['Loading ' path2file1 ' failed'])
+    end
+end
 
+try
 fid2=fopen(path2file2,'r');
 Cal2=textscan(fid2,'%s %f %f','Delimiter',',','headerline',1);
 Meta_Data.AFE.s2.cal=Cal2{2}(end);
-
-fclose(fid1);
 fclose(fid2);
+catch err
+    if strcmp(err.identifier,'MATLAB:FileIO:InvalidFid')
+        warning(['Cannot find ' path2file2])
+    else 
+        warning(['Loading ' path2file2 ' failed'])
+    end
+end
 
 end

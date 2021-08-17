@@ -110,11 +110,11 @@ datadown=cellfun(@(x) structfun(@(y) y(x),data,'un',0),down,'un',0);
 
 % Make sure there is data in the cell
 isACell = cellfun(@(x) ~isempty(x), dataup);
-hasData = cellfun(@(x) ~isempty(x.timestamp), dataup);
+hasData = cellfun(@(x) ~isempty(x.ctdtime), dataup);
 dataup = dataup(isACell & hasData);
 
 isACell = cellfun(@(x) ~isempty(x), datadown);
-hasData = cellfun(@(x) ~isempty(x.timestamp), datadown);
+hasData = cellfun(@(x) ~isempty(x.ctdtime), datadown);
 datadown = datadown(isACell & hasData);
 
 % select only cast with more than 10 points. 10 points is arbitrary

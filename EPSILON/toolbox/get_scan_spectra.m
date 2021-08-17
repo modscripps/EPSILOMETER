@@ -21,7 +21,7 @@ Pr          = Profile.pr(id_scan);
 fpump       = Meta_Data.PROCESS.ctd_fc;
 tscan       = Meta_Data.PROCESS.tscan;
 try
-Fs_epsi     = Meta_Data.PROCESS.Fs_epsi;
+    Fs_epsi = Meta_Data.PROCESS.Fs_epsi;
 catch
     Fs_epsi = Meta_Data.AFE.FS;
 end
@@ -31,10 +31,10 @@ N_ctd       = tscan.*Fs_ctd-mod(tscan*Fs_ctd,2);
 h_freq      = Meta_Data.PROCESS.h_freq;
 
 % Find indices of ctd and epsi data that make up this scan
-[~,indP]    = sort(abs(Profile.P-Pr));
+[~,indP]    = sort(abs(Profile.ctd.P-Pr));
 indP        = indP(1);
 ind_ctdscan = indP-N_ctd/2:indP+N_ctd/2; % ind_scan is even
-ind_Pr_epsi = find(Profile.epsitime<Profile.ctdtime(indP),1,'last');
+ind_Pr_epsi = find(Profile.epsi.time_s<Profile.ctd.time_s(indP),1,'last');
 ind_scan    = ind_Pr_epsi-N_epsi/2:ind_Pr_epsi+N_epsi/2; % ind_scan is even
 
 
@@ -62,14 +62,31 @@ else
 end
 
 channels    = Meta_Data.PROCESS.timeseries;
-LCTD        = length(Profile.P);% length of profile
-scan.w      = nanmean(Profile.dPdt(ind_ctdscan(ind_ctdscan>0 & ind_ctdscan<LCTD)));
+LCTD        = length(Profile.ctd.P);% length of profile
+% NC 17 July 2021 - scan.w should really be in m/s. I added steps in
+% mod_som_read_epsi_files_v3.m to convert pressure to depth (z) and
+% calculate dzdt.  Now I'm using dzdt instead of dPdt to deefine scan.w.
+%scan.w      = nanmean(Profile.ctd.dPdt(ind_ctdscan(ind_ctdscan>0 & ind_ctdscan<LCTD)));
+if isfield(Profile,'dzdt')
+    scan.w      = nanmean(Profile.ctd.dzdt(ind_ctdscan(ind_ctdscan>0 & ind_ctdscan<LCTD)));
+else
+    scan.w      = nanmean(Profile.ctd.dPdt(ind_ctdscan(ind_ctdscan>0 & ind_ctdscan<LCTD)));
+end
 
 % check if the scan is not too shallow or too close to the end of the
-% profile. Also check if the speed if >20 cm s^{-1}
-limit_speed = 0.2;
-if ind_ctdscan(1)>0 && ind_ctdscan(end)<=length(Profile.ctdtime) && scan.w>limit_speed ...
-        && ind_scan(1)>0 && ind_scan(end)<=length(Profile.epsitime)
+% profile.
+%
+% NC - removing the minimum speed check. Sometimes we want up profiles!
+% Sometimes we want both. If we add this back later, I think it should be
+% coded into Meta_Data, not hard-coded here. I will leave a criteria that
+% scan.w needs to be not nan and not inf.
+%
+% limit_speed = 0.2;
+% if ind_ctdscan(1)>0 && ind_ctdscan(end)<=length(Profile.ctd.time_s) && scan.w>limit_speed ...
+%         && ind_scan(1)>0 && ind_scan(end)<=length(Profile.epsi.time_s)
+if ind_ctdscan(1)>0 && ind_ctdscan(end)<=length(Profile.ctd.time_s) ...
+        && ind_scan(1)>0 && ind_scan(end)<=length(Profile.epsi.time_s) ...
+        && ~isinf(scan.w) && ~isnan(scan.w);
     
     % Put new variables in the structure
     varList = {'Pr','tscan','Fs_epsi','N_epsi',...
@@ -79,18 +96,27 @@ if ind_ctdscan(1)>0 && ind_ctdscan(end)<=length(Profile.ctdtime) && scan.w>limit
         scan.(varList{iVar}) = eval(varList{iVar});
     end
     
-    scan.pr     = nanmean(Profile.P(ind_ctdscan));
-    scan.t      = nanmean(Profile.T(ind_ctdscan));
-    scan.s      = nanmean(Profile.S(ind_ctdscan));
-    scan.dnum   = nanmean(Profile.ctdtime(ind_ctdscan));
-    scan.kvis   = nu(scan.s,scan.t,scan.pr);
-    scan.ktemp  = kt(scan.s,scan.t,scan.pr);
+    scan.pr     = nanmean(Profile.ctd.P(ind_ctdscan));
+    scan.t      = nanmean(Profile.ctd.T(ind_ctdscan));
+    scan.s      = nanmean(Profile.ctd.S(ind_ctdscan));
+    if isfield(Profile.ctd,'dnum')
+        scan.dnum   = nanmean(Profile.ctd.dnum(ind_ctdscan));
+    else
+        scan.time_s = nanmean(Profile.ctd.time_s(ind_ctdscan));
+    end
+    % NC 17 July 2021 - the functions nu and kt want pressure in MPa, not
+    % db. Convert to MPa before calculating kinematic viscosity and thermal
+    % diffusivity.
+%     scan.kvis   = nu(scan.s,scan.t,scan.pr);
+%     scan.ktemp  = kt(scan.s,scan.t,scan.pr);
+    scan.kvis   = nu(scan.s,scan.t,db2MPa(scan.pr));
+    scan.ktemp  = kt(scan.s,scan.t,db2MPa(scan.pr));
     scan.kmax   = fpump./scan.w; 
     
     % Add timeseries for each channel 
     for c=1:length(channels)
         currChannel=channels{c};
-        scan.(currChannel)=Profile.(currChannel)(ind_scan); % time series in m.s^{-2}
+        scan.(currChannel)=Profile.epsi.(currChannel)(ind_scan); % time series in m.s^{-2}
     end
     
     % Add full profile coherences
@@ -179,7 +205,12 @@ if ind_ctdscan(1)>0 && ind_ctdscan(end)<=length(Profile.ctdtime) && scan.w>limit
     % ---------------------------------------------------------------------
     scan.varInfo.Pr = {'Epsi pressure','db'};
     scan.varInfo.pr = {'CTD pressure','db'};  
-    scan.varInfo.w = {'fall speed','db s^{-1}'};
+    if isfield(Profile,'dzdt')
+        scan.varInfo.z = {'CTD depth','m'};
+        scan.varInfo.w = {'fall speed','m s^{-1}'};
+    else
+        scan.varInfo.w = {'fall speed','db s^{-1}'};
+    end
     scan.varInfo.t = {'temperature','C'}; 
     scan.varInfo.s = {'salinity','psu'};   
     scan.varInfo.dnum = {'datenum','Matlab datenum'};   
@@ -193,8 +224,8 @@ if ind_ctdscan(1)>0 && ind_ctdscan(end)<=length(Profile.ctdtime) && scan.w>limit
     scan.varInfo.N_ctd = {'',''};
     scan.varInfo.h_freq = {'',''};
     scan.varInfo.indP = {'',''};   
-    scan.varInfo.ind_ctdscan = {'indices of Profile.ctdtime in this scan'; ''};
-    scan.varInfo.ind_scan  = {'indices of Profile.epsitime in this scan'; ''};
+    scan.varInfo.ind_ctdscan = {'indices of Profile.ctd.time_s in this scan'; ''};
+    scan.varInfo.ind_scan  = {'indices of Profile.epsi.time_s in this scan'; ''};
     scan.varInfo.FP07noise = {'',''};
     scan.varInfo.a1_g = {'acceleration sensor 1 timeseries in this scan','[g]'};
     scan.varInfo.a2_g = {'acceleration sensor 2 timeseries in this scan','[g]'};

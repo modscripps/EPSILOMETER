@@ -12,7 +12,11 @@ f2 = 45;
 % Get constants for computing coherences
 nfft = Profile.Meta_Data.PROCESS.nfft;
 nfftc = Profile.Meta_Data.PROCESS.nfftc;
-Fs = Profile.Meta_Data.PROCESS.Fs_epsi;
+try
+    Fs = Profile.Meta_Data.PROCESS.Fs_epsi;
+catch
+    Fs = Profile.Meta_Data.AFE.FS;
+end
 
 % Average power spectral densities
 % -------------------------------------------------------------------------

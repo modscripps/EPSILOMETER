@@ -15,6 +15,8 @@ function [ax,ax3,p5,p6,p7,p8,p9,p10,f] = plot_profile_and_spectra(Profile,depth,
 
 %% Save figure?
 % ----------------------------------------------------------
+try
+
 if nargin<3
     saveFig = 0;
 end
@@ -109,6 +111,7 @@ snoise=10.^(n0s+n1s.*logf+n2s.*logf.^2+n3s.*logf.^3);
 
 % ax(1) - Plot chi profiles
 axes(ax(1))
+if ~isempty(Profile.chi)
 p1 = plot(Profile.chi,Profile.pr);
 p1(1).Color = cols.t1;
 p1(2).Color = cols.t2;
@@ -116,6 +119,7 @@ p1(2).Color = cols.t2;
 ax(1).XScale = 'log';
 ax(1).YLabel.String = 'Depth (m)';
 ax(1).XLabel.String = '\chi (K^2 s^{-1})';
+end
 
 % ax(2) - Plot epsilon profiles
 axes(ax(2))
@@ -134,7 +138,7 @@ p3(2).Color = cols.T;
 ax3(1).XColor = cols.S;
 ax3(2).XColor = cols.T;
 ax3(1).XLabel.String = 'S';
-ax3(2).XLabel.String = 'T (°C)';
+ax3(2).XLabel.String = 'T (\circC)';
 
 % ax(4) - Plot fall speed profile
 p4 = plot(ax(4),Profile.w,Profile.pr);
@@ -343,7 +347,11 @@ for k=scanNum
         p7(2) = loglog(Profile.f,scan.Pa_g_f.a2,'color',cols.a2);
         p7(3) = loglog(Profile.f,scan.Pa_g_f.a3,'color',cols.a3);
         grid on
+        try
         legend([p7(1),p7(2),p7(3)],'a1','a2','a3','location','northwest','numcolumns',2)
+        catch %numcolumns only available in later versions of matlab
+                    legend([p7(1),p7(2),p7(3)],'a1','a2','a3','location','northwest')
+        end
         ax(7).XLabel.String = 'Hz';
         ax(7).YLabel.String = 'g^2/Hz';
         
@@ -356,7 +364,11 @@ for k=scanNum
         p6(3) = semilogx(Profile.f,Co13,'color',cols.a3);
         p6(4) = semilogx(Profile.f,Profile.Cs1a3_full,'color',cols.s1);
         grid on
+        try
         legend('s1a1','s1a2','s1a3','s1a3 full profile','location','northwest','numcolumns',2)
+        catch
+                    legend('s1a1','s1a2','s1a3','s1a3 full profile','location','northwest')
+        end
         ax(6).YAxisLocation='right';
         ax(6).YLabel.String = 'Coherence';
         ax(6).XLabel.String = '';
@@ -369,7 +381,11 @@ for k=scanNum
         p8(3) = semilogx(Profile.f,Co23,'color',cols.a3);
         p8(4) = semilogx(Profile.f,Profile.Cs1a3_full,'color',cols.s2);
         grid on
+        try
         legend('s2a1','s2a2','s2a3','s2a3 full profile','location','northwest','numcolumns',2)
+        catch
+                    legend('s2a1','s2a2','s2a3','s2a3 full profile','location','northwest')
+        end
         ax(8).YAxisLocation='right';
         ax(8).YLabel.String = 'Coherence';
         ax(8).XLabel.String = 'Hz';
@@ -401,10 +417,17 @@ for k=scanNum
         indkc=find(scan.k>scan.kc.t2,1,'first');
         p9(11) = scatter(scan.k(indkc),smTG2(indkc),'filled','p','sizedata',450,'MarkerEdgeColor','k','markerfacecolor',cols.t2,'linewidth',2);
         
+        try
         legend('t1','t1smooth','t2','t2smooth',...
             'batch11','batch12','batch21','batch22',...
             'T-noise','t1_{cutoff}','t2_{cutoff}',...
             'location','southwest','numcolumns',3);
+        catch
+                    legend('t1','t1smooth','t2','t2smooth',...
+            'batch11','batch12','batch21','batch22',...
+            'T-noise','t1_{cutoff}','t2_{cutoff}',...
+            'location','southwest');
+        end
         xlim([6e-1 400])
         ylim([1e-8 1e1])
         grid on
@@ -429,7 +452,11 @@ for k=scanNum
         p10(8) = loglog(scan.kpan.s1,scan.Ppan.s1,'Color',cols.panchev1);
         p10(9) = loglog(scan.kpan.s2,scan.Ppan.s2,'Color',cols.panchev2);
         hold on
+        try
         legend('s1','s1smooth','s2','s2smooth','noise','s1_{cutoff}','s2_{cutoff}','Panchev1','Panchev2','location','southwest','numcolumns',2);
+        catch
+                    legend('s1','s1smooth','s2','s2smooth','noise','s1_{cutoff}','s2_{cutoff}','Panchev1','Panchev2','location','southwest');
+        end
         xlim([6e-1 400])
         ylim([1e-10 1e-1])
         grid on
@@ -444,7 +471,7 @@ for k=scanNum
         [ax(:).FontSize] = deal(axFontSize);
         [ax3(:).FontSize] = deal(axFontSize);
         
-        prLongArray = interp1(Profile.ctdtime,Profile.P,Profile.epsitime);
+        prLongArray = interp1(Profile.ctd.time_s,Profile.ctd.P,Profile.epsi.time_s);
         prInScan = prLongArray(scan.ind_scan);
         y = [nanmin(prInScan) nanmax(prInScan)];
         
@@ -489,7 +516,7 @@ for k=scanNum
             strrep([Meta_Data.mission '  -  ' Meta_Data.vehicle_name '  -  ' Meta_Data.deployment],'_','\_'),...
             sprintf('profile %03.0f',Profile.profNum),...
             sprintf('scan %03.0f',k),...
-            sprintf('epsitime (dnum) = %1.0f',nanmean(Profile.epsitime(Profile.ind_range_epsi(scanNum,:))))
+            sprintf('epsitime (dnum) = %1.0f',nanmean(Profile.epsi.time_s(Profile.ind_range_epsi(scanNum,:))))
             },...
             'FontSize',infoFontSize,...
             'FontName','Monospaced',...
@@ -537,7 +564,7 @@ for k=scanNum
         % ----------------------------------------------------------
         drawnow
         
-        ax(1).XLim = [5e-11 max(max(Profile.chi))];
+        %ax(1).XLim = [5e-11 max(max(Profile.chi))];
         ax(2).XLim = [5e-11 min([1e-4,max(max(Profile.epsilon))])];
         ax3(1).XLim = [min(Profile.s),max(Profile.s)];
         ax3(2).XLim = [min(Profile.t),max(Profile.t)];
@@ -602,4 +629,11 @@ end %end loop through scans
 if saveFig
    figName =  fullfile(Meta_Data.datapath,sprintf('figs/L1_Prof%03.0f_%03.0fm',Profile.profNum,depth));
    eval(['export_fig ' figName ' -png -r200 -nocrop'])
+end
+
+catch err
+    for ii=1:length(err.stack)
+        disp([err.stack(ii).name ' - line ' num2str(err.stack(ii).line)])
+    end
+    
 end
