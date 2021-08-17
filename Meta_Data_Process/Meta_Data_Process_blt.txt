@@ -1,0 +1,15 @@
+latitude     = 54;
+tscan        = 6;
+nfft         = 1024;
+nfftc        = floor(1024/3);
+Fs_ctd       = 16;
+ctd_fc       = 45; 
+dz           = .5;  
+fc1          = 5;
+fc2          = 35;
+Prmin_prof   = 30;
+Prcrit_prof  = 10;
+Prmin = @(x) nanmin(x) + 0.2*range(x);
+Prmax = @(x) nanmin(x) + 0.8*range(x);
+userConfirmsProfiles = 1;
+adjustTemp = false;

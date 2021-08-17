@@ -1,0 +1,29 @@
+SBE 49 FastCAT V 1.1a  SERIAL NO. 0058
+temperature:  10-dec-17
+    TA0 = 8.646787e-04
+    TA1 = 2.862445e-04
+    TA2 = -2.466554e-06
+    TA3 = 2.121614e-07
+    TOFFSET = 0.000000e+00
+conductivity:  10-dec-17
+    G = -9.727914e-01
+    H = 1.412282e-01
+    I = -2.100128e-04
+    J = 3.888261e-05
+    CPCOR = -9.570000e-08
+    CTCOR = 3.250000e-06
+    CSLOPE = 1.000000e+00
+pressure S/N = 3027, range = 1450 psia:  05-dec-17
+    PA0 = -9.985992e-02
+    PA1 = 4.516155e-03
+    PA2 = -1.856201e-11
+    PTCA0 = 5.212094e+05
+    PTCA1 = -2.710947e+00
+    PTCA2 = 6.387558e-02
+    PTCB0 = 2.444488e+01
+    PTCB1 = -6.250000e-04
+    PTCB2 = 0.000000e+00
+    PTEMPA0 = -5.789793e+01
+    PTEMPA1 = 5.622564e+01
+    PTEMPA2 = -9.682869e-01
+    POFFSET = 0.000000e+00

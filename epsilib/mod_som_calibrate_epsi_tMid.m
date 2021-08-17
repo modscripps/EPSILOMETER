@@ -1,21 +1,21 @@
-function [Phi,f1,noise] = mod_som_calibrate_epsi_tMid(obj,tMid,tscan,makeFig,saveFig)
+function [Phi,f1,noise,ax] = mod_som_calibrate_epsi_tMid(obj,tMid,tscan,makeFig,saveFig,replaceData,ax)
 
 %  script to calibrate the epsilometer electronics
 %  Good practice: It would great to keep SOM and front end together to keep
 %  track of the "system's noise"
 %
-%  INPUTS: Meta_Data, tMid, tscan, EPSI
-%       Meta_Data - comes from the the setup file and fill_Meta_Data
-%       tMid      - midpoint of timeseries for computing spectra. Could come
-%                   from user's clicking on a timeseries, or a continuous
-%                   plotting of the most recent 30 seconds of data
+%  INPUTS: 
+%       obj       - epsi_class object or Profile structure, inculdes
+%                   Meta_Data as one of the fields
+%       tMid      - midpoint of timeseries for computing spectra (seconds)
 %       tScan     - length in seconds of the segment used to do an FFT (i.e tscan = NFFT * FS)
-%       EPSI      - epsi structure with timeseries of a1, a2, a3, etc.
 %
 % OUTPUTS: 
 %       Phi        - structure containing frequency spectra for each
 %                    channel
-%       f1         - frequency array
+%       f1         - frequency array 
+%       noise      - structure containing shear and fpo7 noise data
+%       ax         - figure axes
 %       
 %
 %  Created by Arnaud Le Boyer on 7/28/18.
@@ -23,43 +23,49 @@ function [Phi,f1,noise] = mod_som_calibrate_epsi_tMid(obj,tMid,tscan,makeFig,sav
 %
 %   March 2021 - Nicole Couto edited to take tMid AND tscan
 %   April 2021 - Nicole Couto edited to include outputs
+%   June  2021 - Nicole Couto edited to have ax as output and input to use
+%                with epsi_realtime_spectra
 % --------------------------------------------------------------------------
 
-%
-% addpath ../toolbox/
-% fig1 = figure;
-% xlabel_str=datestr(now,'mm-dd-yyyy');
-%timeaxis=(EPSI.epsitime-EPSI.epsitime(1));
-%cmap=colormap(parula(8));
-
 % If no makeFig flag, make figure by default
-if nargin<4
-    makeFig = 1;
+if nargin<6
+    ax = [];
+if nargin<5
+    replaceData=0;
+    if nargin<4
+        makeFig = 1;
+        saveFig = 0;
+    end
+    if nargin==4
+        saveFig = 1;
+    end
 end
-if nargin==4
-    saveFig = 1;
 end
 
 Meta_Data = obj.Meta_Data;
+if ~isfield(obj,'plot_properties')
+    obj.plot_properties = set_epsi_plot_properties;
+    cols = obj.plot_properties.Colors;
+else
+    cols = obj.plot_properties.Colors;
+end
 EPSI = obj.epsi;
 CTD = obj.ctd;
-cols = obj.plot_properties.Colors;
-timeaxis = EPSI.epsitime;
+timeaxis = EPSI.time_s;
 L=length(timeaxis);
 FS=Meta_Data.AFE.FS;
 
 % If there's no CTD data...
 if ~isstruct(CTD)
     clear CTD
-   CTD.ctdtime = [];
+   CTD.time_s = [];
    CTD.dPdt = [];
 elseif isstruct(CTD)
-    ind0=(CTD.ctdtime==0);
+    ind0=(CTD.time_s==0);
     if~isempty(ind0)
         warning("there are 0s in the CTD time")
     end
-    dPdt_interp = movmean(interp1(CTD.ctdtime(~ind0),CTD.dPdt(~ind0),EPSI.epsitime),100);
-
+    dPdt_interp = movmean(interp1(CTD.time_s(~ind0),CTD.dPdt(~ind0),EPSI.time_s),100);
 end
 
 
@@ -108,7 +114,8 @@ idxScan = floor(idxMid - FS*(tscan/2)) : floor(idxMid + FS*(tscan/2));
 
 % Lscan,defined later is the length of tscan. Lseg is the length of the
 % timeseries you want to plot. Let's plot 30 seconds of data
-Lseg = FS*30;
+nSec = 30;
+Lseg = FS*nSec;
 idxSeg = floor(mean(idxScan) - Lseg/2):floor(mean(idxScan) + Lseg/2);
 % If the 30-second segment goes over the length of the timeseries, or
 % begins before it, adjust accordingly
@@ -329,26 +336,10 @@ Phi.a3 = squeeze(nanmean(P11bis(7,:,:),2));
 % -----------------------------------------
 % -----------------------------------------------
 if makeFig
-    % Check if axes already exist. If they do, you're probably in realtime
-    % and want to update the plot. If they don't, you've either just
-    % started realtime or you're making a single plot so you need to
-    % initialize the figure
-%     fig4 = gcf;
-%     if numel(fig4.Children)==11
-%         ax(1) = fig4.Children(11);
-%         ax(2) = fig4.Children(9);
-%         ax(3) = fig4.Children(7);
-%         ax(4) = fig4.Children(5);
-%         ax(5) = fig4.Children(3);
-%         ax(6) = fig4.Children(2);
-%         delete([ax(1).Children(:)]);
-%         delete([ax(2).Children(:)]);
-%         delete([ax(3).Children(:)]);
-%         delete([ax(4).Children(:)]);
-%         delete([ax(5).Children(:)]);
-%         delete([ax(6).Children(:)]);
-%         saveFig = 0;
-%     else
+
+% Set up axes
+if ~replaceData
+        clear ax
         fig4 = figure;
         % Set figure size based on screen size
         defaultFigWidth = 954;
@@ -361,7 +352,33 @@ if makeFig
         ax(3)=subplot('Position',[0.0900    0.7666    0.8200    0.0531]);
         ax(4)=subplot('Position',[0.0900    0.7014    0.8200    0.0531]);
         ax(5)=subplot('Position',[0.0900    0.6363    0.8200    0.0531]);
-%     end
+        ax(6)=subplot('Position',[.0900    0.0500    0.8200    0.5091]);
+        
+    
+elseif replaceData
+    if strcmp(ax(1).Tag,'tMid_spectra_a1')
+        for iAx=1:length(ax)
+            ax(iAx).NextPlot = 'replace';
+        end
+    else
+        clear ax
+        fig4 = figure;
+        % Set figure size based on screen size
+        defaultFigWidth = 954;
+        defaultFigHeight = 954;
+        screenSize = get(0,'screensize');
+        mult = round(min([screenSize(3)/defaultFigWidth,screenSize(4)/defaultFigHeight]),2);
+        set(fig4,'Units','pixels','Position',[1 1 defaultFigWidth*mult defaultFigHeight*mult]);
+        ax(1)=subplot('Position',[0.0900    0.8969    0.8200    0.0531]);
+        ax(2)=subplot('Position',[0.0900    0.8317    0.8200    0.0531]);
+        ax(3)=subplot('Position',[0.0900    0.7666    0.8200    0.0531]);
+        ax(4)=subplot('Position',[0.0900    0.7014    0.8200    0.0531]);
+        ax(5)=subplot('Position',[0.0900    0.6363    0.8200    0.0531]);
+        ax(6)=subplot('Position',[.0900    0.0500    0.8200    0.5091]);
+
+    end
+end
+
 
 % Plot timeseries
 % --------------------
@@ -423,8 +440,6 @@ linkaxes(ax(1:5),'x');
 % plot spectra
 % --------------------
 
-ax(6)=subplot('Position',[.0900    0.0500    0.8200    0.5091]);
-
 hold(ax(6),'on')
 % l0=loglog(ax(6),f1,squeeze(nanmean(P11(1,:,:),2)),'--','Color',cmap(4,:));
 % loglog(ax(6),f1,squeeze(nanmean(P11(2,:,:),2)),'--','Color',cmap(5,:))
@@ -476,7 +491,9 @@ title(ax(1),[Meta_Data.CTL.name '-' Meta_Data.CTL.rev '-' Meta_Data.CTL.SN '-' .
     Meta_Data.AFE.name '-' Meta_Data.AFE.rev '-' Meta_Data.AFE.SN],'fontsize',25)
 
 fig4.PaperPosition = [0 0 25 25];
-% print(fullfile(Meta_Data.Epsipath,[Meta_Data.deployment '.png']),'-dpng')
+
+% Add tag for tracking axes if you're plotting in realtime
+ax(1).Tag = 'tMid_spectra_a1';
 
 figureStamp(getFilename)
 
@@ -488,20 +505,4 @@ if saveFig
 end
 
 end % end if makeFig
-
-
-% Answer1=input('Do you want to save noise data in Meta_Data.L1path?(y/n)','s');
-% while 1
-%     switch Answer1
-%         case 'y' 
-%             save(fullfile(Meta_Data.L1path,[Meta_Data.deployment '-FPO7_noise.mat']),'n0','n1','n2','n3')
-%             save(fullfile(Meta_Data.L1path,[Meta_Data.deployment '-shear_noise.mat']),'n0s','n1s','n2s','n3s')
-%             save(fullfile(Meta_Data.L1path,[Meta_Data.deployment '-spectrum_calib.mat']),'f1','P11')
-%             break;
-%         case 'n'
-%             break;
-%         otherwise
-%             Answer1=input('Do you want to save noise data in Meta_Data.L1path?(y/n)','s');
-%     end
-% end
 

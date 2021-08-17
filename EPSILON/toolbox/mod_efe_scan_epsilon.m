@@ -1,5 +1,5 @@
 function [Ps_volt_f,Ps_shear_k,Ps_shear_co_k,epsilon,epsilon_co,f,k,fc,kc]=mod_efe_scan_epsilon(scan,shear_channel,acceleration_channel,Meta_Data)
-% get epsilon and the cutting frequency
+% get epsilon and the cutoff frequency
 %
 % OUTPUTS:
 %   P   = shear frequency power spectrum
@@ -24,7 +24,8 @@ if isfinite(scan.(shear_channel))
     else
         Sv = Meta_Data.epsi.(shear_channel(1:2)).Sv;
     end
-    w = scan.w;
+    % NC - Changed w to absolute value so this also works for upcasts
+    w = abs(scan.w);
     nfft=Meta_Data.PROCESS.nfft;
     if isfield(Meta_Data,'AFE')
         Fs=Meta_Data.AFE.FS;
@@ -32,7 +33,7 @@ if isfinite(scan.(shear_channel))
         Fs=Meta_Data.PROCESS.Fs_epsi;
     end
     fpump=Meta_Data.PROCESS.ctd_fc;
-    kmax=fpump./scan.w;
+    kmax=fpump./w;
     
     % Get the filter transfer functions.
     h_freq=Meta_Data.PROCESS.h_freq;
@@ -52,7 +53,7 @@ if isfinite(scan.(shear_channel))
     % Compute the frequency spectrum of timeseries in volts
     [Ps_volt_f,f] = pwelch(detrend(scan.(shear_channel)),nfft,[],nfft,Fs,'psd');
     k = f./w;
-    filter_TF=(h_freq.shear .* haf_oakey(f,scan.w));
+    filter_TF=(h_freq.shear .* haf_oakey(f,w));
         
     % Convert frequency spectrum of volts timeseries to the frequency spectrum
     % of velocity data
@@ -63,7 +64,7 @@ if isfinite(scan.(shear_channel))
     
     % Compute epsilon using eps1_mmp.m with kmax
     [epsilon,kc(1)]=eps1_mmp(k,Ps_shear_k,scan.kvis,kmax);
-    fc(1)=kc(1).*scan.w;
+    fc(1)=kc(1).*w;
      
     % ---------------------------------------------------------------------
     % Now, do the same calculations with the coherence correction
@@ -76,7 +77,7 @@ if isfinite(scan.(shear_channel))
     
     % Compute epsilon using eps1_mmp.m with kmax
     [epsilon_co,kc(2)]=eps1_mmp(k,Ps_shear_co_k,scan.kvis,kmax);
-    fc(1)=kc(2).*scan.w;
+    fc(1)=kc(2).*w;
     
 else
     
