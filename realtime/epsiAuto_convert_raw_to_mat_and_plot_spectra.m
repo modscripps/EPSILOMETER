@@ -25,8 +25,8 @@ tscan = 4; %Length of scan in seconds
 % Directories for Epsi:
 % (No sync version. Look at epsiAuto_convert_raw_to_mat_and_plot to see how
 % to sync raw files to a new directory first)
-rawDir      = '/Volumes/Berry/epsi_raw/Copy_of_EPSI_RAW_0724/raw';
-matDir      = '/Volumes/Berry/epsi_raw/Copy_of_EPSI_RAW_0724/mat';
+rawDir      = '/Users/Shared/FCTD_EPSI/RAW';
+matDir      = '/Users/Shared/FCTD_EPSI/RAW/mat';
 dirs = {rawDir,matDir};
 
 % Choose a starting tMax value for getting new data
@@ -115,7 +115,7 @@ EpsiConvert_timer.TimerFcn = [...
     'disp(err); '...
     'end; '...
     'end;'];
-EpsiConvert_timer.Period = 15;
+EpsiConvert_timer.Period = 5;
 EpsiConvert_timer.BusyMode = 'drop';
 EpsiConvert_timer.Name = 'EpsiConvert_timer';
 EpsiConvert_timer.Tag = 'EpsiConvert_timer';

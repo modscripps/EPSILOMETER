@@ -470,7 +470,7 @@ if makeFig
         % plot spectra
         % --------------------
         
-        hold(ax(6),'on')
+        % hold(ax(6),'on')
         % l0=loglog(ax(6),f1,squeeze(nanmean(P11(1,:,:),2)),'--','Color',cmap(4,:));
         % loglog(ax(6),f1,squeeze(nanmean(P11(2,:,:),2)),'--','Color',cmap(5,:))
         % loglog(ax(6),f1,squeeze(nanmean(P11(3,:,:),2)),'--','Color',cmap(6,:))
@@ -479,8 +479,8 @@ if makeFig
         % loglog(ax(6),f1,squeeze(nanmean(P11(6,:,:),2)),'--','Color',cmap(2,:))
         % loglog(ax(6),f1,squeeze(nanmean(P11(7,:,:),2)),'--','Color',cmap(3,:))
         
-        hold(ax(6),'on')
         l0=loglog(ax(6),f1,squeeze(nanmean(P11bis(1,:,:),2)),'--','Color',cols.t1);
+        hold(ax(6),'on')
         loglog(ax(6),f1,squeeze(nanmean(P11bis(2,:,:),2)),'--','Color',cols.t2)
         loglog(ax(6),f1,squeeze(nanmean(P11bis(3,:,:),2)),'--','Color',cols.s1)
         loglog(ax(6),f1,squeeze(nanmean(P11bis(4,:,:),2)),'--','Color',cols.s2)
