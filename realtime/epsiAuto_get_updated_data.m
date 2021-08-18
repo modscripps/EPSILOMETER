@@ -1,12 +1,17 @@
 function [obj,tMaxNow] = epsiAuto_get_updated_data(oldData,newData,tMaxPrevious)
 
+if isempty(newData.epsi)
+    disp('There is no new epsi data.')
+    obj = oldData;
+    tMaxNow = tMaxPrevious;
+else
 % Determine whether tMaxPrevious is a datenum or seconds since power on.
 % Depending on what you have, use either 'time_s' or 'dnum' as the
 % timestamp.
 if tMaxPrevious.epsi>1e9
     timestamp = 'dnum';
 else
-    timesetamp = 'time_s';
+    timestamp = 'time_s';
 end
 
 time_offset = 0; % SAN added to correct for current 12 hrs offset in
@@ -117,4 +122,5 @@ clear data
 %     num2str(second(datetime(tMaxNow,'convertfrom','datenum')),'%02.0f')];
 % save(fullfile('/Volumes/Berry/blt_epsi/whats_wrong', fileName))
 
+end %if isempty(newData.epsi)
 end

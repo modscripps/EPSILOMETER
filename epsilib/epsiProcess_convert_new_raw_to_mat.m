@@ -27,6 +27,14 @@ function [matData] = epsiProcess_convert_new_raw_to_mat(dirs,Meta_Data,varargin)
 % Updated 2011 06 21 by San Nguyen
 % Updated 2012 09 29 by San Nguyen for EquatorMix2012
 
+% NC - Make matData for output even if there is no new data
+matData.epsi = [];
+matData.ctd = [];
+matData.alt = [];
+matData.act = [];
+matData.vnav = [];
+matData.gps = [];
+
 % NC - Only rsync files with the desired suffix
 suffixStr = Meta_Data.rawfileSuffix; %ex. *.raw, *.ascii, etc
 suffixSearch = ['*' suffixStr];
