@@ -68,9 +68,6 @@ if ~(isfield(obj,'ctd') || isclassfield(obj,'ctd'))
 elseif isfield(obj,'ctd') || isclassfield(obj,'ctd')
     CTD = obj.ctd;
     ind0=(CTD.time_s==0);
-    if~isempty(ind0)
-        warning("there are 0s in the CTD time")
-    end
     notNan = ~isnan(CTD.time_s);
     if sum(~ind0 & notNan)>3
         dPdt_interp = movmean(interp1(CTD.time_s(~ind0 & notNan),CTD.dPdt(~ind0 & notNan),EPSI.time_s),100);
@@ -78,15 +75,14 @@ elseif isfield(obj,'ctd') || isclassfield(obj,'ctd')
         CTD.dPdt = [];
     end
 end
-% Get rid of nans in the data. If you're plotting in realtime, there will
+% Get rid of nans in the data. If you're plotting in realtime, there might
 % be a lot of nans at the end
 EPSI = structfun(@(x) x(~isnan(x)),EPSI,'un',0);
 CTD = structfun(@(x) x(~isnan(x)),CTD,'un',0);
 
-timeaxis = EPSI.time_s;
+timeaxis = EPSI.time_s - nanmin(EPSI.time_s);
 L=length(timeaxis);
 FS=Meta_Data.AFE.FS;
-
 
 % %%
 % %figure('units','inch','position',[0,0,35,15]);

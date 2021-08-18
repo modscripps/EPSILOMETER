@@ -18,11 +18,19 @@ else
     %data July 3rd.
     
     obj = oldData;
-    data = newData;
+
+    % Load time index and sort by time 
+    load(fullfile(obj.Meta_Data.MATpath,'TimeIndex'));
+    [~,idxSorted] = sort(TimeIndex.timeEnd);
     
-    % Load most recent data file
-    % data = load(fullfile(obj.Meta_Data.MATpath,TimeIndex.filenames{idxLast}));
-    % fprintf([TimeIndex.filenames{idxLast},'\n'])
+    % If there is less than 30 seconds of data in the new file, load the
+    % second-to-last file and merge them
+    if range(newData.epsi.time_s)<30
+    data2 = load(fullfile(obj.Meta_Data.MATpath,TimeIndex.filenames{idxLast}));
+    fprintf([TimeIndex.filenames{idxLast},'\n'])
+    else 
+        data = newData;
+    end
     
     
     % TODO 08/18/2021
