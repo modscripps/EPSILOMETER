@@ -52,6 +52,11 @@ efe_block_version = 'v3';
 [ind_vnav_start,ind_vnav_stop] = regexp(str,'\$VNMAR([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
 [ind_gps_start, ind_gps_stop] = regexp(str,'\$GPGGA([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
 
+% if not using a different sbe49
+if isempty(ind_sbe_start)
+    [ind_sbe_start, ind_sbe_stop]   = regexp(str,'\$SB41([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
+end
+
 
 %% Define the header tag format
 % In the versions of the SOM acquisition software since 23 May 2021 (and
@@ -258,7 +263,7 @@ else
     switch Meta_Data.CTD.name
         case{"SBE49","SBE","S49","SB49"}
             sbe.data.format      = 'eng';
-            sbe.data.length      = 22;
+            sbe.data.length      = 24;
             sbe.data.sample_freq = 16;
             sbe.cal              = Meta_Data.CTD.cal;
         case{"SBE41","S41","SB41"}
@@ -319,12 +324,12 @@ else
         sbe_block_data = sbe_block_str(tag.data_offset:end-tag.chksum.length);
         
         % Where do 16 and 24 come from? % Does length(sbe_block_data)=sbe.hexlengthblock.value?
-        if (length(sbe_block_data)~=(24+16)*sbe.data.recs_per_block)
+        if (length(sbe_block_data)~=(sbe.data.length+16)*sbe.data.recs_per_block)
             fprintf("SBE block %i has incorrect length\r\n",iB)
         else
             %
             % Where do 16 and 24 come from?
-            sbe_block_data=reshape(sbe_block_data,16+24,sbe.data.recs_per_block).';
+            sbe_block_data=reshape(sbe_block_data,16+sbe.data.length,sbe.data.recs_per_block).';
             
             for iR=1:sbe.data.recs_per_block
                 
@@ -378,19 +383,20 @@ else
             ctd = sbe49_ascii_get_temperature(ctd,sbe);
             ctd = sbe49_ascii_get_pressure(ctd,sbe);
             ctd = sbe49_ascii_get_conductivity(ctd,sbe);
-            
             ctd.S    = sw_salt(ctd.C*10./c3515,ctd.T,ctd.P);
-            ctd.sig  = sw_pden(ctd.S,ctd.T,ctd.P,0);
-            ctd.dPdt = [0; diff(ctd.P)./diff(ctd.time_s)];
-            
-            % NC 17 July 2021 - added ctd.z and ctd.dzdt.
-            % get_scan_spectra.m will use dzdt to define fall speed w.
-            if ~isfield(Meta_Data.PROCESS,'latitude')
-                error('Need latitude to get depth from pressure data. Add to MetaProcess text file.')
-            end
-            ctd.z    = sw_dpth(ctd.P,Meta_Data.PROCESS.latitude);
-            ctd.dzdt = [0; diff(ctd.z)./diff(ctd.time_s)];
     end
+    
+    ctd.sig  = sw_pden(ctd.S,ctd.T,ctd.P,0);
+    ctd.dPdt = [0; diff(ctd.P)./diff(ctd.time_s)];
+
+% ALB commenting out.    
+%     % NC 17 July 2021 - added ctd.z and ctd.dzdt.
+%     % get_scan_spectra.m will use dzdt to define fall speed w.
+%     if ~isfield(Meta_Data.PROCESS,'latitude')
+%         error('Need latitude to get depth from pressure data. Add to MetaProcess text file.')
+%     end
+%     ctd.z    = sw_dpth(ctd.P,Meta_Data.PROCESS.latitude);
+%     ctd.dzdt = [0; diff(ctd.z)./diff(ctd.time_s)];
     
     % Make sure ctd.S is real. Every once in a while, S comes out imaginary, I think only when SBE is on deck.
     ctd.S = real(ctd.S);

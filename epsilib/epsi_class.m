@@ -81,21 +81,17 @@ classdef epsi_class < handle
                     repeat = 0;
                     
                     % Set epsi paths and define suffix for raw files
-                    obj.Meta_Data = set_epsi_paths(obj.Meta_Data);
+                    obj.Meta_Data = epsiSetup_set_epsi_paths(obj.Meta_Data);
                     obj.Meta_Data = epsiSetup_get_raw_suffix(obj.Meta_Data);
                     
-                    % First, try reading configuration data from the
-                    % file. If that doesn't work, try reading from a
-                    % configuration file.
-%                                         try
-%                                             setupfile=dir(fullfile(obj.Meta_Data.RAWpath,['*' obj.Meta_Data.rawfileSuffix]));
-% %                                             setup=mod_som_read_setup_from_raw(setupfile(1).name);
-%                                         catch
-%                 end
                     try
+                        
+                        rawfile=dir('*.raw');
+                        rawfile=rawfile(1);
+                        setup=mod_som_read_setup_from_raw(rawfile.name);
+                    catch
                         setupfile=dir('*config*');
                         setup=mod_som_read_setup_from_config(setupfile.name);
-                    catch
                         error('mod_som_read_setup failed - do you have a config file?')
                     end
                     % end
@@ -112,6 +108,7 @@ classdef epsi_class < handle
                     % Set epsi paths and define suffix for raw files
                     obj.Meta_Data = epsiSetup_set_epsi_paths(obj.Meta_Data);
                     obj.Meta_Data = epsiSetup_get_raw_suffix(obj.Meta_Data);
+                    
                     Meta_Data = obj.Meta_Data;
                     save(fullfile(obj.Meta_Data.datapath,'Meta_Data'),'Meta_Data');
    
@@ -729,9 +726,9 @@ classdef epsi_class < handle
             plot_profile_and_spectra(Profile,depth,saveFig)
         end
         function f_clearRawData(obj)
-            delete(fullfile(obj.Meta_Data.CTDpath,'*.mat'))
-            delete(fullfile(obj.Meta_Data.CTDpath,'*.mat'))
-            delete(fullfile(obj.Meta_Data.Epsipath,'*.mat'))
+%             delete(fullfile(obj.Meta_Data.CTDpath,'*.mat'))
+%             delete(fullfile(obj.Meta_Data.CTDpath,'*.mat'))
+%             delete(fullfile(obj.Meta_Data.Epsipath,'*.mat'))
             delete(fullfile(obj.Meta_Data.MATpath,'*.mat'))
             delete(fullfile(obj.Meta_Data.datapath,'Meta_Data.mat'));
         end
