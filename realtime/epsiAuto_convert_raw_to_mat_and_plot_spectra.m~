@@ -61,7 +61,7 @@ cd ..
 % catch
 try
     rawfile=dir('*.raw');
-    setup=mod_som_read_setup_from_raw(rawfile(1).name);
+    setup=mod_som_read_setup_from_raw(rawsetupfile.name);
 catch
     setupfile=dir('*config*');
     setup=mod_som_read_setup_from_config(setupfile.name);
