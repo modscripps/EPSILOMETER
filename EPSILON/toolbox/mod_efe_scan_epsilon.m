@@ -57,11 +57,11 @@ if isfinite(scan.(shear_channel))
     
     % Convert frequency spectrum of velocity timeseries in volts to the frequency spectrum
     % of shear in s^-1
-    Ps_shear_f = ((2*G/(Sv*w))^2).*Ps_volt_f./filter_TF;
+    Ps_velocity_f = ((2*G/(Sv*w))^2).*Ps_volt_f./filter_TF;
     
-    % Convert the shear frequency spectrum to shear wavenumber spectrum
-    %Ps_shear_k = ((2*pi*k).^2).*(Ps_shear_f./w);
-    Ps_shear_k = ((2*pi*k).^2).*(Ps_shear_f.*w); %NC 9/2/21 - frequency spectrum should be MULTIPLIED by w, not divided
+    % Convert the frequency velocity spectrum to shear wavenumber spectrum
+    %Ps_shear_k = ((2*pi*k).^2).*(Ps_velocity_f./w);
+    Ps_shear_k = ((2*pi*k).^2).*(Ps_velocity_f.*w); %NC 9/2/21 - frequency spectrum should be MULTIPLIED by w, not divided
     
     % Compute epsilon using eps1_mmp.m with kmax
     try
@@ -78,7 +78,7 @@ if isfinite(scan.(shear_channel))
     % Now, do the same calculations with the coherence correction
     
     % Remove the coherent part of the frequency spectrum
-    Ps_shear_co_f = Ps_shear_f.*(1-Csa);
+    Ps_shear_co_f = Ps_velocity_f.*(1-Csa);
     
     % Convert the frequency velocity spectrum to shear wavenumber spectrum
     %Ps_shear_co_k = ((2*pi*k).^2).*(Ps_shear_co_f./w);
