@@ -37,7 +37,7 @@ if isfinite(scan.(shear_channel))
     
     % Get the filter transfer functions.
     h_freq=Meta_Data.PROCESS.h_freq;
-
+    
     % Get the coherence between the shear channel and acceleration channel (should
     % be a3)
     switch shear_channel
@@ -54,30 +54,46 @@ if isfinite(scan.(shear_channel))
     [Ps_volt_f,f] = pwelch(detrend(scan.(shear_channel)),nfft,[],nfft,Fs,'psd');
     k = f./w;
     filter_TF=(h_freq.shear .* haf_oakey(f,w));
-        
-    % Convert frequency spectrum of volts timeseries to the frequency spectrum
-    % of velocity data
-    Ps_velocity_f = ((2*G/(Sv*w))^2).*Ps_volt_f./filter_TF;
     
-    % Convert the frequency velocity spectrum to shear wavenumber spectrum
-    Ps_shear_k = ((2*pi*k).^2).*(Ps_velocity_f./w);
+    % Convert frequency spectrum of velocity timeseries in volts to the frequency spectrum
+    % of shear in s^-1
+    Ps_shear_f = ((2*G/(Sv*w))^2).*Ps_volt_f./filter_TF;
+    
+    % Convert the shear frequency spectrum to shear wavenumber spectrum
+    %Ps_shear_k = ((2*pi*k).^2).*(Ps_shear_f./w);
+    Ps_shear_k = ((2*pi*k).^2).*(Ps_shear_f.*w); %NC 9/2/21 - frequency spectrum should be MULTIPLIED by w, not divided
     
     % Compute epsilon using eps1_mmp.m with kmax
-    [epsilon,kc(1)]=eps1_mmp(k,Ps_shear_k,scan.kvis,kmax);
-    fc(1)=kc(1).*w;
-     
+    try
+        [epsilon,kc(1)]=eps1_mmp(k,Ps_shear_k,scan.kvis,kmax);
+        fc(1)=kc(1).*w;
+    catch
+        epsilon=nan;
+        kc(1)=nan;
+        fc(1)=nan;
+    end
+    
+    
     % ---------------------------------------------------------------------
     % Now, do the same calculations with the coherence correction
     
     % Remove the coherent part of the frequency spectrum
-    Ps_velocity_co_f = Ps_velocity_f.*(1-Csa);
+    Ps_shear_co_f = Ps_shear_f.*(1-Csa);
     
     % Convert the frequency velocity spectrum to shear wavenumber spectrum
-    Ps_shear_co_k = ((2*pi*k).^2).*(Ps_velocity_co_f./w);
+    %Ps_shear_co_k = ((2*pi*k).^2).*(Ps_shear_co_f./w);
+    Ps_shear_co_k = ((2*pi*k).^2).*(Ps_shear_co_f.*w); %NC 9/2/21 - frequency spectrum should be MULTIPLIED by w, not divided
     
     % Compute epsilon using eps1_mmp.m with kmax
-    [epsilon_co,kc(2)]=eps1_mmp(k,Ps_shear_co_k,scan.kvis,kmax);
-    fc(1)=kc(2).*w;
+    try
+        [epsilon_co,kc(2)]=eps1_mmp(k,Ps_shear_co_k,scan.kvis,kmax);
+        fc(1)=kc(2).*w;
+    catch
+        epsilon_co=nan;
+        kc(1)=nan;
+        fc(1)=nan;
+    end
+    
     
 else
     
