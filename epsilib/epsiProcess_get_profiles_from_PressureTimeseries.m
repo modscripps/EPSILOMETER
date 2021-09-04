@@ -1,4 +1,4 @@
-function [PT] = epsiProcess_get_profiles_from_PressureTimeseries(PressureTimeseries)
+function [PT] = epsiProcess_get_profiles_from_PressureTimeseries(PressureTimeseries,varargin)
  
 % INPUTS
 %   PressureTimeseries.dnum

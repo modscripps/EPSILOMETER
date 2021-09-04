@@ -34,12 +34,12 @@ if ~isempty(profNumChar)
     
     % Does the last profile have all its data? Or was more collected in the
     % last batch of files?
-    lastProf_maxTime = nanmax(lastProf.Profile.ctddnum);
+    lastProf_maxTime = nanmax(lastProf.Profile.ctd.dnum);
     
     % If there is more data for the last profile in the PressureTimeseries,
     % rerun the last profile. In the next step, we'll run everything after the
     % lastProfNum, so subtract one from that value.
-    if PressureTimeseries.ctddnum(PressureTimeseries.endprof(lastProfNum))>lastProf_maxTime
+    if PressureTimeseries.dnum(PressureTimeseries.endprof(lastProfNum))>lastProf_maxTime
         lastProfNum = lastProfNum-1;
     end
 elseif isempty(profNumChar)
@@ -52,8 +52,8 @@ end
 for iProf=1:length(PressureTimeseries.startprof)
     if iProf>lastProfNum
             profIdx = PressureTimeseries.startprof(iProf):PressureTimeseries.endprof(iProf);
-            tMin = PressureTimeseries.ctddnum(PressureTimeseries.startprof(iProf));
-            tMax = PressureTimeseries.ctddnum(profIdx(end));
+            tMin = PressureTimeseries.dnum(PressureTimeseries.startprof(iProf));
+            tMax = PressureTimeseries.dnum(profIdx(end));
             fprintf('Building Profile%03.0f of %03.0f\n',iProf,length(PressureTimeseries.startprof))
             
             Profile = obj.f_cropTimeseries(tMin,tMax);

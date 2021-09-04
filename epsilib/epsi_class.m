@@ -31,7 +31,7 @@ classdef epsi_class < handle
             %           TODO only define Meta data if epsi.mat and ctd.mat does not
             %           exist
             
-            % Check to see if Meta_Data is already defined
+            % Check to see if Meta_Data is already definedc
             checkMD = dir('Meta_Data.mat');
             
             repeat = 1; %NC Initialize repeat flag to use if Meta_Data path names were not made on this machine
@@ -81,7 +81,7 @@ classdef epsi_class < handle
                     repeat = 0;
                     
                     % Set epsi paths and define suffix for raw files
-                    obj.Meta_Data = set_epsi_paths(obj.Meta_Data);
+                    obj.Meta_Data = epsiSetup_set_epsi_paths(obj.Meta_Data);
                     obj.Meta_Data = epsiSetup_get_raw_suffix(obj.Meta_Data);
                     
                     % First, try reading configuration data from the
@@ -621,7 +621,7 @@ classdef epsi_class < handle
             
             % Load the pressure timeseries and find the downcast or upcast with the
             % greatest range in pressure.
-            load(fullfile(obj.Meta_Data.MATpath,'Epsi_PressureTimeseries.mat'));
+            load(fullfile(obj.Meta_Data.MATpath,'PressureTimeseries.mat'));
             %             switch datachoice
             %                 case 'dataup'
             %                     profLengths = PressureTimeseries.endup-PressureTimeseries.startup;
@@ -673,7 +673,7 @@ classdef epsi_class < handle
             if nargin<3
                 saveData = 1;
             end
-            if ~isfield(obj.Meta_Data.PROCESS,'nfft')
+            if ~any([isfield(obj.Meta_Data.PROCESS,'nfft'),isclassfield(obj.Meta_Data.PROCESS,'nfft')])
                 obj.Meta_Data= obj.f_read_MetaProcess();
             end
             Meta_Data = obj.Meta_Data;

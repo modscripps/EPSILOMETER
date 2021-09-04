@@ -116,7 +116,7 @@ end
 
 % split and median fall rate per segments. Used for the physical answer of
 % the FPO7 probe (h_freq.FPO7).
-w=cellfun(@(x) abs(median(Profile.ctd.w(x))),ctd_indscan);
+w=cellfun(@(x) abs(median(Profile.ctd.dzdt(x))),ctd_indscan);
 
 % 1 side of the ctd spectra
 ctd_indk=find(ctd_k>=0);
