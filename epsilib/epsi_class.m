@@ -465,7 +465,7 @@ classdef epsi_class < handle
         end
         
         
-                function  [P11,f,noise,ax]=f_plot_spectraAtTmid(obj,tmid,tscan,makeFig,saveFig,replaceData,ax)
+        function  [P11,f,noise,ax]=f_plot_spectraAtTmid(obj,tmid,tscan,nSec,makeFig,saveFig,replaceData,ax)
             % Plots 30-sec timeseries from all channels and spectra from
             % user-defined tscan
             %
@@ -477,6 +477,7 @@ classdef epsi_class < handle
             % INPUTS
             %   tmid = midpoint of scan (seconds)
             %   tscan = length of scan (seconds)
+            %   nSec      - length of timeseries to plot
             %   makeFig = (OPTIONAL, flag to plot figure [0/1], default=1)
             %   saveFig = (OPTIONAL, flag to save figure [0/1], default=1)
             %
@@ -484,20 +485,21 @@ classdef epsi_class < handle
             %   P11 = structure of frequency spectra for each channel
             %   f = frequency array
             %   noise = structure of shear and fpo7 noise coefficients
-            if nargin<6
+            if nargin<7
                 ax = [];
-                if nargin<5
+                if nargin<6
                     replaceData=0;
-                    if nargin<4
+                    if nargin<5
                         makeFig = 1;
                         saveFig = 0;
                     end
-                    if nargin==4
+                    if nargin==5
                         saveFig = 1;
                     end
                 end
             end
-            [P11,f,noise,ax] = epsiPlot_spectra_at_tMid(obj,tmid,tscan,makeFig,saveFig,replaceData,ax);
+            
+            [P11,f,noise,ax] = epsiPlot_spectra_at_tMid(obj,tmid,tscan,nSec,makeFig,saveFig,replaceData,ax);
         end
         
         
@@ -688,9 +690,9 @@ classdef epsi_class < handle
             %            - P = the pressure array to use
             %
             if nargin>1
-                obj = processNewProfiles(obj,varargin);
+                obj = epsiProcess_processNewProfiles(obj,varargin);
             else
-                obj = processNewProfiles(obj);
+                obj = epsiProcess_processNewProfiles(obj);
             end
         end
         function obj = f_interpolateProfileToP(obj,Profile,P)
@@ -701,6 +703,9 @@ classdef epsi_class < handle
             %   P - pressure array
            griddedProfile = epsiProcess_interpolate_Profile_to_P(Profile,P); 
            obj = griddedProfile;
+        end
+        function obj = f_gridProfiles(obj,P)
+            obj = epsiProcess_gridProfiles(obj,P);
         end
         function obj = f_cropTimeseries(obj,tMin,tMax)
             % Get a piece of timeseries structure that you can use to compute

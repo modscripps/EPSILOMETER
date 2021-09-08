@@ -1,4 +1,4 @@
-function [Phi,f1,noise,ax] = epsiPlot_spectra_at_tMid(obj,tMid,tscan,makeFig,saveFig,replaceData,ax)
+function [Phi,f1,noise,ax] = epsiPlot_spectra_at_tMid(obj,tMid,tscan,nSec,makeFig,saveFig,replaceData,ax)
 % [Phi,f1,noise,ax] = epsiPlot_spectra_at_tMid(obj,tMid,tscan,makeFig,saveFig,replaceData,ax)
 %   ** Nicole Couto copied from mod_som_calibrate_epsi_tMid.m just to start giving
 %   consistent names to epsi_class plotting functions
@@ -12,6 +12,7 @@ function [Phi,f1,noise,ax] = epsiPlot_spectra_at_tMid(obj,tMid,tscan,makeFig,sav
 %                   Meta_Data as one of the fields
 %       tMid      - midpoint of timeseries for computing spectra (seconds)
 %       tScan     - length in seconds of the segment used to do an FFT (i.e tscan = NFFT * FS)
+%       nSec      - length of timeseries to plot
 %
 % OUTPUTS:
 %       Phi        - structure containing frequency spectra for each
@@ -31,15 +32,15 @@ function [Phi,f1,noise,ax] = epsiPlot_spectra_at_tMid(obj,tMid,tscan,makeFig,sav
 % --------------------------------------------------------------------------
 
 % If no makeFig flag, make figure by default
-if nargin<6
+if nargin<7
     ax = [];
-    if nargin<5
+    if nargin<6
         replaceData=0;
-        if nargin<4
+        if nargin<5
             makeFig = 1;
             saveFig = 0;
         end
-        if nargin==4
+        if nargin==5
             saveFig = 1;
         end
     end
@@ -137,7 +138,6 @@ else
     
     % Lscan,defined later is the length of tscan. Lseg is the length of the
     % timeseries you want to plot. Let's plot 30 seconds of data
-    nSec = 30;
     Lseg = FS*nSec;
     idxSeg = floor(mean(idxScan) - Lseg/2):floor(mean(idxScan) + Lseg/2);
     % If the 30-second segment goes over the length of the timeseries, or
