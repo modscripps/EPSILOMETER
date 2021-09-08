@@ -55,11 +55,14 @@ end
 %     setup=mod_som_read_setup_from_raw(setupfile(1).name);
 % catch
 try
+    rawfile=dir('*.raw');
+    setup=mod_som_read_setup_from_raw(rawfile(1).name);
+catch
     setupfile=dir('*config*');
     setup=mod_som_read_setup_from_config(setupfile.name);
-catch
     error('mod_som_read_setup failed')
 end
+
 %end
 
 % Initialize obj with structures big enough to load at least one Epsi .mat
