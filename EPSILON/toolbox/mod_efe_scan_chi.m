@@ -56,7 +56,8 @@ k = f./w;
 Pt_T_f = (Pt_volt_f*(dTdV^2)) ./ filter_TF;
 
 % Convert temperature frequency spectrum to temperature gradient wavenumber spectrum
-Pt_Tg_k = ((2*pi*k).^2).*Pt_T_f./w;
+% Pt_Tg_k = ((2*pi*k).^2).*Pt_T_f./w;
+Pt_Tg_k = ((2*pi*k).^2).*Pt_T_f.*w; %NC 9/2/21 - frequency spectrum should be MULTIPLIED by w, not divided
 
 % Calculate chi
 dk = nanmean(diff(k));

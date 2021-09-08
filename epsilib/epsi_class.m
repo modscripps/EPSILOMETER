@@ -31,7 +31,7 @@ classdef epsi_class < handle
             %           TODO only define Meta data if epsi.mat and ctd.mat does not
             %           exist
             
-            % Check to see if Meta_Data is already defined
+            % Check to see if Meta_Data is already definedc
             checkMD = dir('Meta_Data.mat');
             
             repeat = 1; %NC Initialize repeat flag to use if Meta_Data path names were not made on this machine
@@ -462,7 +462,7 @@ classdef epsi_class < handle
         end
         
         
-                function  [P11,f,noise,ax]=f_plot_spectraAtTmid(obj,tmid,tscan,makeFig,saveFig,replaceData,ax)
+        function  [P11,f,noise,ax]=f_plot_spectraAtTmid(obj,tmid,tscan,nSec,makeFig,saveFig,replaceData,ax)
             % Plots 30-sec timeseries from all channels and spectra from
             % user-defined tscan
             %
@@ -474,6 +474,7 @@ classdef epsi_class < handle
             % INPUTS
             %   tmid = midpoint of scan (seconds)
             %   tscan = length of scan (seconds)
+            %   nSec      - length of timeseries to plot
             %   makeFig = (OPTIONAL, flag to plot figure [0/1], default=1)
             %   saveFig = (OPTIONAL, flag to save figure [0/1], default=1)
             %
@@ -481,20 +482,21 @@ classdef epsi_class < handle
             %   P11 = structure of frequency spectra for each channel
             %   f = frequency array
             %   noise = structure of shear and fpo7 noise coefficients
-            if nargin<6
+            if nargin<7
                 ax = [];
-                if nargin<5
+                if nargin<6
                     replaceData=0;
-                    if nargin<4
+                    if nargin<5
                         makeFig = 1;
                         saveFig = 0;
                     end
-                    if nargin==4
+                    if nargin==5
                         saveFig = 1;
                     end
                 end
             end
-            [P11,f,noise,ax] = epsiPlot_spectra_at_tMid(obj,tmid,tscan,makeFig,saveFig,replaceData,ax);
+            
+            [P11,f,noise,ax] = epsiPlot_spectra_at_tMid(obj,tmid,tscan,nSec,makeFig,saveFig,replaceData,ax);
         end
         
         
@@ -618,7 +620,7 @@ classdef epsi_class < handle
             
             % Load the pressure timeseries and find the downcast or upcast with the
             % greatest range in pressure.
-            load(fullfile(obj.Meta_Data.MATpath,'Epsi_PressureTimeseries.mat'));
+            load(fullfile(obj.Meta_Data.MATpath,'PressureTimeseries.mat'));
             %             switch datachoice
             %                 case 'dataup'
             %                     profLengths = PressureTimeseries.endup-PressureTimeseries.startup;
@@ -670,7 +672,7 @@ classdef epsi_class < handle
             if nargin<3
                 saveData = 1;
             end
-            if ~isfield(obj.Meta_Data.PROCESS,'nfft')
+            if ~any([isfield(obj.Meta_Data.PROCESS,'nfft'),isclassfield(obj.Meta_Data.PROCESS,'nfft')])
                 obj.Meta_Data= obj.f_read_MetaProcess();
             end
             Meta_Data = obj.Meta_Data;
@@ -685,9 +687,9 @@ classdef epsi_class < handle
             %            - P = the pressure array to use
             %
             if nargin>1
-                obj = processNewProfiles(obj,varargin);
+                obj = epsiProcess_processNewProfiles(obj,varargin);
             else
-                obj = processNewProfiles(obj);
+                obj = epsiProcess_processNewProfiles(obj);
             end
         end
         function obj = f_interpolateProfileToP(obj,Profile,P)
@@ -698,6 +700,9 @@ classdef epsi_class < handle
             %   P - pressure array
            griddedProfile = epsiProcess_interpolate_Profile_to_P(Profile,P); 
            obj = griddedProfile;
+        end
+        function obj = f_gridProfiles(obj,P)
+            obj = epsiProcess_gridProfiles(obj,P);
         end
         function obj = f_cropTimeseries(obj,tMin,tMax)
             % Get a piece of timeseries structure that you can use to compute

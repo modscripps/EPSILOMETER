@@ -20,6 +20,12 @@ if isnumeric(Profile_or_profNum) && ~isstruct(Profile_or_profNum)
     %eval(['Profile = ' sprintf('Profile%03.0f',profNum) ';']);
 elseif isstruct(Profile_or_profNum)
     Profile = Profile_or_profNum;
+elseif isclassfield(Profile_or_profNum,'epsi') && isclassfield(Profile_or_profNum,'ctd') && isclassfield(Profile_or_profNum,'Meta_Data')
+    Profile.Meta_Data = Profile_or_profNum.Meta_Data;
+    Profile.epsi = Profile_or_profNum.epsi;
+    Profile.ctd = Profile_or_profNum.ctd;
+else
+    error('Need epsi, ctd, and Meta_Data to calculate turbulence parameters!');
 end
 
 
@@ -221,13 +227,17 @@ for p = 1:nbscan % p is the scan index.
         Profile.w(p) = scan.w;
         Profile.t(p) = scan.t;
         Profile.s(p) = scan.s;
-        Profile.dnum(p) = scan.dnum;
-        
-        % Fill in the epsi channels
-        for c = 1:length(channels)
-            wh_channel = channels{c};   
-            Profile.(wh_channel)(scan.ind_scan) = scan.(wh_channel);
+        if isfield(scan,'dnum')
+            Profile.dnum(p) = scan.dnum;
         end
+        
+        % NC 8/25/21 - commented out because these fields already exist
+        % inside epsi field
+%         % Fill in the epsi channels
+%         for c = 1:length(channels)
+%             wh_channel = channels{c};   
+%             Profile.(wh_channel)(scan.ind_scan) = scan.(wh_channel);
+%         end
         
      
     end

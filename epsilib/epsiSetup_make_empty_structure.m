@@ -1,8 +1,15 @@
-function data = epsiSetup_make_empty_structure()
 
-emptyEpsi = nan(200000,1);
-emptyCtd = nan(10000,1);
-emptyAlt = nan(1000,1);
+function data = epsiSetup_make_empty_structure(varargin)
+
+if nargin<1
+    nSec=60*5;
+elseif nargin==1
+    nSec = varargin{1};
+end
+
+emptyEpsi = nan(nSec*320,1);
+emptyCtd = nan(nSec*16,1);
+emptyAlt = nan(nSec,1);
 
 data.epsi.time_s = emptyEpsi;
 data.epsi.dnum = emptyEpsi;
