@@ -46,7 +46,7 @@ classdef epsi_class < handle
                     % accessible. If not, Meta_Data was probably
                     % created on a different computer and you need to
                     % remake the paths.
-                    if  ~(isdir(obj.Meta_Data.processpath) && isdir(obj.Meta_Data.datapath) && isdir(obj.Meta_Data.CALIpath)) || ~isclassfield(obj.Meta_Data,'RAWpath')
+                    if  ~(isdir(obj.Meta_Data.paths.process_library) && isdir(obj.Meta_Data.paths.data) && isdir(obj.Meta_Data.paths.calibration)) || ~isclassfield(obj.Meta_Data,'RAWpath')
 %                         obj.Meta_Data = set_epsi_paths(obj.Meta_Data);
                         
                         % Find the epsi library and add it as process path
@@ -56,20 +56,20 @@ classdef epsi_class < handle
                             strfind(x,'epsilib'),spltpath, ...
                             'UniformOutput',false))};
                         
-                        obj.Meta_Data.processpath=fileparts(epsilib_path);
-                        obj.Meta_Data.CALIpath = fullfile(obj.Meta_Data.processpath,'CALIBRATION','ELECTRONICS');
-                        obj.Meta_Data.datapath=pwd;
+                        obj.Meta_Data.paths.process_library=fileparts(epsilib_path);
+                        obj.Meta_Data.paths.calibration = fullfile(obj.Meta_Data.paths.process_library,'CALIBRATION','ELECTRONICS');
+                        obj.Meta_Data.paths.data=pwd;
                         
 %                         % Print processpath and datapath to screen
-%                         fprintf('Meta_Data.processpath is %s \n',obj.Meta_Data.processpath);
-%                         fprintf('Meta_Data.datapath is %s \n',obj.Meta_Data.datapath);
+%                         fprintf('Meta_Data.paths.process_library is %s \n',obj.Meta_Data.paths.process_library);
+%                         fprintf('Meta_Data.paths.data is %s \n',obj.Meta_Data.paths.data);
                         
                         % Set epsi paths and define suffix for raw files
                         obj.Meta_Data = epsiSetup_set_epsi_paths(obj.Meta_Data);
                         obj.Meta_Data = epsiSetup_get_raw_suffix(obj.Meta_Data);
                         
                         Meta_Data = obj.Meta_Data;
-                        save(fullfile(obj.Meta_Data.datapath,'Meta_Data'),'Meta_Data');
+                        save(fullfile(obj.Meta_Data.paths.data,'Meta_Data'),'Meta_Data');
                     else
                         repeat = 0;
                         checkMD = [];
@@ -88,7 +88,7 @@ classdef epsi_class < handle
                     % file. If that doesn't work, try reading from a
                     % configuration file.
 %                                         try
-%                                             setupfile=dir(fullfile(obj.Meta_Data.RAWpath,['*' obj.Meta_Data.rawfileSuffix]));
+%                                             setupfile=dir(fullfile(obj.Meta_Data.paths.raw_data,['*' obj.Meta_Data.rawfileSuffix]));
 % %                                             setup=mod_som_read_setup_from_raw(setupfile(1).name);
 %                                         catch
 %                 end
@@ -103,8 +103,8 @@ classdef epsi_class < handle
                     try
                         obj.Meta_Data = epsiSetup_fill_meta_data(setup);
                         
-                        fprintf('Meta_Data.processpath is %s \n',obj.Meta_Data.processpath);
-                        fprintf('Meta_Data.datapath is %s \n',obj.Meta_Data.datapath);
+                        fprintf('Meta_Data.paths.process_library is %s \n',obj.Meta_Data.paths.process_library);
+                        fprintf('Meta_Data.paths.data is %s \n',obj.Meta_Data.paths.data);
                     catch
                         error('fill_meta_data failed')
                     end
@@ -113,7 +113,7 @@ classdef epsi_class < handle
                     obj.Meta_Data = epsiSetup_set_epsi_paths(obj.Meta_Data);
                     obj.Meta_Data = epsiSetup_get_raw_suffix(obj.Meta_Data);
                     Meta_Data = obj.Meta_Data;
-                    save(fullfile(obj.Meta_Data.datapath,'Meta_Data'),'Meta_Data');
+                    save(fullfile(obj.Meta_Data.paths.data,'Meta_Data'),'Meta_Data');
    
                 end
             end
@@ -125,12 +125,12 @@ classdef epsi_class < handle
             
             % Also, print all the directories just to be sure
             disp('... These are your directories:')
-            fprintf('processpath: %s \n',obj.Meta_Data.processpath);
-            fprintf('datapath: %s \n',obj.Meta_Data.datapath);
-            fprintf('CALIpath: %s \n',obj.Meta_Data.CALIpath);
-            fprintf('RAWpath: %s \n',obj.Meta_Data.RAWpath);
-            fprintf('MATpath: %s \n',obj.Meta_Data.MATpath);
-            fprintf('L1path: %s \n',obj.Meta_Data.L1path);            
+            fprintf('process path: %s \n',obj.Meta_Data.paths.process_library);
+            fprintf('data path: %s \n',obj.Meta_Data.paths.data);
+            fprintf('calibration path: %s \n',obj.Meta_Data.paths.calibration);
+            fprintf('raw data path: %s \n',obj.Meta_Data.paths.raw_data);
+            fprintf('mat data path: %s \n',obj.Meta_Data.paths.mat_data);
+            fprintf('profiles path: %s \n',obj.Meta_Data.paths.profiles);            
             
             % NC - check for s1 and s2 cal values. If they're
             % 0, manually input all probe numbers
@@ -143,7 +143,7 @@ classdef epsi_class < handle
             obj.f_read_MetaProcess;
             
             % Define filedir as path to raw data
-            obj.filename=obj.Meta_Data.RAWpath;
+            obj.filename=obj.Meta_Data.paths.raw_data;
             
             % Define plot properties
             obj.f_getPlotProperties;
@@ -158,13 +158,13 @@ classdef epsi_class < handle
 %             elseif lastOrAll==2
 %                 obj = obj.f_getAllData();
 %             end
-%             cd(obj.Meta_Data.datapath)
+%             cd(obj.Meta_Data.paths.data)
         end
         
         
         function obj=f_read_MetaProcess(obj,filename)
             if nargin==1
-                filename=fullfile(obj.Meta_Data.processpath,'Meta_Data_Process',...
+                filename=fullfile(obj.Meta_Data.paths.process_library,'Meta_Data_Process',...
                     'Meta_Data_Process.txt');
             end
             Meta_Data = epsiSetup_read_MetaProcess(obj.Meta_Data,filename);
@@ -173,8 +173,8 @@ classdef epsi_class < handle
         function obj=f_readData(obj,varargin)
 
             % Copy raw files from datapath to RAWpath
-            %list_rawfile = dir(fullfile(obj.Meta_Data.datapath,['*' obj.Meta_Data.rawfileSuffix]));
-            list_rawfile = dir(fullfile(obj.Meta_Data.RAWpath,['*' obj.Meta_Data.rawfileSuffix]));
+            %list_rawfile = dir(fullfile(obj.Meta_Data.paths.data,['*' obj.Meta_Data.rawfileSuffix]));
+            list_rawfile = dir(fullfile(obj.Meta_Data.paths.raw_data,['*' obj.Meta_Data.rawfileSuffix]));
             
             % Some files are called '*data*' and if you look for them, you
             % might  also grab Meta_Data. Get rid of it. 
@@ -183,15 +183,15 @@ classdef epsi_class < handle
             list_rawfile = list_rawfile(~matchArray);
             
             if isempty(list_rawfile)
-                warning(['There are no *' obj.Meta_Data.rawfileSuffix ' * raw files in ' obj.Meta_Data.RAWpath])
+                warning(['There are no *' obj.Meta_Data.rawfileSuffix ' * raw files in ' obj.Meta_Data.paths.raw_data])
             else 
 %                 for f=1:length(list_rawfile)
 %                     copyfile(fullfile(list_rawfile(f).folder, ...
 %                         list_rawfile(f).name),  ...
-%                         obj.Meta_Data.RAWpath,'f'); %NC set mode to 'f' to copy file
+%                         obj.Meta_Data.paths.raw_data,'f'); %NC set mode to 'f' to copy file
 %                 end
             % Convert raw to mat
-            dirs = {obj.Meta_Data.RAWpath; obj.Meta_Data.MATpath};
+            dirs = {obj.Meta_Data.paths.raw_data; obj.Meta_Data.paths.mat_data};
             epsiProcess_convert_new_raw_to_mat(dirs,obj.Meta_Data,'noSync');
             end
         end
@@ -202,9 +202,9 @@ classdef epsi_class < handle
             obj.alt = obj.f_getLastAlt();
         end
         function obj=f_getLastEpsi(obj)
-            load(fullfile(obj.Meta_Data.MATpath,'TimeIndex'));
+            load(fullfile(obj.Meta_Data.paths.mat_data,'TimeIndex'));
             [~,idxLast] = max(TimeIndex.timeEnd);
-            data = load(fullfile(obj.Meta_Data.MATpath,TimeIndex.filenames{idxLast}),'epsi');
+            data = load(fullfile(obj.Meta_Data.paths.mat_data,TimeIndex.filenames{idxLast}),'epsi');
             
             if isstruct(data.epsi)
                 obj=data.epsi;
@@ -213,9 +213,9 @@ classdef epsi_class < handle
             end
         end
         function obj=f_getLastCtd(obj)
-            load(fullfile(obj.Meta_Data.MATpath,'TimeIndex'));
+            load(fullfile(obj.Meta_Data.paths.mat_data,'TimeIndex'));
             [~,idxLast] = max(TimeIndex.timeEnd);
-            data = load(fullfile(obj.Meta_Data.MATpath,TimeIndex.filenames{idxLast}),'ctd');
+            data = load(fullfile(obj.Meta_Data.paths.mat_data,TimeIndex.filenames{idxLast}),'ctd');
             
             if isstruct(data.ctd)
                 obj=data.ctd;
@@ -224,9 +224,9 @@ classdef epsi_class < handle
             end
         end
         function obj=f_getLastAlt(obj)
-            load(fullfile(obj.Meta_Data.MATpath,'TimeIndex'));
+            load(fullfile(obj.Meta_Data.paths.mat_data,'TimeIndex'));
             [~,idxLast] = max(TimeIndex.timeEnd);
-            data = load(fullfile(obj.Meta_Data.MATpath,TimeIndex.filenames{idxLast}),'alt');
+            data = load(fullfile(obj.Meta_Data.paths.mat_data,TimeIndex.filenames{idxLast}),'alt');
             
             if isstruct(data.alt)
                 obj=data.alt;
@@ -241,20 +241,20 @@ classdef epsi_class < handle
             % files Or the name of the file
             obj.f_readData;
             
-            load(fullfile(obj.Meta_Data.MATpath,'TimeIndex'));
+            load(fullfile(obj.Meta_Data.paths.mat_data,'TimeIndex'));
             
             if isnumeric(fileNumOrName)
                 if length(fileNumOrName)==1 %If you chose one file, as an index number
                     idx = fileNumOrName;
-                    fileList{1} = fullfile(obj.Meta_Data.MATpath,TimeIndex.filenames{idx});
+                    fileList{1} = fullfile(obj.Meta_Data.paths.mat_data,TimeIndex.filenames{idx});
                 else %If you chose more than one file as a list of indices
                     for iF=1:length(fileNumOrName)
-                       fileList{iF} = fullfile(obj.Meta_Data.MATpath,TimeIndex.filenames{iF});
+                       fileList{iF} = fullfile(obj.Meta_Data.paths.mat_data,TimeIndex.filenames{iF});
                     end
                 end
             elseif ischar(fileNumOrName) %If you chose one file as a character string
                 try
-                    fileList{1} = fullfile(obj.Meta_Data.MATpath,fileNumOrName);
+                    fileList{1} = fullfile(obj.Meta_Data.paths.mat_data,fileNumOrName);
                     load(fileList{1})
                 catch
                     fileList{1} = fileNumOrName;
@@ -302,40 +302,6 @@ classdef epsi_class < handle
                 obj=data.alt;
             else
                 obj=[];
-            end
-        end
-        function obj=f_getAllEpsi(obj)
-            data=load(fullfile(obj.Meta_Data.Epsipath,['epsi_' obj.Meta_Data.deployment '.mat']));
-            if isstruct(data.epsi)
-                obj=data.epsi;
-            else
-                obj=[];
-            end
-        end
-        function obj=f_getAllCtd(obj)
-            %obj.f_mergeData;
-            if exist(fullfile(obj.Meta_Data.CTDpath,['ctd_' obj.Meta_Data.deployment '.mat'])) == 2
-                data=load(fullfile(obj.Meta_Data.CTDpath,['ctd_' obj.Meta_Data.deployment '.mat']));
-                if isstruct(data.ctd)
-                    obj=data.ctd;
-                else
-                    obj=[];
-                end
-            else
-                obj = [];
-            end
-        end
-        function obj=f_getAllAlt(obj)
-            %obj.f_mergeData;
-            if exist(fullfile(obj.Meta_Data.CTDpath,['alt_' obj.Meta_Data.deployment '.mat'])) == 2
-                data=load(fullfile(obj.Meta_Data.CTDpath,['alt_' obj.Meta_Data.deployment '.mat']));
-                if isstruct(data.alt)
-                    obj=data.alt;
-                else
-                    obj=[];
-                end
-            else
-                obj = [];
             end
         end
         function obj=f_getPlotProperties(obj)
@@ -417,37 +383,21 @@ classdef epsi_class < handle
             end
         end
         function f_plotPressureTimeseries(obj)
-           fileName = fullfile(obj.Meta_Data.MATpath,'PressureTimeseries.mat');
+           fileName = fullfile(obj.Meta_Data.paths.mat_data,'PressureTimeseries.mat');
            load(fileName);
            figure
 
            plot(PressureTimeseries.dnum,PressureTimeseries.P,'k');
            hold on
-           plot(PressureTimeseries.dnum(PressureTimeseries.startprof),PressureTimeseries.P(PressureTimeseries.startprof),'og');
-           plot(PressureTimeseries.dnum(PressureTimeseries.endprof),PressureTimeseries.P(PressureTimeseries.endprof),'sr');
+           s = plot(PressureTimeseries.dnum(PressureTimeseries.startprof),PressureTimeseries.P(PressureTimeseries.startprof),'og');
+           e = plot(PressureTimeseries.dnum(PressureTimeseries.endprof),PressureTimeseries.P(PressureTimeseries.endprof),'sr');
            set(gca,'ydir','reverse')
+           legend([s,e],{'start prof','end prof'})
            datetick(gca,'x')
            set(gca,'xticklabelrotation',45)
            title([datestr(nanmin(PressureTimeseries.dnum)) ' - ' ...
                datestr(nanmax(PressureTimeseries.dnum))]);
            grid on
-
-           plot(PressureTimeseries.ctddnum,PressureTimeseries.P);
-           set(gca,'ydir','reverse')
-
-           plot(PressureTimeseries.ctddnum,PressureTimeseries.P);
-           set(gca,'ydir','reverse')
-           datetick(gca,'x')
-
-           plot(PressureTimeseries.ctddnum,PressureTimeseries.P);
-           set(gca,'ydir','reverse')
-           datetick(gca,'x')
-           plot(PressureTimeseries.ctddnum,PressureTimeseries.P);
-           set(gca,'ydir','reverse')
-           datetick(gca,'x')
-           plot(PressureTimeseries.ctddnum,PressureTimeseries.P);
-           set(gca,'ydir','reverse')
-           datetick(gca,'x')
         end
         function f_plotFallSpeed(obj)
             figure
@@ -555,7 +505,7 @@ classdef epsi_class < handle
 %                 obj.Meta_Data.PROCESS.Prcrit_prof,...
 %                 obj.Meta_Data.PROCESS.userConfirmsProfiles)
 %             
-%             load(fullfile(obj.Meta_Data.L1path,['Profiles_' obj.Meta_Data.deployment]));
+%             load(fullfile(obj.Meta_Data.paths.profiles,['Profiles_' obj.Meta_Data.deployment]));
 %             
 %             switch obj.Meta_Data.vehicle_name
 %                 case 'FISH'
@@ -574,7 +524,7 @@ classdef epsi_class < handle
 %                 CTD = CTDProfiles.(datachoice){iProf};
 %                 Profile = mod_epsilometer_merge_profile(obj.Meta_Data,CTD,EPSI);
 %                 Profile.profNum = iProf;
-%                 save(fullfile(obj.Meta_Data.L1path,sprintf('Profile%03.0f',iProf)),'Profile','-v7.3');
+%                 save(fullfile(obj.Meta_Data.paths.profiles,sprintf('Profile%03.0f',iProf)),'Profile','-v7.3');
 %             end
 %         end
 
@@ -586,8 +536,8 @@ classdef epsi_class < handle
 %             % with individual .mat files and Epsi_MATFile_TimeIndex. 
 %             % - This step takes the merged Epsi_PressureTimeseries and
 %             % separates into downcasts and upcasts (still to do)
-%             % - Saves Epsi_PressureTimeseries.mat in Meta_Data.MATpath
-%             MATpath = obj.Meta_Data.MATpath;
+%             % - Saves Epsi_PressureTimeseries.mat in Meta_Data.paths.mat_data
+%             MATpath = obj.Meta_Data.paths.mat_data;
 %             CTD = EPSI_get_CTD_profile_indices(MATpath);
 %             obj = CTD;
 %             fprintf('... Epsi_PressureTimeseries saved in %s \n',MATpath)
@@ -601,10 +551,10 @@ classdef epsi_class < handle
                 obj.Meta_Data= obj.f_read_MetaProcess();
             end
             Meta_Data = obj.Meta_Data;
-            save(fullfile(Meta_Data.datapath,'Meta_Data'),'Meta_Data');
+            save(fullfile(Meta_Data.paths.data,'Meta_Data'),'Meta_Data');
             
 %             try
-%                 load(fullfile(obj.Meta_Data.L1path,['Profiles_' Meta_Data.deployment]));
+%                 load(fullfile(obj.Meta_Data.paths.profiles,['Profiles_' Meta_Data.deployment]));
 %             catch err
 %                 error('You need to create profiles before calibrating temperature for this deployment')
 %             end
@@ -623,7 +573,7 @@ classdef epsi_class < handle
             
             % Load the pressure timeseries and find the downcast or upcast with the
             % greatest range in pressure.
-            load(fullfile(obj.Meta_Data.MATpath,'PressureTimeseries.mat'));
+            load(fullfile(obj.Meta_Data.paths.mat_data,'PressureTimeseries.mat'));
             %             switch datachoice
             %                 case 'dataup'
             %                     profLengths = PressureTimeseries.endup-PressureTimeseries.startup;
@@ -645,7 +595,7 @@ classdef epsi_class < handle
                 tMax = PressureTimeseries.dnum(PressureTimeseries.endprof(idxProf));
                 Profile = obj.f_cropTimeseries(tMin,tMax);
                 
-%                 load(fullfile(obj.Meta_Data.L1path,sprintf('Profile%03.0f',idxProf)));
+%                 load(fullfile(obj.Meta_Data.paths.profiles,sprintf('Profile%03.0f',idxProf)));
 %                 try
 %                     Fs=obj.Meta_Data.AFE.FS;
 %                 catch
@@ -695,13 +645,19 @@ classdef epsi_class < handle
                 obj = epsiProcess_processNewProfiles(obj);
             end
         end
-        function obj = f_interpolateProfileToP(obj,Profile,P)
+        function obj = f_makeNewProfiles(obj)
+            % obj = f_makeNewProfiles(obj)
+            %
+            % Makes new profiles but does not compute turbulence variables
+            obj = epsiProcess_makeNewProfiles(obj);
+        end
+        function obj = f_interpolateProfileToZ(obj,Profile,z)
             % obj = f_interpolateProfileToP(Profile,P)
             %
             % INPUTS:
             %   Profile - Profile structure with turbulence variables
             %   P - pressure array
-           griddedProfile = epsiProcess_interpolate_Profile_to_P(Profile,P); 
+           griddedProfile = epsiProcess_interpolate_Profile_to_z(Profile,z); 
            obj = griddedProfile;
         end
         function obj = f_gridProfiles(obj,P)
@@ -733,12 +689,10 @@ classdef epsi_class < handle
             end
             plot_profile_and_spectra(Profile,depth,saveFig)
         end
-        function f_clearRawData(obj)
-            delete(fullfile(obj.Meta_Data.CTDpath,'*.mat'))
-            delete(fullfile(obj.Meta_Data.CTDpath,'*.mat'))
-            delete(fullfile(obj.Meta_Data.Epsipath,'*.mat'))
-            delete(fullfile(obj.Meta_Data.MATpath,'*.mat'))
-            delete(fullfile(obj.Meta_Data.datapath,'Meta_Data.mat'));
+        function f_clearProcessedData(obj)
+            delete(fullfile(obj.Meta_Data.paths.mat_data,'*.mat'))
+            delete(fullfile(obj.Meta_Data.paths.profiles,'*.mat'))
+            delete(fullfile(obj.Meta_Data.paths.data,'Meta_Data.mat'));
         end
     end %end methods
 end %end classdef

@@ -174,14 +174,14 @@ B2=squeeze(nanmean(P11_epsi(indt1,:,:),2)).*dTdV(1).^2./h_freq.electFPO7.'.^2;
 % the batchprocess
 Meta_Data.AFE.t1.cal=dTdV(1);
 Meta_Data.AFE.t2.cal=dTdV(2);
-save(fullfile(Meta_Data.datapath,'Meta_data.mat'),'Meta_Data');
+save(fullfile(Meta_Data.paths.data,'Meta_data.mat'),'Meta_Data');
 
 % only for plotting: we getting the board noise
 switch Meta_Data.AFE.temp_circuit
     case 'Tdiff'
-        FPO7noise=load(fullfile(Meta_Data.CALIpath,'FPO7_noise.mat'),'n0','n1','n2','n3');
+        FPO7noise=load(fullfile(Meta_Data.paths.calibration,'FPO7_noise.mat'),'n0','n1','n2','n3');
     otherwise
-        FPO7noise=load(fullfile(Meta_Data.CALIpath,'FPO7_notdiffnoise.mat'),'n0','n1','n2','n3');
+        FPO7noise=load(fullfile(Meta_Data.paths.calibration,'FPO7_notdiffnoise.mat'),'n0','n1','n2','n3');
 end
 n0=FPO7noise.n0; n1=FPO7noise.n1; n2=FPO7noise.n2; n3=FPO7noise.n3;
 logf=log10(1/3:1/3:epsi_df/2);
@@ -216,7 +216,7 @@ if isfield(Profile,'profNum')
 titleStr={sprintf('%s cast %i - temperature_ ',titleStr,Profile.profNum);...
                 sprintf('dTdV = %2.2f',dTdV(1))};
 else
-  titleStr={sprintf('%s epsitime %i-%i - temperature_ ',titleStr,Profile.epsi.dnum(1),Profile.epsi.dnum(end)); ...
+  titleStr={['epsitime ' datestr(Profile.epsi.dnum(1),'HH:MM:SS') ' - ' datestr(Profile.epsi.dnum(end),'HH:MM:SS')]; ...
       sprintf('dTdV = %2.2f',dTdV(1))};
 end
 title(titleStr,'fontsize',20)
@@ -228,9 +228,9 @@ xlim([1/15 170])
 set(gca,'fontsize',20)
 fig=gcf;fig.PaperPosition=[0 0 8 6];
 if isfield(Profile,'profNum')
-    filename=fullfile(Meta_Data.FIGpath,sprintf('Tctd_Tepsi_comp_cast%i_t1.png',Profile.profNum));
+    filename=fullfile(Meta_Data.paths.figures,sprintf('Tctd_Tepsi_comp_cast%i_t1.png',Profile.profNum));
 else
-    filename=fullfile(Meta_Data.FIGpath,'Tctd_Tepsi_comp_t1.png');
+    filename=fullfile(Meta_Data.paths.figures,'Tctd_Tepsi_comp_t1.png');
 end
 figureStamp(mfilename('fullpath'))
 print('-dpng2',filename)
@@ -262,7 +262,7 @@ if isfield(Profile,'profNum')
 titleStr={sprintf('%s cast %i - temperature_ ',titleStr,Profile.profNum);...
                 sprintf('dTdV = %2.2f',dTdV(2))};
 else
-  titleStr={sprintf('%s epsitime %i-%i - temperature_ ',titleStr,Profile.epsi.time_s(1),Profile.epsi.time_s(end)); ...
+  titleStr={['epsitime ' datestr(Profile.epsi.dnum(1),'HH:MM:SS') ' - ' datestr(Profile.epsi.dnum(end),'HH:MM:SS')]; ...
       sprintf('dTdV = %2.2f',dTdV(2))};
 end
 title(titleStr,'fontsize',20)
@@ -274,9 +274,9 @@ xlim([1/15 170])
 set(gca,'fontsize',20)
 fig=gcf;fig.PaperPosition=[0 0 8 6];
 if isfield(Profile,'profNum')
-    filename=fullfile(Meta_Data.FIGpath,sprintf('Tctd_Tepsi_comp_cast%i_t2.png',Profile.profNum));
+    filename=fullfile(Meta_Data.paths.figures,sprintf('Tctd_Tepsi_comp_cast%i_t2.png',Profile.profNum));
 else
-    filename=fullfile(Meta_Data.FIGpath,'Tctd_Tepsi_comp_t2.png');
+    filename=fullfile(Meta_Data.paths.figures,'Tctd_Tepsi_comp_t2.png');
 end
 figureStamp(mfilename('fullpath'))
 print('-dpng2',filename)

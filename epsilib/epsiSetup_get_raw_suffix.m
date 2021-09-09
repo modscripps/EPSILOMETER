@@ -10,7 +10,7 @@ function [Meta_Data] = epsiSetup_get_raw_file_suffix(Meta_Data)
 suffixOptions = {'.ascii','_raw','.raw'};
 
 % List files in raw directory
-rawDirContents = dir(Meta_Data.RAWpath);
+rawDirContents = dir(Meta_Data.paths.raw_data);
 
 % Todo: If there is nothing in the raw directory, list files in the main data
 % directory

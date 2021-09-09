@@ -262,6 +262,6 @@ ax(9).Tag = 'S';
 
 if saveFig
     img = getframe(gcf);
-    imwrite(img.cdata,fullfile(obj.Meta_Data.datapath,'figs/epsi_ctd_alt_timeseries.png'));
-    savefig(fullfile(obj.Meta_Data.datapath,'figs/epsi_ctd_timeseries_alt.fig'));
+    imwrite(img.cdata,fullfile(Meta_Data.paths.data,'figs/epsi_ctd_alt_timeseries.png'));
+    savefig(fullfile(Meta_Data.paths.data,'figs/epsi_ctd_timeseries_alt.fig'));
 end

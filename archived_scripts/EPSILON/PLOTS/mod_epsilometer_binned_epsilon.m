@@ -160,7 +160,7 @@ kvis_th2=nanmean(mkvis2);
 % get shear channel average noise to compute epsi
 logf=log10(fe);
 h_freq=get_filters_MADRE(Meta_Data,fe);
-shearnoise=load(fullfile(Meta_Data.CALIpath,'shear_noise.mat'),'n0s','n1s','n2s','n3s');
+shearnoise=load(fullfile(Meta_Data.paths.calibration,'shear_noise.mat'),'n0s','n1s','n2s','n3s');
 n0s=shearnoise.n0s; n1s=shearnoise.n1s; n2s=shearnoise.n2s; n3s=shearnoise.n3s;
 snoise=10.^(n0s+n1s.*logf+n2s.*logf.^2+n3s.*logf.^3);
 TFshear1=(Sv1.*w_th1/twoG).^2 .* h_freq.shear.* haf_oakey(fe,w_th1);

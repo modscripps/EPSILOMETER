@@ -29,9 +29,9 @@ print(F4,fullfile(Meta_Data.L1path,[Meta_Data.deployment '_binned_epsilon2_co_t3
 %% Chi plot
 switch Meta_Data.MAP.temperature
     case 'Tdiff'
-        FPO7noise=load(fullfile(Meta_Data.CALIpath,'FPO7_noise.mat'),'n0','n1','n2','n3');
+        FPO7noise=load(fullfile(Meta_Data.paths.calibration,'FPO7_noise.mat'),'n0','n1','n2','n3');
     otherwise
-        FPO7noise=load(fullfile(Meta_Data.CALIpath,'FPO7_notdiffnoise.mat'),'n0','n1','n2','n3');
+        FPO7noise=load(fullfile(Meta_Data.paths.calibration,'FPO7_notdiffnoise.mat'),'n0','n1','n2','n3');
 end
 dTdV(1)=Meta_Data.epsi.t1.dTdV; %1/0.025 V/deg 
 dTdV(2)=Meta_Data.epsi.t2.dTdV; %1/0.025 V/deg 

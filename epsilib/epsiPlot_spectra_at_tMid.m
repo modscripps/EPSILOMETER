@@ -532,7 +532,7 @@ if makeFig
     % --------------------
     if saveFig
         img = getframe(gcf);
-        imwrite(img.cdata,fullfile(Meta_Data.datapath,['figs/epsi_' Meta_Data.deployment '_t' num2str(tMid) '.png']));
+        imwrite(img.cdata,fullfile(Meta_Data.paths.data,['figs/epsi_' Meta_Data.deployment '_t' num2str(tMid) '.png']));
     end
     
 end % end if makeFig

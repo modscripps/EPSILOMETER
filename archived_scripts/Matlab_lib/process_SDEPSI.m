@@ -10,7 +10,7 @@ Meta_Data.MADRE.rev='MADREB.2';
 Meta_Data.MADRE.SN='2';
 Meta_Data.MAP.rev='MAPC.0';
 Meta_Data.MAP.SN='3';
-Meta_Data.CALIpath=fullfile('..','CALIBRATION',[Meta_Data.MADRE.rev '_' ...
+Meta_Data.paths.calibration=fullfile('..','CALIBRATION',[Meta_Data.MADRE.rev '_' ...
     Meta_Data.MADRE.SN '-' Meta_Data.MAP.rev '_' Meta_Data.MAP.SN]);
 
 % TODO: It does not work if the data does not have all the channels

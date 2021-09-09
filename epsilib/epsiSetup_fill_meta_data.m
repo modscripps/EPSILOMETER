@@ -26,8 +26,8 @@ epsilib_path=spltpath{~cellfun(@isempty, ...
                                strfind(x,'epsilib'),spltpath, ...
                                'UniformOutput',false))};
 
-Meta_Data.processpath=fileparts(epsilib_path);
-Meta_Data.datapath=pwd;
+Meta_Data.paths.process_library=fileparts(epsilib_path);
+Meta_Data.paths.data=pwd;
 
 Meta_Data.mission='';
 Meta_Data.vehicle_name='';
@@ -53,9 +53,9 @@ Meta_Data.AFE.name=wh_AFE;
 Meta_Data.AFE.rev='EFErev4'; %TODO get info from config file
 Meta_Data.AFE.SN='000';      %TODO get info from config file
 
-% Meta_Data.CALIpath=fullfile('..','CALIBRATION',[Meta_Data.CTL.rev '_' ...
+% Meta_Data.paths.calibration=fullfile('..','CALIBRATION',[Meta_Data.CTL.rev '_' ...
 %     Meta_Data.CTL.SN '-' Meta_Data.AFE.rev '_' Meta_Data.AFE.SN]);
-Meta_Data.CALIpath=fullfile(Meta_Data.processpath,'CALIBRATION','ELECTRONICS');
+Meta_Data.paths.calibration=fullfile(Meta_Data.paths.process_library,'CALIBRATION','ELECTRONICS');
 %% set process parameters
 Meta_Data.PROCESS.nb_channels = setup.(wh_AFE).nb_channel;
 Meta_Data.PROCESS.channels=cellfun(@(x) x.name, setup.(wh_AFE).sensors, 'un',0);
@@ -72,7 +72,7 @@ for n=1:numel(Meta_Data.PROCESS.channels)
     end
 end
 
-Meta_Data.AFE.shearcal_path=fullfile(Meta_Data.processpath,'CALIBRATION','SHEAR_PROBES');
+Meta_Data.AFE.shearcal_path=fullfile(Meta_Data.paths.process_library,'CALIBRATION','SHEAR_PROBES');
 
 for i=1:Meta_Data.PROCESS.nb_channels
     sensor=setup.(wh_AFE).sensors{i};
@@ -122,7 +122,7 @@ Meta_Data.CTD.name = setup.(wh_CTD).header;
 % Also use SBE in TPS and NOT engineer format.
 Meta_Data.CTD.SN   = num2str(str2double(setup.(wh_CTD).sn),'%04.0f');
 Meta_Data.CTD.sample_per_record   = setup.(wh_CTD).sample_data_per_record;
-Meta_Data.CTD.CALpath   = fullfile(Meta_Data.processpath,'CALIBRATION','SBE49');
+Meta_Data.CTD.CALpath   = fullfile(Meta_Data.paths.process_library,'CALIBRATION','SBE49');
 
 Meta_Data.CTD.CALfile   = @(x,y) fullfile(x,[y '.cal']);
 
@@ -155,7 +155,7 @@ Meta_Data.SDIO=setup.SDIO;
 
 
 fprintf('Saving Meta_Data in datapath \n')
-save(fullfile(Meta_Data.datapath,'Meta_Data.mat'),'Meta_Data');
+save(fullfile(Meta_Data.paths.data,'Meta_Data.mat'),'Meta_Data');
 
 % TODO: It does not work if the data does not have all the channels
 % .     I ll change that if needed

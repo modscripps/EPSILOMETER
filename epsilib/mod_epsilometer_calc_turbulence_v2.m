@@ -16,7 +16,7 @@ end
 %% Get Profile from Profile_or_profNum
 if isnumeric(Profile_or_profNum) && ~isstruct(Profile_or_profNum)
     profNum = Profile_or_profNum;
-    load(fullfile(Meta_Data.L1path,sprintf('Profile%03.0f',profNum)));
+    load(fullfile(Meta_Data.paths.profiles,sprintf('Profile%03.0f',profNum)));
     %eval(['Profile = ' sprintf('Profile%03.0f',profNum) ';']);
 elseif isstruct(Profile_or_profNum)
     Profile = Profile_or_profNum;
@@ -52,9 +52,9 @@ Meta_Data.PROCESS.h_freq = get_filters_SOM(Meta_Data,Meta_Data.PROCESS.fe);
 % get FPO7 channel average noise to compute chi
 switch Meta_Data.AFE.temp_circuit
     case 'Tdiff'
-        Meta_Data.PROCESS.FPO7noise = load(fullfile(Meta_Data.CALIpath,'FPO7_noise.mat'),'n0','n1','n2','n3');
+        Meta_Data.PROCESS.FPO7noise = load(fullfile(Meta_Data.paths.calibration,'FPO7_noise.mat'),'n0','n1','n2','n3');
     otherwise
-        Meta_Data.PROCESS.FPO7noise = load(fullfile(Meta_Data.CALIpath,'FPO7_notdiffnoise.mat'),'n0','n1','n2','n3');
+        Meta_Data.PROCESS.FPO7noise = load(fullfile(Meta_Data.paths.calibration,'FPO7_notdiffnoise.mat'),'n0','n1','n2','n3');
 end
 
 %% Cut profile to compute coherence
@@ -134,6 +134,8 @@ accList = Meta_Data.PROCESS.timeseries(idxA);
 Profile.t = nan(nbscan,1);
 Profile.w = nan(nbscan,1);
 Profile.s = nan(nbscan,1);
+Profile.th = nan(nbscan,1);
+Profile.sgth = nan(nbscan,1);
 Profile.dnum = nan(nbscan,1);
 Profile.ind_range_ctd = nan(nbscan,2);
 Profile.ind_range_epsi = nan(nbscan,2);
@@ -227,6 +229,8 @@ for p = 1:nbscan % p is the scan index.
         Profile.w(p) = scan.w;
         Profile.t(p) = scan.t;
         Profile.s(p) = scan.s;
+        Profile.th(p) = scan.th;
+        Profile.sgth(p) = scan.sgth;
         if isfield(scan,'dnum')
             Profile.dnum(p) = scan.dnum;
         end
@@ -244,97 +248,23 @@ for p = 1:nbscan % p is the scan index.
     
 end
 
+Profile.Cs1a3_full = Profile.Cs1a3_full(:).';
+Profile.Cs2a3_full = Profile.Cs2a3_full(:).';
+
 %% Define varInfo and sort Profile fields
-% The order of the fields in varInfo will define the order of fields in
-% Profile, so make sure there are the same number of fields!
-if isfield(Profile.ctd,'dnum')
-    Profile.varInfo.dnum = {'datenum','Matlab datenum'};
-    Profile.varInfo.time_s = {'time','seconds since Jan 1 1970'};
-else
-    Profile.varInfo.time_s = {'time','seconds since power on'};
-end
-Profile.varInfo.P = {'CTD P','db'};
-Profile.varInfo.dPdt = {'CTD diff(P)/diff(ctdtime)','db s^{-1}'};
-Profile.varInfo.T = {'CTD temperature','C'};
-Profile.varInfo.C = {'CTD conductivity',''};
-Profile.varInfo.S = {'CTD salinity','psu'};
-Profile.varInfo.sig = {'CTD potential density (sigma-theta)',''};
-%Profile.varInfo.EPSInbsample = {'',''};
-%Profile.varInfo.epsitime = {'Epsi time','Matlab datenum'};
-Profile.varInfo.a1_g = {'acceleration sensor 1 timeseries in this scan','[g]'};
-Profile.varInfo.a2_g = {'acceleration sensor 2 timeseries in this scan','[g]'};
-Profile.varInfo.a3_g = {'acceleration sensor 3 timeseries in this scan','[g]'};
-Profile.varInfo.s1_volt = {'shear sensor 1 timeseries in this scan','Volts'};
-Profile.varInfo.s2_volt = {'shear sensor 2 timeseries in this scan','Volts'};
-Profile.varInfo.t1_volt = {'temperature sensor 1 timeseries in this scan','Volts'};
-Profile.varInfo.t2_volt = {'temperature sensor 2 timeseries in this scan','Volts'};
-if isfield(Meta_Data.PROCESS.timeseries,'c_count')
-Profile.varInfo.c_count = {'additional sensor timseries in the scan' 'count'};
-end
-Profile.varInfo.nbscan = {'',''};
-Profile.varInfo.nfft = {'',''};
-Profile.varInfo.nfftc = {'',''};
-Profile.varInfo.tscan = {'length of scan window','s'};
-Profile.varInfo.fpump = {'',''};
-Profile.varInfo.dnum = {'datenum','Matlab datenum'}; 
-Profile.varInfo.pr = {'CTD pressure','db'};  
-Profile.varInfo.w = {'fall speed','db s^{-1}'};
-Profile.varInfo.t = {'temperature','C'};
-Profile.varInfo.s = {'salinity','psu'};  
-Profile.varInfo.kvis = {'kinematic viscosity',''};  
-Profile.varInfo.epsilon = {'turbulent kinetic energy dissipation rate calculated from Ps_shear_k', ''};
-Profile.varInfo.epsilon_co = {'turbulent kinetic energy dissipation rate calculated from Ps_shear_co_k', ''};
-Profile.varInfo.chi = {'temperature gradient dissipation rate',''};
-Profile.varInfo.sh_fc = {'shear cutoff frequency, 1=uncorrected, 2=coherence-corrected', 'Hz'};
-Profile.varInfo.tg_fc = {'temperature gradient cutoff frequency, 1=uncorrected, 2=coherence-corrected', 'Hz'};
-Profile.varInfo.flag_tg_fc = {'temperature gradient cut off frequency is very high','0/1'};
-Profile.varInfo.ind_range_ctd = {'1st and last indices of CTD arrays in this Profile that go into each scan window',''};
-Profile.varInfo.ind_range_epsi = {'1st and last indices of Epsi arrays in this Profile that go into each scan window',''};
-Profile.varInfo.f = {'frequency','Hz'};
-Profile.varInfo.k = {'wavenumber','cycles m^-^1'};
-Profile.varInfo.Pa_g_f = {'accleration frequency power spectrum', '[g]^2 Hz^{-1}'};
-Profile.varInfo.Ps_volt_f = {'shear frequency power spectrum', 'Volts^2 Hz^{-1}'};
-Profile.varInfo.Ps_shear_k = {'shear wavenumber power spectrum', 's{-1} cpm^{-1}'};
-Profile.varInfo.Ps_shear_co_k = {'coherence-corrected shear frequency power spectrum (full profile coherence with a3 channel has been removed)', ''};
-Profile.varInfo.Pt_volt_f = {'temperature frequency power spectrum','Volts^2 Hz{-1}'};
-Profile.varInfo.Pt_Tg_k = {'temperature gradient wavenumber power spectrum', 'C^2 s{-1} cpm^{-1}'};
-Profile.varInfo.Cs1a3_full = {'coherence betwen s1 and a3 channels between Meta_Data.PROCESS.Prmin and Meta_Data.PROCESS.Prmax',''};
-Profile.varInfo.Cs2a3_full = {'coherence betwen s2 and a3 channels between Meta_Data.PROCESS.Prmin and Meta_Data.PROCESS.Prmax',''};
-
-% Profile fields to remove
-fieldsToRemove = {'P_raw','T_raw','S_raw','C_raw','PT_raw','timestamp',...
-'t1_count','t2_count','s1_count','s2_count','a1_count','a2_count','a3_count'};
-for iField=1:length(fieldsToRemove)
-   if isfield(Profile,fieldsToRemove{iField})
-       Profile = rmfield(Profile,fieldsToRemove{iField});
-   end
-end
-
-
-% Sort Profile field names by order of varInfo as written above
-varFields = fields(Profile.varInfo);
-profFields = fields(Profile);
+Profile = add_varInfo(Profile);
+Profile = sort_profile(Profile);
 
 % Save files
 if saveData && isfield(Profile,'profNum')
     save_var_name = 'Profile';
     save_file_name = sprintf('Profile%03i',Profile.profNum);
-    save_file = fullfile(Meta_Data.L1path, ...
+    save_file = fullfile(Meta_Data.paths.profiles, ...
                         [save_file_name '.mat']);
     eval(['save(''' save_file ''', ''' save_var_name ''');']);
 end
 
-
-% 
-
-% try
-%     Profile = orderfields(Profile,['Meta_Data';'varInfo';varFields]);
-% catch
-%     error('There are more Profile fields than are defined in varInfo')
-% end
-% 
-
-
-
+% Sort Profile by standard field order
+Profile = sort_profile(Profile);
 
 end

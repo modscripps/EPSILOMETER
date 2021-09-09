@@ -8,7 +8,7 @@ function mod_epsi_read_rawfiles(Meta_Data)
 % get the filenames of the raw data in the  raw or sdraw folder
 switch Meta_Data.PROCESS.recording_mode
     case 'STREAMING'
-        list_files = dir(fullfile(Meta_Data.RAWpath,'*.epsi'));
+        list_files = dir(fullfile(Meta_Data.paths.raw_data,'*.epsi'));
         if isempty(list_files)
             list_files = dir(fullfile(Meta_Data.SDRAWpath,'*.epsi'));
         end
@@ -75,7 +75,7 @@ switch Meta_Data.PROCESS.recording_mode
         a.epsi = STR.epsi;
         a.aux1 = STR.aux1;
         
-        save(fullfile(Meta_Data.RAWpath,['STR' Meta_Data.deployment '.mat']),'a','-v7.3')
+        save(fullfile(Meta_Data.paths.raw_data,['STR' Meta_Data.deployment '.mat']),'a','-v7.3')
     case 'SD'
         % the computation of S sig is done in sd buildtime
         %TODO this somewhere else maybe a function common to

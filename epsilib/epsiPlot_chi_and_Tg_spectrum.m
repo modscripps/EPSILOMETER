@@ -44,9 +44,9 @@ logf=log10(Profile.f);
 h_freq=get_filters_SOM(Meta_Data,Profile.f);
 switch Meta_Data.AFE.temp_circuit
     case 'Tdiff'
-        FPO7noise=load(fullfile(Meta_Data.CALIpath,'FPO7_noise.mat'),'n0','n1','n2','n3');
+        FPO7noise=load(fullfile(Meta_Data.paths.calibration,'FPO7_noise.mat'),'n0','n1','n2','n3');
     otherwise
-        FPO7noise=load(fullfile(Meta_Data.CALIpath,'FPO7_notdiffnoise.mat'),'n0','n1','n2','n3');
+        FPO7noise=load(fullfile(Meta_Data.paths.calibration,'FPO7_notdiffnoise.mat'),'n0','n1','n2','n3');
 end
 n0=FPO7noise.n0; n1=FPO7noise.n1; n2=FPO7noise.n2; n3=FPO7noise.n3;
 tnoise=10.^(n0+n1.*logf+n2.*logf.^2+n3.*logf.^3);

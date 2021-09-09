@@ -35,7 +35,7 @@ ylabel('Depth (m)','fontsize',fontsize)
 fig=gcf;
 fig.PaperPosition = [0 0 12 8];
 fig.PaperOrientation='Portrait';
-print(fullfile(Meta_Data.L1path,'Epsi1_map.png'),'-dpng2')
+print(fullfile(Meta_Data.paths.profiles,'Epsi1_map.png'),'-dpng2')
 
 % epsilon 2
 figure;
@@ -56,7 +56,7 @@ ylabel('Depth (m)','fontsize',20)
 fig=gcf;
 fig.PaperPosition = [0 0 15 10];
 fig.PaperOrientation='Portrait';
-print(fullfile(Meta_Data.L1path,'Epsi2_Map.png'),'-dpng2')
+print(fullfile(Meta_Data.paths.profiles,'Epsi2_Map.png'),'-dpng2')
 
 
 % chi 1 
@@ -78,7 +78,7 @@ ylabel('Depth (m)','fontsize',fontsize)
 fig=gcf;
 fig.PaperPosition = [0 0 12 8];
 fig.PaperOrientation='Portrait';
-print(fullfile(Meta_Data.L1path,'Chi1_map1.png'),'-dpng2')
+print(fullfile(Meta_Data.paths.profiles,'Chi1_map1.png'),'-dpng2')
 
 %chi2 
 figure;
@@ -99,7 +99,7 @@ ylabel('Depth (m)','fontsize',20)
 fig=gcf;
 fig.PaperPosition = [0 0 15 10];
 fig.PaperOrientation='Portrait';
-print(fullfile(Meta_Data.L1path,'Chi2_map.png'),'-dpng2')
+print(fullfile(Meta_Data.paths.profiles,'Chi2_map.png'),'-dpng2')
 
 
 % chi 1 
@@ -121,7 +121,7 @@ ylabel('Depth (m)','fontsize',fontsize)
 fig=gcf;
 fig.PaperPosition = [0 0 12 8];
 fig.PaperOrientation='Portrait';
-print(fullfile(Meta_Data.L1path,'Chi21_map1.png'),'-dpng2')
+print(fullfile(Meta_Data.paths.profiles,'Chi21_map1.png'),'-dpng2')
 
 %chi2 
 figure;
@@ -142,7 +142,7 @@ ylabel('Depth (m)','fontsize',20)
 fig=gcf;
 fig.PaperPosition = [0 0 15 10];
 fig.PaperOrientation='Portrait';
-print(fullfile(Meta_Data.L1path,'Chi22_map.png'),'-dpng2')
+print(fullfile(Meta_Data.paths.profiles,'Chi22_map.png'),'-dpng2')
 
 
 
@@ -165,7 +165,7 @@ ylabel('Depth (m)','fontsize',fontsize)
 fig=gcf;
 fig.PaperPosition = [0 0 14 9];
 fig.PaperOrientation='Portrait';
-print(fullfile(Meta_Data.L1path,'Epsichi1_map.png'),'-dpng2')
+print(fullfile(Meta_Data.paths.profiles,'Epsichi1_map.png'),'-dpng2')
 
 %epsilon from chi2 
 figure;
@@ -186,5 +186,5 @@ ylabel('Depth (m)','fontsize',20)
 fig=gcf;
 fig.PaperPosition = [0 0 15 10];
 fig.PaperOrientation='Portrait';
-print(fullfile(Meta_Data.L1path,'Epsichi2_map.png'),'-dpng2')
+print(fullfile(Meta_Data.paths.profiles,'Epsichi2_map.png'),'-dpng2')
 

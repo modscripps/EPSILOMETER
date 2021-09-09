@@ -69,7 +69,7 @@ obj.plot_properties = epsiSetup_set_plot_properties;
 % Create Meta_Data
 obj.Meta_Data = epsiSetup_fill_meta_data(setup);
 obj.Meta_Data = epsiSetup_read_MetaProcess(obj.Meta_Data,...
-    fullfile(obj.Meta_Data.processpath,'Meta_Data_Process','Meta_Data_Process_blt.txt'));
+    fullfile(obj.Meta_Data.paths.process_library,'Meta_Data_Process','Meta_Data_Process_blt.txt'));
 obj.Meta_Data.rawfileSuffix = fileSuffix;
 
 % Apply TMAX to structure tMax. Since the instruments sample at different

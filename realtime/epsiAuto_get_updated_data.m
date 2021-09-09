@@ -21,7 +21,7 @@ else
     data = newData;
     
     % Load most recent data file
-    % data = load(fullfile(obj.Meta_Data.MATpath,TimeIndex.filenames{idxLast}));
+    % data = load(fullfile(obj.Meta_Data.paths.mat_data,TimeIndex.filenames{idxLast}));
     % fprintf([TimeIndex.filenames{idxLast},'\n'])
     
     

@@ -53,9 +53,9 @@ else
     
     switch tempChoice
         case 'Tdiff'
-            Meta_Data.PROCESS.FPO7noise=load(fullfile(Meta_Data.CALIpath,'FPO7_noise.mat'),'n0','n1','n2','n3');
+            Meta_Data.PROCESS.FPO7noise=load(fullfile(Meta_Data.paths.calibration,'FPO7_noise.mat'),'n0','n1','n2','n3');
         otherwise
-            Meta_Data.PROCESS.FPO7noise=load(fullfile(Meta_Data.CALIpath,'FPO7_notdiffnoise.mat'),'n0','n1','n2','n3');
+            Meta_Data.PROCESS.FPO7noise=load(fullfile(Meta_Data.paths.calibration,'FPO7_notdiffnoise.mat'),'n0','n1','n2','n3');
     end
     FPO7noise   = Meta_Data.PROCESS.FPO7noise;
     
@@ -99,6 +99,8 @@ if ind_ctdscan(1)>0 && ind_ctdscan(end)<=length(Profile.ctd.time_s) ...
     scan.pr     = nanmean(Profile.ctd.P(ind_ctdscan));
     scan.t      = nanmean(Profile.ctd.T(ind_ctdscan));
     scan.s      = nanmean(Profile.ctd.S(ind_ctdscan));
+    scan.th     = nanmean(Profile.ctd.th(ind_ctdscan));
+    scan.sgth   = nanmean(Profile.ctd.sgth(ind_ctdscan));    
     if isfield(Profile.ctd,'dnum')
         scan.dnum   = nanmean(Profile.ctd.dnum(ind_ctdscan));
     else

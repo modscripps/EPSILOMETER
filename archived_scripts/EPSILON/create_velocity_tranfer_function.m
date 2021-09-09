@@ -10,7 +10,7 @@ function [H1,H2]=create_velocity_tranfer_function(MS,min_epsi,Meta_Data)
 % code inspired by Bethan Wynne-Cattanach's code
 % written by Arnaud Le Boyer 02/06/2020.
 
-listfile=dir(fullfile(Meta_Data.L1path,'Turbulence_Profiles*.mat'));
+listfile=dir(fullfile(Meta_Data.paths.profiles,'Turbulence_Profiles*.mat'));
 listfilename=natsort({listfile.name});
 
 

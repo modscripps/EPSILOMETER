@@ -242,6 +242,11 @@ else
         epsi.time_s = epsi_timestamp./1000;
     end
     
+    % Sort epsi fields
+    epsi = orderfields(epsi,{'dnum','time_s','t1_count','t2_count','s1_count',...
+        's2_count','a1_count','a2_count','a3_count','t1_volt','t2_volt','s1_volt',...
+        's2_volt','a1_g','a2_g','a3_g'});
+    
 end %end if there is epsi data
 
 
@@ -380,20 +385,27 @@ else
             ctd = sbe49_ascii_get_conductivity(ctd,sbe);
             
             ctd.S    = sw_salt(ctd.C*10./c3515,ctd.T,ctd.P);
-            ctd.sig  = sw_pden(ctd.S,ctd.T,ctd.P,0);
+            ctd.th   = sw_ptmp(ctd.S,ctd.T,ctd.P,0);
+            ctd.sgth  = sw_pden(ctd.S,ctd.T,ctd.P,0);
             ctd.dPdt = [0; diff(ctd.P)./diff(ctd.time_s)];
             
             % NC 17 July 2021 - added ctd.z and ctd.dzdt.
             % get_scan_spectra.m will use dzdt to define fall speed w.
             if ~isfield(Meta_Data.PROCESS,'latitude')
                 error('Need latitude to get depth from pressure data. Add to MetaProcess text file.')
+            else
+                ctd.z    = sw_dpth(ctd.P,Meta_Data.PROCESS.latitude);
+                ctd.dzdt = [0; diff(ctd.z)./diff(ctd.time_s)];
             end
-            ctd.z    = sw_dpth(ctd.P,Meta_Data.PROCESS.latitude);
-            ctd.dzdt = [0; diff(ctd.z)./diff(ctd.time_s)];
+
     end
     
     % Make sure ctd.S is real. Every once in a while, S comes out imaginary, I think only when SBE is on deck.
     ctd.S = real(ctd.S);
+    
+    % Sort ctd fields
+    ctd = orderfields(ctd,{'dnum','time_s','P_raw','T_raw','S_raw',...
+        'C_raw','PT_raw','P','z','T','S','C','th','sgth','dPdt','dzdt'});
 
 end %end loop if there is ctd data
 
@@ -451,6 +463,9 @@ else
         % time_s - seconds since power on
         alt.time_s = alt_timestamp./1000;
     end
+    
+    % Order alt fields
+    alt = orderfields(alt,{'dnum','time_s','dst'});
     
 end %end loop if there is alt data
 
@@ -544,6 +559,9 @@ else
         % time_s - seconds since power on
         vnav.time_s = vnav_timestamp./1000;
     end
+    
+    % Order vnav fields 
+    vnav = orderfields(vnav,{'dnum','time_s','compass','acceleration','gyro'});
     
 end %end loop if there is vnav data
 

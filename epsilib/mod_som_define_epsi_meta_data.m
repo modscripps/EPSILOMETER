@@ -28,6 +28,6 @@ end
 
 Meta_Data=mod_som_get_filters_name_efe(Meta_Data);
 % TODO: we ARE calibrating the board. need to save the result  
-%Meta_Data.CALIpath=fullfile(Meta_Data.process,'CALIBRATION','ELECTRONICS');
+%Meta_Data.paths.calibration=fullfile(Meta_Data.process,'CALIBRATION','ELECTRONICS');
 
 end

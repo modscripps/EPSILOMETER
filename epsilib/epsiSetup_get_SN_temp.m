@@ -9,4 +9,4 @@ Meta_Data.AFE.t2.SN = input(': ','s');
 fprintf('**** t1 SN = %s ****\n',Meta_Data.AFE.t1.SN)
 fprintf('**** t2 SN = %s ****\n',Meta_Data.AFE.t2.SN)
 
-save(fullfile(Meta_Data.datapath,'Meta_Data.mat'),'Meta_Data');
+save(fullfile(Meta_Data.paths.data,'Meta_Data.mat'),'Meta_Data');

@@ -1,5 +1,8 @@
-function obj = processNewProfiles(obj,varargin)
+function obj = epsiProcess_makeNewProfiles(obj,varargin)
 % obj = f_processNewProfiles(obj,varargin)
+%
+% - Divides data into profiles
+% - Does not compute turbulence data
 %
 % INPUTS:
 %   obj = epsi_class object
@@ -22,15 +25,15 @@ end
 % obj.f_getProfileIndices;
 
 % Load PressureTimeseries
-load(fullfile(obj.Meta_Data.MATpath,'PressureTimeseries.mat'))
+load(fullfile(obj.Meta_Data.paths.mat_data,'PressureTimeseries.mat'))
 
 % Look for the current list of profiles
-profList = dir(fullfile(obj.Meta_Data.L1path,'Profile*.mat'));
+profList = dir(fullfile(obj.Meta_Data.paths.profiles,'Profile*.mat'));
 profNumChar = cell2mat(cellfun(@(C) C(8:10),{profList(:).name},'uniformoutput',0).');
 if ~isempty(profNumChar)
     lastProfNum = str2double(profNumChar(end,:));
     % Load the last profile
-    lastProf = load(fullfile(obj.Meta_Data.L1path,sprintf('Profile%03.f',lastProfNum)));
+    lastProf = load(fullfile(obj.Meta_Data.paths.profiles,sprintf('Profile%03.f',lastProfNum)));
     
     % Does the last profile have all its data? Or was more collected in the
     % last batch of files?
@@ -58,16 +61,14 @@ for iProf=1:length(PressureTimeseries.startprof)
             
             Profile = obj.f_cropTimeseries(tMin,tMax);
             Profile.profNum = iProf;
-            Profile = obj.f_computeTurbulence(Profile);
-            
-            if makeGrid
-                process_gridProfiles;
-            end
-            
+
+            % Sort Profile by standard field order
+            Profile = sort_profile(Profile);
+
             % Save new profile
-            saveName = fullfile(obj.Meta_Data.L1path,sprintf('Profile%03.0f',iProf));
+            saveName = fullfile(obj.Meta_Data.paths.profiles,sprintf('Profile%03.0f',iProf));
             eval(['save ' saveName ' Profile']);
             clear Profile
     end
 end
-end %end f_processNewProfiles
+end %end f_makeNewProfiles

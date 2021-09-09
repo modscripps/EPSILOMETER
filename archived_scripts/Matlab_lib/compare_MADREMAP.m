@@ -86,5 +86,5 @@ print(fullfile(Meta_Data2.CALIpath,[Meta_Data1.deployment '-' Meta_Data1.deploym
 
 
 % fig=gcf;fig.PaperPosition = [0 0 30 30];
-% print(fullfile(Meta_Data.L1path,[Meta_Data.deployment '.png']),'-dpng')
+% print(fullfile(Meta_Data.paths.profiles,[Meta_Data.deployment '.png']),'-dpng')
 

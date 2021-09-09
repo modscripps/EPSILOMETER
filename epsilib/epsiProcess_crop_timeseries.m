@@ -13,7 +13,7 @@ function [Timeseries] = epsiProcess_crop_timeseries(Meta_Data,tRange)
 %   variables
 
 %% Find the mat file(s) within the time range
-load(fullfile(Meta_Data.MATpath,'TimeIndex'))
+load(fullfile(Meta_Data.paths.mat_data,'TimeIndex'))
 
 % To do: First, decide if the input was in datenum or seconds since power up.
 
@@ -44,14 +44,14 @@ if ~isempty(myFileIdx)
     % and merge them.
     if length(myFileIdx)==1
         try
-            load([Meta_Data.MATpath '/' TimeIndex.filenames{myFileIdx} '.mat']);
+            load([Meta_Data.paths.mat_data '/' TimeIndex.filenames{myFileIdx} '.mat']);
         catch
             error(['Can''t load ' TimeIndex.filenames{myFileIdx}])
         end
     elseif length(myFileIdx)>1
         % Load the first file and name the structures 'Out'
         try
-            load([Meta_Data.MATpath '/' TimeIndex.filenames{myFileIdx(1)} '.mat']);
+            load([Meta_Data.paths.mat_data '/' TimeIndex.filenames{myFileIdx(1)} '.mat']);
         catch
             error(['Can''t load ' TimeIndex.filenames{myFileIdx(1)}])
         end
@@ -71,7 +71,7 @@ if ~isempty(myFileIdx)
         % more than 2, so this should be pretty fast)
         for iF=2:length(myFileIdx)
             try
-                load([Meta_Data.MATpath '/' TimeIndex.filenames{myFileIdx(iF)} '.mat']);
+                load([Meta_Data.paths.mat_data '/' TimeIndex.filenames{myFileIdx(iF)} '.mat']);
             catch
                 error(['Can''t load ' TimeIndex.filenames{myFileIdx(iF)}])
             end
@@ -111,7 +111,11 @@ if ~isempty(myFileIdx)
             case 'time_s'
             inRange = ctd.time_s>=tRange(1) & ctd.time_s<=tRange(end);
         end
+        
         ctdFields = fields(ctd);
+        % Don't add any of the '_raw' fields
+        notRaw = cell2mat(cellfun(@(C) isempty(strfind(C,'_raw')),ctdFields,'UniformOutput',0));
+        ctdFields = ctdFields(notRaw);
         for iField=1:numel(ctdFields)
             Timeseries.ctd.(ctdFields{iField}) = ctd.(ctdFields{iField})(inRange);
         end
@@ -125,7 +129,11 @@ if ~isempty(myFileIdx)
             case 'time_s'
             inRange = epsi.time_s>=tRange(1) & epsi.time_s<=tRange(end);
         end
+        
         epsiFields = fields(epsi);
+        % Don't add any of the '_count' fields
+        notCount = cell2mat(cellfun(@(C) isempty(strfind(C,'_count')),epsiFields,'UniformOutput',0));
+        epsiFields = epsiFields(notCount);
         for iField=1:numel(epsiFields)
             Timeseries.epsi.(epsiFields{iField}) = epsi.(epsiFields{iField})(inRange);
         end
@@ -142,6 +150,34 @@ if ~isempty(myFileIdx)
         altFields = fields(alt);
         for iField=1:numel(altFields)
             Timeseries.alt.(altFields{iField}) = alt.(altFields{iField})(inRange);
+        end
+    end
+    
+    %% Add vnav to Timeseries
+    if isfield(vnav,'dnum') || isfield(vnav,'time_s')
+        switch tRangeChoice
+            case 'dnum'
+            inRange = vnav.dnum>=tRange(1) & vnav.dnum<=tRange(end);
+            case 'time_s'
+            inRange = vnav.time_s>=tRange(1) & vnav.time_s<=tRange(end);
+        end
+        vnavFields = fields(vnav);
+        for iField=1:numel(vnavFields)
+            Timeseries.vnav.(vnavFields{iField}) = vnav.(vnavFields{iField})(inRange,:);
+        end
+    end
+    
+    %% Add gps to Timeseries
+    if isfield(gps,'dnum') || isfield(gpsg,'time_s')
+        switch tRangeChoice
+            case 'dnum'
+            inRange = gps.dnum>=tRange(1) & gps.dnum<=tRange(end);
+            case 'time_s'
+            inRange = gps.time_s>=tRange(1) & gps.time_s<=tRange(end);
+        end
+        gpsFields = fields(gps);
+        for iField=1:numel(gpsFields)
+            Timeseries.gps.(gpsFields{iField}) = gps.(gpsFields{iField})(inRange,:);
         end
     end
     

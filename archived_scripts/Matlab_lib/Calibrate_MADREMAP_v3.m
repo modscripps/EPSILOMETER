@@ -241,12 +241,12 @@ Answer1=input('Do you want to save?(y/n)','s');
 while 1
     switch Answer1
         case 'y'
-            eval(['!mkdir ' Meta_Data.CALIpath])
-             print(fullfile(Meta_Data.CALIpath,[Meta_Data.deployment '.png']),'-dpng')
-             save(fullfile(Meta_Data.CALIpath,[Meta_Data.deployment '-FPO7_noise.mat']),'n0','n1','n2','n3')
-             save(fullfile(Meta_Data.CALIpath,[Meta_Data.deployment '-shear_noise.mat']),'n0s','n1s','n2s','n3s')
-             save(fullfile(Meta_Data.CALIpath,[Meta_Data.deployment '-spectrum_calib.mat']),'f1','P11')
-             save(fullfile(Meta_Data.CALIpath, ...
+            eval(['!mkdir ' Meta_Data.paths.calibration])
+             print(fullfile(Meta_Data.paths.calibration,[Meta_Data.deployment '.png']),'-dpng')
+             save(fullfile(Meta_Data.paths.calibration,[Meta_Data.deployment '-FPO7_noise.mat']),'n0','n1','n2','n3')
+             save(fullfile(Meta_Data.paths.calibration,[Meta_Data.deployment '-shear_noise.mat']),'n0s','n1s','n2s','n3s')
+             save(fullfile(Meta_Data.paths.calibration,[Meta_Data.deployment '-spectrum_calib.mat']),'f1','P11')
+             save(fullfile(Meta_Data.paths.calibration, ...
             ['Meta_' Meta_Data.mission '_' Meta_Data.deployment '.mat']),'Meta_Data')
             break;
         case 'n'

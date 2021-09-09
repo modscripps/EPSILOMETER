@@ -1,4 +1,4 @@
-function [F1,F2]=plot_binned_epsilon(Epsilon_class,title_string,F1,F2,Meta_Data)
+function [F1,F2]=plot_binned_epsilon_co(Epsilon_class,title_string,F1,F2,Meta_Data)
 
 %  input: 
 %  Epsilon_class : averaged temperature gradiant spectra classified by epsilon value
@@ -15,7 +15,7 @@ w_th=.65; %theoratical (estimated) speed w_th
 Sv = [Meta_Data.epsi.s1.Sv,Meta_Data.epsi.s2.Sv]; % TODO get Sv directly from the database
 Gr=9.81;
 h_freq=get_filters_MADRE(Meta_Data,f);
-shearnoise=load(fullfile(Meta_Data.CALIpath,'shear_noise.mat'),'n0s','n1s','n2s','n3s');
+shearnoise=load(fullfile(Meta_Data.paths.calibration,'shear_noise.mat'),'n0s','n1s','n2s','n3s');
 n0s=shearnoise.n0s; n1s=shearnoise.n1s; n2s=shearnoise.n2s; n3s=shearnoise.n3s;
 snoise=10.^(n0s+n1s.*logf+n2s.*logf.^2+n3s.*logf.^3);
 TFshear=(Sv(1).*w_th/(2*Gr)).^2 .* h_freq.shear.* haf_oakey(f,w_th);
@@ -49,7 +49,7 @@ for i=1:length(Epsilon_class.bin)
             sprintf('10^{%1.1f}',log10(Epsilon_class.bin(i))),...
             'fontsize',20,'Parent',ax1)
     end
-    ll(i)=loglog(ax1,Epsilon_class.k,Epsilon_class.mPshear1(i,:),'Color',cmap(i,:),'linewidth',2);
+    ll(i)=loglog(ax1,Epsilon_class.k,Epsilon_class.mPshear1_co(i,:),'Color',cmap(i,:),'linewidth',2);
     loglog(ax1,f./w_th,10*snoise_k,'Color',[.2 .2 .2],'linewidth',2);
     
 end
@@ -62,7 +62,7 @@ ylabel(ax1,'[s^{-2} / cpm]')
 set(ax1,'fontsize',20)
 title(ax1,[title_string '- Shear1'])
 
-nanind=find(nansum(Epsilon_class.mPshear1,2)>0);
+nanind=find(nansum(Epsilon_class.mPshear1_co,2)>0);
 legend_string=arrayfun(@(x) sprintf('log_{10}(\\epsilon)~%2.1f',x),log10(Epsilon_class.bin),'un',0);
 hl=gridLegend(ll(nanind),2,legend_string{nanind},'location','northwest');
 set(hl,'fontsize',5)
@@ -70,7 +70,7 @@ hl.Position=[.01 .75 .25 .25];
 
 ax2=axes('position',[.7 .1 .25 .82]);
 
-plot(ax2,log10(Epsilon_class.bin),Epsilon_class.nbin1,'-+k')
+plot(ax2,log10(Epsilon_class.bin),Epsilon_class.nbin1_co,'-+k')
 set(ax2,'fontsize',20)
 xlabel(ax2,'log_{10} \epsilon')
 xlim([min(log10(Epsilon_class.bin)) max(log10(Epsilon_class.bin))])
@@ -105,7 +105,7 @@ for i=1:length(Epsilon_class.bin)
             sprintf('10^{%1.1f}',log10(Epsilon_class.bin(i))),...
             'fontsize',20,'Parent',ax3)
     end
-    ll(i)=loglog(ax3,Epsilon_class.k,Epsilon_class.mPshear2(i,:),'Color',cmap(i,:),'linewidth',2);
+    ll(i)=loglog(ax3,Epsilon_class.k,Epsilon_class.mPshear2_co(i,:),'Color',cmap(i,:),'linewidth',2);
 end
 loglog(ax3,f./w_th,snoise_k,'Color',[.2 .2 .2],'linewidth',2);
 
@@ -117,7 +117,7 @@ ylabel(ax3,'[s^{-2} / cpm]')
 set(ax3,'fontsize',20)
 title(ax3,[title_string '- Shear2'])
 
-nanind=find(nansum(Epsilon_class.mPshear2,2)>0);
+nanind=find(nansum(Epsilon_class.mPshear2_co,2)>0);
 legend_string=arrayfun(@(x) sprintf('log_{10}(\\epsilon)~%2.1f',x),log10(Epsilon_class.bin),'un',0);
 hl=gridLegend(ll(nanind),2,legend_string{nanind},'location','northwest');
 set(hl,'fontsize',10)
@@ -125,10 +125,8 @@ hl.Position=[.01 .75 .25 .25];
 
 ax4=axes('position',[.7 .1 .25 .82]);
 
-plot(ax4,log10(Epsilon_class.bin),Epsilon_class.nbin2,'-+k')
+plot(ax4,log10(Epsilon_class.bin),Epsilon_class.nbin2_co,'-+k')
 set(ax4,'fontsize',20)
 xlabel(ax4,'log_{10} \epsilon')
 xlim(ax4,[min(log10(Epsilon_class.bin)) max(log10(Epsilon_class.bin))])
 title(ax4,'PDF \epsilon_2')
-
-

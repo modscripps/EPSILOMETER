@@ -15,9 +15,9 @@ function [Tnoise1,Tnoise2]=mod_epsilometer_get_temperature_noise(Meta_Data,fc)
 
 % Download EPSI and CTD profile
 try
-    load(fullfile(Meta_Data.L1path,['Profiles_' Meta_Data.deployment '.mat']),'CTDProfiles','EpsiProfiles');
+    load(fullfile(Meta_Data.paths.profiles,['Profiles_' Meta_Data.deployment '.mat']),'CTDProfiles','EpsiProfiles');
 catch
-    load(fullfile(Meta_Data.L1path,['Profiles_' Meta_Data.deployment '.mat']),'CTDProfile','EpsiProfile');
+    load(fullfile(Meta_Data.paths.profiles,['Profiles_' Meta_Data.deployment '.mat']),'CTDProfile','EpsiProfile');
     CTDProfiles = CTDProfile;
     EpsiProfiles = EpsiProfile;
 end
@@ -37,9 +37,9 @@ fe=Meta_Data.PROCESS.fe;
 % get FPO7 channel average noise to compute chi
 switch Meta_Data.MAP.temperature
     case 'Tdiff'
-        FPO7noise=load(fullfile(Meta_Data.CALIpath,'FPO7_noise.mat'),'n0','n1','n2','n3');
+        FPO7noise=load(fullfile(Meta_Data.paths.calibration,'FPO7_noise.mat'),'n0','n1','n2','n3');
     otherwise
-        FPO7noise=load(fullfile(Meta_Data.CALIpath,'FPO7_notdiffnoise.mat'),'n0','n1','n2','n3');
+        FPO7noise=load(fullfile(Meta_Data.paths.calibration,'FPO7_notdiffnoise.mat'),'n0','n1','n2','n3');
 end
 
 logf=log10(fe);

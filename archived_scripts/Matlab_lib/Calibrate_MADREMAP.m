@@ -164,8 +164,8 @@ title([ Meta_Data.MADRE.rev '-' Meta_Data.MADRE.SN '-' Meta_Data.MAP.rev '-' Met
 
 
 fig=gcf;fig.PaperPosition = [0 0 20 10];
-print([Meta_Data.L1path Meta_Data.deployement '.png'],'-dpng')
+print([Meta_Data.paths.profiles Meta_Data.deployement '.png'],'-dpng')
 
-save([Meta_Data.CALIpath 'FPO7_noise.mat'],'n0','n1','n2','n3')
-save([Meta_Data.CALIpath 'shear_noise.mat'],'n0s','n1s','n2s','n3s')
+save([Meta_Data.paths.calibration 'FPO7_noise.mat'],'n0','n1','n2','n3')
+save([Meta_Data.paths.calibration 'shear_noise.mat'],'n0s','n1s','n2s','n3s')
 
