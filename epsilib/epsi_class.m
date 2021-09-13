@@ -46,7 +46,7 @@ classdef epsi_class < handle
                     % accessible. If not, Meta_Data was probably
                     % created on a different computer and you need to
                     % remake the paths.
-                    if  ~(isdir(obj.Meta_Data.paths.process_library) && isdir(obj.Meta_Data.paths.data) && isdir(obj.Meta_Data.paths.calibration)) || ~isclassfield(obj.Meta_Data,'RAWpath')
+                    if  ~(isdir(obj.Meta_Data.paths.process_library) && isdir(obj.Meta_Data.paths.data) && isdir(obj.Meta_Data.paths.calibration)) || ~isclassfield(obj.Meta_Data.paths,'raw_data')
 %                         obj.Meta_Data = set_epsi_paths(obj.Meta_Data);
                         
                         % Find the epsi library and add it as process path
@@ -651,17 +651,17 @@ classdef epsi_class < handle
             % Makes new profiles but does not compute turbulence variables
             obj = epsiProcess_makeNewProfiles(obj);
         end
-        function obj = f_interpolateProfileToZ(obj,Profile,z)
+        function obj = f_interpolateProfileToP(obj,Profile,z)
             % obj = f_interpolateProfileToP(Profile,P)
             %
             % INPUTS:
             %   Profile - Profile structure with turbulence variables
             %   P - pressure array
-           griddedProfile = epsiProcess_interpolate_Profile_to_z(Profile,z); 
+           griddedProfile = epsiProcess_interpolate_Profile_to_P(Profile,z); 
            obj = griddedProfile;
         end
-        function obj = f_gridProfiles(obj,P)
-            obj = epsiProcess_gridProfiles(obj,P);
+        function obj = f_gridProfiles(obj,z)
+            obj = epsiProcess_gridProfiles(obj,z);
         end
         function obj = f_cropTimeseries(obj,tMin,tMax)
             % Get a piece of timeseries structure that you can use to compute

@@ -97,6 +97,7 @@ if ind_ctdscan(1)>0 && ind_ctdscan(end)<=length(Profile.ctd.time_s) ...
     end
     
     scan.pr     = nanmean(Profile.ctd.P(ind_ctdscan));
+    scan.z      = nanmean(Profile.ctd.z(ind_ctdscan));
     scan.t      = nanmean(Profile.ctd.T(ind_ctdscan));
     scan.s      = nanmean(Profile.ctd.S(ind_ctdscan));
     scan.th     = nanmean(Profile.ctd.th(ind_ctdscan));

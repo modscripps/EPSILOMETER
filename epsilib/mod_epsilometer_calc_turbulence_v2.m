@@ -27,6 +27,10 @@ elseif isclassfield(Profile_or_profNum,'epsi') && isclassfield(Profile_or_profNu
 else
     error('Need epsi, ctd, and Meta_Data to calculate turbulence parameters!');
 end
+if isfield(Profile_or_profNum,'gps')
+    Profile.latitude = nanmean(Profile_or_profNum.gps.latitude);
+    Profile.longitude = nanmean(Profile_or_profNum.gps.longitude);
+end
 
 
 %% get channels
@@ -131,12 +135,13 @@ accList = Meta_Data.PROCESS.timeseries(idxA);
 
 % ------------------------------------------------
 % Pre-allocate profile space
+Profile.dnum = nan(nbscan,1);
+Profile.z = nan(nbscan,1);
 Profile.t = nan(nbscan,1);
 Profile.w = nan(nbscan,1);
 Profile.s = nan(nbscan,1);
 Profile.th = nan(nbscan,1);
 Profile.sgth = nan(nbscan,1);
-Profile.dnum = nan(nbscan,1);
 Profile.ind_range_ctd = nan(nbscan,2);
 Profile.ind_range_epsi = nan(nbscan,2);
 Profile.epsilon = nan(nbscan,2);
@@ -225,7 +230,8 @@ for p = 1:nbscan % p is the scan index.
         Profile.Pa_g_f.a1(p,:) = scan.Pa_g_f.a1(:).';
         Profile.Pa_g_f.a2(p,:) = scan.Pa_g_f.a2(:).';
         Profile.Pa_g_f.a3(p,:) = scan.Pa_g_f.a3(:).';
-
+        
+        Profile.z(p) = scan.z;
         Profile.w(p) = scan.w;
         Profile.t(p) = scan.t;
         Profile.s(p) = scan.s;
@@ -253,7 +259,11 @@ Profile.Cs2a3_full = Profile.Cs2a3_full(:).';
 
 %% Define varInfo and sort Profile fields
 Profile = add_varInfo(Profile);
-Profile = sort_profile(Profile);
+try
+    Profile = sort_profile(Profile);
+catch
+    warning('Update sort_profile.m with the correct variable names');
+end
 
 % Save files
 if saveData && isfield(Profile,'profNum')

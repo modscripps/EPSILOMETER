@@ -9,15 +9,15 @@ function obj = epsiProcess_processNewProfiles(obj,varargin)
 %   obj = epsi_class object
 %
 % OPTIONAL INPUTS:
-%   'grid',P - 'grid' flag to grid some of the profile variables onto a
+%   'grid',z - 'grid' flag to grid some of the profile variables onto a
 %               standard pressure grid 
-%            - P = the pressure array to use
+%            - z = the depth array to use
 %
 % If there are optional arguments they are 'grid' and P, the pressure array
 % to grid onto
 if nargin>1
     makeGrid = true;
-    P = varargin{1}{2};
+    z = varargin{1}{2};
 else
     makeGrid = false;
 end
@@ -65,10 +65,6 @@ for iProf=1:length(PressureTimeseries.startprof)
             Profile = obj.f_computeTurbulence(Profile);
             % Sort Profile by standard field order
             Profile = sort_profile(Profile);
-            
-            if makeGrid
-                process_gridProfiles;
-            end
             
             % Save new profile
             saveName = fullfile(obj.Meta_Data.paths.profiles,sprintf('Profile%03.0f',iProf));

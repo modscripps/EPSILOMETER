@@ -1,18 +1,22 @@
 function obj = epsiProcess_gridProfiles(obj,z)
 
+% NC 9/9/21 To do - This could be faster. Right now it always interpolates
+% every profile and concatenates them. Could check to see if current
+% profile already exists in grid
+
+% Try loading griddedProfiles. If it doesn't exist, we'll
+% make it
+if exist(fullfile(obj.Meta_Data.paths.profiles,'griddedProfiles.mat'),'file')==2
+    load(fullfile(obj.Meta_Data.paths.profiles,'griddedProfiles'));
+end
+
 fileList = dir(fullfile(obj.Meta_Data.paths.profiles,'Profile*.mat'));
 for iFile=1:length(fileList)
     
     load(fullfile(obj.Meta_Data.paths.profiles,fileList(iFile).name))
     % Interpolate this profile to standard pressure grid
-    gridNew = obj.f_interpolateProfileToZ(Profile,z);
-    
-    % Try loading griddedProfiles. If it doesn't exist, we'll
-    % make it
-    if exist(fullfile(obj.Meta_Data.paths.profiles,'griddedProfiles.mat'),'file')==2
-        load(fullfile(obj.Meta_Data.paths.profiles,'griddedProfiles'));
-    end
-    
+    gridNew = epsiProcess_interpolate_Profile_to_P(Profile,z); 
+
     % Add gridded profile to full grid. If full grid doesn't
     % exist yet, create it.
     if exist('grid','var')
@@ -29,7 +33,7 @@ for iFile=1:length(fileList)
     end
     
     % Keep only unique profiles - if you're running this in
-    % realtime ou could have part of a profiles followed by the
+    % realtime you could have part of a profiles followed by the
     % rest of it.
     % ... but keep the last one if there is more than one.
     % TO DO: make this step less janky
@@ -42,6 +46,12 @@ for iFile=1:length(fileList)
     
     close
 end
+
+grid.mission = grid.mission(:,1).';
+grid.vehicle_name = grid.vehicle_name(:,1).';
+grid.deployment = grid.deployment(:,1).';
+grid.pr = grid.pr(:,1);
+grid.z = grid.z(:,1);
 
 saveName = fullfile(obj.Meta_Data.paths.profiles,'griddedProfiles');
 eval(['save ' saveName ' grid']);
