@@ -68,7 +68,7 @@ for iProf=1:length(PressureTimeseries.startprof)
             
             % Save new profile
             saveName = fullfile(obj.Meta_Data.paths.profiles,sprintf('Profile%03.0f',iProf));
-            eval(['save ' saveName ' Profile']);
+            save(saveName,'Profile');
             clear Profile
     end
 end

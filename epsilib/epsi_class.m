@@ -49,7 +49,20 @@ classdef epsi_class < handle
                     % NC 9/22/21 - Always redefine the data path as the current
                     % directory
                     obj.Meta_Data.paths.data=pwd;
-                    if  ~isdir(obj.Meta_Data.paths.process_library) || ~isdir(obj.Meta_Data.paths.data) || ~isdir(obj.Meta_Data.paths.calibration) || ~isclassfield(obj.Meta_Data.paths,'raw_data')
+%                     idx_blank_space=strfind(obj.Meta_Data.paths.data,' ');
+%                     
+%                     if ~isempty(idx_blank_space)
+%                         split_str=strsplit(Meta_Data.paths.data,' ');
+%                         for i=1:length(split_str)-1
+%                             split_str{i}=[split_str{i} '\ ']
+%                         end
+%                         Meta_Data.paths.data=[split_str{:}]
+%                         obj.Meta_Data.paths.data=Meta_Data.paths.data;
+%                     end
+                    if  ~isdir(obj.Meta_Data.paths.process_library) || ...
+                        ~isdir(obj.Meta_Data.paths.data) || ...
+                        ~isdir(obj.Meta_Data.paths.calibration) || ...
+                        ~isclassfield(obj.Meta_Data.paths,'raw_data')
 %                         obj.Meta_Data = set_epsi_paths(obj.Meta_Data);
                         
                         % Find the epsi library and add it as process path
