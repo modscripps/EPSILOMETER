@@ -46,7 +46,7 @@ classdef epsi_class < handle
                     % accessible. If not, Meta_Data was probably
                     % created on a different computer and you need to
                     % remake the paths.
-                    if  ~(isdir(obj.Meta_Data.paths.process_library) && isdir(obj.Meta_Data.paths.data) && isdir(obj.Meta_Data.paths.calibration)) || ~isclassfield(obj.Meta_Data.paths,'raw_data')
+                    if  ~isdir(obj.Meta_Data.paths.process_library) || ~isdir(obj.Meta_Data.paths.data) || ~isdir(obj.Meta_Data.paths.calibration) || ~isclassfield(obj.Meta_Data.paths,'raw_data')
 %                         obj.Meta_Data = set_epsi_paths(obj.Meta_Data);
                         
                         % Find the epsi library and add it as process path
