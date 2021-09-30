@@ -168,7 +168,7 @@ if ~isempty(myFileIdx)
     end
     
     %% Add gps to Timeseries
-    if isfield(gps,'dnum') || isfield(gpsg,'time_s')
+    if isfield(gps,'dnum') || isfield(gps,'time_s')
         switch tRangeChoice
             case 'dnum'
             inRange = gps.dnum>=tRange(1) & gps.dnum<=tRange(end);

@@ -92,6 +92,7 @@ classdef epsi_class < handle
                     repeat = 0;
                     
                     % Set epsi paths and define suffix for raw files
+                    obj.Meta_Data.paths.data = pwd;
                     obj.Meta_Data = epsiSetup_set_epsi_paths(obj.Meta_Data);
                     obj.Meta_Data = epsiSetup_get_raw_suffix(obj.Meta_Data);
                     

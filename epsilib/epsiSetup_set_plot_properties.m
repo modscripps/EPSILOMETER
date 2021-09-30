@@ -1,4 +1,4 @@
-function [plot_properties] = set_epsi_plot_properties()            
+function [plot_properties] = epsiSetup_set_plot_properties()            
 plot_properties.FontName='Sans';
             plot_properties.FontSize=16;
             plot_properties.LineWidth=2;
