@@ -1,3 +1,0 @@
-function Profile=epsiProcess_add_shear_heading_to_Profile(Profile)
-    Profile.shear_heading
-end

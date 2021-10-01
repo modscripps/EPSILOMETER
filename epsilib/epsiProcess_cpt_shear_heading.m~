@@ -1,7 +1,0 @@
-function vnav=epsiProcess_cpt_shear_heading(vnav)
-
-    vnav.shear_heading=tand(vnav.compass(:,1<))
-
-
-
-end

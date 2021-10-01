@@ -51,8 +51,7 @@ if ~isempty(Profile.epsi)
                           'linear','movmean',movmean_window_width);
         Profile.outliers.(wh_channel)= ...
                                    sum(Profile.epsi.(wh_channel)~= ...
-                                       Profile.epsi.([wh_channel '_raw']))/...
-                                       numel(Profile.epsi.(wh_channel))*100;
+                                       Profile.epsi.([wh_channel '_raw']));
     end
                       
 end
