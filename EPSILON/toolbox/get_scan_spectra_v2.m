@@ -1,4 +1,4 @@
-function [scan] = get_scan_spectra(Profile,id_scan)
+function [scan] = get_scan_spectra_v2(Profile,id_scan)
 
 % function [scan] = get_scan_spectra(Profile,id_scan)
 %
@@ -11,6 +11,14 @@ function [scan] = get_scan_spectra(Profile,id_scan)
 %          now including spectra
 %
 % Nicole Couto | June 2020
+%
+% ALB: adding the multivariate vibration correction.
+%      It should get rid of the acceleration and coherence channel
+%      selection. 
+%      I am following Goodman2006:
+%      "On Measuring the Terms of the Turbulent Kinetic 
+%      Energy Budget from an AUV". JTECH
+% aleboyer@ucsd.edu |
 % -------------------------------------------------------------------------
 %% Gather some data
 % -------------------------------------------------------------------------
@@ -29,6 +37,8 @@ N_epsi      = tscan.*Fs_epsi-mod(tscan*Fs_epsi,2);
 Fs_ctd      = Meta_Data.PROCESS.Fs_ctd;
 N_ctd       = tscan.*Fs_ctd-mod(tscan*Fs_ctd,2);
 h_freq      = Meta_Data.PROCESS.h_freq;
+
+dof         = 2*N_epsi/Meta_Data.PROCESS.nfft-1;
 
 % Find indices of ctd and epsi data that make up this scan
 [~,indP]    = sort(abs(Profile.ctd.P-Pr));
@@ -122,13 +132,14 @@ if ind_ctdscan(1)>0 && ind_ctdscan(end)<=length(Profile.ctd.time_s) ...
         scan.(currChannel)=Profile.epsi.(currChannel)(ind_scan); % time series in m.s^{-2}
     end
     
+    %% Compute spectra for acceleration channels
+    % ---------------------------------------------------------------------
     % Add full profile coherences
     scan.Cs1a3_full = Profile.Cs1a3_full;
     scan.Cs2a3_full = Profile.Cs2a3_full; 
-    
-    %% Compute spectra for acceleration channels
-    % ---------------------------------------------------------------------
-    
+
+    %ALB I am keeping accel spectra and Coh becasue it could be useful for
+    %debug but I am not using them anymore to clean the shear spectra.
     idxA = contains(Meta_Data.PROCESS.timeseries,'a');
     chanList = Meta_Data.PROCESS.timeseries(idxA);
     for iChan=1:numel(chanList)
@@ -161,18 +172,25 @@ if ind_ctdscan(1)>0 && ind_ctdscan(end)<=length(Profile.ctd.time_s) ...
     for iChan=1:numel(chanList)
         currChannel = chanList{iChan};
         
-        [Ps_volt_f,Ps_shear_k,Ps_shear_co_k,epsilon,epsilon_co,f,k,fc,kc] = ...
-            mod_efe_scan_epsilon(scan,currChannel,Meta_Data);
-        
-        % Get Panchev spectrum
-        if ~isempty(epsilon)
-            [kpan,Ppan] = panchev(epsilon,scan.kvis);
-            [~,Ppan_co] = panchev(epsilon_co,scan.kvis);
-        end
+        if isfield(Meta_Data.PROCESS, "multivariate")
+            if (Meta_Data.PROCESS.multivariate)
+                
+                [Ps_volt_f,Ps_shear_k,Ps_shear_co_k,epsilon,epsilon_co,f,k,fc,kc,Ppan,Ppan_co,fom] = ...
+                    mod_efe_scan_epsilon_v2(scan,currChannel,Meta_Data);
+            else
+                [Ps_volt_f,Ps_shear_k,Ps_shear_co_k,epsilon,epsilon_co,f,k,fc,kc,Ppan,Ppan_co,fom] = ...
+                    mod_efe_scan_epsilon(scan,currChannel,Meta_Data);
+            end%end if Meta_Data.PROCESS.multivariate=1
+        else
+            [Ps_volt_f,Ps_shear_k,Ps_shear_co_k,epsilon,epsilon_co,f,k,fc,kc,Ppan,Ppan_co,fom] = ...
+                mod_efe_scan_epsilon(scan,currChannel,Meta_Data);
+            
+        end%end if Meta_Data.PROCESS is a field multivariate
+
         
         % Put new variables in the structure
         varList = {'Ps_volt_f','Ps_shear_k','Ps_shear_co_k',...
-            'epsilon','epsilon_co','f','k','fc','kc','Ppan','Ppan_co','kpan'};
+            'epsilon','epsilon_co','f','k','fc','kc','Ppan','Ppan_co','fom'};
         for iVar=1:numel(varList)
             scan.(varList{iVar}).(currChannel(1:2)) = eval(varList{iVar});
         end
@@ -258,7 +276,6 @@ if ind_ctdscan(1)>0 && ind_ctdscan(end)<=length(Profile.ctd.time_s) ...
     scan.varInfo.epsilon_co = {'turbulent kinetic energy dissipation rate calculated from Ps_shear_co_k', ''};
     scan.varInfo.Ppan = {'frequency Panchev curve',''};
     scan.varInfo.Ppan_co = {'frequency Panchev curve',''};
-    scan.varInfo.kpan = {'wavenumber array for Panchev curve',''};
     scan.varInfo.Pt_volt_f = {'temperature frequency power spectrum','Volts^2 Hz{-1}'};
     scan.varInfo.Pt_Tg_k = {'temperature gradient wavenumber power spectrum', 'C^2 s{-1} cpm^{-1}'};
     scan.varInfo.chi = {'temperature gradient dissipation rate',''};

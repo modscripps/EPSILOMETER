@@ -1,9 +1,11 @@
-function [Pv1,Pv2,Pv1_co,Pv2_co,fe]=mod_efe_scan_multivariate_coherence(scan,nb_accel_channel,nfft,Fs)
+function [Pv,Pv_co,fe]=multivariate_correction(signal2correct,vibration,nfft,Fs)
 % Correcting the shear channels using a multivariate acceleration
 % correction: I use all the acceleration channnels to get a combined
 % coherence that removed from the shear channel. 
 %
-% Input: scan, meta_data  
+% Input: signaltocorrect: 1D timeseries of the signal you want to correct
+%        vibration      : 2D (channels,timestamp) timseries of "vibrations"
+%                         you want to use to correct signaltocorrect  
 %        
 % Compute the coherence over the whole profile using all 3 axis (we could add more) 
 % over the 1./tsan:Fs frequency frequency axis with nfft samples.
@@ -14,20 +16,26 @@ function [Pv1,Pv2,Pv1_co,Pv2_co,fe]=mod_efe_scan_multivariate_coherence(scan,nb_
 % a3 should be alingned with the shear
 % a1 is the other horizontal accell
 % a2 is the vertical 
-list_accel={'a3_g','a1_g','a2_g'};
 
-Csi=zeros(nb_accel_channel,nfft/2+1);
-Csj=zeros(nb_accel_channel,nfft/2+1);
-Aij=zeros(nb_accel_channel,nb_accel_channel,nfft/2+1);
-MC=zeros(nb_accel_channel,nb_accel_channel,nfft/2+1);
+% detrend signal to correct beffo
+signal2correct=detrend(signal2correct)
+
+if size(vibration,2)>size(vibration,1)
+    vibration=vibration.';
+end
+
+nb_vibration_channel=size(vibration,1);
+
+Csi=zeros(nb_vibration_channel,nfft/2+1);
+Csj=zeros(nb_vibration_channel,nfft/2+1);
+Aij=zeros(nb_vibration_channel,nb_vibration_channel,nfft/2+1);
+MC=zeros(nb_vibration_channel,nb_vibration_channel,nfft/2+1);
 
 df=Fs./nfft;
-if isfinite(scan.s1_volt)
     % lets do this 
-    [Pv1,fe]=pwelch(detrend(scan.s1_volt),nfft,[],nfft,Fs);
+    [Pv,fe]=pwelch(detrend(signal2correct),nfft,[],nfft,Fs);
 
-    for i=1:nb_accel_channel% nb of accel channel
-        wh_accel_i=list_accel{i};
+    for i=1:nb_vibration_channel% nb of accel channel
         accel_i=detrend(scan.(wh_accel_i));
         Csi(i,:)=cpsd(detrend(scan.s1_volt), accel_i,...
                       nfft,[],nfft,Fs);

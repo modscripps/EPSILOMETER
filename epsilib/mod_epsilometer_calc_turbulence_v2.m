@@ -104,17 +104,7 @@ end
 % compute coherence with a3 over the full profile.
 [Profile.Cs1a3_full,Profile.Cs2a3_full,...
         ~,~,~] = mod_efe_scan_coherence(Profile_coh,'a3_g',Meta_Data);
-
-% NC - Profile already has dPdt
-% %% Get dPdt
-% switch Meta_Data.vehicle_name
-%     case 'FISH'
-%         Profile.dPdt  =  compute_fallrate_downcast(Profile);
-%     case {'WW','Seacycler'}
-%         % TODO: make the P from the WW CTD in the same unit as SEABIRD
-%         Profile.dPdt  =  compute_speed_upcast(Profile);
-%         Profile.dPdt  =  -Profile.dPdt/1e7;
-% end
+    
 
 %% define a Pressure axis to an which I will compute epsilon and chi.
 %  The spectra will be nfft long centered around P(z) +/- tscan/2.
@@ -168,6 +158,7 @@ Profile.th = nan(nbscan,1);
 Profile.sgth = nan(nbscan,1);
 Profile.ind_range_ctd = nan(nbscan,2);
 Profile.ind_range_epsi = nan(nbscan,2);
+Profile.fom = nan(nbscan,2);
 Profile.epsilon = nan(nbscan,2);
 Profile.epsilon_co = nan(nbscan,2);
 Profile.sh_fc = nan(nbscan,2);
@@ -209,12 +200,18 @@ for p = 1:nbscan % p is the scan index.
     end
     
     % Get spectral data for each scan
-    scan  =  get_scan_spectra(Profile,p);
+%     scan  =  get_scan_spectra(Profile,p);
+    scan  =  get_scan_spectra_v2(Profile,p);
     
     % If there is data in the scan, add it to the profile
     if isfield(scan,'ind_ctdscan')
         Profile.ind_range_ctd(p,:) = [scan.ind_ctdscan(1),scan.ind_ctdscan(end)];
         Profile.ind_range_epsi(p,:) = [scan.ind_scan(1),scan.ind_scan(end)];
+        
+        %figure of merit: QC to check how the shear spectra fit panchev.
+        %fom<=1 great match, fom> 1 bad match.
+        Profile.fom(p,1) = scan.fom.s1;
+        Profile.fom(p,2) = scan.fom.s2;
         
         Profile.epsilon(p,1) = scan.epsilon.s1;
         Profile.epsilon(p,2) = scan.epsilon.s2;
@@ -239,41 +236,33 @@ for p = 1:nbscan % p is the scan index.
         % Add spectra to profile
         Profile.k(p,:) = scan.k;
         
-        Profile.Ps_volt_f.s1(p,:) = scan.Ps_volt_f.s1(:).';
-        Profile.Ps_volt_f.s2(p,:) = scan.Ps_volt_f.s2(:).';
-        Profile.Ps_shear_k.s1(p,:) = scan.Ps_shear_k.s1(:).';
-        Profile.Ps_shear_k.s2(p,:) = scan.Ps_shear_k.s2(:).';
+        Profile.Ps_volt_f.s1(p,:)     = scan.Ps_volt_f.s1(:).';
+        Profile.Ps_volt_f.s2(p,:)     = scan.Ps_volt_f.s2(:).';
+        Profile.Ps_shear_k.s1(p,:)    = scan.Ps_shear_k.s1(:).';
+        Profile.Ps_shear_k.s2(p,:)    = scan.Ps_shear_k.s2(:).';
         Profile.Ps_shear_co_k.s1(p,:) = scan.Ps_shear_co_k.s1(:).';
         Profile.Ps_shear_co_k.s2(p,:) = scan.Ps_shear_co_k.s2(:).';       
         
         Profile.Pt_volt_f.t1(p,:) = scan.Pt_volt_f.t1(:).';
         Profile.Pt_volt_f.t2(p,:) = scan.Pt_volt_f.t2(:).';
-        Profile.Pt_Tg_k.t1(p,:) = scan.Pt_Tg_k.t1(:).';
-        Profile.Pt_Tg_k.t2(p,:) = scan.Pt_Tg_k.t2(:).';
+        Profile.Pt_Tg_k.t1(p,:)   = scan.Pt_Tg_k.t1(:).';
+        Profile.Pt_Tg_k.t2(p,:)   = scan.Pt_Tg_k.t2(:).';
         
         Profile.Pa_g_f.a1(p,:) = scan.Pa_g_f.a1(:).';
         Profile.Pa_g_f.a2(p,:) = scan.Pa_g_f.a2(:).';
         Profile.Pa_g_f.a3(p,:) = scan.Pa_g_f.a3(:).';
         
-        Profile.z(p) = scan.z;
-        Profile.w(p) = scan.w;
-        Profile.t(p) = scan.t;
-        Profile.s(p) = scan.s;
-        Profile.th(p) = scan.th;
+        Profile.z(p)    = scan.z;
+        Profile.w(p)    = scan.w;
+        Profile.t(p)    = scan.t;
+        Profile.s(p)    = scan.s;
+        Profile.th(p)   = scan.th;
         Profile.sgth(p) = scan.sgth;
+        
         if isfield(scan,'dnum')
             Profile.dnum(p) = scan.dnum;
         end
         
-        % NC 8/25/21 - commented out because these fields already exist
-        % inside epsi field
-%         % Fill in the epsi channels
-%         for c = 1:length(channels)
-%             wh_channel = channels{c};   
-%             Profile.(wh_channel)(scan.ind_scan) = scan.(wh_channel);
-%         end
-        
-     
     end
     
 end
