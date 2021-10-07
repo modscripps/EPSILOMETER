@@ -11,7 +11,7 @@ end
 Profile.varInfo.ctd.P = {'CTD P','db'};
 Profile.varInfo.ctd.dPdt = {'CTD diff(P)/diff(ctdtime)','db s^{-1}'};
 Profile.varInfo.ctd.T = {'CTD temperature','^\circC'};
-Profile.varInfo.ctd.C = {'CTD conductivity',''};
+Profile.varInfo.ctd.C = {'CTD conductivity','S/m'};
 Profile.varInfo.ctd.S = {'CTD salinity','psu'};
 Profile.varInfo.th = {'Potential temperature','^\circC'};
 Profile.varInfo.ctd.sgth = {'CTD potential density (sigma-theta)',''};

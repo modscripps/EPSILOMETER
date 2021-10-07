@@ -209,7 +209,7 @@ for p = 1:nbscan % p is the scan index.
         Profile.ind_range_epsi(p,:) = [scan.ind_scan(1),scan.ind_scan(end)];
         
         %figure of merit: QC to check how the shear spectra fit panchev.
-        %fom<=1 great match, fom> 1 bad match.
+        %fom<=1 great match, fom>> 1 bad match.
         Profile.fom(p,1) = scan.fom.s1;
         Profile.fom(p,2) = scan.fom.s2;
         
