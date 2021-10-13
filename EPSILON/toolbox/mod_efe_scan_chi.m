@@ -18,14 +18,22 @@ switch fpo7_channel
         if isfield(Meta_Data,'AFE')
             dTdV = Meta_Data.AFE.t1.cal;
         else
-        dTdV=Meta_Data.epsi.t1.dTdV;
+            try
+                dTdV=Meta_Data.epsi.t1.dTdV;
+            catch
+                dTdV=Meta_Data.epsi.t1.cal;
+            end
         end
     case 't2_volt'
-                if isfield(Meta_Data,'AFE')
+        if isfield(Meta_Data,'AFE')
             dTdV = Meta_Data.AFE.t2.cal;
         else
-        dTdV=Meta_Data.epsi.t2.dTdV;
-                end
+            try
+            dTdV=Meta_Data.epsi.t2.dTdV;
+            catch
+                dTdV=Meta_Data.epsi.t2.cal;
+            end
+        end
     otherwise
         disp('wrong channel to compute chi, must be t1 or t2')
 end

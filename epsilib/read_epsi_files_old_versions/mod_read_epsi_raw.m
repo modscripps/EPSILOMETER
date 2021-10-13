@@ -76,7 +76,7 @@ end
 
 % reading epsi files through FID
 function EPSI = mod_read_epsi_raw_file(fid,Meta_Data)
-tic
+%tic
 % make sure the file marker begins at the start
 EPSI = epsi_ascii_parseheader(fid);
 
@@ -122,7 +122,7 @@ ind_madre = strfind(str,'$MADRE');
 % get aux1 position beginning of SBE block if present
 %ind_aux1 = strfind(str,'$AUX1');
 is_aux1 = contains(str,'$AUX1');
-toc
+%toc
 
 %find header length from the 1st MADRE block
 header_length=strfind(str(ind_madre(1):ind_madre(1)+72),'$');
@@ -302,7 +302,7 @@ for i=1:numel(indblock)
     epsi.raw(i,:) = int32(str(indblock(i)+epsi.offset(end)+epsi.name_length+(1:epsi.total_length)));
 end
 % done with split file
-toc
+%toc
 
 %convert 3 bytes ADC samples into 24 bits counts. 
 epsi.raw1 = epsi.raw(:,1:epsi.bytes_per_channel:end)*256^2+ ...
@@ -433,7 +433,8 @@ acc_factor = 0.66;
 
 for cha=1:Meta_Data.PROCESS.nb_channels
     wh_channel=Meta_Data.PROCESS.channels{cha};
-    if ~strcmp(wh_channel,'c')
+    %if ~strcmp(wh_channel,'c') %NC 10/12/21 - change to 'c_count')
+    if ~strcmp(wh_channel,'c_count')
         switch Meta_Data.epsi.(wh_channel).ADCconf
             case {'Bipolar','bipolar'}
                 EPSI.epsi.([wh_channel '_volt'])=full_range/gain* ...
@@ -474,7 +475,7 @@ if(isfield(EPSI.epsi,'time') && ~isempty(EPSI.epsi.time)) && is_aux1
     [ia, ib] = ismember(EPSI.aux1.Aux1Stamp,EPSI.epsi.EPSInbsample);
     EPSI.aux1.time(ia) = EPSI.epsi.time(ib(ib>0));
 end
-toc
+%toc
 end
 
 

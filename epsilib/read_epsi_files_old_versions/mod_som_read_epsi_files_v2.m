@@ -32,7 +32,7 @@ if ischar(filename) % dir or file
                     disp(['reading ' fileList(i).name]);
                     [epsi{i},ctd{i},alt{i},act{i}] = mod_som_read_epsi_raw(fullfile(fileDir,fileList(i).name),Meta_Data);
                     
-                    structList = {'epsi','ctd','alt','vnav'}
+                    structList = {'epsi','ctd','alt','vnav'};
                     %NC - add tracker for file
                     %for iS=1:length(structList)
                     %    if isstruct(eval(structList{iS}))
@@ -112,25 +112,28 @@ fclose(fid);
 %% Read EFE block depending on when file was created (block format has changed)
 
 % NC added to switch how we read files depending on date they were created
-fileStruct = dir(filename);
-modifiedDate = fileStruct.datenum;
+% fileStruct = dir(filename);
+% modifiedDate = fileStruct.datenum;
+% NC 10/11/21 - Separated mod_som_read_epsi_files_v2.m and
+% mod_som_read_epsi_files_v1.m. This one is v2;
+efe_block_version = 'v2';
 
 
 [ind_efe_start, ind_efe_end,ind_efe_tokens] = regexp(str,'\$EFE([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end','tokenExtents');
 
-if modifiedDate==datenum('31-Jan-2008 23:00:00')
-    efe_block_version = 'v2'; %raw file from SD card after 2021,4,1 that was not initialized
-elseif modifiedDate<datenum(2021,4,1)
-    efe_block_version = 'v1';
-elseif (modifiedDate>=datenum(2021,4,1) && modifiedDate<=datenum(2021,5,23))
-    efe_block_version = 'v2';
-elseif modifiedDate>=datenum(2021,5,23)
-    efe_block_version = 'v3';
-end
-
-if (strcmp(str(ind_efe_start+30),"*")==0)
-    efe_block_version = 'v3';
-end
+% if modifiedDate==datenum('31-Jan-2008 23:00:00')
+%     efe_block_version = 'v2'; %raw file from SD card after 2021,4,1 that was not initialized
+% elseif modifiedDate<datenum(2021,4,1)
+%     efe_block_version = 'v1';
+% elseif (modifiedDate>=datenum(2021,4,1) && modifiedDate<=datenum(2021,5,23))
+%     efe_block_version = 'v2';
+% elseif modifiedDate>=datenum(2021,5,23)
+%     efe_block_version = 'v3';
+% end
+% 
+% if (strcmp(str(ind_efe_start+30),"*")==0)
+%     efe_block_version = 'v3';
+% end
 
 switch efe_block_version
     

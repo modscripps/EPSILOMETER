@@ -129,9 +129,8 @@ if ind_ctdscan(1)>0 && ind_ctdscan(end)<=length(Profile.ctd.time_s) ...
     % Add timeseries for each channel 
     for c=1:length(channels)
         currChannel=channels{c};
-        if ~strcmp(currChannel,'c_count')
+        if cur
         scan.(currChannel)=Profile.epsi.(currChannel)(ind_scan); % time series in m.s^{-2}
-        end
     end
     
     %% Compute spectra for acceleration channels
