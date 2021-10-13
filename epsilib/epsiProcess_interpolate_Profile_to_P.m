@@ -17,7 +17,11 @@ end
 
 % Add depth field and interpolate
 grid.pr = P(:);
-grid.z = sw_dpth(grid.pr,nanmean(grid.latitude));
+try
+    grid.z = sw_dpth(grid.pr,nanmean(grid.latitude));
+catch
+    grid.z = sw_dpth(grid.pr,Profile.Meta_Data.PROCESS.latitude);
+end
 
 % Add varList1
 notNan = ~isnan(Profile.pr);

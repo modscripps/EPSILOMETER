@@ -1,10 +1,16 @@
-function [Meta_Data] = calibrate_dTdV(Meta_Data);
+function [Meta_Data] = process_calibrate_dTdV(Meta_Data);
 
 % A new possible method for finding dTdV for a deployment. Find dTdV for as
 % many 50-second overlapping scans as there are in a profile. Pick the best
 % one as the median of the top 10% of dTdV values. Plot the 2D PDF to
 % visualize the choice.
 %
+%
+% TODO - do this at the .mat file level instead of the Profile level.
+%      - the outcome will be almost exactly the same. You might not get as
+%      many 50-m segments because some are broken across two files, but
+%      you'll be able to calibrate before creating the profiles so you can
+%      save a fully-processed profile with turbulence data a
 % Nicole Couto | September 2021
 
 
@@ -28,8 +34,12 @@ for ii=1:length(fileList)
     RANGETall = [RANGETall;rangeT_profile{ii}(:)];
 end
 
-[N1,XEDGES,YEDGES] = histcounts2(RANGETall,DTDVall_1,0:0.005:0.15,0.5:1:55,'normalization','pdf');
-[N2,XEDGES,YEDGES] = histcounts2(RANGETall,DTDVall_2,0:0.005:0.15,0.5:1:55,'normalization','pdf');
+[~,XEDGES,~] = histcounts(RANGETall(RANGETall<=0.5));
+YEDGES = 0.05:1:55;
+[N1,XEDGES,YEDGES] = histcounts2(RANGETall(RANGETall<=0.5),DTDVall_1(RANGETall<=0.5),XEDGES,YEDGES,'normalization','pdf');
+[N2,XEDGES,YEDGES] = histcounts2(RANGETall(RANGETall<=0.5),DTDVall_2(RANGETall<=0.5),XEDGES,YEDGES,'normalization','pdf');
+% [N1,XEDGES,YEDGES] = histcounts2(RANGETall,DTDVall_1,0:0.005:0.15,0.5:1:55,'normalization','pdf');
+% [N2,XEDGES,YEDGES] = histcounts2(RANGETall,DTDVall_2,0:0.005:0.15,0.5:1:55,'normalization','pdf');
 XBINS = nanmean([XEDGES(1:end-1);XEDGES(2:end)]);
 YBINS = nanmean([YEDGES(1:end-1);YEDGES(2:end)]);
 

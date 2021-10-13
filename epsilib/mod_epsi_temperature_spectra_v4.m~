@@ -41,7 +41,11 @@ end
 try
     epsi_df=Meta_Data.AFE.FS;
 catch
-    epsi_df=Meta_Data.PROCESS.Fs_epsi;
+    try
+        epsi_df=Meta_Data.PROCESS.Fs;
+    catch
+        epsi_df=Meta_Data.PROCESS.Fs_epsi;
+    end
 end
 
 ctd_df = Meta_Data.PROCESS.Fs_ctd;
@@ -214,20 +218,15 @@ B2=squeeze(nanmean(P11_epsi(indt1,:,:),2)).*dTdV(1).^2./h_freq.electFPO7.'.^2;
 
 % Sensitivity of probe, nominal. Save dTdV in Meta Data it will be use in
 % the batchprocess
-if isfield(Meta_Data,'AFE')
-    field_name = 'AFE';
-elseif isfield(Meta_Data,'epsi')
-    field_name = 'epsi';
-end
-Meta_Data.(field_name).t1.cal=dTdV(1);
-Meta_Data.(field_name).t2.cal=dTdV(2);
+Meta_Data.AFE.t1.cal=dTdV(1);
+Meta_Data.AFE.t2.cal=dTdV(2);
 % NC 9/14/21 - Added dTdV_profile and rangeT to try to come up with a
 % better way to compute dTdV for a deployment
-Meta_Data.(field_name).t1.cal_profile=dTdV_profile(1,:);
-Meta_Data.(field_name).t2.cal_profile=dTdV_profile(2,:);
-Meta_Data.(field_name).t1.ctd_Tmin = nanmin(data_CTD.');
-Meta_Data.(field_name).t1.ctd_Tmax = nanmax(data_CTD.');
-Meta_Data.(field_name).t1.pr = nanmean(pr_CTD.');
+Meta_Data.AFE.t1.cal_profile=dTdV_profile(1,:);
+Meta_Data.AFE.t2.cal_profile=dTdV_profile(2,:);
+Meta_Data.AFE.t1.ctd_Tmin = nanmin(data_CTD.');
+Meta_Data.AFE.t1.ctd_Tmax = nanmax(data_CTD.');
+Meta_Data.AFE.t1.pr = nanmean(pr_CTD.');
 
 
 % Save dTdV in Meta_Data
@@ -238,7 +237,7 @@ end
 % Plot data
 if  plotData
     % only for plotting: we getting the board noise
-    switch Meta_Data.(field_name).temp_circuit
+    switch Meta_Data.AFE.temp_circuit
         case 'Tdiff'
             FPO7noise=load(fullfile(Meta_Data.paths.calibration,'FPO7_noise.mat'),'n0','n1','n2','n3');
         otherwise

@@ -7,7 +7,7 @@ function [Meta_Data] = epsiSetup_get_raw_file_suffix(Meta_Data)
 % List possible suffix options. They need to be actual suffixes. Nothing
 % can exist after these characters because Epsi_MakeMatFromRaw creates
 % files based on the name BEFORE the suffix.
-suffixOptions = {'.ascii','_raw','.raw'};
+suffixOptions = {'.ascii','_raw','.raw','.epsi'};
 
 % List files in raw directory
 rawDirContents = dir(Meta_Data.paths.raw_data);

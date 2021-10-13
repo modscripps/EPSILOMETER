@@ -34,7 +34,7 @@ end
 
 %% despiking shear and temp
 
-%fprintf('despiking Profile\r\n')
+printf('despiking Profile\r\n')
 %ALB Following the SCOR group recommendation
 %I am assuming any impact between probes and stuff in the ocean is about
 %50 ms = 50e-3 sec * 320Hz = 16 samples.
@@ -138,7 +138,7 @@ N_ctd = tscan.*Fs_ctd-mod(tscan*Fs_ctd,2);
 % get shear probe calibration coefficient.
 if isfield(Meta_Data,'AFE')
     field_name = 'AFE';
-elseif isfield(Meta_Data,'epsi')
+elseif isfield(md,'epsi')
     field_name = 'epsi';
 end
 Sv1 = Meta_Data.(field_name).s1.cal;
@@ -232,7 +232,7 @@ for p = 1:nbscan % p is the scan index.
         Profile.ind_range_epsi(p,:) = [scan.ind_scan(1),scan.ind_scan(end)];
         
         %figure of merit: QC to check how the shear spectra fit panchev.
-        %fom<=1 great match, fom>> 1 bad match.
+        %fom<=1 great match, fom> 1 bad match.
         Profile.fom(p,1) = scan.fom.s1;
         Profile.fom(p,2) = scan.fom.s2;
         
