@@ -91,10 +91,10 @@ classdef epsi_class < handle
                     fprintf('Initializing epsi_class and creating new Meta_Data \n')
                     repeat = 0;
                     
-                    %                     % Set epsi paths and define suffix for raw files
-                    %                     obj.Meta_Data.paths.data = pwd;
-                    %                     obj.Meta_Data = epsiSetup_set_epsi_paths(obj.Meta_Data);
-                    %                     obj.Meta_Data = epsiSetup_get_raw_suffix(obj.Meta_Data);
+%                     % Set epsi paths and define suffix for raw files
+%                     obj.Meta_Data.paths.data = pwd;
+%                     obj.Meta_Data = epsiSetup_set_epsi_paths(obj.Meta_Data);
+%                     obj.Meta_Data = epsiSetup_get_raw_suffix(obj.Meta_Data);
                     
                     % There are three cases for getting configuration data
                     % and Meta_Data
@@ -118,6 +118,7 @@ classdef epsi_class < handle
                             obj.Meta_Data = create_metadata_from_deployment_log_v2(dir_has_log.name);
                         catch err
                             error('Failed to find config data (1)')
+                            sp
                         end
                         
                     elseif ~isempty(dir_has_config) %if there is a config file...
@@ -159,7 +160,7 @@ classdef epsi_class < handle
                         end
                         
                     end
-                    
+
                     % Set epsi paths and define suffix for raw files
                     obj.Meta_Data = epsiSetup_set_epsi_paths(obj.Meta_Data);
                     obj.Meta_Data = epsiSetup_get_raw_suffix(obj.Meta_Data);
@@ -187,9 +188,9 @@ classdef epsi_class < handle
             % 0, manually input all probe numbers.
             % NC 10/7/21 - Check for 'AFE' or 'epsi' strucutre in Meta_Data. Add
             % calibratation to the appropriate structure.
-            if isfield(obj.Meta_Data,'AFE')
+            if isfield(Meta_Data,'AFE')
                 field_name = 'AFE';
-            elseif isfield(obj.Meta_Data,'epsi')
+            elseif isfield(Meta_Data,'epsi')
                 field_name = 'epsi';
             end
             if obj.Meta_Data.(field_name).s1.cal==0 || obj.Meta_Data.(field_name).s2.cal==0
@@ -230,12 +231,6 @@ classdef epsi_class < handle
         end
         function obj=f_readData(obj,varargin)
             
-            if nargin>0
-                version_number = varargin{1};
-            else
-                version_number = 3;
-            end
-            
             % Copy raw files from datapath to RAWpath
             %list_rawfile = dir(fullfile(obj.Meta_Data.paths.data,['*' obj.Meta_Data.rawfileSuffix]));
             list_rawfile = dir(fullfile(obj.Meta_Data.paths.raw_data,['*' obj.Meta_Data.rawfileSuffix]));
@@ -256,9 +251,8 @@ classdef epsi_class < handle
                 %                 end
                 % Convert raw to mat
                 dirs = {obj.Meta_Data.paths.raw_data; obj.Meta_Data.paths.mat_data};
-                epsiProcess_convert_new_raw_to_mat(dirs,obj.Meta_Data,'noSync','version',version_number);
+                epsiProcess_convert_new_raw_to_mat(dirs,obj.Meta_Data,'noSync');
             end
-            
         end
         function obj=f_getLastData(obj)
             obj.f_readData;
@@ -613,10 +607,10 @@ classdef epsi_class < handle
             %   obj.Meta_Data = f_calibrateTemperature(obj);
             %
             if ~isfield(obj.Meta_Data.PROCESS,'nfft')
-                error('Meta_Data.PROCESS.nfft is not defined. Add Meta_Data_Process info')
+                obj.Meta_Data= obj.f_read_MetaProcess();
             end
-            %             Meta_Data = obj.Meta_Data;
-            %             save(fullfile(Meta_Data.paths.data,'Meta_Data'),'Meta_Data');
+            Meta_Data = obj.Meta_Data;
+            save(fullfile(Meta_Data.paths.data,'Meta_Data'),'Meta_Data');
             
             %             try
             %                 load(fullfile(obj.Meta_Data.paths.profiles,['Profiles_' Meta_Data.deployment]));
@@ -636,51 +630,41 @@ classdef epsi_class < handle
                     idxchoice = 'down';
             end
             
+            % Load the pressure timeseries and find the downcast or upcast with the
+            % greatest range in pressure.
+            load(fullfile(obj.Meta_Data.paths.mat_data,'PressureTimeseries.mat'));
+            %             switch datachoice
+            %                 case 'dataup'
+            %                     profLengths = PressureTimeseries.endup-PressureTimeseries.startup;
+            %                     pRange = PressureTimeseries.P(PressureTimeseries.endup) -...
+            %                                 PressureTimeseries.P(PressureTimeseries.startup);
+            %                 case 'datadown'
+            %                     profLengths = PressureTimeseries.enddown-PressureTimeseries.startdown;
+            %                     pRange = PressureTimeseries.P(PressureTimeseries.enddown) -...
+            %                                 PressureTimeseries.P(PressureTimeseries.startdown);
+            %             end
+            profLengths = PressureTimeseries.endprof-PressureTimeseries.startprof;
+            pRange = PressureTimeseries.P(PressureTimeseries.endprof) -...
+                PressureTimeseries.P(PressureTimeseries.startprof);
+            % Find the longest profile
+            [~,idxProf] = max(pRange);
             
-            % NC 10/12/21 - Instead of using the longest profile, wait
-            % until after profiles are created and define dTdV according to
-            % calibrate_dTdV.m
-            dTdV_process = 'new';
-            switch dTdV_process
-                case 'new'
-                    obj.Meta_Data = process_calibrate_dTdV(obj.Meta_Data);   
-                case 'old'
-                    % Load the pressure timeseries and find the downcast or upcast with the
-                    % greatest range in pressure.
-                    load(fullfile(obj.Meta_Data.paths.mat_data,'PressureTimeseries.mat'));
-                    %             switch datachoice
-                    %                 case 'dataup'
-                    %                     profLengths = PressureTimeseries.endup-PressureTimeseries.startup;
-                    %                     pRange = PressureTimeseries.P(PressureTimeseries.endup) -...
-                    %                                 PressureTimeseries.P(PressureTimeseries.startup);
-                    %                 case 'datadown'
-                    %                     profLengths = PressureTimeseries.enddown-PressureTimeseries.startdown;
-                    %                     pRange = PressureTimeseries.P(PressureTimeseries.enddown) -...
-                    %                                 PressureTimeseries.P(PressureTimeseries.startdown);
-                    %             end
-                    profLengths = PressureTimeseries.endprof-PressureTimeseries.startprof;
-                    pRange = PressureTimeseries.P(PressureTimeseries.endprof) -...
-                        PressureTimeseries.P(PressureTimeseries.startprof);
-                    % Find the longest profile
-                    [~,idxProf] = max(pRange);
-                    
-                    % Get (and merge if necessary) .mat data for this profile
-                    tMin = PressureTimeseries.dnum(PressureTimeseries.startprof(idxProf));
-                    tMax = PressureTimeseries.dnum(PressureTimeseries.endprof(idxProf));
-                    Profile = obj.f_cropTimeseries(tMin,tMax);
-                    
-                    %                 load(fullfile(obj.Meta_Data.paths.profiles,sprintf('Profile%03.0f',idxProf)));
-                    %                 try
-                    %                     Fs=obj.Meta_Data.AFE.FS;
-                    %                 catch
-                    %                     Fs=obj.Meta_Data.PROCESS.Fs; %Check this,  I think it's wrong
-                    %                 end
-                    %                 tscanLongestProfile = floor(0.8*length(Profile.epsi.time_s)/Fs);
-                    %                 tscanDefault = 50;
-                    %                 tscan = min([tscanDefault,tscanLongestProfile]);
-                    
-                    obj.Meta_Data=mod_epsi_temperature_spectra_v3(obj.Meta_Data,Profile);
-            end
+            % Get (and merge if necessary) .mat data for this profile
+            tMin = PressureTimeseries.dnum(PressureTimeseries.startprof(idxProf));
+            tMax = PressureTimeseries.dnum(PressureTimeseries.endprof(idxProf));
+            Profile = obj.f_cropTimeseries(tMin,tMax);
+            
+            %                 load(fullfile(obj.Meta_Data.paths.profiles,sprintf('Profile%03.0f',idxProf)));
+            %                 try
+            %                     Fs=obj.Meta_Data.AFE.FS;
+            %                 catch
+            %                     Fs=obj.Meta_Data.PROCESS.Fs; %Check this,  I think it's wrong
+            %                 end
+            %                 tscanLongestProfile = floor(0.8*length(Profile.epsi.time_s)/Fs);
+            %                 tscanDefault = 50;
+            %                 tscan = min([tscanDefault,tscanLongestProfile]);
+            
+            obj.Meta_Data=mod_epsi_temperature_spectra_v3(obj.Meta_Data,Profile);
             
         end
         function obj = f_computeTurbulence(obj,Profile_or_profNum,saveData)
@@ -697,26 +681,14 @@ classdef epsi_class < handle
             % OUTPUT
             %   Profile = structure similar to input Profile structure, but
             %   now with turbulence quantities added
-            process_all_profiles = 0;
             if nargin<3
                 saveData = 1;
-                if nargin<2
-                    process_all_profiles = 1;
-                end
             end
             if ~any([isfield(obj.Meta_Data.PROCESS,'nfft'),isclassfield(obj.Meta_Data.PROCESS,'nfft')])
                 obj.Meta_Data= obj.f_read_MetaProcess();
             end
             Meta_Data = obj.Meta_Data;
-            if ~process_all_profiles
             obj = mod_epsilometer_calc_turbulence_v2(Meta_Data,Profile_or_profNum,saveData);
-            elseif process_all_profiles
-                profile_list = dir(fullfile(Meta_Data.paths.profiles,'Profile*.mat'));
-                for p=1:length(profile_list)
-                    fprintf('Building Profile%03.0f of %03.0f\n',p,length(profile_list))
-                    obj = mod_epsilometer_calc_turbulence_v2(Meta_Data,p,saveData);
-                end
-            end
         end
         function obj = f_processNewProfiles(obj,varargin)
             % obj = f_processNewProfiles(obj,varargin)
