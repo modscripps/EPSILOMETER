@@ -6,7 +6,7 @@ grid.deployment = Profile.Meta_Data.deployment;
 
 varList0 = {'profNum','dnum','latitude','longitude'};
 varList1 = {'w','t','s','th','sgth'};
-varList2 = {'epsilon','epsilon_co','chi'};
+varList2 = {'epsilon','epsilon_co','chi','fom'};
 
 % Add varList0
 for iVar=1:length(varList0) 

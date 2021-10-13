@@ -96,29 +96,68 @@ classdef epsi_class < handle
                     obj.Meta_Data = epsiSetup_set_epsi_paths(obj.Meta_Data);
                     obj.Meta_Data = epsiSetup_get_raw_suffix(obj.Meta_Data);
                     
-                    % First, try reading configuration data from the
-                    % file. If that doesn't work, try reading from a
-                    % configuration file.
-%                                         try
-%                                             setupfile=dir(fullfile(obj.Meta_Data.paths.raw_data,['*' obj.Meta_Data.rawfileSuffix]));
-% %                                             setup=mod_som_read_setup_from_raw(setupfile(1).name);
-%                                         catch
-%                 end
-                    try
-                        setupfile=dir('*config*');
-                        setup=mod_som_read_setup_from_config(setupfile.name);
-                    catch
-                        error('mod_som_read_setup failed - do you have a config file?')
-                    end
-                    % end
+                    % There are three cases for getting configuration data
+                    % and Meta_Data
+                    %   1) Binary (?) config info is in the first raw file (done by
+                    %   typing settings.stream during data aquistion,
+                    %   header is $SOM3). Extra Meta_Data for processing is
+                    %   in a Meta_Data_Process file.
+                    %   2) Binary (?) config info is in a file called
+                    %   *config*. Extra Meta_Data for processing is
+                    %   in a Meta_Data_Process file.
+                    %   3) All Meta_Data is in a csv file called Log_*.csv
                     
-                    try
-                        obj.Meta_Data = epsiSetup_fill_meta_data(setup);
+                    % Is there a log csv file? Is there a config file? Or
+                    % is config data inside the raw data files?
+                    dir_has_log = dir('Log*.csv');
+                    dir_has_config = dir('*config*');
+                    
+                    if ~isempty(dir_has_log) %if there is a log file...
                         
-                        fprintf('Meta_Data.paths.process_library is %s \n',obj.Meta_Data.paths.process_library);
-                        fprintf('Meta_Data.paths.data is %s \n',obj.Meta_Data.paths.data);
-                    catch
-                        error('fill_meta_data failed')
+                        try
+                            obj.Meta_Data = create_metadata_from_deployment_log_v2(dir_has_log.name);
+                        catch err
+                            error('Failed to find config data (1)')
+                        end
+                        
+                    elseif ~isempty(dir_has_config) %if there is a config file...
+                        
+                        try
+                            setup=mod_som_read_setup_from_config(dir_has_config.name);
+                        catch
+                            error('Failed to find config data (2)')
+                        end
+                        % Fill Meta Data from setup data
+                        try
+                            obj.Meta_Data = epsiSetup_fill_meta_data(setup);
+                            
+                            fprintf('Meta_Data.paths.process_library is %s \n',obj.Meta_Data.paths.process_library);
+                            fprintf('Meta_Data.paths.data is %s \n',obj.Meta_Data.paths.data);
+                        catch
+                            error('fill_meta_data failed (2)')
+                        end
+                        
+                    else %if there is no log file or config file, look for config data inside the raw files
+                        % TODO 10/7/21 - Loop through more that just the
+                        % first file to look for $SOM3
+                        
+                        try
+                            setupfile=dir(fullfile(obj.Meta_Data.paths.raw_data,...
+                                ['*' obj.Meta_Data.rawfileSuffix]));
+                            setup=mod_som_read_setup_from_raw(setupfile(1).name);
+                        catch
+                            error('Failed to find config data (3)')
+                        end
+                        % Fill Meta Data from setup data
+                        try
+                            obj.Meta_Data = epsiSetup_fill_meta_data(setup);
+                            
+                            fprintf('Meta_Data.paths.process_library is %s \n',obj.Meta_Data.paths.process_library);
+                            fprintf('Meta_Data.paths.data is %s \n',obj.Meta_Data.paths.data);
+                        catch
+                            error('fill_meta_data failed (3)')
+                        end
+                        
                     end
                     
                     % Set epsi paths and define suffix for raw files
@@ -144,9 +183,16 @@ classdef epsi_class < handle
             fprintf('mat data path: %s \n',obj.Meta_Data.paths.mat_data);
             fprintf('profiles path: %s \n',obj.Meta_Data.paths.profiles);            
             
-            % NC - check for s1 and s2 cal values. If they're
-            % 0, manually input all probe numbers
-            if obj.Meta_Data.AFE.s1.cal==0 || obj.Meta_Data.AFE.s2.cal==0
+            % NC - check for s1 and s2 cal values. For newer deployments that have Meta_Data.AFE structure, if they're
+            % 0, manually input all probe numbers.
+            % NC 10/7/21 - Check for 'AFE' or 'epsi' strucutre in Meta_Data. Add
+            % calibratation to the appropriate structure.
+            if isfield(obj.Meta_Data,'AFE')
+                field_name = 'AFE';
+            elseif isfield(obj.Meta_Data,'epsi')
+                field_name = 'epsi';
+            end
+            if obj.Meta_Data.(field_name).s1.cal==0 || obj.Meta_Data.(field_name).s2.cal==0
                 obj.Meta_Data = obj.f_getSNshear;
                 obj.Meta_Data = obj.f_getSNtemp;
             end
@@ -161,16 +207,16 @@ classdef epsi_class < handle
             obj.f_getPlotProperties;
             
             % Don't automatically read data. If you ran autoreadEpsi, you
-            % probably don't need to and you 
-%             %NC - Always check for new data by calling f_readData and then
-%             %load data into epsi class
-%             obj.f_readData();
-%             if lastOrAll==1
-%                 obj = obj.f_getLastData();
-%             elseif lastOrAll==2
-%                 obj = obj.f_getAllData();
-%             end
-%             cd(obj.Meta_Data.paths.data)
+            % probably don't need to and you
+            %             %NC - Always check for new data by calling f_readData and then
+            %             %load data into epsi class
+            %             obj.f_readData();
+            %             if lastOrAll==1
+            %                 obj = obj.f_getLastData();
+            %             elseif lastOrAll==2
+            %                 obj = obj.f_getAllData();
+            %             end
+            %             cd(obj.Meta_Data.paths.data)
         end
         
         
@@ -183,29 +229,36 @@ classdef epsi_class < handle
             obj.Meta_Data = Meta_Data;
         end
         function obj=f_readData(obj,varargin)
-
+            
+            if nargin>0
+                version_number = varargin{1};
+            else
+                version_number = 3;
+            end
+            
             % Copy raw files from datapath to RAWpath
             %list_rawfile = dir(fullfile(obj.Meta_Data.paths.data,['*' obj.Meta_Data.rawfileSuffix]));
             list_rawfile = dir(fullfile(obj.Meta_Data.paths.raw_data,['*' obj.Meta_Data.rawfileSuffix]));
             
             % Some files are called '*data*' and if you look for them, you
-            % might  also grab Meta_Data. Get rid of it. 
+            % might  also grab Meta_Data. Get rid of it.
             matchCell = strfind({list_rawfile.name}, 'Meta_Data');
             matchArray = cellfun(@(C) ~isempty(C),matchCell);
             list_rawfile = list_rawfile(~matchArray);
             
             if isempty(list_rawfile)
                 warning(['There are no *' obj.Meta_Data.rawfileSuffix ' * raw files in ' obj.Meta_Data.paths.raw_data])
-            else 
-%                 for f=1:length(list_rawfile)
-%                     copyfile(fullfile(list_rawfile(f).folder, ...
-%                         list_rawfile(f).name),  ...
-%                         obj.Meta_Data.paths.raw_data,'f'); %NC set mode to 'f' to copy file
-%                 end
-            % Convert raw to mat
-            dirs = {obj.Meta_Data.paths.raw_data; obj.Meta_Data.paths.mat_data};
-            epsiProcess_convert_new_raw_to_mat(dirs,obj.Meta_Data,'noSync');
+            else
+                %                 for f=1:length(list_rawfile)
+                %                     copyfile(fullfile(list_rawfile(f).folder, ...
+                %                         list_rawfile(f).name),  ...
+                %                         obj.Meta_Data.paths.raw_data,'f'); %NC set mode to 'f' to copy file
+                %                 end
+                % Convert raw to mat
+                dirs = {obj.Meta_Data.paths.raw_data; obj.Meta_Data.paths.mat_data};
+                epsiProcess_convert_new_raw_to_mat(dirs,obj.Meta_Data,'noSync','version',version_number);
             end
+            
         end
         function obj=f_getLastData(obj)
             obj.f_readData;
@@ -261,7 +314,7 @@ classdef epsi_class < handle
                     fileList{1} = fullfile(obj.Meta_Data.paths.mat_data,TimeIndex.filenames{idx});
                 else %If you chose more than one file as a list of indices
                     for iF=1:length(fileNumOrName)
-                       fileList{iF} = fullfile(obj.Meta_Data.paths.mat_data,TimeIndex.filenames{iF});
+                        fileList{iF} = fullfile(obj.Meta_Data.paths.mat_data,TimeIndex.filenames{iF});
                     end
                 end
             elseif ischar(fileNumOrName) %If you chose one file as a character string
@@ -278,7 +331,7 @@ classdef epsi_class < handle
             for iF=1:length(fileList)-1
                 
                 fileName = fileList{iF+1};
-
+                
                 data2.epsi = obj.f_getFileEpsi(fileName);
                 data2.ctd = obj.f_getFileCtd(fileName);
                 data2.alt = obj.f_getFileAlt(fileName);
@@ -365,10 +418,10 @@ classdef epsi_class < handle
             
         end
         function f_plot_epsi_detrended(obj)
-            plot_epsi_detrended(obj);     
+            plot_epsi_detrended(obj);
         end
         function f_plotEpsi(obj)
-            plot_epsi(obj);     
+            plot_epsi(obj);
         end
         function f_plotAlti(obj)
             figure
@@ -395,21 +448,21 @@ classdef epsi_class < handle
             end
         end
         function f_plotPressureTimeseries(obj)
-           fileName = fullfile(obj.Meta_Data.paths.mat_data,'PressureTimeseries.mat');
-           load(fileName);
-           figure
-
-           plot(PressureTimeseries.dnum,PressureTimeseries.P,'k');
-           hold on
-           s = plot(PressureTimeseries.dnum(PressureTimeseries.startprof),PressureTimeseries.P(PressureTimeseries.startprof),'og');
-           e = plot(PressureTimeseries.dnum(PressureTimeseries.endprof),PressureTimeseries.P(PressureTimeseries.endprof),'sr');
-           set(gca,'ydir','reverse')
-           legend([s,e],{'start prof','end prof'})
-           datetick(gca,'x')
-           set(gca,'xticklabelrotation',45)
-           title([datestr(nanmin(PressureTimeseries.dnum)) ' - ' ...
-               datestr(nanmax(PressureTimeseries.dnum))]);
-           grid on
+            fileName = fullfile(obj.Meta_Data.paths.mat_data,'PressureTimeseries.mat');
+            load(fileName);
+            figure
+            
+            plot(PressureTimeseries.dnum,PressureTimeseries.P,'k');
+            hold on
+            s = plot(PressureTimeseries.dnum(PressureTimeseries.startprof),PressureTimeseries.P(PressureTimeseries.startprof),'og');
+            e = plot(PressureTimeseries.dnum(PressureTimeseries.endprof),PressureTimeseries.P(PressureTimeseries.endprof),'sr');
+            set(gca,'ydir','reverse')
+            legend([s,e],{'start prof','end prof'})
+            datetick(gca,'x')
+            set(gca,'xticklabelrotation',45)
+            title([datestr(nanmin(PressureTimeseries.dnum)) ' - ' ...
+                datestr(nanmax(PressureTimeseries.dnum))]);
+            grid on
         end
         function f_plotFallSpeed(obj)
             figure
@@ -511,66 +564,66 @@ classdef epsi_class < handle
             set(ax(1),'Fontsize',obj.plot_properties.FontSize,'FontName',obj.plot_properties.FontName)
             linkaxes(ax,'x')
         end
-%         function f_createProfiles(obj)
-%             EPSI_create_profiles_v2(obj.Meta_Data,...
-%                 obj.Meta_Data.PROCESS.Prmin_prof,...
-%                 obj.Meta_Data.PROCESS.Prcrit_prof,...
-%                 obj.Meta_Data.PROCESS.userConfirmsProfiles)
-%             
-%             load(fullfile(obj.Meta_Data.paths.profiles,['Profiles_' obj.Meta_Data.deployment]));
-%             
-%             switch obj.Meta_Data.vehicle_name
-%                 case 'FISH'
-%                     datachoice = 'datadown';
-%                     idxchoice = 'down';
-%                 case 'WW'
-%                     datachoice = 'dataup';
-%                     idxchoice = 'up';
-%                 otherwise
-%                     datachoice = 'datadown';
-%                     idxchoice = 'down';
-%             end
-%             
-%             for iProf=1:length(CTDProfiles.(datachoice))
-%                 EPSI = EpsiProfiles.(datachoice){iProf};
-%                 CTD = CTDProfiles.(datachoice){iProf};
-%                 Profile = mod_epsilometer_merge_profile(obj.Meta_Data,CTD,EPSI);
-%                 Profile.profNum = iProf;
-%                 save(fullfile(obj.Meta_Data.paths.profiles,sprintf('Profile%03.0f',iProf)),'Profile','-v7.3');
-%             end
-%         end
-
-%         function obj = f_getProfileIndices(obj)
-%             % USAGE
-%             %   obj.f_getProfileIndices
-%             %
-%             % - Epsi_MakeMatFromRaw saves a merged pressure timeseries along
-%             % with individual .mat files and Epsi_MATFile_TimeIndex. 
-%             % - This step takes the merged Epsi_PressureTimeseries and
-%             % separates into downcasts and upcasts (still to do)
-%             % - Saves Epsi_PressureTimeseries.mat in Meta_Data.paths.mat_data
-%             MATpath = obj.Meta_Data.paths.mat_data;
-%             CTD = EPSI_get_CTD_profile_indices(MATpath);
-%             obj = CTD;
-%             fprintf('... Epsi_PressureTimeseries saved in %s \n',MATpath)
-%         end 
-
+        %         function f_createProfiles(obj)
+        %             EPSI_create_profiles_v2(obj.Meta_Data,...
+        %                 obj.Meta_Data.PROCESS.Prmin_prof,...
+        %                 obj.Meta_Data.PROCESS.Prcrit_prof,...
+        %                 obj.Meta_Data.PROCESS.userConfirmsProfiles)
+        %
+        %             load(fullfile(obj.Meta_Data.paths.profiles,['Profiles_' obj.Meta_Data.deployment]));
+        %
+        %             switch obj.Meta_Data.vehicle_name
+        %                 case 'FISH'
+        %                     datachoice = 'datadown';
+        %                     idxchoice = 'down';
+        %                 case 'WW'
+        %                     datachoice = 'dataup';
+        %                     idxchoice = 'up';
+        %                 otherwise
+        %                     datachoice = 'datadown';
+        %                     idxchoice = 'down';
+        %             end
+        %
+        %             for iProf=1:length(CTDProfiles.(datachoice))
+        %                 EPSI = EpsiProfiles.(datachoice){iProf};
+        %                 CTD = CTDProfiles.(datachoice){iProf};
+        %                 Profile = mod_epsilometer_merge_profile(obj.Meta_Data,CTD,EPSI);
+        %                 Profile.profNum = iProf;
+        %                 save(fullfile(obj.Meta_Data.paths.profiles,sprintf('Profile%03.0f',iProf)),'Profile','-v7.3');
+        %             end
+        %         end
+        
+        %         function obj = f_getProfileIndices(obj)
+        %             % USAGE
+        %             %   obj.f_getProfileIndices
+        %             %
+        %             % - Epsi_MakeMatFromRaw saves a merged pressure timeseries along
+        %             % with individual .mat files and Epsi_MATFile_TimeIndex.
+        %             % - This step takes the merged Epsi_PressureTimeseries and
+        %             % separates into downcasts and upcasts (still to do)
+        %             % - Saves Epsi_PressureTimeseries.mat in Meta_Data.paths.mat_data
+        %             MATpath = obj.Meta_Data.paths.mat_data;
+        %             CTD = EPSI_get_CTD_profile_indices(MATpath);
+        %             obj = CTD;
+        %             fprintf('... Epsi_PressureTimeseries saved in %s \n',MATpath)
+        %         end
+        
         function obj = f_calibrateTemperature(obj)
             % USAGE
             %   obj.Meta_Data = f_calibrateTemperature(obj);
             %
             if ~isfield(obj.Meta_Data.PROCESS,'nfft')
-                obj.Meta_Data= obj.f_read_MetaProcess();
+                error('Meta_Data.PROCESS.nfft is not defined. Add Meta_Data_Process info')
             end
-            Meta_Data = obj.Meta_Data;
-            save(fullfile(Meta_Data.paths.data,'Meta_Data'),'Meta_Data');
+            %             Meta_Data = obj.Meta_Data;
+            %             save(fullfile(Meta_Data.paths.data,'Meta_Data'),'Meta_Data');
             
-%             try
-%                 load(fullfile(obj.Meta_Data.paths.profiles,['Profiles_' Meta_Data.deployment]));
-%             catch err
-%                 error('You need to create profiles before calibrating temperature for this deployment')
-%             end
-%             
+            %             try
+            %                 load(fullfile(obj.Meta_Data.paths.profiles,['Profiles_' Meta_Data.deployment]));
+            %             catch err
+            %                 error('You need to create profiles before calibrating temperature for this deployment')
+            %             end
+            %
             switch obj.Meta_Data.vehicle_name
                 case 'FISH'
                     datachoice = 'datadown';
@@ -583,41 +636,51 @@ classdef epsi_class < handle
                     idxchoice = 'down';
             end
             
-            % Load the pressure timeseries and find the downcast or upcast with the
-            % greatest range in pressure.
-            load(fullfile(obj.Meta_Data.paths.mat_data,'PressureTimeseries.mat'));
-            %             switch datachoice
-            %                 case 'dataup'
-            %                     profLengths = PressureTimeseries.endup-PressureTimeseries.startup;
-            %                     pRange = PressureTimeseries.P(PressureTimeseries.endup) -...
-            %                                 PressureTimeseries.P(PressureTimeseries.startup);
-            %                 case 'datadown'
-            %                     profLengths = PressureTimeseries.enddown-PressureTimeseries.startdown;
-            %                     pRange = PressureTimeseries.P(PressureTimeseries.enddown) -...
-            %                                 PressureTimeseries.P(PressureTimeseries.startdown);
-            %             end
-            profLengths = PressureTimeseries.endprof-PressureTimeseries.startprof;
-            pRange = PressureTimeseries.P(PressureTimeseries.endprof) -...
-                PressureTimeseries.P(PressureTimeseries.startprof);
-            % Find the longest profile
-            [~,idxProf] = max(pRange);
-
-                % Get (and merge if necessary) .mat data for this profile
-                tMin = PressureTimeseries.dnum(PressureTimeseries.startprof(idxProf));
-                tMax = PressureTimeseries.dnum(PressureTimeseries.endprof(idxProf));
-                Profile = obj.f_cropTimeseries(tMin,tMax);
-                
-%                 load(fullfile(obj.Meta_Data.paths.profiles,sprintf('Profile%03.0f',idxProf)));
-%                 try
-%                     Fs=obj.Meta_Data.AFE.FS;
-%                 catch
-%                     Fs=obj.Meta_Data.PROCESS.Fs; %Check this,  I think it's wrong   
-%                 end
-%                 tscanLongestProfile = floor(0.8*length(Profile.epsi.time_s)/Fs);
-%                 tscanDefault = 50;
-%                 tscan = min([tscanDefault,tscanLongestProfile]);
-                
-                obj.Meta_Data=mod_epsi_temperature_spectra_v3(obj.Meta_Data,Profile);
+            
+            % NC 10/12/21 - Instead of using the longest profile, wait
+            % until after profiles are created and define dTdV according to
+            % calibrate_dTdV.m
+            dTdV_process = 'new';
+            switch dTdV_process
+                case 'new'
+                    obj.Meta_Data = process_calibrate_dTdV(obj.Meta_Data);   
+                case 'old'
+                    % Load the pressure timeseries and find the downcast or upcast with the
+                    % greatest range in pressure.
+                    load(fullfile(obj.Meta_Data.paths.mat_data,'PressureTimeseries.mat'));
+                    %             switch datachoice
+                    %                 case 'dataup'
+                    %                     profLengths = PressureTimeseries.endup-PressureTimeseries.startup;
+                    %                     pRange = PressureTimeseries.P(PressureTimeseries.endup) -...
+                    %                                 PressureTimeseries.P(PressureTimeseries.startup);
+                    %                 case 'datadown'
+                    %                     profLengths = PressureTimeseries.enddown-PressureTimeseries.startdown;
+                    %                     pRange = PressureTimeseries.P(PressureTimeseries.enddown) -...
+                    %                                 PressureTimeseries.P(PressureTimeseries.startdown);
+                    %             end
+                    profLengths = PressureTimeseries.endprof-PressureTimeseries.startprof;
+                    pRange = PressureTimeseries.P(PressureTimeseries.endprof) -...
+                        PressureTimeseries.P(PressureTimeseries.startprof);
+                    % Find the longest profile
+                    [~,idxProf] = max(pRange);
+                    
+                    % Get (and merge if necessary) .mat data for this profile
+                    tMin = PressureTimeseries.dnum(PressureTimeseries.startprof(idxProf));
+                    tMax = PressureTimeseries.dnum(PressureTimeseries.endprof(idxProf));
+                    Profile = obj.f_cropTimeseries(tMin,tMax);
+                    
+                    %                 load(fullfile(obj.Meta_Data.paths.profiles,sprintf('Profile%03.0f',idxProf)));
+                    %                 try
+                    %                     Fs=obj.Meta_Data.AFE.FS;
+                    %                 catch
+                    %                     Fs=obj.Meta_Data.PROCESS.Fs; %Check this,  I think it's wrong
+                    %                 end
+                    %                 tscanLongestProfile = floor(0.8*length(Profile.epsi.time_s)/Fs);
+                    %                 tscanDefault = 50;
+                    %                 tscan = min([tscanDefault,tscanLongestProfile]);
+                    
+                    obj.Meta_Data=mod_epsi_temperature_spectra_v3(obj.Meta_Data,Profile);
+            end
             
         end
         function obj = f_computeTurbulence(obj,Profile_or_profNum,saveData)
@@ -634,14 +697,26 @@ classdef epsi_class < handle
             % OUTPUT
             %   Profile = structure similar to input Profile structure, but
             %   now with turbulence quantities added
+            process_all_profiles = 0;
             if nargin<3
                 saveData = 1;
+                if nargin<2
+                    process_all_profiles = 1;
+                end
             end
             if ~any([isfield(obj.Meta_Data.PROCESS,'nfft'),isclassfield(obj.Meta_Data.PROCESS,'nfft')])
                 obj.Meta_Data= obj.f_read_MetaProcess();
             end
             Meta_Data = obj.Meta_Data;
+            if ~process_all_profiles
             obj = mod_epsilometer_calc_turbulence_v2(Meta_Data,Profile_or_profNum,saveData);
+            elseif process_all_profiles
+                profile_list = dir(fullfile(Meta_Data.paths.profiles,'Profile*.mat'));
+                for p=1:length(profile_list)
+                    fprintf('Building Profile%03.0f of %03.0f\n',p,length(profile_list))
+                    obj = mod_epsilometer_calc_turbulence_v2(Meta_Data,p,saveData);
+                end
+            end
         end
         function obj = f_processNewProfiles(obj,varargin)
             % obj = f_processNewProfiles(obj,varargin)
@@ -669,8 +744,8 @@ classdef epsi_class < handle
             % INPUTS:
             %   Profile - Profile structure with turbulence variables
             %   P - pressure array
-           griddedProfile = epsiProcess_interpolate_Profile_to_P(Profile,z); 
-           obj = griddedProfile;
+            griddedProfile = epsiProcess_interpolate_Profile_to_P(Profile,z);
+            obj = griddedProfile;
         end
         function obj = f_gridProfiles(obj,z)
             obj = epsiProcess_gridProfiles(obj,z);
