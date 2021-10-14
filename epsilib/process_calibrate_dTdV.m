@@ -144,12 +144,13 @@ N2_cumsum = cumsum(N2_sorted);
 [~,top10_1] = min(abs(N1_cumsum-10));
 [~,top10_2] = min(abs(N2_cumsum-10));
 
-[X,Y] = meshgrid(XBINS,YBINS);
+[X,Y1] = meshgrid(XBINS,YBINS1);
 X = X.';
-Y = Y.';
+Y1 = Y1.';
+[~,Y2] = meshgrid(XBINS,YBINS2);
 
-dTdV(2) = nanmedian(Y(IDX2_sorted(1:top10_2)));
-dTdV(1) = nanmedian(Y(IDX1_sorted(1:top10_1)));
+dTdV(1) = nanmedian(Y1(IDX1_sorted(1:top10_1)));
+dTdV(2) = nanmedian(Y2(IDX2_sorted(1:top10_2)));
 
 if isfield(Meta_Data,'AFE')
     Meta_Data.(field_name).t1.cal = dTdV(1);

@@ -7,7 +7,11 @@ function obj = epsiProcess_gridProfiles(obj,z)
 % Try loading griddedProfiles. If it doesn't exist, we'll
 % make it
 if exist(fullfile(obj.Meta_Data.paths.profiles,'griddedProfiles.mat'),'file')==2
-    load(fullfile(obj.Meta_Data.paths.profiles,'griddedProfiles'));
+    grid_exists = 1;
+    G = load(fullfile(obj.Meta_Data.paths.profiles,'griddedProfiles'));
+    grid = G.grid;
+else 
+    grid_exists = 0;
 end
 
 fileList = dir(fullfile(obj.Meta_Data.paths.profiles,'Profile*.mat'));
@@ -19,7 +23,7 @@ for iFile=1:length(fileList)
 
     % Add gridded profile to full grid. If full grid doesn't
     % exist yet, create it.
-    if exist('grid','var')
+    if grid_exists
         varList = fields(grid);
         for iVar=1:length(varList)
             grid.(varList{iVar})(:,end+1) = gridNew.(varList{iVar});
@@ -30,6 +34,7 @@ for iFile=1:length(fileList)
         for iVar=1:length(varList)
             grid.(varList{iVar})(:,1) = gridNew.(varList{iVar});
         end
+        grid_exists = 1;
     end
     
     % Keep only unique profiles - if you're running this in
