@@ -170,69 +170,7 @@ for i=1:length(myASCIIfiles)
         fprintf(1,'Retranslating %s%s\n',MatDir,myMATfile.name);
         
         filename = fullfile(RawDir,myASCIIfiles(i).name);
-        switch version
-            case 3
-                [epsi,ctd,alt,act,vnav,gps] = mod_som_read_epsi_files_v3(filename,Meta_Data);
-                matData.epsi = epsi;
-                matData.ctd = ctd;
-                matData.alt = alt;
-                matData.act = act;
-                matData.vnav = vnav;
-                matData.gps = gps;
-            case 2
-                [epsi,ctd,alt,act]=mod_som_read_epsi_files_v2(filename,Meta_Data);
-                matData.epsi = epsi;
-                matData.ctd = ctd;
-                matData.alt = alt;
-                matData.act = act;
-                vnav = [];
-                gps = [];
-            case 1
-                [epsi,ctd,alt,act]=mod_som_read_epsi_files_v1(filename,Meta_Data);
-                matData.epsi = epsi;
-                matData.ctd = ctd;
-                matData.alt = alt;
-                matData.act = act;
-                vnav = [];
-                gps = [];
-            case 0
-                EPSI = mod_read_epsi_raw(filename,Meta_Data);
-                % Save as standalone structures too, for saving individual
-                % files in following steps
-                epsi = EPSI.epsi;
-                ctd = EPSI.aux1;
-                alt = [];
-                vnav = [];
-                gps = [];
-                
-                
-                epsi.dnum = epsi.time;
-                t0 = nanmin(epsi.dnum);
-                epsi.time_s = (epsi.dnum-t0)*(24*60*60);
-                
-                ctd.dnum = ctd.time;
-                ctd.time_s = (ctd.dnum-t0)*(24*60*60);
-                
-                % Add extra ctd variables
-                % Define a constant for salinity calculation
-                c3515 = 42.914;
-                ctd.S    = sw_salt(ctd.C*10./c3515,ctd.T,ctd.P);
-                ctd.th   = sw_ptmp(ctd.S,ctd.T,ctd.P,0);
-                ctd.sgth  = sw_pden(ctd.S,ctd.T,ctd.P,0);
-                ctd.dPdt = [0; diff(ctd.P)./diff(ctd.time_s)];
-                
-                % NC 17 July 2021 - added ctd.z and ctd.dzdt.
-                % get_scan_spectra.m will use dzdt to define fall speed w.
-                if ~isfield(Meta_Data.PROCESS,'latitude')
-                    error('Need latitude to get depth from pressure data. Add to MetaProcess text file.')
-                else
-                    ctd.z    = sw_dpth(ctd.P,Meta_Data.PROCESS.latitude);
-                    ctd.dzdt = [0; diff(ctd.z)./diff(ctd.time_s)];
-                end
-                
-                matData.epsi = epsi;
-                matData.ctd = ctd;     
-        end
+        [matData, epsi,ctd,alt,act,vnav,gps] = read_data_file(filename,Meta_Data,version);
         
         %             % Display file size, time, pressure, altimeter
         %             try
@@ -380,69 +318,9 @@ for i=1:length(myASCIIfiles)
         fprintf(1,'Translating %s%s\n',RawDir,myASCIIfiles(i).name);
         
         filename = fullfile(RawDir,myASCIIfiles(i).name);
-        switch version
-            case 3
-                [epsi,ctd,alt,act,vnav,gps] = mod_som_read_epsi_files_v3(filename,Meta_Data);
-                matData.epsi = epsi;
-                matData.ctd = ctd;
-                matData.alt = alt;
-                matData.act = act;
-                matData.vnav = vnav;
-                matData.gps = gps;
-            case 2
-                [epsi,ctd,alt,act]=mod_som_read_epsi_files_v2(filename,Meta_Data);
-                matData.epsi = epsi;
-                matData.ctd = ctd;
-                matData.alt = alt;
-                matData.act = act;
-                vnav = [];
-                gps = [];
-            case 1
-                [epsi,ctd,alt,act]=mod_som_read_epsi_files_v1(filename,Meta_Data);
-                matData.epsi = epsi;
-                matData.ctd = ctd;
-                matData.alt = alt;
-                matData.act = act;
-                vnav = [];
-                gps = [];
-            case 0
-                EPSI = mod_read_epsi_raw(filename,Meta_Data);
-                % Save as standalone structures too, for saving individual
-                % files in following steps
-                epsi = EPSI.epsi;
-                ctd = EPSI.aux1;
-                alt = [];
-                vnav = [];
-                gps = [];
-                
-                
-                epsi.dnum = epsi.time;
-                t0 = nanmin(epsi.dnum);
-                epsi.time_s = (epsi.dnum-t0)*(24*60*60);
-                
-                ctd.dnum = ctd.time;
-                ctd.time_s = (ctd.dnum-t0)*(24*60*60);
-                
-                % Add extra ctd variables
-                % Define a constant for salinity calculation
-                c3515 = 42.914;
-                ctd.S    = sw_salt(ctd.C*10./c3515,ctd.T,ctd.P);
-                ctd.th   = sw_ptmp(ctd.S,ctd.T,ctd.P,0);
-                ctd.sgth  = sw_pden(ctd.S,ctd.T,ctd.P,0);
-                ctd.dPdt = [0; diff(ctd.P)./diff(ctd.time_s)];
-                
-                % NC 17 July 2021 - added ctd.z and ctd.dzdt.
-                % get_scan_spectra.m will use dzdt to define fall speed w.
-                if ~isfield(Meta_Data.PROCESS,'latitude')
-                    error('Need latitude to get depth from pressure data. Add to MetaProcess text file.')
-                else
-                    ctd.z    = sw_dpth(ctd.P,Meta_Data.PROCESS.latitude);
-                    ctd.dzdt = [0; diff(ctd.z)./diff(ctd.time_s)];
-                end
-                
-                matData.epsi = epsi;
-                matData.ctd = ctd;        
-        end
+        [matData, epsi,ctd,alt,act,vnav,gps] = read_data_file(filename,Meta_Data,version);
+        
+
         
         %             % Display file size, time, pressure, altimeter
         %             try
@@ -580,6 +458,81 @@ end
 
 clear epsi ctd alt act vnav;
 end
+
+
+
+% ------------------------------
+% ----- SUBFUNCTIONS -----------
+% ------------------------------
+function  [matData, epsi,ctd,alt,act,vnav,gps] = read_data_file(filename,Meta_Data,version)
+
+switch version
+    case 3
+        [epsi,ctd,alt,act,vnav,gps] = mod_som_read_epsi_files_v3(filename,Meta_Data);
+        matData.epsi = epsi;
+        matData.ctd = ctd;
+        matData.alt = alt;
+        matData.act = act;
+        matData.vnav = vnav;
+        matData.gps = gps;
+    case 2
+        [epsi,ctd,alt,act]=mod_som_read_epsi_files_v2(filename,Meta_Data);
+        matData.epsi = epsi;
+        matData.ctd = ctd;
+        matData.alt = alt;
+        matData.act = act;
+        vnav = [];
+        gps = [];
+    case 1
+        [epsi,ctd,alt,act]=mod_som_read_epsi_files_v1(filename,Meta_Data);
+        matData.epsi = epsi;
+        matData.ctd = ctd;
+        matData.alt = alt;
+        matData.act = act;
+        vnav = [];
+        gps = [];
+    case 0
+        EPSI = mod_read_epsi_raw(filename,Meta_Data);
+        % Save as standalone structures too, for saving individual
+        % files in following steps
+        epsi = EPSI.epsi;
+        ctd = EPSI.aux1;
+        act = [];
+        alt = [];
+        vnav = [];
+        gps = [];
+        
+        
+        epsi.dnum = epsi.time;
+        t0 = Meta_Data.starttime;
+        epsi.time_s = (epsi.dnum-t0)*(24*60*60);
+        
+        ctd.dnum = ctd.time;
+        ctd.time_s = (ctd.dnum-t0)*(24*60*60);
+        
+        % Add extra ctd variables
+        % Define a constant for salinity calculation
+        c3515 = 42.914;
+        ctd.S    = sw_salt(ctd.C*10./c3515,ctd.T,ctd.P);
+        ctd.th   = sw_ptmp(ctd.S,ctd.T,ctd.P,0);
+        ctd.sgth  = sw_pden(ctd.S,ctd.T,ctd.P,0);
+        ctd.dPdt = [0; diff(ctd.P)./diff(ctd.time_s)];
+        
+        % NC 17 July 2021 - added ctd.z and ctd.dzdt.
+        % get_scan_spectra.m will use dzdt to define fall speed w.
+        if ~isfield(Meta_Data.PROCESS,'latitude')
+            error('Need latitude to get depth from pressure data. Add to MetaProcess text file.')
+        else
+            ctd.z    = sw_dpth(ctd.P,Meta_Data.PROCESS.latitude);
+            ctd.dzdt = [0; diff(ctd.z)./diff(ctd.time_s)];
+        end
+        
+        matData.epsi = epsi;
+        matData.ctd = ctd;
+end
+end %end read_data_file
+% ---------------------------------
+
 
 
 function FastCTD_UpdateMATFileTimeIndex(dirname,filename,FCTD)

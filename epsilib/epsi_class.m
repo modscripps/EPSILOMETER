@@ -229,6 +229,8 @@ classdef epsi_class < handle
             obj.Meta_Data = Meta_Data;
         end
         function obj=f_readData(obj,varargin)
+            % MISOBOB - f_readData(0)
+            % BLT     - f_readData
             
             if nargin>0
                 version_number = varargin{1};

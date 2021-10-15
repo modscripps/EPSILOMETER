@@ -18,6 +18,9 @@ fileList = dir(fullfile(obj.Meta_Data.paths.profiles,'Profile*.mat'));
 for iFile=1:length(fileList)
     
     load(fullfile(obj.Meta_Data.paths.profiles,fileList(iFile).name))
+    
+    if isfield(Profile,'pr') %Only add to grid if turbulence parameters have been computed
+    
     % Interpolate this profile to standard pressure grid
     gridNew = epsiProcess_interpolate_Profile_to_P(Profile,z); 
 
@@ -50,6 +53,7 @@ for iFile=1:length(fileList)
     end
     
     close
+    end
 end
 
 grid.mission = grid.mission(:,1).';

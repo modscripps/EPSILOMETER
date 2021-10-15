@@ -105,7 +105,7 @@ if isfinite(scan.(shear_channel))
     end
     
             % Get Panchev spectrum
-        if ~isempty(epsilon)
+        if ~isempty(epsilon) && ~isnan(epsilon)
             
             sig_lnS=5/4*dof^(-7/9);
             [kpan,Ppan] = panchev(epsilon,scan.kvis);

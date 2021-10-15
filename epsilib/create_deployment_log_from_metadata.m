@@ -125,7 +125,7 @@ end
 
 parameters{16} = 'Starttime';
 try
-    values{16} = Meta_Data.starttime;
+    values{16} = datestr(Meta_Data.starttime,'dd-mmm-yyyy HH:MM:SS');
 catch
     values{16} = '00-Jan-0000';
 end
