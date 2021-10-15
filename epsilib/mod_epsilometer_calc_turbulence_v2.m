@@ -120,8 +120,15 @@ for iChan=1:numel(channels)
 end
 
 % compute coherence with a3 over the full profile.
+% NC added 10/14/21 - compute coherence with a1 for earlier datasets. Check
+% Meta_Data.PROCESS to determine which channel
+if isfield(Meta_Data.PROCESS,'coherent_acc_chan')
+    channel = [Meta_Data.PROCESS.coherent_acc_chan '_g'];
+else
+    channel = 'a3_g';
+end
 [Profile.Cs1a3_full,Profile.Cs2a3_full,...
-    ~,~,~] = mod_efe_scan_coherence(Profile_coh,'a3_g',Meta_Data);
+    ~,~,~] = mod_efe_scan_coherence(Profile_coh,channel,Meta_Data);
 
 
 %% define a Pressure axis to an which I will compute epsilon and chi.

@@ -10,3 +10,4 @@ fc2          = 35;
 Prmin = @(x) nanmin(x) + 0.2*range(x);
 Prmax = @(x) nanmin(x) + 0.8*range(x);
 adjustTemp = false;
+coherent_acc_chan = 'a1';

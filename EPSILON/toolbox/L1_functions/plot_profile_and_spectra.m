@@ -342,7 +342,6 @@ for k=scanNum
         Co22 = scan.Cs2a.a2;
         Co13 = scan.Cs1a.a3;
         Co23 = scan.Cs2a.a3;
-        
                
         %% Frequency plots
         % ----------------------------------------------------------
