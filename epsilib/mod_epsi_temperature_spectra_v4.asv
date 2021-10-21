@@ -182,7 +182,7 @@ if nbscan>=1
         if ndims(P11_epsi_TF_interp)==3
             dTdV_profile(indt1,:) = sqrt(nanmedian(P11_ctd(:,indsub1Hz)./squeeze(P11_epsi_TF_interp(indt1,:,indsub1Hz)),2));
         elseif ndims(P11_epsi_TF_interp)==2
-            dTdV_profile(indt1,:) = sqrt(nanmedian(P11_ctd(:,indsub1Hz)./P11_epsi_TF_interp(indt1,indsub1Hz)));
+            dTdV_profile(indt1,:) = sqrt(nanmedian(P11_ctd(:,indsub1Hz)./P11_epsi_TF_interp(1,indsub1Hz),2));
         end
         P11_epsi_TF_mean(indt1,:) = squeeze(nanmean(P11_epsi_TF(indt1,:,:),2)); % Temperature gradient frequency spectra should be ?C^2/s^-2 Hz^-1 ????
         P11_epsi_TF_mean_interp(indt1,:)=interp1(epsi_f,P11_epsi_TF_mean(indt1,:),ctd_f);
@@ -195,11 +195,11 @@ if nbscan>=1
         if ndims(P11_epsi_TF_interp)==3
             dTdV_profile(indt2,:) = sqrt(nanmedian(P11_ctd(:,indsub1Hz)./squeeze(P11_epsi_TF_interp(indt2,:,indsub1Hz)),2));
         elseif ndims(P11_epsi_TF_interp)==2
-            dTdV_profile(indt2,:) = sqrt(nanmedian(P11_ctd(:,indsub1Hz)./P11_epsi_TF_interp(indt2,indsub1Hz)));
+            dTdV_profile(indt2,:) = sqrt(nanmedian(P11_ctd(:,indsub1Hz)./P11_epsi_TF_interp(:,indsub1Hz),2));
         end
         P11_epsi_TF_mean(indt2,:) = squeeze(nanmean(P11_epsi_TF(indt2,:,:),2)); % Temperature gradient frequency spectra should be ?C^2/s^-2 Hz^-1 ????
         P11_epsi_TF_mean_interp(indt2,:)=interp1(epsi_f,P11_epsi_TF_mean(indt2,:),ctd_f);
-        dTdV(2)=sqrt(nanmedian(P11_ctd_mean(indsub1Hz)./P11_epsi_TF_mean_interp(indt2,indsub1Hz)));
+        dTdV(2)=sqrt(nanmedian(P11_ctd_mean(indsub1Hz)./P11_epsi_TF_mean_interp(:,indsub1Hz)));
         P11_epsi_TF_mean_calibrated(indt2,:)= P11_epsi_TF_mean(indt2,:).*dTdV(2).^2;
     end
 
