@@ -730,7 +730,7 @@ else
     for cha=1:seg.data.n_channels
         wh_channel=seg.channels{cha};
         idnull=cellfun(@isempty,seg.(wh_channel));
-        seg.(wh_channel)=cell2mat(seg.(wh_channel)(~idnull).');
+        seg.(wh_channel)=cell2mat(seg.(wh_channel)(~idnull));
     end
     
     if nanmedian(segment_timestamp(iB))>1e9

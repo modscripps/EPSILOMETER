@@ -49,6 +49,7 @@ if isempty(argsNameToCheck);
     argsNameToCheck = {'noSync','noGrid','doFCTD','fileStr','version'}; %Add flag for doFCTD - makes mat files in FCTD processing format
 end
 
+% TODO PLease comment on these parameters
 rSync = true;
 doGrid = false;
 doFCTD = false;

@@ -46,6 +46,7 @@ indP        = indP(1);
 ind_ctdscan = indP-N_ctd/2:indP+N_ctd/2; % ind_scan is even
 ind_Pr_epsi = find(Profile.epsi.time_s<Profile.ctd.time_s(indP),1,'last');
 ind_scan    = ind_Pr_epsi-N_epsi/2:ind_Pr_epsi+N_epsi/2; % ind_scan is even
+ind_scan    = ind_scan(1:floor(dof)*Meta_Data.PROCESS.nfft); % ind_scan is even
 
 
 % get FPO7 channel average noise to compute chi

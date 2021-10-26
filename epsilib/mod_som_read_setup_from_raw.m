@@ -60,7 +60,7 @@ module{nb_module}.index=initialize_flag_offset+4;
 while unpack
     module{nb_module}.size=conv32d(double(uint8(str(module{nb_module}.index+(0:3)))));
     module{nb_module}.str=str(module{nb_module}.index+(0:module{nb_module}.size-1));
-    if ((module{nb_module}.index+module{nb_module}.size)>=length(str))
+    if (length(str)-(module{nb_module}.index+module{nb_module}.size)<6)%TDO make it so I am sure length(str) == the end of the modules.
         unpack=false;
     else
         nb_module=nb_module+1;
