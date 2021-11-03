@@ -1,4 +1,4 @@
-function [epsi,ctd,alt,act,vnav,gps,seg] = mod_som_read_epsi_files_vGPS(filename,Meta_Data)
+function [epsi,ctd,alt,act,vnav,gps,seg,spec] = mod_som_read_epsi_files_vGPS(filename,Meta_Data)
 
 % For now, only works for 'v3' of som_acq
 % It only works with a single file, since we're always calling it from a
@@ -709,6 +709,7 @@ else
                                          
             for n=1:seg.data.sample_per_segment*seg.data.n_channels
                 seg.data.raw_float{iB}(n) = double(typecast(seg.data.raw_bytes{iB}(:,n).' , 'single'));
+%                 seg.data.raw_float{iB}(n) = double(uint32(seg.data.raw_bytes{iB}(:,n))).'*mult(1:4);
             end
             % Save data as 'counts'
             for cha=1:seg.data.n_channels  
@@ -730,13 +731,13 @@ else
     for cha=1:seg.data.n_channels
         wh_channel=seg.channels{cha};
         idnull=cellfun(@isempty,seg.(wh_channel));
-        seg.(wh_channel)=cell2mat(seg.(wh_channel)(~idnull).');
+        seg.(wh_channel)=cell2mat(seg.(wh_channel)(~idnull));
     end
     
     if nanmedian(segment_timestamp(iB))>1e9
         % time_s - seconds since 1970
         % dnum - matlab datenum
-        [seg.time_s,seg.dnum] = convert_timestamp(epsi_timestamp);
+        [seg.time_s,seg.dnum] = convert_timestamp(segment_timestamp);
     else
         % time_s - seconds since power on
         seg.time_s = segment_timestamp(iB)./1000;
@@ -747,6 +748,108 @@ else
     seg = orderfields(seg,{'dnum','time_s','t1_volt','s1_volt','a3_g'});
     
 end %end if there is epsi data
+
+%% Process SEGM data
+if isempty(ind_spec_start)
+    disp('no spec data')
+    spec=[];
+else
+    disp('processing spec data')
+    
+    % Pre-allocate space for data
+    spec.data.n_blocks           = numel(ind_spec_start); %Number of data blocks beginning with $EFE
+    
+    spec.data.n_channels          = 3;
+    spec.data.sample_freq       = 320;
+    spec.data.sample_per_spec   = 4096/2; %NFFT/2
+    spec.data.spec_per_block  = 1;
+    spec.data.timestamp_length   = 8;
+    spec.data.n_elements         = spec.data.timestamp_length+ ...
+                                  spec.data.n_channels*...
+                                  spec.data.sample_per_spec*4;
+    spec.channels ={'t1_volt','s1_volt','a3_g'};
+     
+%     seg.data.n_recs             = efe.data.n_blocks*efe.data.recs_per_block;
+    % The first 8 bytes are the timestamp. Timestamp in milliseconds since
+    % 1970 is too big for uint32, so use uint64
+    ind_time = 1:spec.data.timestamp_length;
+    mult = 256.^[0:7].';
+    
+
+    spec_timestamp           = nan(spec.data.n_blocks,1);
+    %epsi.time_s and epsi.dnum will be created from epsi_timestamp once
+    %all its records are filled
+    
+    % Loop through data blocks and parse strings
+    for iB = 1:spec.data.n_blocks
+        
+        % Grab the block of data starting with the header
+        spec_block_str = str(ind_spec_start(iB):ind_spec_stop(iB));
+        
+        % Get the header timestamp and length of data block (?)
+        spec.data.hextimestamp.value   = hex2dec(spec_block_str(tag.hextimestamp.inds));
+        spec.data.hexlengthblock.value = hex2dec(spec_block_str(tag.hexlengthblock.inds));
+        % It should be the case that
+        % efe.hexlengthblock.value==efe.data.element_length*efe.data.recs_per_block
+        
+        % Get the data after the header.
+        spec_block_data = spec_block_str(tag.data_offset:end-tag.chksum.length);
+        
+        % Does length(efe_block_data)=efe.hexlengthblock.value?
+        if (length(spec_block_data)~=spec.data.n_elements)
+            fprintf("SPEC block %i has incorrect length\r\n",iB)
+        else
+            
+            spec_timestamp(iB)=double(uint64(spec_block_data(ind_time)))*mult;
+            
+            % Reshape the data
+            spec.data.raw_bytes{iB} = reshape(uint8(spec_block_data(ind_time(end)+1:end)),...
+                                             4,...
+                                             spec.data.sample_per_spec*...
+                                             spec.data.n_channels);
+                                         
+            for n=1:spec.data.sample_per_spec*spec.data.n_channels
+                spec.data.raw_float{iB}(n) = double(typecast(spec.data.raw_bytes{iB}(:,n).' , 'single'));
+%                 seg.data.raw_float{iB}(n) = double(uint32(seg.data.raw_bytes{iB}(:,n))).'*mult(1:4);
+            end
+            % Save data as 'counts'
+            for cha=1:spec.data.n_channels  
+                wh_channel=spec.channels{cha};
+                spec.(wh_channel){iB} = spec.data.raw_float{iB}(1+(cha-1)*spec.data.sample_per_spec:cha*spec.data.sample_per_spec);
+            end
+
+            % Get the checksum value
+            i1 = tag.data_offset+spec.data.hexlengthblock.value;
+            i2 = i1+tag.chksum.length-1;
+            % The full checksum looks like *8F__ so we get str indices from
+            % i1+1 to i2-2 to isolate just the 8F part
+            spec.checksum.data(iB) = hex2dec(spec_block_str(i1+1:i2-2));
+        end %end if efe data block is the correct size
+    end %end loop through efe blocks
+    
+    % Clean and concatenate efe.data.raw_bytes
+    % Check for empty raw_bytes cells and concatenate only the full ones
+    for cha=1:spec.data.n_channels
+        wh_channel=spec.channels{cha};
+        idnull=cellfun(@isempty,spec.(wh_channel));
+        spec.(wh_channel)=cell2mat(spec.(wh_channel)(~idnull));
+    end
+    
+    if nanmedian(spec_timestamp)>1e9
+        % time_s - seconds since 1970
+        % dnum - matlab datenum
+        [spec.time_s,spec.dnum] = convert_timestamp(spec_timestamp);
+    else
+        % time_s - seconds since power on
+        spec.time_s = spec_timestamp./1000;
+        spec.dnum   = spec.time_s.*nan;
+    end
+    
+    % Sort epsi fields
+    spec = orderfields(seg,{'dnum','time_s','t1_volt','s1_volt','a3_g'});
+    
+end %end spec
+
 
 
 
