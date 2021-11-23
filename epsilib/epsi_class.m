@@ -31,6 +31,15 @@ classdef epsi_class < handle
             %           TODO only define Meta data if epsi.mat and ctd.mat does not
             %           exist
             
+            % removed archive+path
+            spltpath=strsplit(path,':');
+            archived_path=spltpath{~cellfun(@isempty, ...
+                cellfun(@(x) ...
+                strfind(x,'archived_scripts'),spltpath, ...
+                'UniformOutput',false))};
+            if ~isempty(archived_path)
+                rmpath(archived_path);
+            end
             % Check to see if Meta_Data is already definedc
             checkMD = dir('Meta_Data.mat');
             

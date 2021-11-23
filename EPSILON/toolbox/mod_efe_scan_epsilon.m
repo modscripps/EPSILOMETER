@@ -14,6 +14,9 @@ function [Ps_volt_f,Ps_shear_k,Ps_shear_co_k,epsilon,epsilon_co,f,k,fc,kc,Ppan,P
 %   f  = frequency array
 
 nfft=Meta_Data.PROCESS.nfft;
+dof_coh=Meta_Data.PROCESS.dof_coh;
+nb_vibration_channel=3;% hard coded nb of acceleration channel used to mv correction
+
 
 %ALB little warning about dof and statistical significance
 % following Lueck2021c: bias in coherent noise correction.
@@ -83,25 +86,43 @@ if isfinite(scan.(shear_channel))
         fc(1)=nan;
     end
     
-    
-    % ---------------------------------------------------------------------
-    % Now, do the same calculations with the coherence correction
-    
     % Remove the coherent part of the frequency spectrum
+    
     Ps_velocity_co_f = Ps_velocity_f.*(1-Csa);
+    
+    if isfield(Meta_Data.PROCESS, "multivariate")
+        if (Meta_Data.PROCESS.multivariate)
+            % ---------------------------------------------------------------------
+            % Now, do the same calculations with the multivariate coherence correction
+            % in this mv context 
+            % Ps_volt_f_co=Ps_volt_f-Csa
+            % Pv_co=(Pv-Coh)./bias;
+            bias=1-1.02*nb_vibration_channel./dof;
+            Ps_volt_co_f=(Ps_volt_f(:)-Csa(:))./bias;
+            Ps_volt_co_f(Ps_volt_co_f<0)=nan;
+            Ps_volt_co_f=fillmissing(Ps_volt_co_f,'linear');
+            close all;
+            loglog(Meta_Data.PROCESS.fe,Ps_volt_f,'b',Meta_Data.PROCESS.fe,Ps_volt_co_f,'r')
+            Ps_velocity_co_f = ((2*G/(Sv*w))^2).*Ps_volt_co_f./filter_TF;
+            pause;
+
+        end
+    end
+
     
     % Convert the frequency velocity spectrum to shear wavenumber spectrum
     %Ps_shear_co_k = ((2*pi*k).^2).*(Ps_shear_co_f./w);
+    
     Ps_shear_co_k = ((2*pi*k).^2).*(Ps_velocity_co_f.*w); %NC 9/2/21 - frequency spectrum should be MULTIPLIED by w, not divided
     
     % Compute epsilon using eps1_mmp.m with kmax
     try
         [epsilon_co,kc(2)]=eps1_mmp(k,Ps_shear_co_k,scan.kvis,kmax);
-        fc(1)=kc(2).*w;
+        fc(2)=kc(2).*w;
     catch
         epsilon_co=nan;
-        kc(1)=nan;
-        fc(1)=nan;
+        kc(2)=nan;
+        fc(2)=nan;
     end
     
             % Get Panchev spectrum
@@ -114,7 +135,10 @@ if isfinite(scan.(shear_channel))
             Ppan=interp1(kpan(~isnan(Ppan)),Ppan(~isnan(Ppan)),k);
 
             fom=log(Ps_shear_co_k./Ppan_co);
-            fom=nanvar(fom(k<kc(1)))./sig_lnS;
+            fom=nanvar(fom(k>2 & k<kc(2)))./sig_lnS
+            close all
+            loglog(k,Ps_shear_co_k,'b',k,Ppan,'r')
+            pause
         else
             fom=NaN;
             Ppan_co=NaN;

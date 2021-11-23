@@ -11,3 +11,15 @@ if isfield(Profile,'alt')
 end
 
 % (2) Interpolate ctd and alt data to epsi timestamp
+
+% (3) add n2
+
+% (4) add Thorpe scale
+
+% (5) add epsilon from thorpe scale
+
+% (6) compute gamma_chi=chi/epsilon
+
+% (7) add ozmidov scale (epsilon/N^3)^(1/2)
+
+% (7) add Re_b= epsilon/nu / N^2

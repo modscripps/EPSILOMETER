@@ -73,7 +73,7 @@ Fs_ctd = Meta_Data.PROCESS.Fs_ctd;
 
 fpump = Meta_Data.PROCESS.ctd_fc;
 tscan = Meta_Data.PROCESS.tscan;
-limit_speed = .2; % limit speed 20 cm s^{-1}
+% limit_speed = .2; % limit speed 20 cm s^{-1}
 dz  =   Meta_Data.PROCESS.dz;
 
 [~,Meta_Data.PROCESS.fe]  =  pwelch(0*(1:Meta_Data.PROCESS.nfft),...
@@ -110,6 +110,7 @@ Prmax = Meta_Data.PROCESS.Prmax(Profile.ctd.P);
 inRange = Profile.ctd.P>=Prmin & Profile.ctd.P<=Prmax;
 ctdtime = Profile.ctd.time_s(inRange);
 
+
 % Remove epsi values outside the time period defined by ctdtime
 keepEpsi = Profile.epsi.time_s>=nanmin(ctdtime) & Profile.epsi.time_s<=nanmax(ctdtime);
 for iChan=1:numel(channels)
@@ -119,7 +120,29 @@ for iChan=1:numel(channels)
     end
 end
 
-% compute coherence with a3 over the full profile.
+if isfield(Meta_Data.PROCESS, "multivariate")
+    if (Meta_Data.PROCESS.multivariate)
+        for iChan=1:numel(channels)
+            wh_channel = channels{iChan};
+            if ~strcmp(wh_channel,'c_count')
+                Profile_coh.(wh_channel) = Profile.epsi.(wh_channel);
+            end
+        end
+        %ALB add ctd.P and ctd.time_s so I can compute multivariate coherence on
+        %the same grid as the futur scans
+        Profile_coh.time_s=Profile.epsi.time_s;
+        Profile_coh.ctd.P=Profile.ctd.P;
+        Profile_coh.ctd.time_s=Profile.ctd.time_s;
+    end
+end
+
+%% define a Pressure axis to an which I will compute epsilon and chi.
+%  The spectra will be nfft long centered around P(z) +/- tscan/2.
+%
+Pr = ceil(min(Profile.ctd.P)):dz:floor(max(Profile.ctd.P));
+nbscan = length(Pr);
+
+%% compute coherence with a3 over the full profile.
 % NC added 10/14/21 - compute coherence with a1 for earlier datasets. Check
 % Meta_Data.PROCESS to determine which channel
 if isfield(Meta_Data.PROCESS,'coherent_acc_chan')
@@ -127,15 +150,24 @@ if isfield(Meta_Data.PROCESS,'coherent_acc_chan')
 else
     channel = 'a3_g';
 end
+
+if isfield(Meta_Data.PROCESS, "multivariate")
+    if (Meta_Data.PROCESS.multivariate & ~isfield(Profile, "Cs1a_mv"))
+        
+        [Profile.Cs1a_mv,Profile.Cs2a_mv] = ...
+            mod_efe_profile_multivariate_coherence(Profile_coh,Pr,Meta_Data);
+        % save profile cause it takes for eve to compute mv.
+        save_var_name = 'Profile';
+        save_file_name = sprintf('Profile%03i',Profile.profNum);
+        save_file = fullfile(Meta_Data.paths.profiles, ...
+            [save_file_name '.mat']);
+        eval(['save(''' save_file ''', ''' save_var_name ''');']);
+    end
+end
 [Profile.Cs1a3_full,Profile.Cs2a3_full,...
     ~,~,~] = mod_efe_scan_coherence(Profile_coh,channel,Meta_Data);
 
-
-%% define a Pressure axis to an which I will compute epsilon and chi.
-%  The spectra will be nfft long centered around P(z) +/- tscan/2.
-%
-Pr = ceil(min(Profile.ctd.P)):dz:floor(max(Profile.ctd.P));
-nbscan = length(Pr);
+%%
 
 LCTD = length(Profile.ctd.P);% length of profile
 % number of samples for a scan. I make sure it is always even
@@ -191,10 +223,13 @@ Profile.ind_range_epsi = nan(nbscan,2);
 Profile.fom = nan(nbscan,2);
 Profile.epsilon = nan(nbscan,2);
 Profile.epsilon_co = nan(nbscan,2);
+Profile.epsilon_final = nan(nbscan,1);
 Profile.sh_fc = nan(nbscan,2);
 Profile.chi = nan(nbscan,2);
 Profile.tg_fc = nan(nbscan,2);
 Profile.flag_tg_fc = nan(nbscan,2);
+Profile.epsi_qc = nan(nbscan,2);
+Profile.epsi_qc_final = nan(nbscan,1);
 Profile.kvis = nan(nbscan,1);
 Profile.k = nan(nbscan,length(f));
 Profile.Ps_volt_f.s1 = nan(nbscan,length(f));
@@ -247,8 +282,12 @@ for p = 1:nbscan % p is the scan index.
         Profile.epsilon(p,2) = scan.epsilon.s2;
         Profile.epsilon_co(p,1) = scan.epsilon_co.s1;
         Profile.epsilon_co(p,2) = scan.epsilon_co.s2;
-        Profile.sh_fc(p,1) = scan.fc.s1;
-        Profile.sh_fc(p,2) = scan.fc.s2;
+        Profile.epsilon_final(p) = scan.epsilon_final;
+        Profile.epsi_qc(p,1) = scan.epsi_qc(1);
+        Profile.epsi_qc(p,2) = scan.epsi_qc(2);
+        Profile.epsi_qc_final(p) = scan.epsi_qc_final;
+        Profile.sh_fc(p,1) = scan.fc.s1(2); %only saving the shear_co limit
+        Profile.sh_fc(p,2) = scan.fc.s2(2); %only saving the shear_co limit
         Profile.kvis(p,1) = scan.kvis;
         
         if isfield(scan.chi,'t1')

@@ -1,4 +1,4 @@
-function [Pv1,Pv2,Pv1_co,Pv2_co,fe]=mod_efe_scan_multivariate_coherence(scan,nb_accel_channel,nfft,Fs)
+function [Coh_s1a,Coh_s2a,sumCoh_s1,sumCoh_s2,fe]=mod_efe_scan_multivariate_coherence(scan,nb_accel_channel,nfft,dof_coh,Fs)
 % Correcting the shear channels using a multivariate acceleration
 % correction: I use all the acceleration channnels to get a combined
 % coherence that removed from the shear channel. 
@@ -7,6 +7,14 @@ function [Pv1,Pv2,Pv1_co,Pv2_co,fe]=mod_efe_scan_multivariate_coherence(scan,nb_
 %        
 % Compute the coherence over the whole profile using all 3 axis (we could add more) 
 % over the 1./tsan:Fs frequency frequency axis with nfft samples.
+%
+% I changed the design of the correction. 
+% Now I compute the multivariate coherence along the whole profile.
+% The coherence is computed using the dof_coh in meta_data. If we follow
+% rolf lueck recommandation dof_coh=15 is good. 
+% This means that we need to "slide" our multivariate approach along the
+% profile using segments with a length = dof_coh * NFFT and obtain the
+% multivariate coherence for a freqeuncy array = Meta_Data.PROCESS.fe
 
 % written by aleboyer@ucsd.edu 10/01/2021
 

@@ -225,36 +225,36 @@ if ind_ctdscan(1)>0 && ind_ctdscan(end)<=length(Profile.ctd.time_s) ...
         end
     end
     %% quality control param
-    scan.epsi_qc=[1 1]; % good data
+    scan.qc=[1 1]; % good data
     if ((scan.epsilon_co.s1/scan.epsilon_co.s2)>3)
-        scan.epsi_qc=scan.epsi_qc+ [1 0];
+        scan.qc=scan.qc+ [1 0];
     end
     if ((scan.epsilon_co.s2/scan.epsilon_co.s1)>3)
-        scan.epsi_qc=scan.epsi_qc+ [0 1];
+        scan.qc=scan.qc+ [0 1];
     end
     if (scan.fom.s1>3)
-        scan.epsi_qc=scan.epsi_qc+ [1 0];
+        scan.qc=scan.qc+ [1 0];
     end
     if (scan.fom.s2>3)
-        scan.epsi_qc=scan.epsi_qc+ [0 1];
+        scan.qc=scan.qc+ [0 1];
     end    
     if (scan.epsilon_co.s1==1e-11)
-        scan.epsi_qc=scan.epsi_qc+ [1 0];
+        scan.qc=scan.qc+ [1 0];
     end
     if (scan.epsilon_co.s2==1e-11)
-        scan.epsi_qc=scan.epsi_qc+ [0 1];
+        scan.qc=scan.qc+ [0 1];
     end
     
     %% final epsilon product
-    if sum(scan.epsi_qc)==2
+    if sum(scan.qc)==2
         %good epsilons we use the mean of both epsilons
         epsilons=[scan.epsilon_co.s1 scan.epsilon_co.s2];
         scan.epsilon_final = nanmean(epsilons);
-        scan.epsi_qc_final=1;
+        scan.qc_final=1;
     else
         %otherwise the estimate with the small QC
         epsilons=[scan.epsilon_co.s1 scan.epsilon_co.s2];
-        scan.epsilon_final = epsilons(scan.epsi_qc==min(scan.epsi_qc));
+        scan.epsilon_final = epsilons(scan.qc==min(scan.epsi_qc));
         scan.epsi_qc_final=min(scan.epsi_qc);
     end
     %%
