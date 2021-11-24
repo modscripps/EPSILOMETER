@@ -7,15 +7,18 @@ function Meta_Data=create_metadata_from_deployment_log_v2(filename)
 %   md          = option structure of user-defined Meta_Data info
 % -------------------------------------------------------------------------
 
-spltpath=strsplit(path,':');
 % If epsilib directory is immediately inside EPSILOMETER directory, the
 % next two lines should appropriately define the process directory
 % ALB to NC: Pretty smart move :).
-epsilib_path=spltpath{~cellfun(@isempty, ...
-                               cellfun(@(x) ...
-                               strfind(x,'epsilib'),spltpath, ...
-                               'UniformOutput',false))};
 
+spltpath=strsplit(path,':');
+epsilib_path=spltpath{~cellfun(@isempty, ...
+    cellfun(@(x) ...
+    strfind(x,'epsilib'),spltpath, ...
+    'UniformOutput',false))};
+
+                           
+                           
 Meta_Data.paths.process_library=fileparts(epsilib_path);
 Meta_Data.paths.data=pwd;
 Meta_Data.paths.calibration = fullfile(Meta_Data.paths.process_library,'CALIBRATION','ELECTRONICS');
@@ -162,6 +165,11 @@ Meta_Data.epsi.a3.ADCfilter=Meta_Data.Firmware.ADCfilter; % serial number;
     Meta_Data.PROCESS.nfft,[], ...
     Meta_Data.PROCESS.nfft, ...
     Meta_Data.PROCESS.Fs_epsi,'psd');
+
+buildname= @(x,y) fullfile(x,[y '.cal']);
+Meta_Data.aux1.CALpath   = fullfile(Meta_Data.paths.process_library,'CALIBRATION','SBE49');
+Meta_Data.aux1.CALfile=buildname(Meta_Data.aux1.CALpath,Meta_Data.aux1.SN);
+Meta_Data.aux1.cal=get_CalSBE(Meta_Data.aux1.CALfile);
 
 fprintf('Saving Meta_Data in datapath \n')
 save(fullfile(Meta_Data.paths.data,'Meta_Data.mat'),'Meta_Data');

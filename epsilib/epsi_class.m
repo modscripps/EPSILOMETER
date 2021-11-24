@@ -33,13 +33,18 @@ classdef epsi_class < handle
             
             % removed archive+path
             spltpath=strsplit(path,':');
-            archived_path=spltpath{~cellfun(@isempty, ...
-                cellfun(@(x) ...
-                strfind(x,'archived_scripts'),spltpath, ...
-                'UniformOutput',false))};
-            if ~isempty(archived_path)
-                rmpath(archived_path);
+            try
+                archived_path=spltpath{~cellfun(@isempty, ...
+                    cellfun(@(x) ...
+                    strfind(x,'archived_scripts'),spltpath, ...
+                    'UniformOutput',false))};
+                if ~isempty(archived_path)
+                    rmpath(genpath(archived_path));
+                end
+            catch
+                
             end
+            
             % Check to see if Meta_Data is already definedc
             checkMD = dir('Meta_Data.mat');
             

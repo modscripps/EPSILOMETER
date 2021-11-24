@@ -503,13 +503,22 @@ switch version
         vnav = [];
         gps = [];
         
-        
-        epsi.dnum = epsi.time;
         t0 = Meta_Data.starttime;
-        epsi.time_s = (epsi.dnum-t0)*(24*60*60);
+        epsi.time_s=epsi.EPSInbsample/Meta_Data.PROCESS.Fs_epsi;
+        try
+        epsi.dnum = epsi.time-epsi.time(1);
+        epsi.dnum = epsi.dnum+t0;
+        catch
+        epsi.dnum = epsi.time_s/86400 +t0;
+        end
         
-        ctd.dnum = ctd.time;
-        ctd.time_s = (ctd.dnum-t0)*(24*60*60);
+        ctd.time_s=ctd.Aux1Stamp/Meta_Data.PROCESS.Fs_ctd;
+        try
+        ctd.dnum = ctd.time-ctd.time(1);
+        ctd.dnum=ctd.dnum+t0;
+        catch
+        ctd.dnum = ctd.time_s/86400 +t0;
+        end
         
         % Add extra ctd variables
         % Define a constant for salinity calculation
@@ -522,7 +531,9 @@ switch version
         % NC 17 July 2021 - added ctd.z and ctd.dzdt.
         % get_scan_spectra.m will use dzdt to define fall speed w.
         if ~isfield(Meta_Data.PROCESS,'latitude')
-            error('Need latitude to get depth from pressure data. Add to MetaProcess text file.')
+            warning('Need latitude to get depth from pressure data. Add to MetaProcess text file. Pursue without')
+            ctd.z    = ctd.P;
+            ctd.dzdt = [0; diff(ctd.z)./diff(ctd.time_s)];
         else
             ctd.z    = sw_dpth(ctd.P,Meta_Data.PROCESS.latitude);
             ctd.dzdt = [0; diff(ctd.z)./diff(ctd.time_s)];

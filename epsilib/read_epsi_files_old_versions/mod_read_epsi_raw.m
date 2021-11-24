@@ -94,7 +94,8 @@ if ~isempty(EPSI)
     end
 else
 %  isfield(Meta_Data,'SBEcal')
-    EPSI.header=Meta_Data.SBEcal;
+%     EPSI.header=Meta_Data.SBEcal;
+    EPSI.header=Meta_Data.aux1.cal;
 end
 
 %TODO get rid of ths offset  
