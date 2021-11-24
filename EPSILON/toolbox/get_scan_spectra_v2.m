@@ -246,7 +246,7 @@ if ind_ctdscan(1)>0 && ind_ctdscan(end)<=length(Profile.ctd.time_s) ...
     end
     
     %% final epsilon product
-    if sum(scan.epsi_qc)==2
+    if scan.epsi_qc(1)==scan.epsi_qc(2)
         %good epsilons we use the mean of both epsilons
         epsilons=[scan.epsilon_co.s1 scan.epsilon_co.s2];
         scan.epsilon_final = nanmean(epsilons);

@@ -82,8 +82,7 @@ for p=1:numel(Pr)
         % Not sure about the df. It is in the Goodman2006 paper but I have a
         % doubt wether it is already included in the output of cpsd.
         % With the df It seems to do a good job in the correction.
-%         Coh_s1a(p,:)=squeeze(nansum(nansum(MC,1),2))*df;
-        Coh_s1a(p,:)=squeeze(nanmean(nanmean(MC,1),2));
+        Coh_s1a(p,:)=squeeze(nansum(nansum(MC,1),2))*df;
     end
     
     if isfinite(Profile.s2_volt)
@@ -113,7 +112,7 @@ for p=1:numel(Pr)
         % doubt wether it is already included in the output of cpsd.
         % With the df It seems to do a good job in the correction.
 %         Coh_s2a(p,:)=squeeze(nansum(nansum(MC,1),2))*df;
-        Coh_s2a(p,:)=squeeze(nanmean(nanmean(MC,1),2));
+        Coh_s2a(p,:)=squeeze(nanmean(nanmean(MC,1),2))*df;
     end
 end
 
