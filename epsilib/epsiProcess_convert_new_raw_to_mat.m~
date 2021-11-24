@@ -513,9 +513,10 @@ switch version
         end
         
         ctd.time_s=ctd.Aux1Stamp/Meta_Data.PROCESS.Fs_ctd;
-        if (t0==0)
-        ctd.dnum = ctd.time;
-        else
+        if t0==
+        ctd.dnum = ctd.time-ctd.time(1);
+        ctd.dnum=ctd.dnum+t0;
+        catch
         ctd.dnum = ctd.time_s/86400 +t0;
         end
         
