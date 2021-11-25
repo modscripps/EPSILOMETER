@@ -505,18 +505,14 @@ switch version
         
         t0 = Meta_Data.starttime;
         epsi.time_s=epsi.EPSInbsample/Meta_Data.PROCESS.Fs_epsi;
-        try
-        epsi.dnum = epsi.time-epsi.time(1);
-        epsi.dnum = epsi.dnum+t0;
-        catch
-        epsi.dnum = epsi.time_s/86400 +t0;
-        end
-        
         ctd.time_s=ctd.Aux1Stamp/Meta_Data.PROCESS.Fs_ctd;
+        
         if (t0==0)
+        epsi.dnum = epsi.time
         ctd.dnum = ctd.time;
         else
         ctd.dnum = ctd.time_s/86400 +t0;
+        epsi.dnum = epsi.time_s/86400 +t0;
         end
         
         % Add extra ctd variables
