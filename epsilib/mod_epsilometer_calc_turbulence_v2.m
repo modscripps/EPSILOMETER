@@ -156,6 +156,8 @@ if isfield(Meta_Data.PROCESS, "multivariate")
         
         [Profile.Cs1a_mv,Profile.Cs2a_mv] = ...
             mod_efe_profile_multivariate_coherence(Profile_coh,Pr,Meta_Data);
+        [Profile.Cs1a_mv,Profile.Cs2a_mv] = ...
+            mod_efe_profile_multi_coherence(Profile_coh,Pr,Meta_Data);
         % save profile cause it takes for eve to compute mv.
         save_var_name = 'Profile';
         save_file_name = sprintf('Profile%03i',Profile.profNum);

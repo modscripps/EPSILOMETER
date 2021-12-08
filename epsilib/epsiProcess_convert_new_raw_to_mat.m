@@ -29,11 +29,13 @@ function [matData] = epsiProcess_convert_new_raw_to_mat(dirs,Meta_Data,varargin)
 
 % NC - Make matData for output even if there is no new data
 matData.epsi = [];
-matData.ctd = [];
-matData.alt = [];
-matData.act = [];
+matData.ctd  = [];
+matData.alt  = [];
+matData.act  = [];
 matData.vnav = [];
-matData.gps = [];
+matData.gps  = [];
+matData.seg  = [];
+matData.spec = [];
 
 % NC - Only rsync files with the desired suffix
 suffixStr = Meta_Data.rawfileSuffix; %ex. *.raw, *.ascii, etc
@@ -186,6 +188,7 @@ for i=1:length(myASCIIfiles)
         %             catch
         %             end
         
+        
         if ~isempty(epsi) && isfield(epsi,'time_s')
             save([MatDir  base '.mat'],'epsi','ctd','alt');
             epsiProcess_update_TimeIndex(MatDir,base,epsi);
@@ -337,14 +340,21 @@ for i=1:length(myASCIIfiles)
         %             end
         
         % Save the data in a mat file with the same name as the raw file
+
+        %ALB I am change the if loop belowe so we always save in the .mat file 
+        %ALB all the structure inside matData
+        %ALB I am keeping the timeseries updates
+        save(fullfile(MatDir,[base '.mat']),'-struct','matData');
+        fprintf(1,'%s: Wrote  %s%s.mat\n\n',datestr(now,'YY.mm.dd HH:MM:SS'),MatDir,base);
+
         if ~isempty(epsi) && isfield(epsi,'time_s')
-            save([MatDir  base '.mat'],'epsi','ctd','alt','vnav','gps');
+%             save([MatDir  base '.mat'],'epsi','ctd','alt','vnav','gps');
             epsiProcess_update_TimeIndex(MatDir,base,epsi);
-            fprintf(1,'%s: Wrote  %s%s.mat\n\n',datestr(now,'YY.mm.dd HH:MM:SS'),MatDir,base);
+            %fprintf(1,'%s: Wrote  %s%s.mat\n\n',datestr(now,'YY.mm.dd HH:MM:SS'),MatDir,base);
         elseif isempty(epsi) &&  ~isempty(ctd) && isfield(ctd,'time_s') %For the case where the is no epsi data, but there is ctd data
-            save([MatDir  base '.mat'],'epsi','ctd','alt','vnav','gps');
+%             save([MatDir  base '.mat'],'epsi','ctd','alt','vnav','gps');
             epsiProcess_update_TimeIndex(MatDir,base,ctd);
-            fprintf(1,'%s: Wrote  %s%s.mat\n\n',datestr(now,'YY.mm.dd HH:MM:SS'),MatDir,base);
+            %fprintf(1,'%s: Wrote  %s%s.mat\n\n',datestr(now,'YY.mm.dd HH:MM:SS'),MatDir,base);
         end
         
         % Update pressure timeseries
@@ -468,20 +478,32 @@ end
 function  [matData, epsi,ctd,alt,act,vnav,gps] = read_data_file(filename,Meta_Data,version)
 
 switch version
+    case 4
+        [epsi,ctd,alt,act,vnav,gps,seg,spec,avgspec,dissrate] = mod_som_read_epsi_files_v4(filename,Meta_Data);
+        matData.epsi     = epsi;
+        matData.ctd      = ctd;
+        matData.alt      = alt;
+        matData.act      = act;
+        matData.vnav     = vnav;
+        matData.gps      = gps;
+        matData.seg      = seg;
+        matData.spec     = spec;
+        matData.avgspec  = avgspec;
+        matData.dissrate = dissrate;
     case 3
         [epsi,ctd,alt,act,vnav,gps] = mod_som_read_epsi_files_v3(filename,Meta_Data);
         matData.epsi = epsi;
-        matData.ctd = ctd;
-        matData.alt = alt;
-        matData.act = act;
+        matData.ctd  = ctd;
+        matData.alt  = alt;
+        matData.act  = act;
         matData.vnav = vnav;
-        matData.gps = gps;
+        matData.gps  = gps;
     case 2
         [epsi,ctd,alt,act]=mod_som_read_epsi_files_v2(filename,Meta_Data);
         matData.epsi = epsi;
-        matData.ctd = ctd;
-        matData.alt = alt;
-        matData.act = act;
+        matData.ctd  = ctd;
+        matData.alt  = alt;
+        matData.act  = act;
         vnav = [];
         gps = [];
     case 1
@@ -505,10 +527,10 @@ switch version
         
         t0 = Meta_Data.starttime;
         epsi.time_s=epsi.EPSInbsample/Meta_Data.PROCESS.Fs_epsi;
-        ctd.time_s=ctd.Aux1Stamp/Meta_Data.PROCESS.Fs_ctd;
+        ctd.time_s=ctd.Aux1Stamp/Meta_Data.PROCESS.Fs_epsi;
         
         if (t0==0)
-        epsi.dnum = epsi.time
+        epsi.dnum = epsi.time;
         ctd.dnum = ctd.time;
         else
         ctd.dnum = ctd.time_s/86400 +t0;

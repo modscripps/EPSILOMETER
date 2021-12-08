@@ -31,7 +31,7 @@ function Meta_Data=mod_epsi_temperature_spectra_v3(Meta_Data,Profile)
 try
     epsi_df=Meta_Data.AFE.FS;
 catch
-    epsi_df=Meta_Data.PROCESS.Fs; %Check this,  I think it's wrong
+    epsi_df=Meta_Data.PROCESS.Fs_epsi; %Check this,  I think it's wrong
 end
 
 ctd_df = Meta_Data.PROCESS.Fs_ctd;
@@ -177,11 +177,20 @@ Meta_Data.AFE.t2.cal=dTdV(2);
 save(fullfile(Meta_Data.paths.data,'Meta_data.mat'),'Meta_Data');
 
 % only for plotting: we getting the board noise
+try
 switch Meta_Data.AFE.temp_circuit
     case 'Tdiff'
         FPO7noise=load(fullfile(Meta_Data.paths.calibration,'FPO7_noise.mat'),'n0','n1','n2','n3');
     otherwise
         FPO7noise=load(fullfile(Meta_Data.paths.calibration,'FPO7_notdiffnoise.mat'),'n0','n1','n2','n3');
+end
+catch
+switch Meta_Data.MAP.temperature
+    case 'Tdiff'
+        FPO7noise=load(fullfile(Meta_Data.paths.calibration,'FPO7_noise.mat'),'n0','n1','n2','n3');
+    otherwise
+        FPO7noise=load(fullfile(Meta_Data.paths.calibration,'FPO7_notdiffnoise.mat'),'n0','n1','n2','n3');
+end
 end
 n0=FPO7noise.n0; n1=FPO7noise.n1; n2=FPO7noise.n2; n3=FPO7noise.n3;
 logf=log10(1/3:1/3:epsi_df/2);

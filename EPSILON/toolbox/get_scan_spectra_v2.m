@@ -121,8 +121,13 @@ if ind_ctdscan(1)>0 && ind_ctdscan(end)<=length(Profile.ctd.time_s) ...
     scan.z      = nanmean(Profile.ctd.z(ind_ctdscan));
     scan.t      = nanmean(Profile.ctd.T(ind_ctdscan));
     scan.s      = nanmean(Profile.ctd.S(ind_ctdscan));
+    try
     scan.th     = nanmean(Profile.ctd.th(ind_ctdscan));
     scan.sgth   = nanmean(Profile.ctd.sgth(ind_ctdscan));    
+    catch
+    scan.th     = nan;
+    scan.sgth   = nan;    
+    end
     if isfield(Profile.ctd,'dnum')
         scan.dnum   = nanmean(Profile.ctd.dnum(ind_ctdscan));
     else
@@ -187,8 +192,8 @@ if ind_ctdscan(1)>0 && ind_ctdscan(end)<=length(Profile.ctd.time_s) ...
         
         if isfield(Meta_Data.PROCESS, "multivariate")
             if (Meta_Data.PROCESS.multivariate)
-                scan.Cs1a3_full=Profile.Cs1a_mv(id_scan,:);
-                scan.Cs2a3_full=Profile.Cs2a_mv(id_scan,:);
+                scan.Cs1a3_full=Profile.Cs1a_mv(id_scan,:).';
+                scan.Cs2a3_full=Profile.Cs2a_mv(id_scan,:).';
             end%end if Meta_Data.PROCESS.multivariate=1
         end%end if Meta_Data.PROCESS is a field multivariate
         [Ps_volt_f,Ps_shear_k,Ps_shear_co_k,epsilon,epsilon_co,f,k,fc,kc,Ppan,Ppan_co,fom] = ...

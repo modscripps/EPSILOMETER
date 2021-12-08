@@ -132,6 +132,7 @@ classdef epsi_class < handle
                         
                         try
                             obj.Meta_Data = create_metadata_from_deployment_log_v2(dir_has_log.name);
+                            obj.Meta_Data.AFE=obj.Meta_Data.epsi;
                         catch err
                             error('Failed to find config data (1)')
                         end
@@ -646,7 +647,7 @@ classdef epsi_class < handle
                 case 'FISH'
                     datachoice = 'datadown';
                     idxchoice = 'down';
-                case 'WW'
+                case {'WW','SEACYCLER'}
                     datachoice = 'dataup';
                     idxchoice = 'up';
                 otherwise
@@ -658,7 +659,7 @@ classdef epsi_class < handle
             % NC 10/12/21 - Instead of using the longest profile, wait
             % until after profiles are created and define dTdV according to
             % calibrate_dTdV.m
-            dTdV_process = 'new';
+            dTdV_process = 'old';
             switch dTdV_process
                 case 'new'
                     obj.Meta_Data = process_calibrate_dTdV(obj.Meta_Data);   
@@ -680,7 +681,7 @@ classdef epsi_class < handle
                     pRange = PressureTimeseries.P(PressureTimeseries.endprof) -...
                         PressureTimeseries.P(PressureTimeseries.startprof);
                     % Find the longest profile
-                    [~,idxProf] = max(pRange);
+                    [~,idxProf] = max(abs(pRange));
                     
                     % Get (and merge if necessary) .mat data for this profile
                     tMin = PressureTimeseries.dnum(PressureTimeseries.startprof(idxProf));

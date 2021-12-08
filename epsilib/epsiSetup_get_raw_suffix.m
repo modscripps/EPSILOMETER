@@ -25,3 +25,4 @@ end
 % We use the suffix option with the most match counts
 [~,idxChoice] = max(counts);
 Meta_Data.rawfileSuffix = suffixOptions{idxChoice};
+

@@ -62,7 +62,7 @@ grid.deployment = grid.deployment(:,1).';
 grid.pr = grid.pr(:,1);
 grid.z = grid.z(:,1);
 
-saveName = fullfile(obj.Meta_Data.paths.profiles,'griddedProfiles');
-eval(['save ' saveName ' grid']);
+saveName = fullfile(obj.Meta_Data.paths.profiles,'griddedProfiles.mat');
+save(saveName,'grid');
 
 end

@@ -1,11 +1,17 @@
-function [epsi,ctd,alt,act,vnav,gps,seg,spec] = mod_som_read_epsi_files_vGPS(filename,Meta_Data)
+function [epsi,ctd,alt,act,vnav,gps,seg,spec,avgspec,dissrate] = mod_som_read_epsi_files_v4(filename,Meta_Data)
 
-% For now, only works for 'v3' of som_acq
+% For now, only works for 'v4' of som_acq
 % It only works with a single file, since we're always calling it from a
 % loop  in Epsi_MakeMatFromRaw
 %
+% ALB: I added seg and spec structures: 
+% Seg is a structure with the segments compiled in 
+% the fill_segment task inside efeobp.c
+% Spec is a structure with the spectra  compiled in 
+% the cpt_spectra task inside efeobp.c. The spectra should match the segment found in the seg structure. 
+%
 % TO DO:
-%   Add backwards compatability - look at mod_som_read_epsi_files_v2.m
+%   Add backwards compatability - look at mod_som_read_epsi_files_v3.m
 %
 % CALLED BY:
 %   Epsi_MakeMatFromRaw
@@ -21,7 +27,10 @@ function [epsi,ctd,alt,act,vnav,gps,seg,spec] = mod_som_read_epsi_files_vGPS(fil
 %   act   (intermediate processing in 'actu' structure)
 %   vnav  (intermediate processing in 'vecnav' structure)
 %   gps   (intermediate processing in 'gpsmeta' structure
+%   seg   (intermediate processing in 'seg' structure)
+%   spec  (intermediate processing in 'spec' structure)
 %
+% 11/28/21 aleboyer@ucsd.edu  updated from v3
 % Nicole Couto adapted from Arnaud LeBoyer's mod_som_read_epsi_raw.m
 % June 2021
 % -------------------------------------------------------------------------
@@ -741,17 +750,9 @@ else
         [seg.time_s,seg.dnum] = convert_timestamp(segment_timestamp);
     else
         % time_s - seconds since power on
-        seg.time_s = arrayfun(@(x,y) linspace(x,y, ...
-                                             seg.data.sample_per_segment)./1000, ...
-                                    segment_timestamp(1:end-1), ...
-                                    segment_timestamp(2:end),'un',0);
+        seg.time_s = arrayfun(@(x,y) linspace(x,x+1000*(seg.data.sample_per_segment+1)/seg.data.sample_freq ...
+                                             ,seg.data.sample_per_segment)./1000,segment_timestamp,'un',0);
                                 
-        % ALB 500 is 1000*0.5. 
-        % ALB 1000 because segment_timestampare in milisec/
-        % ALB 0.5 becasue I have 50% overlap.
-        seg.time_s{end+1}=linspace(segment_timestamp(end), ...
-                                   segment_timestamp(end)+500*seg.data.sample_per_segment/seg.data.sample_freq,...
-                                   seg.data.sample_per_segment)./1000;
 %         seg.time_s=cell2mat(seg.time_s.');
          seg.dnum=cellfun(@(x) x.*nan,seg.time_s,'un',0);
     end
@@ -863,6 +864,208 @@ else
     
 end %end spec
 
+
+%% Process AVGSPEC data
+if isempty(ind_avgspec_start)
+    disp('no avgspec data')
+    avgspec=[];
+else
+    disp('processing avgspec data')
+    
+    % Pre-allocate space for data
+    avgspec.data.n_blocks           = numel(ind_avgspec_start); %Number of data blocks beginning with $EFE
+    
+    avgspec.data.n_channels        = 3;
+    avgspec.data.sample_freq       = 320;
+    avgspec.data.sample_per_spec   = 2048/2; %NFFT/2
+    avgspec.data.spec_per_block    = 1;
+    avgspec.data.timestamp_length  = 8;
+    avgspec.data.n_elements        = avgspec.data.timestamp_length+ ...
+                                  avgspec.data.n_channels*...
+                                  avgspec.data.sample_per_spec*4;
+    avgspec.channels ={'t1_k','s1_k','a3_g'};
+     
+%     seg.data.n_recs             = efe.data.n_blocks*efe.data.recs_per_block;
+    % The first 8 bytes are the timestamp. Timestamp in milliseconds since
+    % 1970 is too big for uint32, so use uint64
+    ind_time = 1:avgspec.data.timestamp_length;
+    mult = 256.^[0:7].';
+    
+
+    avgspec_timestamp           = nan(avgspec.data.n_blocks,1);
+    %epsi.time_s and epsi.dnum will be created from epsi_timestamp once
+    %all its records are filled
+    
+    % Loop through data blocks and parse strings
+    for iB = 1:avgspec.data.n_blocks
+        
+        % Grab the block of data starting with the header
+        avgspec_block_str = str(ind_avgspec_start(iB):ind_avgspec_stop(iB));
+        
+        % Get the header timestamp and length of data block (?)
+        avgspec.data.hextimestamp.value   = hex2dec(spec_block_str(tag.hextimestamp.inds));
+        avgspec.data.hexlengthblock.value = hex2dec(spec_block_str(tag.hexlengthblock.inds));
+        % It should be the case that
+        % efe.hexlengthblock.value==efe.data.element_length*efe.data.recs_per_block
+        
+        % Get the data after the header.
+        avgspec_block_data = avgspec_block_str(tag.data_offset:end-tag.chksum.length);
+        
+        % Does length(efe_block_data)=efe.hexlengthblock.value?
+        if (length(avgspec_block_data)~=avgspec.data.n_elements)
+            fprintf("AVGSPEC block %i has incorrect length\r\n",iB)
+        else
+            
+            avgspec_timestamp(iB)=double(uint64(avgspec_block_data(ind_time)))*mult;
+            
+            % Reshape the data
+            avgspec.data.raw_bytes{iB} = reshape(uint8(avgspec_block_data(ind_time(end)+1:end)),...
+                                             4,...
+                                             avgspec.data.sample_per_spec*...
+                                             avgspec.data.n_channels);
+                                         
+            for n=1:avgspec.data.sample_per_spec*avgspec.data.n_channels
+                avgspec.data.raw_float{iB}(n) = double(typecast(avgspec.data.raw_bytes{iB}(:,n).' , 'single'));
+            end
+            % Save data as 'counts'
+            for cha=1:avgspec.data.n_channels  
+                wh_channel=avgspec.channels{cha};
+                avgspec.(wh_channel){iB} = avgspec.data.raw_float{iB}(1+(cha-1)*avgspec.data.sample_per_spec:cha*avgspec.data.sample_per_spec);
+            end
+
+            % Get the checksum value
+            i1 = tag.data_offset+avgspec.data.hexlengthblock.value;
+            i2 = i1+tag.chksum.length-1;
+            % The full checksum looks like *8F__ so we get str indices from
+            % i1+1 to i2-2 to isolate just the 8F part
+            avgspec.checksum.data(iB) = hex2dec(avgspec_block_str(i1+1:i2-2));
+        end %end if efe data block is the correct size
+    end %end loop through efe blocks
+    
+    % Clean and concatenate efe.data.raw_bytes
+    % Check for empty raw_bytes cells and concatenate only the full ones
+    for cha=1:avgspec.data.n_channels
+        wh_channel=avgspec.channels{cha};
+        idnull=cellfun(@isempty,avgspec.(wh_channel));
+        avgspec.(wh_channel)=avgspec.(wh_channel)(~idnull);
+    end
+    
+    if nanmedian(avgspec_timestamp)>1e9
+        % time_s - seconds since 1970
+        % dnum - matlab datenum
+        [avgspec.time_s,avgspec.dnum] = convert_timestamp(avgspec_timestamp);
+    else
+        % time_s - seconds since power on
+        avgspec.time_s = avgspec_timestamp./1000;
+        avgspec.dnum=avgspec.time_s.*nan;
+
+    end
+    
+    % Sort epsi fields
+    avgspec = orderfields(avgspec,{'dnum','time_s','t1_k','s1_k','a3_g','data','channels','checksum'});
+    
+end %end spec
+
+
+%% Process DISRATE data
+if isempty(ind_dissrate_start)
+    disp('no disssrate data')
+    dissrate=[];
+else
+    disp('processing dissrate data')
+    
+    % Pre-allocate space for data
+    dissrate.data.n_blocks           = numel(ind_dissrate_start); %Number of data blocks beginning with $EFE
+    
+    dissrate.channels         = {'pressure','temperature','salinity','chi','epsilon','nu','kappa'};
+    dissrate.data.n_channels         = length(dissrate.channels);
+    dissrate.data.dissrate_per_block = 1;
+    dissrate.data.timestamp_length   = 8;
+    dissrate.data.float_length       = 4;
+    dissrate.data.n_elements         = dissrate.data.timestamp_length+ ...
+                                      (dissrate.data.n_channels)*...
+                                       dissrate.data.float_length;
+     
+    % The first 8 bytes are the timestamp. Timestamp in milliseconds since
+    % 1970 is too big for uint32, so use uint64
+    ind_time = 1:dissrate.data.timestamp_length;
+    mult = 256.^[0:7].';
+    
+
+    dissrate_timestamp           = nan(dissrate.data.n_blocks,1);
+    %epsi.time_s and epsi.dnum will be created from epsi_timestamp once
+    %all its records are filled
+    
+    % Loop through data blocks and parse strings
+    for iB = 1:dissrate.data.n_blocks
+        
+        % Grab the block of data starting with the header
+        dissrate_block_str = str(ind_dissrate_start(iB):ind_dissrate_stop(iB));
+        
+        % Get the header timestamp and length of data block (?)
+        dissrate.data.hextimestamp.value   = hex2dec(dissrate_block_str(tag.hextimestamp.inds));
+        dissrate.data.hexlengthblock.value = hex2dec(dissrate_block_str(tag.hexlengthblock.inds));
+        % It should be the case that
+        % efe.hexlengthblock.value==efe.data.element_length*efe.data.recs_per_block
+        
+        % Get the data after the header.
+        dissrate_block_data = dissrate_block_str(tag.data_offset:end-tag.chksum.length);
+        
+        % Does length(efe_block_data)=efe.hexlengthblock.value?
+        if (length(dissrate_block_data)~=dissrate.data.n_elements)
+            fprintf("dissrate block %i has incorrect length\r\n",iB)
+        else
+            
+            dissrate_timestamp(iB)=double(uint64(dissrate_block_data(ind_time)))*mult;
+            
+            % Reshape the data
+            dissrate.data.raw_bytes{iB} = reshape(uint8(dissrate_block_data(ind_time(end)+1:end)),...
+                                             dissrate.data.float_length,...
+                                             dissrate.data.n_channels);
+                                         
+            for n=1:dissrate.data.n_channels
+                dissrate.data.raw_float{iB}(n) = double(typecast(dissrate.data.raw_bytes{iB}(:,n).' , 'single'));
+            end
+            % Save data as 'counts'
+            for cha=1:dissrate.data.n_channels  
+                wh_channel=dissrate.channels{cha};
+                dissrate.(wh_channel){iB} = dissrate.data.raw_float{iB}(cha);
+            end
+
+            % Get the checksum value
+            i1 = tag.data_offset+dissrate.data.hexlengthblock.value;
+            i2 = i1+tag.chksum.length-1;
+            % The full checksum looks like *8F__ so we get str indices from
+            % i1+1 to i2-2 to isolate just the 8F part
+            dissrate.checksum.data(iB) = hex2dec(dissrate_block_str(i1+1:i2-2));
+        end %end if efe data block is the correct size
+    end %end loop through efe blocks
+    
+    % Clean and concatenate data.raw_bytes
+    % Check for empty raw_bytes cells and concatenate only the full ones
+    for cha=1:dissrate.data.n_channels
+        wh_channel=dissrate.channels{cha};
+        idnull=cellfun(@isempty,dissrate.(wh_channel));
+        dissrate.(wh_channel)=cell2mat(dissrate.(wh_channel)(~idnull));
+    end
+    
+    if nanmedian(dissrate_timestamp)>1e9
+        % time_s - seconds since 1970
+        % dnum - matlab datenum
+        [dissrate.time_s,dissrate.dnum] = convert_timestamp(dissrate_timestamp);
+    else
+        % time_s - seconds since power on
+        dissrate.time_s = dissrate_timestamp./1000;
+        dissrate.dnum=dissrate.time_s.*nan;
+
+    end
+    
+    % Sort epsi fields
+    dissrate = orderfields(dissrate,{'dnum','time_s','pressure','temperature', ...
+                                 'salinity','chi','epsilon','nu','kappa',...
+                                 'data','channels','checksum'});
+    
+end %end spec
 
 
 

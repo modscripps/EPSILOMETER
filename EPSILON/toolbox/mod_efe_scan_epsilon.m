@@ -97,15 +97,14 @@ if isfinite(scan.(shear_channel))
             % in this mv context 
             % Ps_volt_f_co=Ps_volt_f-Csa
             % Pv_co=(Pv-Coh)./bias;
-            bias=1-1.02*nb_vibration_channel./dof;
-            df=Fs./nfft;
-            Ps_volt_co_f=(Ps_volt_f(:)-Csa(:)*df)./bias;
-            Ps_volt_co_f(Ps_volt_co_f<0)=nan;
-            Ps_volt_co_f=fillmissing(Ps_volt_co_f,'linear');
-            close all;
-            loglog(Meta_Data.PROCESS.fe,Ps_volt_f,'b',Meta_Data.PROCESS.fe,Csa*df,'r')
-            Ps_velocity_co_f = ((2*G/(Sv*w))^2).*Ps_volt_co_f./filter_TF;
-            pause;
+            Ps_velocity_co_f = Ps_velocity_f.*(1-Csa);
+%             bias=1-1.02*nb_vibration_channel./dof_coh;
+%             df=Fs./nfft;
+%             Ps_volt_co_f=(Ps_volt_f(:)-Csa(:).*df)./bias;
+%             Ps_volt_co_f(Ps_volt_co_f<0)=nan;
+%             Ps_volt_co_f=fillmissing(Ps_volt_co_f,'linear');
+%             close all;
+%             Ps_velocity_co_f = ((2*G/(Sv*w))^2).*Ps_volt_co_f./filter_TF;
 
         end
     end
@@ -136,7 +135,7 @@ if isfinite(scan.(shear_channel))
             Ppan=interp1(kpan(~isnan(Ppan)),Ppan(~isnan(Ppan)),k);
 
             fom=log(Ps_shear_co_k./Ppan_co);
-            fom=nanvar(fom(k>2 & k<kc(2)))./sig_lnS
+            fom=nanvar(fom(k>2 & k<kc(2)))./sig_lnS;
 %             close all
 %             loglog(k,Ps_shear_co_k,'b',k,Ppan,'r')
 %             pause

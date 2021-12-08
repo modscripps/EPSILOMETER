@@ -117,7 +117,11 @@ if ~isempty(myFileIdx)
         notRaw = cell2mat(cellfun(@(C) isempty(strfind(C,'_raw')),ctdFields,'UniformOutput',0));
         ctdFields = ctdFields(notRaw);
         for iField=1:numel(ctdFields)
-            Timeseries.ctd.(ctdFields{iField}) = ctd.(ctdFields{iField})(inRange);
+            if (sum(isnan(ctd.(ctdFields{iField})))==0)
+                Timeseries.ctd.(ctdFields{iField}) = ctd.(ctdFields{iField})(inRange);
+            else
+                Timeseries.ctd.(ctdFields{iField})=[];
+            end
         end
     end
     
@@ -140,6 +144,7 @@ if ~isempty(myFileIdx)
     end
     
     %% Add alt to Timeseries
+    if exist('alt','var')
     if isfield(alt,'dnum') || isfield(alt,'time_s')
         switch tRangeChoice
             case 'dnum'
@@ -152,32 +157,39 @@ if ~isempty(myFileIdx)
             Timeseries.alt.(altFields{iField}) = alt.(altFields{iField})(inRange);
         end
     end
+    end
     
     %% Add vnav to Timeseries
-    if isfield(vnav,'dnum') || isfield(vnav,'time_s')
-        switch tRangeChoice
-            case 'dnum'
-            inRange = vnav.dnum>=tRange(1) & vnav.dnum<=tRange(end);
-            case 'time_s'
-            inRange = vnav.time_s>=tRange(1) & vnav.time_s<=tRange(end);
-        end
-        vnavFields = fields(vnav);
-        for iField=1:numel(vnavFields)
-            Timeseries.vnav.(vnavFields{iField}) = vnav.(vnavFields{iField})(inRange,:);
+    if exist('vnav','var')
+        
+        if isfield(vnav,'dnum') || isfield(vnav,'time_s')
+            switch tRangeChoice
+                case 'dnum'
+                    inRange = vnav.dnum>=tRange(1) & vnav.dnum<=tRange(end);
+                case 'time_s'
+                    inRange = vnav.time_s>=tRange(1) & vnav.time_s<=tRange(end);
+            end
+            vnavFields = fields(vnav);
+            for iField=1:numel(vnavFields)
+                Timeseries.vnav.(vnavFields{iField}) = vnav.(vnavFields{iField})(inRange,:);
+            end
         end
     end
     
     %% Add gps to Timeseries
-    if isfield(gps,'dnum') || isfield(gps,'time_s')
-        switch tRangeChoice
-            case 'dnum'
-            inRange = gps.dnum>=tRange(1) & gps.dnum<=tRange(end);
-            case 'time_s'
-            inRange = gps.time_s>=tRange(1) & gps.time_s<=tRange(end);
-        end
-        gpsFields = fields(gps);
-        for iField=1:numel(gpsFields)
-            Timeseries.gps.(gpsFields{iField}) = gps.(gpsFields{iField})(inRange,:);
+    if exist('gps','var')
+        
+        if isfield(gps,'dnum') || isfield(gps,'time_s')
+            switch tRangeChoice
+                case 'dnum'
+                    inRange = gps.dnum>=tRange(1) & gps.dnum<=tRange(end);
+                case 'time_s'
+                    inRange = gps.time_s>=tRange(1) & gps.time_s<=tRange(end);
+            end
+            gpsFields = fields(gps);
+            for iField=1:numel(gpsFields)
+                Timeseries.gps.(gpsFields{iField}) = gps.(gpsFields{iField})(inRange,:);
+            end
         end
     end
     

@@ -1,4 +1,4 @@
-function [Coh_s1a,Coh_s2a]=mod_efe_profile_multivariate_coherence(Profile,Pr,Meta_Data)
+function [Coh_s1a,Coh_s2a]=mod_efe_profile_multi_coherence(Profile,Pr,Meta_Data)
 
 % Correcting the shear channels using a multivariate acceleration
 % correction: I use all the acceleration channnels to get a combined
@@ -44,7 +44,7 @@ for p=1:numel(Pr)
     ind_scan    = ind_Pr_epsi-N_epsi/2:ind_Pr_epsi+N_epsi/2-1; % ind_scan is even
     % ALB case where we are to close to the beginning of the profile 
     if ind_scan(1)<=0
-        ind_scan=ind_scan-ind_scan(1)+1;
+        ind_scan=ind_scan(ind_scan>0);
     end
     % ALB case where we are to close to the end of the profile
     if ind_scan(end)>=numel(Profile.time_s)
@@ -52,68 +52,26 @@ for p=1:numel(Pr)
     end
     
     Csi=zeros(nb_accel_channel,nfft/2+1);
-    Csj=zeros(nb_accel_channel,nfft/2+1);
-    Aij=zeros(nb_accel_channel,nb_accel_channel,nfft/2+1);
-    MC=zeros(nb_accel_channel,nb_accel_channel,nfft/2+1);
     
-    df=Fs./nfft;
     if isfinite(Profile.s1_volt)
         for i=1:nb_accel_channel% nb of accel channel
             wh_accel_i=list_accel{i};
             accel_i=detrend(Profile.(wh_accel_i)(ind_scan));
-            Csi(i,:)=cpsd(detrend(Profile.s1_volt(ind_scan)), accel_i,...
-                nfft,[],nfft,Fs);
-            
-            for j=1:nb_accel_channel %nb of accel channel
-                wh_accel_j=list_accel{i};
-                accel_j=detrend(Profile.(wh_accel_j)(ind_scan));
-                
-                Csj(j,:)=cpsd(detrend(Profile.s1_volt(ind_scan)), accel_j,...
-                    nfft,[],nfft,Fs);
-                
-                Aij(i,j,:)=cpsd(accel_i,accel_j, ...
-                    nfft,[],nfft,Fs);
-                
-                MC(i,j,:)=Csi(i,:).*conj(Csj(j,:))./ ...
-                    squeeze(Aij(i,j,:)).';
-            end
+            [Csi(i,:),~]=mscohere(detrend(Profile.s1_volt(ind_scan)),accel_i,nfft,[],nfft,Fs);
         end
-        % sum the MC (Mutlivariate Coeficients to get the correction)
-        % Not sure about the df. It is in the Goodman2006 paper but I have a
-        % doubt wether it is already included in the output of cpsd.
-        % With the df It seems to do a good job in the correction.
-        Coh_s1a(p,:)=squeeze(nansum(nansum(MC,1),2))*df;
+            
+        Coh_s1a(p,:)=max(Csi);
     end
     
     if isfinite(Profile.s2_volt)
         for i=1:nb_accel_channel% nb of accel channel
             wh_accel_i=list_accel{i};
             accel_i=detrend(Profile.(wh_accel_i)(ind_scan));
-            Csi(i,:)=cpsd(detrend(Profile.s2_volt(ind_scan)), accel_i,...
-                nfft,[],nfft,Fs);
-            
-            for j=1:nb_accel_channel %nb of accel channel
-                wh_accel_j=list_accel{i};
-                accel_j=detrend(Profile.(wh_accel_j)(ind_scan));
-                
-                Csj(j,:)=cpsd(detrend(Profile.s2_volt(ind_scan)), accel_j,...
-                    nfft,[],nfft,Fs);
-                
-                Aij(i,j,:)=cpsd(accel_i,accel_j, ...
-                    nfft,[],nfft,Fs);
-                
-                MC(i,j,:)=Csi(i,:).*conj(Csj(j,:))./ ...
-                    squeeze(Aij(i,j,:)).';
-                
-            end
+            [Csi(i,:),~]=mscohere(detrend(Profile.s2_volt(ind_scan)),accel_i,nfft,[],nfft,Fs);
         end
-        % sum the MC (Mutlivariate Coeficients to get the correction)
-        % Not sure about the df. It is in the Goodman2006 paper but I have a
-        % doubt wether it is already included in the output of cpsd.
-        % With the df It seems to do a good job in the correction.
-%         Coh_s2a(p,:)=squeeze(nansum(nansum(MC,1),2))*df;
-        Coh_s2a(p,:)=squeeze(nanmean(nanmean(MC,1),2))*df;
+        Coh_s2a(p,:)=max(Csi);
     end
 end
+
 
 disp("multivariate done.")

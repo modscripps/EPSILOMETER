@@ -89,6 +89,7 @@ nbscan = min([nbscan_epsi,nbscan_ctd]);
 %                            'movmean',10);
 
 % we compute spectra on scan with 50% overlap.
+if nbscan>1
 nbscan=2*nbscan-1;
 epsi_indscan = arrayfun(@(x) (1+floor(epsi_Lscan/2)*(x-1):1+floor(epsi_Lscan/2)*(x-1)+epsi_Lscan-1),1:nbscan,'un',0);
 ctd_indscan = arrayfun(@(x) (1+floor(ctd_Lscan/2)*(x-1):1+floor(ctd_Lscan/2)*(x-1)+ctd_Lscan-1),1:nbscan,'un',0);
@@ -347,6 +348,7 @@ if  plotData
     end
     figureStamp(mfilename('fullpath'))
     print('-dpng2',filename)
-    
+   
+end
 end
 

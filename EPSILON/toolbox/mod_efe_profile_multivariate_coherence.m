@@ -65,7 +65,7 @@ for p=1:numel(Pr)
                 nfft,[],nfft,Fs);
             
             for j=1:nb_accel_channel %nb of accel channel
-                wh_accel_j=list_accel{i};
+                wh_accel_j=list_accel{j};
                 accel_j=detrend(Profile.(wh_accel_j)(ind_scan));
                 
                 Csj(j,:)=cpsd(detrend(Profile.s1_volt(ind_scan)), accel_j,...
@@ -83,7 +83,7 @@ for p=1:numel(Pr)
         % doubt wether it is already included in the output of cpsd.
         % With the df It seems to do a good job in the correction.
 %         Coh_s1a(p,:)=squeeze(nansum(nansum(MC,1),2))*df;
-        Coh_s1a(p,:)=squeeze(nanmean(nanmean(MC,1),2));
+        Coh_s1a(p,:)=abs(squeeze(MC(3,3,:)+MC(2,2,:)+MC(1,1,:)));
     end
     
     if isfinite(Profile.s2_volt)
@@ -113,7 +113,9 @@ for p=1:numel(Pr)
         % doubt wether it is already included in the output of cpsd.
         % With the df It seems to do a good job in the correction.
 %         Coh_s2a(p,:)=squeeze(nansum(nansum(MC,1),2))*df;
-        Coh_s2a(p,:)=squeeze(nanmean(nanmean(MC,1),2));
+%         Coh_s2a(p,:)=squeeze(nanmean(nanmean(MC,1),2));
+        Coh_s2a(p,:)=abs(squeeze(MC(3,3,:)+MC(2,2,:)+MC(1,1,:)));
+
     end
 end
 
