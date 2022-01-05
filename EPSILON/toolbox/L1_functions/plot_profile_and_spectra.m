@@ -322,7 +322,7 @@ for k=scanNum
         [kbatch_s2t1,Pbatch_s2t1] = batchelor(scan.epsilon.s2,scan.chi.t1, ...
             scan.kvis,scan.ktemp);
         
-        [kbatch_s1t2,Pbatch_s12] = batchelor(scan.epsilon.s1,scan.chi.t2, ...
+        [kbatch_s1t2,Pbatch_s1t2] = batchelor(scan.epsilon.s1,scan.chi.t2, ...
             scan.kvis,scan.ktemp);
         [kbatch_s2t2,Pbatch_s2t2] = batchelor(scan.epsilon.s2,scan.chi.t2, ...
             scan.kvis,scan.ktemp);
@@ -419,10 +419,10 @@ for k=scanNum
         p9(4) = loglog(scan.k,smTG2,'color',cols.t2);
         
         % Add Batchelor spectra
-        p9(5) = loglog(kbatch_s1t1,Pbatch_s1t1,'Color',cols.batch11);
-        p9(6) = loglog(kbatch_s1t2,Pbatch12,'Color',cols.batch12);
-        p9(7) = loglog(kbatch_s2t1,Pbatch_s2t1,'Color',cols.batch21);
-        p9(8) = loglog(kbatch_s2t2,Pbatch_s2t2,'Color',cols.batch22);
+        p9(5) = loglog(kbatch_s1t1,Pbatch_s1t1,'Color',cols.batch_s1s1);
+        p9(6) = loglog(kbatch_s1t2,Pbatch_s1t2,'Color',cols.batch_s1s2);
+        p9(7) = loglog(kbatch_s2t1,Pbatch_s2t1,'Color',cols.batch_s2s1);
+        p9(8) = loglog(kbatch_s2t2,Pbatch_s2t2,'Color',cols.batch_s2s2);
         
         % Add noise
         p9(9) = loglog(k_noise,tnoise_k,'k:');
@@ -465,8 +465,8 @@ for k=scanNum
         p10(7) = scatter(scan.k(indkc),smS2(indkc),'filled','p','sizedata',450,'MarkerEdgeColor','k','markerfacecolor',cols.s2,'linewidth',2);
         
         % Add Panchev
-        p10(8) = loglog(scan.kpan.s1,scan.Ppan.s1,'Color',cols.panchev1);
-        p10(9) = loglog(scan.kpan.s2,scan.Ppan.s2,'Color',cols.panchev2);
+        p10(8) = loglog(scan.k,scan.Ppan.s1,'Color',cols.panchev1);
+        p10(9) = loglog(scan.k,scan.Ppan.s2,'Color',cols.panchev2);
         hold on
         try
         legend('s1','s1smooth','s2','s2smooth','noise','s1_{cutoff}','s2_{cutoff}','Panchev1','Panchev2','location','southwest','numcolumns',2);
@@ -474,7 +474,7 @@ for k=scanNum
                     legend('s1','s1smooth','s2','s2smooth','noise','s1_{cutoff}','s2_{cutoff}','Panchev1','Panchev2','location','southwest');
         end
         xlim([6e-1 400])
-        ylim([1e-10 1e-1])
+%         ylim([1e-10 1e-1])
         grid on
         xlabel('k (cpm)')
         ylabel('\phi^2_{shear} (s^{-2} / cpm)')
@@ -493,7 +493,8 @@ for k=scanNum
         
         axes(ax(1))
         hold on
-        ax(1).XLim = [5e-11 min([1e-4,ax(1).XLim(2)])];
+%         ax(1).XLim = [5e-11 min([1e-4,ax(1).XLim(2)])];
+        ax(1).XLim = [ nanmin(Profile.chi(:)) nanmax(Profile.chi(:))];
         x = [1e-20 1e0];
         f(1) = fill(x([1 1 2 2 1]),y([1 2 2 1 1]),'k');
         f(1).FaceAlpha = 0.2;
@@ -501,7 +502,7 @@ for k=scanNum
         
         axes(ax(2))
         hold on
-        ax(2).XLim = [5e-11 min([1e-4,ax(2).XLim(2)])];
+        ax(2).XLim = [nanmin(Profile.epsilon_co(:)) nanmax(Profile.epsilon_co(:))];
         x = [1e-20 1e0];
         f(2) = fill(x([1 1 2 2 1]),y([1 2 2 1 1]),'k');
         f(2).FaceAlpha = 0.2;
@@ -509,6 +510,9 @@ for k=scanNum
         
         axes(ax3(2))
         hold on
+        ax(3).XLim = [nanmin(Profile.s) nanmax(Profile.s)];
+        ax3(2).XLim = [nanmin(Profile.t) nanmax(Profile.t)];
+        
         x = [-3 40];
         f(3) = fill(x([1 1 2 2 1]),y([1 2 2 1 1]),'k');
         f(3).FaceAlpha = 0.2;
@@ -516,7 +520,7 @@ for k=scanNum
         
         axes(ax(4))
         hold on
-        ax(4).XLim = [max([0.5,ax(4).XLim(1)]) ax(4).XLim(2)];
+        ax(4).XLim = [nanmin(Profile.w) nanmax(Profile.w)];
         x = [0 4];
         f(4) = fill(x([1 1 2 2 1]),y([1 2 2 1 1]),'k');
         f(4).FaceAlpha = 0.2;
@@ -581,11 +585,11 @@ for k=scanNum
         drawnow
         
         %ax(1).XLim = [5e-11 max(max(Profile.chi))];
-        ax(2).XLim = [5e-11 min([1e-4,max(max(Profile.epsilon))])];
-        ax3(1).XLim = [min(Profile.s),max(Profile.s)];
-        ax3(2).XLim = [min(Profile.t),max(Profile.t)];
-        ax(4).XLim = [max([min(Profile.w),0.47]),max(Profile.w)];
-        [ax(5:8).XLim] = deal(Profile.f([1 end]));
+%         ax(2).XLim = [5e-11 min([1e-4,max(max(Profile.epsilon))])];
+%         ax3(1).XLim = [min(Profile.s),max(Profile.s)];
+%         ax3(2).XLim = [min(Profile.t),max(Profile.t)];
+%         ax(4).XLim = [max([min(Profile.w),0.47]),max(Profile.w)];
+%         [ax(5:8).XLim] = deal(Profile.f([1 end]));
         [ax(5:8).XTick] = deal([1 10 100]);
         [ax([5,6]).XTickLabel] = deal('');
         
@@ -643,8 +647,8 @@ for k=scanNum
 end %end loop through scans
 
 if saveFig
-   figName =  fullfile(Meta_Data.paths.data,sprintf('figs/L1_Prof%03.0f_%03.0fm',Profile.profNum,depth));
-   eval(['export_fig ' figName ' -png -r200 -nocrop'])
+   figName =  fullfile(Meta_Data.paths.data,sprintf('figs/Prof%03.0f_%03.0fm.png',Profile.profNum,depth));
+   print('-dpng2',figName)
 end
 
 catch err

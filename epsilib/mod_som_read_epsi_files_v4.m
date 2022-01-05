@@ -1,4 +1,4 @@
-function [epsi,ctd,alt,act,vnav,gps,seg,spec,avgspec,dissrate] = mod_som_read_epsi_files_v4(filename,Meta_Data)
+function [epsi,ctd,alt,act,vnav,gps,seg,spec,avgspec,dissrate,apf] = mod_som_read_epsi_files_v4(filename,Meta_Data)
 
 % For now, only works for 'v4' of som_acq
 % It only works with a single file, since we're always calling it from a
@@ -61,10 +61,12 @@ efe_block_version = 'v3';
 [ind_vnav_start,ind_vnav_stop]  = regexp(str,'\$VNMAR([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
 [ind_gps_start, ind_gps_stop]   = regexp(str,'\$GPGGA([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
 
-[ind_seg_start, ind_seg_stop]   = regexp(str,'\$SEGM([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
+[ind_seg_start, ind_seg_stop]           = regexp(str,'\$SEGM([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
 [ind_spec_start, ind_spec_stop]         = regexp(str,'\$SPEC([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
 [ind_avgspec_start, ind_avgspec_stop]   = regexp(str,'\$AVGS([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
 [ind_dissrate_start, ind_dissrate_stop] = regexp(str,'\$RATE([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
+[ind_apf0_start, ind_apf0_stop]           = regexp(str,'\$APF0([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
+[ind_apf1_start, ind_apf1_stop]           = regexp(str,'\$APF1([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
 
 
 
@@ -903,8 +905,8 @@ else
         avgspec_block_str = str(ind_avgspec_start(iB):ind_avgspec_stop(iB));
         
         % Get the header timestamp and length of data block (?)
-        avgspec.data.hextimestamp.value   = hex2dec(spec_block_str(tag.hextimestamp.inds));
-        avgspec.data.hexlengthblock.value = hex2dec(spec_block_str(tag.hexlengthblock.inds));
+        avgspec.data.hextimestamp.value   = hex2dec(avgspec_block_str(tag.hextimestamp.inds));
+        avgspec.data.hexlengthblock.value = hex2dec(avgspec_block_str(tag.hexlengthblock.inds));
         % It should be the case that
         % efe.hexlengthblock.value==efe.data.element_length*efe.data.recs_per_block
         
@@ -942,6 +944,11 @@ else
         end %end if efe data block is the correct size
     end %end loop through efe blocks
     
+        [~,fe]=pwelch(1.*(1:2048),2048,[], ...
+        2048,320);
+    avgspec.freq=fe(2:end);
+
+    
     % Clean and concatenate efe.data.raw_bytes
     % Check for empty raw_bytes cells and concatenate only the full ones
     for cha=1:avgspec.data.n_channels
@@ -962,7 +969,7 @@ else
     end
     
     % Sort epsi fields
-    avgspec = orderfields(avgspec,{'dnum','time_s','t1_k','s1_k','a3_g','data','channels','checksum'});
+    avgspec = orderfields(avgspec,{'dnum','time_s','freq','t1_k','s1_k','a3_g','data','channels','checksum'});
     
 end %end spec
 
@@ -1059,7 +1066,7 @@ else
         dissrate.dnum=dissrate.time_s.*nan;
 
     end
-    
+
     % Sort epsi fields
     dissrate = orderfields(dissrate,{'dnum','time_s','pressure','temperature', ...
                                  'salinity','chi','epsilon','nu','kappa',...
@@ -1068,8 +1075,232 @@ else
 end %end spec
 
 
+%% Process DISRATE data
+if (isempty(ind_apf0_start) & isempty(ind_apf1_start))
+    disp('no apf data')
+    apf=[];
+else
+    disp('processing apf data')
+    if isempty(ind_apf0_start)
+        %time, pressure, dpdt, epsilon, chi, epsi_fom, chi_fom.
+        
+        apf.channels         = {'dnum','pressure','dpdt','epsilon','chi','epsi_fom','epsi_chi'};
+        ind_apf_start=ind_apf1_start;
+        ind_apf_stop=ind_apf1_stop;
+        
+    else
+        %time, pressure, dpdt, epsilon, chi, avg_t, avg_s, avg_a
+        apf.channels         = {'dnum','pressure','dpdt','epsilon','chi','avg_tg_k','avg_shear_k','avg_accel_k'};
+        ind_apf_start=ind_apf0_start;
+        ind_apf_stop=ind_apf0_stop;
+    end
 
+    
+    
+    % Pre-allocate space for data
+    apf.data.n_blocks           = numel(ind_apf_start); %Number of data blocks beginning with $EFE
+    
+    apf.data.n_channels         = length(apf.channels);
+    apf.data.dissrate_per_block = 1;
+    apf.data.avgs_per_block     = 3;
+    apf.data.avgs_per_block     = 3;
+    apf.data.timestamp_length   = 2;
+    apf.data.float_length       = 4;
+    apf.data.dissrate_length    = 3;
+    apf.data.foco_length        = 2;
+    apf.data.fom_length         = 1;
+    apf.data.max_dissrate       = log10(1e-3);
+    apf.data.max_foco           = log10(1e-2);
+    apf.data.max_fom            = 10;
+    apf.data.min_dissrate       = log10(1e-12);
+    apf.data.min_foco           = log10(1e-13);
+    apf.data.min_fom            = 0 ;
+    apf.data.dissrate_range     = 4095; 
+    apf.data.foco_range         = 65535; 
+    apf.data.fom_range          = 15; 
+    apf.data.diag_coef          = 8;
+    apf.data.dissrate_per_bit   = apf.data.dissrate_range/ ...
+                                 (apf.data.max_dissrate -apf.data.min_dissrate);
+    apf.data.foco_per_bit       = apf.data.foco_range/ ...
+                                 (apf.data.max_foco -apf.data.min_foco);
+    apf.data.fom_per_bit        = apf.data.fom_range/ ...
+                                 (apf.data.max_fom -apf.data.min_fom);
+                             
+    apf.data.dissrate_count0    = - (apf.data.dissrate_per_bit* ...
+                                     apf.data.max_dissrate) +...
+                                     apf.data.dissrate_range;                                 
+    apf.data.foco_count0        = - (apf.data.foco_per_bit* ...
+                                     apf.data.max_foco) +...
+                                     apf.data.foco_range;                                 
+    apf.data.fom_count0         = - (apf.data.fom_per_bit* ...
+                                     apf.data.max_fom) +...
+                                     apf.data.fom_range;
 
+%     apf.data.n_elements         = apf.data.timestamp_length+ ...
+%                                       (apf.data.n_channels)*...
+%                                        apf.data.float_length;
+                                           %read the metadata
+%         uint32_t daq_timestamp;                 4//
+%         uint8_t  profile_id;                    1
+%         uint16_t modsom_sn;                     2
+%         uint16_t efe_sn;                        2
+%         uint32_t firmware_rev;                  4
+%         uint16_t nfft;                          2
+%         mod_som_apf_probe_t  probe1;            5
+%         mod_som_apf_probe_t  probe2;            5
+%         uint8_t  comm_telemetry_packet_format;  1
+%         uint8_t  sd_format;                     1
+%         uint16_t sample_cnt;                    2
+%         uint16_t end_metadata; //always 0xFFFF; 2
+    apf.metadata.size=4+1+2+2+4+2+5+5+1+1+2+2;
+    
+        % anonymous function to convert dissrate, foco, fom 
+%            mod_epsilon  = (uint32_t) ceil(local_epsilon*
+%            mod_som_apf_ptr->producer_ptr->decim_coef.dissrate_per_bit+
+%            mod_som_apf_ptr->producer_ptr->decim_coef.dissrate_counts_at_origin);
+
+    convert_dissrate = @(x) ((x-apf.data.dissrate_count0)/apf.data.dissrate_per_bit);
+    convert_foco    = @(x) (x-apf.data.foco_count0)/apf.data.foco_per_bit;
+    convert_fom     = @(x) (x-apf.data.fom_count0)/apf.data.fom_per_bit;
+
+    
+    % The first 8 bytes are the timestamp. Timestamp in milliseconds since
+    % 1970 is too big for uint32, so use uint64
+    ind_time = 1:apf.data.timestamp_length;
+    mult = 256.^[0:7].';
+    
+
+%     apf_timestamp           = nan(apf.data.n_blocks,1);
+    %epsi.time_s and epsi.dnum will be created from epsi_timestamp once
+    %all its records are filled
+    
+    % Loop through data blocks and parse strings
+    for iB = 1:apf.data.n_blocks
+        
+        % Grab the block of data starting with the header
+        apf_block_str = str(ind_apf_start(iB):ind_apf_stop(iB));
+        
+        % Get the header timestamp and length of data block (?)
+        apf.data.hextimestamp.value   = hex2dec(apf_block_str(tag.hextimestamp.inds));
+        apf.data.hexlengthblock.value = hex2dec(apf_block_str(tag.hexlengthblock.inds));
+        % It should be the case that
+        % efe.hexlengthblock.value==efe.data.element_length*efe.data.recs_per_block
+        
+        % Get the data after the header.
+        apf_block_data = apf_block_str(tag.data_offset:end-tag.chksum.length);
+        
+        %         uint32_t daq_timestamp;                 4//
+%         uint8_t  profile_id;                    1
+%         uint16_t modsom_sn;                     2
+%         uint16_t efe_sn;                        2
+%         uint32_t firmware_rev;                  4
+%         uint16_t nfft;                          2
+%         mod_som_apf_probe_t  probe1;            5
+%         mod_som_apf_probe_t  probe2;            5
+%         uint8_t  comm_telemetry_packet_format;  1
+%         uint8_t  sd_format;                     1
+%         uint16_t sample_cnt;                    2
+%         uint16_t end_metadata; //always 0xFFFF; 2
+
+        apf.metadata.raw_bytes{iB}     = uint8(apf_block_data(1:apf.metadata.size));
+        apf.metadata.daq_timestamp{iB} = double(uint32(apf_block_data(1:4)))*mult(1:4);
+        apf.metadata.profile_id{iB}    = double(uint32(apf_block_data(5)));
+        apf.metadata.modsom_sn{iB}     = double(uint32(apf_block_data(6:7)))*mult(1:2);
+        apf.metadata.efe_sn{iB}        = double(uint32(apf_block_data(8:9)))*mult(1:2);
+        apf.metadata.firmware_rev{iB}  = dec2hex(double(uint32(apf_block_data(13:16)))*mult(1:4)); % This makes no sense why 13:16 and not 10:13
+        apf.metadata.nfft{iB}          = double(uint32(apf_block_data(17:18)))*mult(1:2);
+        apf.metadata.probe1{iB}.type   = double(uint32(apf_block_data(19)));
+        apf.metadata.probe1{iB}.sn     = double(uint32(apf_block_data(20:21)))*mult(1:2);
+        apf.metadata.probe1{iB}.cal    = double(uint32(apf_block_data(23:24)))*mult(1:2);% This makes no sense why 23:24 and not 22:23
+        apf.metadata.probe2{iB}.type   = double(uint32(apf_block_data(25)));
+        apf.metadata.probe2{iB}.sn     = double(uint32(apf_block_data(26:27)))*mult(1:2);
+        apf.metadata.probe2{iB}.cal    = double(uint32(apf_block_data(29:30)))*mult(1:2);
+        apf.metadata.packet_format{iB} = double(uint32(apf_block_data(31)));
+        apf.metadata.sd_format{iB}     = double(uint32(apf_block_data(32)));
+        apf.metadata.sample_cnt{iB}    = double(uint32(apf_block_data(33:34)))*mult(1:2);
+        apf.metadata.endbytes{iB}      = dec2hex(double(uint32(apf_block_data(35:36)))*mult(1:2));
+        apf.data.nfft_diag             = apf.metadata.nfft{iB}/apf.data.diag_coef;
+        [~,fe]=pwelch(1.*(1:apf.metadata.nfft{iB}),apf.metadata.nfft{iB},[], ...
+                        apf.metadata.nfft{iB},320);
+        apf.data.freq{iB}=fe(2:end);            
+        apf.data.freq_diag{iB}=fe(1:apf.data.nfft_diag);            
+        
+        % Does length(efe_block_data)=efe.hexlengthblock.value?
+        if (length(apf_block_data)~=apf.data.hexlengthblock.value)
+            fprintf("apf block %i has incorrect length\r\n",iB)
+        else
+            local_apf_block_counter=36;
+            for d=1:apf.metadata.sample_cnt{iB}
+                % get timestamp
+                local_apf_block_counter=local_apf_block_counter(end)+ind_time;
+                apf.data.timestamp{iB}(d)=(double(apf_block_data(local_apf_block_counter)))*mult(1:2);
+                % get pressure
+                local_apf_block_counter=local_apf_block_counter(end)+(1:apf.data.float_length);
+                apf.data.pressure{iB}(d) = double(typecast(uint8(apf_block_data(local_apf_block_counter)), 'single'));
+                % get dpdt
+                local_apf_block_counter=local_apf_block_counter(end)+(1:apf.data.float_length);
+                apf.data.dpdt{iB}(d)     = double(typecast(uint8(apf_block_data(local_apf_block_counter)), 'single'));
+                % get dissrate
+                local_apf_block_counter=local_apf_block_counter(end)+(1:apf.data.dissrate_length);
+                apf.data.raw_dissrate{iB}(d,:) = uint8(apf_block_data(local_apf_block_counter));
+                
+                tempo_epsilon = bitor( bitshift(uint32(apf.data.raw_dissrate{iB}(d,1)),4), ...
+                                             bitshift(uint32(apf.data.raw_dissrate{iB}(d,2)),-4));
+                apf.data.epsilon{iB}(d) = convert_dissrate(double(tempo_epsilon));
+                                         
+                tempo_chi     = bitor( bitshift(uint32(apf.data.raw_dissrate{iB}(d,2)),4), ...
+                                       uint32(apf.data.raw_dissrate{iB}(d,3)));
+                apf.data.chi{iB}(d) = convert_dissrate(double(tempo_chi));
+                
+                for ii=1:apf.data.nfft_diag
+                % get avg sh k spectrum
+                    local_apf_block_counter=local_apf_block_counter(end)+(1:apf.data.foco_length);
+                    tempo_foco = double(uint8(apf_block_data(local_apf_block_counter)))*mult(1:2);
+                    apf.data.avg_shear_k{iB}{d}(ii)=convert_foco(tempo_foco);
+                % get avg tg k spectrum
+                    local_apf_block_counter=local_apf_block_counter(end)+(1:apf.data.foco_length);
+                    tempo_foco = double(uint8(apf_block_data(local_apf_block_counter)))*mult(1:2);
+                    apf.data.avg_tg_k{iB}{d}(ii)=convert_foco(tempo_foco);
+                % get avg a3 k spectrum
+                    local_apf_block_counter=local_apf_block_counter(end)+(1:apf.data.foco_length);
+                    tempo_foco = double(uint8(apf_block_data(local_apf_block_counter)))*mult(1:2);
+                    apf.data.avg_accel_k{iB}{d}(ii)=convert_foco(tempo_foco);
+                end
+            end %end if efe data block is the correct size
+            % Get the checksum value
+            i1 = tag.data_offset+apf.data.hexlengthblock.value;
+            i2 = i1+tag.chksum.length-1;
+            % The full checksum looks like *8F__ so we get str indices from
+            % i1+1 to i2-2 to isolate just the 8F part
+            apf.checksum.data(iB) = hex2dec(apf_block_str(i1+1:i2-2));
+            
+            
+        end %end loop through efe blocks
+    end
+    
+    % Clean and concatenate data.raw_bytes
+    % Check for empty raw_bytes cells and concatenate only the full ones
+    for cha=1:apf.data.n_channels
+        wh_channel=apf.channels{cha};
+        switch wh_channel
+            case "dnum"
+                dnum=cellfun(@(x,y) datenum(datetime(y+x, 'ConvertFrom', 'posixtime')), ...
+                             apf.data.timestamp,apf.metadata.daq_timestamp,'un',0);
+                apf.(wh_channel)=cell2mat(dnum);
+            case {'pressure','dpdt','fom_epsi','fom_chi'}
+                apf.(wh_channel)=cell2mat(apf.data.(wh_channel));
+            case {'epsilon','chi'}
+                apf.(wh_channel)=10.^cell2mat(apf.data.(wh_channel));
+            case {'avg_tg_k','avg_shear_k','avg_accel_k'}
+                tempo=cellfun(@(x) cell2mat(x.'),apf.data.(wh_channel),'UniformOutput',false);
+                apf.(wh_channel)=10.^cell2mat(tempo.');
+        end
+     end
+    % Sort epsi fields
+    apf = orderfields(apf,{'channels','metadata','data','checksum','dnum', ...
+                           'pressure','dpdt','epsilon','chi', ...
+                           'avg_tg_k','avg_shear_k','avg_accel_k'});
+end %end apf
 
 end
 

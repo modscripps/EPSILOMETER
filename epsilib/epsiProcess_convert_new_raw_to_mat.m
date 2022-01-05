@@ -479,7 +479,7 @@ function  [matData, epsi,ctd,alt,act,vnav,gps] = read_data_file(filename,Meta_Da
 
 switch version
     case 4
-        [epsi,ctd,alt,act,vnav,gps,seg,spec,avgspec,dissrate] = mod_som_read_epsi_files_v4(filename,Meta_Data);
+        [epsi,ctd,alt,act,vnav,gps,seg,spec,avgspec,dissrate,apf] = mod_som_read_epsi_files_v4(filename,Meta_Data);
         matData.epsi     = epsi;
         matData.ctd      = ctd;
         matData.alt      = alt;
@@ -490,6 +490,7 @@ switch version
         matData.spec     = spec;
         matData.avgspec  = avgspec;
         matData.dissrate = dissrate;
+        matData.apf      = apf;
     case 3
         [epsi,ctd,alt,act,vnav,gps] = mod_som_read_epsi_files_v3(filename,Meta_Data);
         matData.epsi = epsi;

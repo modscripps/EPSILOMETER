@@ -38,7 +38,7 @@ ctd_df = Meta_Data.PROCESS.Fs_ctd;
 
 % id profile
 tscanAlternate = floor(0.8*length(Profile.epsi.time_s)/epsi_df);
-tscanDefault = 50;
+tscanDefault = 20;
 tscan = min([tscanDefault,tscanAlternate]);
 
 % define parameters to compute the spectra.

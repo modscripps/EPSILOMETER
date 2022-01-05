@@ -14,6 +14,7 @@ function [Ps_volt_f,Ps_shear_k,Ps_shear_co_k,epsilon,epsilon_co,f,k,fc,kc,Ppan,P
 %   f  = frequency array
 
 nfft=Meta_Data.PROCESS.nfft;
+Meta_Data.PROCESS.dof_coh=10;
 dof_coh=Meta_Data.PROCESS.dof_coh;
 nb_vibration_channel=3;% hard coded nb of acceleration channel used to mv correction
 
