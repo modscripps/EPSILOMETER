@@ -43,7 +43,11 @@ suffixSearch = ['*' suffixStr];
 
 % NC - make sure all dirs have a / at the end
 for ii=1:numel(dirs)
-    dirs{ii} = strrep([dirs{ii},'/'],'//','/');
+    if ~ispc
+        dirs{ii} = strrep([dirs{ii},'/'],'//','/');
+    else
+        dirs{ii} = strrep([dirs{ii},'\'],'\\','\');
+    end
 end
 
 persistent argsNameToCheck;

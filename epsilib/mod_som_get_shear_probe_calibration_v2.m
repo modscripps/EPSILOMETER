@@ -14,10 +14,17 @@ elseif isfield(Meta_Data,'epsi')
     field_name = 'epsi';
 end
 
-shearcal_path = strrep([Meta_Data.paths.process_library,'/CALIBRATION/SHEAR_PROBES'],'//','/');
+% shearcal_path = strrep([Meta_Data.paths.process_library,'/CALIBRATION/SHEAR_PROBES'],'//','/');
+localpath=fullfile(Meta_Data.paths.process_library,'CALIBRATION','SHEAR_PROBES');
 
-path2file1 = sprintf([shearcal_path '/%s/Calibration_%s.txt'], Meta_Data.(field_name).s1.SN, Meta_Data.(field_name).s1.SN);
-path2file2 = sprintf([shearcal_path '/%s/Calibration_%s.txt'], Meta_Data.(field_name).s2.SN, Meta_Data.(field_name).s2.SN);
+shearcal_path = strrep(localpath,'//','/');
+
+% path2file1 = sprintf([shearcal_path '/%s/Calibration_%s.txt'], Meta_Data.(field_name).s1.SN, Meta_Data.(field_name).s1.SN);
+% path2file2 = sprintf([shearcal_path '/%s/Calibration_%s.txt'], Meta_Data.(field_name).s2.SN, Meta_Data.(field_name).s2.SN);
+
+path2file1 = fullfile(shearcal_path,Meta_Data.(field_name).s1.SN,sprintf('Calibration_%s.txt',Meta_Data.(field_name).s1.SN));
+path2file2 = fullfile(shearcal_path,Meta_Data.(field_name).s2.SN,sprintf('Calibration_%s.txt',Meta_Data.(field_name).s2.SN));
+
 
 try
 fid1=fopen(path2file1,'r');

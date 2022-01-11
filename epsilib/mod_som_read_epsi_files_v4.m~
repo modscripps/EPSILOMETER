@@ -1451,7 +1451,7 @@ else
         if (length(apf_block_data)~=apf.data.hexlengthblock.value)
             fprintf("apf block %i has incorrect length\r\n",iB)
         else
-            local_apf_block_counter=0;
+            local_apf_block_counter=1;
             % get timestamp
             local_apf_block_counter=local_apf_block_counter(end)+ind_time;
             apf.data.timestamp(iB)=(double(apf_block_data(local_apf_block_counter)))*mult;
@@ -1506,19 +1506,21 @@ else
         wh_channel=apf.channels{cha};
         switch wh_channel
             case "dnum"
-                dnum=datenum(datetime(apf.data.timestamp, 'ConvertFrom', 'posixtime'));
-                apf.(wh_channel)=dnum;
-            case {'pressure','dpdt','temperature','salinity','fom_epsi','fom_chi'}
-                apf.(wh_channel)=apf.data.(wh_channel);
+                dnum=cellfun(@(x,y) datenum(datetime(y+x, 'ConvertFrom', 'posixtime')), ...
+                             apf.data.timestamp,apf.metadata.daq_timestamp,'un',0);
+                apf.(wh_channel)=cell2mat(dnum);
+            case {'pressure','dpdt','fom_epsi','fom_chi'}
+                apf.(wh_channel)=cell2mat(apf.data.(wh_channel));
             case {'epsilon','chi'}
-                apf.(wh_channel)=10.^apf.data.(wh_channel);
+                apf.(wh_channel)=10.^cell2mat(apf.data.(wh_channel));
             case {'avg_tg_k','avg_shear_k','avg_accel_k'}
-                apf.(wh_channel)=cell2mat(apf.data.(wh_channel).');
+                tempo=cellfun(@(x) cell2mat(x.'),apf.data.(wh_channel),'UniformOutput',false);
+                apf.(wh_channel)=10.^cell2mat(tempo.');
         end
      end
     % Sort epsi fields
     apf = orderfields(apf,{'channels','metadata','data','checksum','dnum', ...
-                           'pressure','temperature','salinity','dpdt','epsilon','chi', ...
+                           'pressure','dpdt','epsilon','chi', ...
                            'avg_tg_k','avg_shear_k','avg_accel_k'});
 end %end apf
 
