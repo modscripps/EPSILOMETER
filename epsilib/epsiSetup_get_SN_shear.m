@@ -3,12 +3,14 @@ function [Meta_Data] = set_SN_shear(Meta_Data)
 
 % NC 10/7/21 - Check for 'AFE' or 'epsi' strucutre in Meta_Data. Add
 % calibratation to the appropriate structure.
-if isfield(Meta_Data,'AFE')
+if isfield(obj.Meta_Data,'AFE') && ~isfield(obj.Meta_Data,'epsi')
     field_name = 'AFE';
-elseif isfield(Meta_Data,'epsi')
+elseif isfield(obj.Meta_Data,'epsi') && ~isfield(obj.Meta_Data,'AFE')
+    field_name = 'epsi';
+elseif isfield(obj.Meta_Data,'epsi') && isfield(obj.Meta_Data,'AFE')
     field_name = 'epsi';
 end
-    
+
 fprintf('**** s1 SN (currently SN = %s, cal = %3.2f)',Meta_Data.(field_name).s1.SN,Meta_Data.(field_name).s1.cal)
 Meta_Data.(field_name).s1.SN = input(': ','s');
 fprintf('**** s2 SN (currently SN = %s, cal = %3.2f)',Meta_Data.(field_name).s2.SN,Meta_Data.(field_name).s2.cal)
@@ -20,4 +22,3 @@ fprintf('**** s1 SN = %s, cal = %3.2f ****\n',Meta_Data.(field_name).s1.SN,Meta_
 fprintf('**** s2 SN = %s, cal = %3.2f ****\n',Meta_Data.(field_name).s2.SN,Meta_Data.(field_name).s2.cal)
 
 save(fullfile(Meta_Data.paths.data,'Meta_Data.mat'),'Meta_Data');
-

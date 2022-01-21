@@ -112,7 +112,7 @@ export_fig figs/dTdV_2_1d -png -r150 -nocrop
 % ----
 
 maxX   = nanmedian(RANGETall)+2*std(RANGETall);
-nX     = round(sqrt(length(PRall)/2));
+nX     = max([3,round(sqrt(length(PRall)/2))]); %need at least 3 edges (2 bins)
 XEDGES = linspace(0,maxX,nX);
 indX   = RANGETall<=maxX;
 
@@ -120,7 +120,7 @@ maxY1 = nanmedian(DTDVall_1)+2*nanstd(DTDVall_1);
 minY1 = max([0, nanmedian(DTDVall_1)-2*nanstd(DTDVall_1)]);
 maxY2 = nanmedian(DTDVall_2)+2*nanstd(DTDVall_2);
 minY2 = max([0, nanmedian(DTDVall_2)-2*nanstd(DTDVall_2)]);
-nY   = round(sqrt(length(PRall)*2));
+nY   = max([3,round(sqrt(length(PRall)*2))]); %need at least 3 edges (2 bins)
 YEDGES1 = linspace(minY1,maxY1,nY);
 YEDGES2 = linspace(minY2,maxY2,nY);
 indY1 = DTDVall_1>=minY1 & DTDVall_1<=maxY1;

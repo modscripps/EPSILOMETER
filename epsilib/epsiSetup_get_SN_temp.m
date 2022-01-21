@@ -3,9 +3,11 @@ function [Meta_Data] = set_SN_temp(Meta_Data)
 
 % NC 10/7/21 - Check for 'AFE' or 'epsi' strucutre in Meta_Data. Add
 % calibratation to the appropriate structure.
-if isfield(Meta_Data,'AFE')
+if isfield(obj.Meta_Data,'AFE') && ~isfield(obj.Meta_Data,'epsi')
     field_name = 'AFE';
-elseif isfield(Meta_Data,'epsi')
+elseif isfield(obj.Meta_Data,'epsi') && ~isfield(obj.Meta_Data,'AFE')
+    field_name = 'epsi';
+elseif isfield(obj.Meta_Data,'epsi') && isfield(obj.Meta_Data,'AFE')
     field_name = 'epsi';
 end
 

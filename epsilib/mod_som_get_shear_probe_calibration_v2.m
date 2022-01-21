@@ -8,9 +8,11 @@ function Meta_Data=mod_som_get_shear_probe_calibration_v2(Meta_Data)
 
 % NC 10/7/21 - Check for 'AFE' or 'epsi' strucutre in Meta_Data. Add
 % calibratation to the appropriate structure.
-if isfield(Meta_Data,'AFE')
+if isfield(obj.Meta_Data,'AFE') && ~isfield(obj.Meta_Data,'epsi')
     field_name = 'AFE';
-elseif isfield(Meta_Data,'epsi')
+elseif isfield(obj.Meta_Data,'epsi') && ~isfield(obj.Meta_Data,'AFE')
+    field_name = 'epsi';
+elseif isfield(obj.Meta_Data,'epsi') && isfield(obj.Meta_Data,'AFE')
     field_name = 'epsi';
 end
 
@@ -34,7 +36,7 @@ fclose(fid1);
 catch err
     if strcmp(err.identifier,'MATLAB:FileIO:InvalidFid')
         warning(['Cannot find ' path2file1])
-    else 
+    else
         warning(['Loading ' path2file1 ' failed'])
     end
 end
@@ -47,7 +49,7 @@ fclose(fid2);
 catch err
     if strcmp(err.identifier,'MATLAB:FileIO:InvalidFid')
         warning(['Cannot find ' path2file2])
-    else 
+    else
         warning(['Loading ' path2file2 ' failed'])
     end
 end
