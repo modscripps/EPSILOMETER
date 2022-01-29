@@ -3,11 +3,11 @@ function [Meta_Data] = set_SN_shear(Meta_Data)
 
 % NC 10/7/21 - Check for 'AFE' or 'epsi' strucutre in Meta_Data. Add
 % calibratation to the appropriate structure.
-if isfield(obj.Meta_Data,'AFE') && ~isfield(obj.Meta_Data,'epsi')
+if isclassfield(obj.Meta_Data,'AFE') && ~isclassfield(obj.Meta_Data,'epsi')
     field_name = 'AFE';
-elseif isfield(obj.Meta_Data,'epsi') && ~isfield(obj.Meta_Data,'AFE')
+elseif isclassfield(obj.Meta_Data,'epsi') && ~isclassfield(obj.Meta_Data,'AFE')
     field_name = 'epsi';
-elseif isfield(obj.Meta_Data,'epsi') && isfield(obj.Meta_Data,'AFE')
+elseif isclassfield(obj.Meta_Data,'epsi') && isclassfield(obj.Meta_Data,'AFE')
     field_name = 'epsi';
 end
 

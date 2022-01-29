@@ -204,11 +204,11 @@ classdef epsi_class < handle
             % 0, manually input all probe numbers.
             % NC 10/7/21 - Check for 'AFE' or 'epsi' strucutre in Meta_Data. Add
             % calibratation to the appropriate structure.
-            if isfield(obj.Meta_Data,'AFE') && ~isfield(obj.Meta_Data,'epsi')
+            if isclassfield(obj.Meta_Data,'AFE') && ~isclassfield(obj.Meta_Data,'epsi')
                 field_name = 'AFE';
-            elseif isfield(obj.Meta_Data,'epsi') && ~isfield(obj.Meta_Data,'AFE')
+            elseif isclassfield(obj.Meta_Data,'epsi') && ~isclassfield(obj.Meta_Data,'AFE')
                 field_name = 'epsi';
-            elseif isfield(obj.Meta_Data,'epsi') && isfield(obj.Meta_Data,'AFE')
+            elseif isclassfield(obj.Meta_Data,'epsi') && isclassfield(obj.Meta_Data,'AFE')
                 field_name = 'epsi';
             end
             if obj.Meta_Data.(field_name).s1.cal==0 || obj.Meta_Data.(field_name).s2.cal==0
