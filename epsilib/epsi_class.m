@@ -161,7 +161,7 @@ classdef epsi_class < handle
                         try
                             setupfile=dir(fullfile(obj.Meta_Data.paths.raw_data,...
                                 ['*' obj.Meta_Data.rawfileSuffix]));
-                            setup=mod_som_read_setup_from_raw(setupfile(1).name);
+                            setup=mod_som_read_setup_from_raw(fullfile(setupfile(1).folder,setupfile(1).name));
                         catch
                             error('Failed to find config data (3)')
                         end
