@@ -8,11 +8,11 @@ function Meta_Data=mod_som_get_shear_probe_calibration_v2(Meta_Data)
 
 % NC 10/7/21 - Check for 'AFE' or 'epsi' strucutre in Meta_Data. Add
 % calibratation to the appropriate structure.
-if isclassfield(obj.Meta_Data,'AFE') && ~isclassfield(obj.Meta_Data,'epsi')
+if isfield(Meta_Data,'AFE') && ~isfield(Meta_Data,'epsi')
     field_name = 'AFE';
-elseif isclassfield(obj.Meta_Data,'epsi') && ~isclassfield(obj.Meta_Data,'AFE')
+elseif isfield(Meta_Data,'epsi') && ~isfield(Meta_Data,'AFE')
     field_name = 'epsi';
-elseif isclassfield(obj.Meta_Data,'epsi') && isclassfield(obj.Meta_Data,'AFE')
+elseif isfield(Meta_Data,'epsi') && isfield(Meta_Data,'AFE')
     field_name = 'epsi';
 end
 

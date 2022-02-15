@@ -251,7 +251,7 @@ classdef epsi_class < handle
             % MISOBOB - f_readData(0)
             % BLT     - f_readData
 
-            if nargin>0
+            if nargin>0 && ~isempty(varargin)
                 version_number = varargin{1};
             else
                 version_number = 3;
