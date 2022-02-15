@@ -81,16 +81,8 @@ classdef epsi_profile_class < handle
             end
         end
         function obj=f_update_paths(obj)
-            obj.Meta_Data.paths.process_library = input('process_library (path up to and including EPSILOMETER):  ','s');
-            obj.Meta_Data.paths.data = input('data (directory that includes raw, mat, etc:  ','s');
-
-            obj
-
-            obj.Meta_Data.paths.calibration = fullfile(obj.Meta_Data.paths.process_library,'CALIBRATION','ELECTRONICS');
-            obj.Meta_Data.paths.raw_data = fullfile(obj.Meta_Data.paths.data,'raw');
-            obj.Meta_Data.paths.mat_data = fullfile(obj.Meta_Data.paths.data,'mat');
-            obj.Meta_Data.paths.profiles = fullfile(obj.Meta_Data.paths.data,'profiles');
-            obj.Meta_Data.paths.figures = fullfile(obj.Meta_Data.paths.data,'figs');
+            obj.Meta_Data.paths.process_library = input('process_library (path up to and including EPSILOMETER)','s');
+            obj.Meta_Data.paths.data = input('data')
         end
         function obj=f_plot_profile_and_spectra(obj,depth)
 

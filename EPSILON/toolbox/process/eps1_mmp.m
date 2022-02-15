@@ -1,4 +1,4 @@
-C function [epsilon,kc]=eps1_mmp(k,Psheark,kvis,kmax)
+function [epsilon,kc]=eps1_mmp(k,Psheark,kvis,kmax)
 % eps1_mmp
 %   Usage: epsilon=eps1_mmp(k,Psheark,kvis,w);
 %      k is a vector array with wavenumber in cpm

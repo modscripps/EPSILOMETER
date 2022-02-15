@@ -465,6 +465,7 @@ for k=scanNum
         p10(7) = scatter(scan.k(indkc),smS2(indkc),'filled','p','sizedata',450,'MarkerEdgeColor','k','markerfacecolor',cols.s2,'linewidth',2);
         
         % Add Panchev
+        if ~all(isnan(scan.Ppan.s1))
         p10(8) = loglog(scan.k,scan.Ppan.s1,'Color',cols.panchev1);
         p10(9) = loglog(scan.k,scan.Ppan.s2,'Color',cols.panchev2);
         hold on
@@ -472,6 +473,7 @@ for k=scanNum
         legend('s1','s1smooth','s2','s2smooth','noise','s1_{cutoff}','s2_{cutoff}','Panchev1','Panchev2','location','southwest','numcolumns',2);
         catch
                     legend('s1','s1smooth','s2','s2smooth','noise','s1_{cutoff}','s2_{cutoff}','Panchev1','Panchev2','location','southwest');
+        end
         end
         xlim([6e-1 400])
 %         ylim([1e-10 1e-1])
@@ -493,8 +495,11 @@ for k=scanNum
         
         axes(ax(1))
         hold on
-%         ax(1).XLim = [5e-11 min([1e-4,ax(1).XLim(2)])];
-        ax(1).XLim = [ nanmin(Profile.chi(:)) nanmax(Profile.chi(:))];
+        try
+            ax(1).XLim = [ nanmin(Profile.chi(:)) nanmax(Profile.chi(:))];
+        catch
+            ax(1).XLim = [5e-11 min([1e-4,ax(1).XLim(2)])];
+        end
         x = [1e-20 1e0];
         f(1) = fill(x([1 1 2 2 1]),y([1 2 2 1 1]),'k');
         f(1).FaceAlpha = 0.2;
@@ -502,7 +507,11 @@ for k=scanNum
         
         axes(ax(2))
         hold on
-        ax(2).XLim = [nanmin(Profile.epsilon_co(:)) nanmax(Profile.epsilon_co(:))];
+        try
+            ax(2).XLim = [nanmin(Profile.epsilon_co(:)) nanmax(Profile.epsilon_co(:))];
+        catch
+            ax(1).XLim = [5e-11 min([1e-4,ax(1).XLim(2)])];
+        end
         x = [1e-20 1e0];
         f(2) = fill(x([1 1 2 2 1]),y([1 2 2 1 1]),'k');
         f(2).FaceAlpha = 0.2;
