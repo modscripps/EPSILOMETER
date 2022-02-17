@@ -12,7 +12,7 @@ str_to_match = '*07_24*';
 
 
 % Directories for Epsi:
-rawDir      = '/Volumes/Berry/epsi_raw/Copy_of_EPSI_RAW_0724/raw2';
+rawDir      = '/Volumes/Berry/epsi_raw/Copy_of_EPSI_RAW_0724/raw_all';
 awayDir     = '/Volumes/Berry/epsi_raw/Copy_of_EPSI_RAW_0724';
 rawDirAway  = fullfile(awayDir,'raw');
 matDir      = fullfile(awayDir,'mat');
@@ -44,9 +44,11 @@ end
 
 % Group directories to input for Epsi_MakeMatFromRaw
 try
-    dirs = {rawDir; rawDirAway; matDir; FCTDmatDir};
+    %dirs = {rawDir; rawDirAway; matDir; FCTDmatDir};
+    dirs = {rawDir; matDir; FCTDmatDir}; %If using 'noSync' in epsiProcess_convert_new_raw_to_mat
 catch
-    dirs = {rawDir; rawDirAway; matDir};
+    %dirs = {rawDir; rawDirAway; matDir};
+    dirs = {rawDir; matDir}; %If using 'noSync' in epsiProcess_convert_new_raw_to_mat
 end
 
 cd(matDir)
@@ -69,7 +71,11 @@ end
 
 
 % Initialize obj with structures big enough to load at least one Epsi .mat
-% file into (epsi, ctd, and alt strucutres)
+% file into (epsi, ctd, and alt strucutres). Here, we're making a strucutre
+% that looks like an epsi class so that we can use epsi_class functions.
+% It's not an epsi_class, though. It's just a strucutre, so we need to
+% manually add some fields that would be automatically added by creating
+% an epsi_class.
 obj = epsiSetup_make_empty_structure;
 obj.plot_properties = epsiSetup_set_plot_properties;
 % Create Meta_Data

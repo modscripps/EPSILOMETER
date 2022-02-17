@@ -22,6 +22,7 @@ classdef epsi_class < handle
         epsi
         ctd
         alt
+        vnav
     end
     methods
         function obj=epsi_class(lastOrAll)
