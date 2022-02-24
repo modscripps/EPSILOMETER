@@ -28,13 +28,14 @@ tscan = 4; %Length of scan in seconds
 centerScan = tscan/2; %Plotted spectra will be centered tscan/2 seconds from the end of the timeseries
 
 % Directory containing streaming raw data
-rawDir      = '/Users/Shared/FCTD_EPSI/RAW';
+rawDir      = '/Users/Shared/FCTD_EPSI/RAW1';
 
 % Raw file suffix
+% fileSuffix = '.modraw';
 fileSuffix = '.raw';
 
 % Choose time units
-time_units = 'dnum'; %uncomment this if you set the datetime on SOM
+time_units = 'seconds'; %uncomment this if you set the datetime on SOM
 %time_units = 'seconds'; %uncomment this if you did not set the datetime on SOM
 
 % --- END USER CHOICES ----------------------------------------------------
@@ -51,15 +52,21 @@ end
 % file. If that doesn't work, try reading from a
 % % configuration file.
 % try
-%     setupfile=dir(fullfile(rawDir,'*_raw*'));
+%     setupfile=dir(fullfile(rawDir,'*)_raw*'));
 %     setup=mod_som_read_setup_from_raw(setupfile(1).name);
 % catch
 try
-    setupfile=dir('*config*');
-    setup=mod_som_read_setup_from_config(setupfile.name);
+    setupfile=dir(['*' fileSuffix]);
+    setup=mod_som_read_setup_from_raw(setupfile(1).name);
 catch
-    error('mod_som_read_setup failed')
+    try
+        setupfile=dir('*config*');
+        setup=mod_som_read_setup_from_config(setupfile.name);
+    catch
+        error('mod_som_read_setup failed')
+    end
 end
+
 %end
 
 % Initialize obj with structures big enough to load at least one Epsi .mat

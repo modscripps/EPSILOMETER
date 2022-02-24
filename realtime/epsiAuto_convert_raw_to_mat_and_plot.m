@@ -5,15 +5,18 @@
 % May 2021
 % -------------------------------------------------------------------------
 
-str_to_match = '*07_24*';
+str_to_match = '*EPSI_B_PC2_22_02_16_14*';
 %str_to_match = '*';
 % ~~~ Make sure Meta_Data_Process is pointing to the correct text file
 % (line 75)
 
 
 % Directories for Epsi:
-rawDir      = '/Volumes/Berry/epsi_raw/Copy_of_EPSI_RAW_0724/raw_all';
-awayDir     = '/Volumes/Berry/epsi_raw/Copy_of_EPSI_RAW_0724';
+% rawdir is wehre the data are
+rawDir      = '/Users/Shared/FCTD_EPSI/RAW';
+% awaydir is copy folder
+awayDir     = '/Users/Shared/Beyster_fish2';
+
 rawDirAway  = fullfile(awayDir,'raw');
 matDir      = fullfile(awayDir,'mat');
 FCTDmatDir  = fullfile(awayDir,'FCTDmat');
@@ -57,17 +60,17 @@ cd ..
 % First, try reading configuration data from the
 % file. If that doesn't work, try reading from a
 % % configuration file. fg
-% try
-%     setupfile=dir(fullfile(rawDir,'*_raw*'));
-%     setup=mod_som_read_setup_from_raw(setupfile(1).name);
-% catch
+try
+    setupfile=dir(fullfile(rawDir,'*.raw*'));
+    setup=mod_som_read_setup_from_raw(fullfile(setupfile(1).folder,setupfile(1).name));
+catch
 try
     setupfile=dir(fullfile(awayDir,'*config*'));
     setup=mod_som_read_setup_from_config(setupfile.name);
 catch
     error('mod_som_read_setup failed')
 end
-%end
+end
 
 
 % Initialize obj with structures big enough to load at least one Epsi .mat

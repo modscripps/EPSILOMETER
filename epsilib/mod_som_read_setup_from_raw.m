@@ -453,7 +453,7 @@ switch sensor.name
     case 'ch7'
         sensor.name='a3';
 end
-sensor.sn   = str(offset+(3:5)).';
+sensor.sn   = str(offset+(4:6)).';
 offset=offset+2;
 sensor.cal   = typecast( uint8(str(offset+(6:9))) , 'single');
 sensor.register.COMMS         = dec2hex(uint8(str(offset+(10))));

@@ -56,17 +56,17 @@ cd ..
 % First, try reading configuration data from the
 % file. If that doesn't work, try reading from a
 % % configuration file. fg
-% try
-%     setupfile=dir(fullfile(rawDir,'*_raw*'));
-%     setup=mod_som_read_setup_from_raw(setupfile(1).name);
-% catch
+try
+    setupfile=dir(fullfile(rawDir,'*.raw*'));
+    setup=mod_som_read_setup_from_raw(setupfile(1).name);
+catch
 try
     setupfile=dir('*config*');
     setup=mod_som_read_setup_from_config(setupfile.name);
 catch
     error('mod_som_read_setup failed')
 end
-%end
+end
 
 % Initialize obj with structures big enough to load at least one Epsi .mat
 % file into (epsi, ctd, and alt strucutres)

@@ -302,7 +302,7 @@ classdef epsi_class < handle
         function obj=f_getLastCtd(obj)
             load(fullfile(obj.Meta_Data.paths.mat_data,'TimeIndex'));
             [~,idxLast] = max(TimeIndex.timeEnd);
-            data = load(fullfile(obj.Meta_Data.paths.mat_data,TimeIndex.filenames{idxLast}),'ctd');
+            data = load(fullfile(obj.Meta_Data.paths.mat_data,[TimeIndex.filenames{idxLast} '.mat']),'ctd');
 
             if isstruct(data.ctd)
                 obj=data.ctd;
@@ -550,7 +550,8 @@ classdef epsi_class < handle
             %   [P11,f] = mod_som_calibrate_epsi_tMid(obj,tmid,tscan,makeFig);
             %
             % INPUTS
-            %   tmid = midpoint of scan (seconds)
+            %   tmid = midpoint of scan (seconds),  
+            %   default:  tmid= time_s(end) - 10.
             %   tscan = length of scan (seconds)
             %   makeFig = (OPTIONAL, flag to plot figure [0/1], default=1)
             %   saveFig = (OPTIONAL, flag to save figure [0/1], default=1)

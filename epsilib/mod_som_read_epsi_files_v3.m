@@ -58,6 +58,12 @@ efe_block_version = 'v3';
 [ind_dissrate_start, ind_dissrate_stop] = regexp(str,'\$RATE([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
 
 
+    %ALB GROSCON
+    spltfilename=strsplit(filename,'/');
+    strdate=spltfilename{end}(12:end-4);
+    strdate=['20' strdate];
+    t0=(datenum(strdate,"yyyy_mm_dd_HHMMSS")-datenum("01-01-1970 00:00:00"))*86400;
+    t0=0;
 
 %% Define the header tag format
 % In the versions of the SOM acquisition software since 23 May 2021 (and
@@ -240,6 +246,8 @@ else
     
     % If timestamp has values like 1.6e12, it is in milliseconds since Jan
     % 1, 1970. Otherwise it's in milliseconds since the start of the record
+    %ALB GROSCON
+%     epsi_timestamp=epsi_timestamp-epsi_timestamp(1)+t0*1000;
     if nanmedian(epsi_timestamp)>1e9
         % time_s - seconds since 1970
         % dnum - matlab datenum
@@ -247,6 +255,7 @@ else
     else
         % time_s - seconds since power on
         epsi.time_s = epsi_timestamp./1000;
+        epsi.dnum=now+epsi.time_s;
     end
     
     % Sort epsi fields
@@ -349,6 +358,7 @@ else
                 
                 % The hexadecimal timestamp is the first 16 characters of the
                 % data
+
                 ctd_timestamp(n_rec) = hex2dec(element_ctd(1:16));
                 
                 % Everything after that is the data
@@ -375,13 +385,18 @@ else
     
     % If timestamp has values like 1.6e12, it is in milliseconds since Jan
     % 1, 1970. Otherwise it's in milliseconds since the start of the record
+        %ALB GROSCON
+%     ctd_timestamp=ctd_timestamp-ctd_timestamp(1)+t0*1000;
+
     if nanmedian(ctd_timestamp)>1e9
         % time_s - seconds since 1970
         % dnum - matlab datenum
         [ctd.time_s,ctd.dnum] = convert_timestamp(ctd_timestamp);
+        disp(datestr(ctd.dnum(1)))
     else
         % time_s - seconds since power on
         ctd.time_s = ctd_timestamp./1000;
+        ctd.dnum = now +ctd.time_s;
     end
     
     % If the data were in engineering units, convert to physical units
@@ -450,6 +465,7 @@ else
         % For the altimeter, all the data is actually in the header
         alti.hextimestamp.value   = hex2dec(alt_block_str(tag.hextimestamp.inds));
         alt_timestamp(iB) = alti.hextimestamp.value;
+
         
         % The altimeter block does not have a hexlengthblock (hexadecimal
         % length of data block). It has the altimeter reading in that
@@ -462,6 +478,8 @@ else
     
     % If timestamp has values like 1.6e12, it is in milliseconds since Jan
     % 1, 1970. Otherwise it's in milliseconds since the start of the record
+    %GROSCON
+%     alt_timestamp=alt_timestamp-alt_timestamp(1)+t0*1000;
     if nanmedian(alt_timestamp)>1e9
         % time_s - seconds since 1970
         % dnum - matlab datenum
@@ -469,6 +487,7 @@ else
     else
         % time_s - seconds since power on
         alt.time_s = alt_timestamp./1000;
+        alt.dnum = now + alt.time_s;
     end
     
     % Order alt fields
@@ -558,6 +577,7 @@ else
     
     % If timestamp has values like 1.6e12, it is in milliseconds since Jan
     % 1, 1970. Otherwise it's in milliseconds since the start of the record
+%     vnav_timestamp=vnav_timestamp-vnav_timestamp(1)+t0*1000;
     if nanmedian(vnav_timestamp)>1e9
         % time_s - seconds since 1970
         % dnum - matlab datenum
@@ -565,6 +585,7 @@ else
     else
         % time_s - seconds since power on
         vnav.time_s = vnav_timestamp./1000;
+        vnav.dnum = now + vnav.time_s;
     end
     
     % Order vnav fields 
@@ -577,6 +598,7 @@ if isempty(ind_gps_start)
     disp('no gps data')
     gps = [];
 else
+    
     disp('processing gps data')
     
     % GPS-specific quantities
@@ -623,6 +645,7 @@ else
     gps.latitude = nan(gpsmeta.data.n_recs,1);
     gps.longitude = nan(gpsmeta.data.n_recs,1);
     
+    try
     % Loop through data blocks and parse strings
     for iB=1:gpsmeta.data.n_blocks
         
@@ -644,6 +667,14 @@ else
         gps.longitude(iB) = gps.longitude(iB).*(2*strcmpi(data_split{6},'E')-1); % check for East or West (if west multiply by -1)
         
     end
+    
+    catch
+            warning("gps issue")
+        gps.dnum(iB)      = nan;
+        gps.latitude(iB)  = nan;
+        gps.longitude(iB) = nan;
+        gps.longitude(iB) = nan;
+        end
     
 end %end loop if there is gps data
 

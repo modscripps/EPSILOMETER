@@ -55,6 +55,7 @@ efe_block_version = 'v3';
 % ind_*_end    = ending indices of all matches
 
 [ind_efe_start, ind_efe_stop]   = regexp(str,'\$EFE([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
+[ind_sbe41_start, ind_sbe41_stop]   = regexp(str,'\$SB41([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
 [ind_sbe_start, ind_sbe_stop]   = regexp(str,'\$SB49([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
 [ind_alt_start,ind_alt_stop]    = regexp(str,'\$ALT([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
 [ind_act_start,ind_act_stop]    = regexp(str,'\$ACTU([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
@@ -259,6 +260,7 @@ else
     else
         % time_s - seconds since power on
         epsi.time_s = epsi_timestamp./1000;
+        epsi.dnum = now+epsi_timestamp./1000;
     end
     
     % Sort epsi fields
@@ -270,10 +272,16 @@ end %end if there is epsi data
 
 
 %% CTD
-if isempty(ind_sbe_start)
-    disp('no ctd data')
-    ctd=[];
+if isempty(ind_sbe_start) && isempty(ind_sbe41_start)
+        disp('no ctd data')
+        ctd=[];
 else
+    if ~isempty(ind_sbe41_start)
+        ind_sbe_start=ind_sbe41_start;
+        ind_sbe_stop=ind_sbe41_stop;
+    end
+    bad_SB41sample_flag=0;
+        
     disp('processing ctd data')
     
     % SBE-specific quantities
@@ -343,12 +351,12 @@ else
         sbe_block_data = sbe_block_str(tag.data_offset:end-tag.chksum.length);
         
         % Where do 16 and 24 come from? % Does length(sbe_block_data)=sbe.hexlengthblock.value?
-        if (length(sbe_block_data)~=(24+16)*sbe.data.recs_per_block)
+        if (length(sbe_block_data)~=(sbe.data.length+16)*sbe.data.recs_per_block)
             fprintf("SBE block %i has incorrect length\r\n",iB)
         else
             %
             % Where do 16 and 24 come from?
-            sbe_block_data=reshape(sbe_block_data,16+24,sbe.data.recs_per_block).';
+            sbe_block_data=reshape(sbe_block_data,16+sbe.data.length,sbe.data.recs_per_block).';
             
             for iR=1:sbe.data.recs_per_block
                 
@@ -371,10 +379,14 @@ else
                 switch sbe.data.format
                     case 'PTS'
                         data_split        = strsplit(rec_ctd,',');
+                        if length(data_split)==3
                         ctd.P(n_rec)      = str2double(data_split{1});
                         ctd.T(n_rec)      = str2double(data_split{2});
                         ctd.S(n_rec)      = str2double(data_split{3});
                         ctd.C(n_rec)      = NaN;
+                        else
+                            bad_SB41sample_flag=1;
+                        end
                     case 'eng'
                         ctd.T_raw(n_rec)  = hex2dec(rec_ctd(:,1:6));
                         ctd.C_raw(n_rec)  = hex2dec(rec_ctd(:,(1:6)+6));
@@ -382,28 +394,29 @@ else
                         ctd.PT_raw(n_rec) = hex2dec(rec_ctd(:,(1:4)+18));
                 end %end switch sbe.data.format
             end %end loop through recs_per_block
-        end %end if sbe data block is the correct size
-    end %end loop through sbe blocks
-    
-    % If timestamp has values like 1.6e12, it is in milliseconds since Jan
-    % 1, 1970. Otherwise it's in milliseconds since the start of the record
-    if nanmedian(ctd_timestamp)>1e9
-        % time_s - seconds since 1970
-        % dnum - matlab datenum
-        [ctd.time_s,ctd.dnum] = convert_timestamp(ctd_timestamp);
-    else
-        % time_s - seconds since power on
-        ctd.time_s = ctd_timestamp./1000;
-    end
-    
-    % If the data were in engineering units, convert to physical units
-    switch sbe.data.format
-        case 'eng'
-            ctd = sbe49_ascii_get_temperature(ctd,sbe);
-            ctd = sbe49_ascii_get_pressure(ctd,sbe);
-            ctd = sbe49_ascii_get_conductivity(ctd,sbe);
             
-            ctd.S    = sw_salt(ctd.C*10./c3515,ctd.T,ctd.P);
+            % If timestamp has values like 1.6e12, it is in milliseconds since Jan
+            % 1, 1970. Otherwise it's in milliseconds since the start of the record
+            if nanmedian(ctd_timestamp)>1e9
+                % time_s - seconds since 1970
+                % dnum - matlab datenum
+                [ctd.time_s,ctd.dnum] = convert_timestamp(ctd_timestamp);
+            else
+                % time_s - seconds since power on
+                ctd.time_s = ctd_timestamp./1000;
+                
+            end
+            
+            % If the data were in engineering units, convert to physical units
+            switch sbe.data.format
+                case 'eng'
+                    ctd = sbe49_ascii_get_temperature(ctd,sbe);
+                    ctd = sbe49_ascii_get_pressure(ctd,sbe);
+                    ctd = sbe49_ascii_get_conductivity(ctd,sbe);
+                    
+                    ctd.S    = sw_salt(ctd.C*10./c3515,ctd.T,ctd.P);
+            end
+            
             ctd.th   = sw_ptmp(ctd.S,ctd.T,ctd.P,0);
             ctd.sgth  = sw_pden(ctd.S,ctd.T,ctd.P,0);
             ctd.dPdt = [0; diff(ctd.P)./diff(ctd.time_s)];
@@ -416,16 +429,19 @@ else
                 ctd.z    = sw_dpth(ctd.P,Meta_Data.PROCESS.latitude);
                 ctd.dzdt = [0; diff(ctd.z)./diff(ctd.time_s)];
             end
-
-    end
+            
+            if bad_SB41sample_flag==0
+                % Make sure ctd.S is real. Every once in a while, S comes out imaginary, I think only when SBE is on deck.
+                ctd.S = real(ctd.S);
+                
+                % Sort ctd fields
+                ctd = orderfields(ctd,{'dnum','time_s','P_raw','T_raw','S_raw',...
+                    'C_raw','PT_raw','P','z','T','S','C','th','sgth','dPdt','dzdt'});
+            end
+        end %end if sbe data block is the correct size
+    end %end loop through sbe blocks
     
-    % Make sure ctd.S is real. Every once in a while, S comes out imaginary, I think only when SBE is on deck.
-    ctd.S = real(ctd.S);
     
-    % Sort ctd fields
-    ctd = orderfields(ctd,{'dnum','time_s','P_raw','T_raw','S_raw',...
-        'C_raw','PT_raw','P','z','T','S','C','th','sgth','dPdt','dzdt'});
-
 end %end loop if there is ctd data
 
 %% Altimeter

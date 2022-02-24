@@ -18,6 +18,8 @@ else
     %data July 3rd.
     
     obj = oldData;
+    %ALB hack to get fucking sig
+    newData.ctd.sig=newData.ctd.sgth;
     data = newData;
     
     % Load most recent data file
@@ -123,6 +125,7 @@ else
             end
             
             % Now add the new data
+            trStop=1
             obj.ctd.(ctdFields{iField})(lastIdx+1:lastIdx+nNewCtd) = data.ctd.(ctdFields{iField})(idxNewCtd);
         end
     end

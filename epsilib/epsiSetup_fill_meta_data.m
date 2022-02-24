@@ -29,8 +29,8 @@ epsilib_path={spltpath{~cellfun(@isempty, ...
 Meta_Data.paths.process_library=fileparts(epsilib_path{cellfun(@length,epsilib_path)==min(cellfun(@length,epsilib_path))});
 Meta_Data.paths.data=pwd;
 
-Meta_Data.mission='';
-Meta_Data.vehicle_name='';
+Meta_Data.mission=setup.mission_name;
+Meta_Data.vehicle_name=setup.vehicle_name;
 Meta_Data.deployment=setup.SDIO.prefix_file;
 
 %% get controler (CTL) name
@@ -117,6 +117,7 @@ setup_fields=fieldnames(setup);
 wh_CTD=cellfun(@(y) find(cellfun(@(x) strcmp(x,y),CTDnames)),setup_fields,'un',0);
 wh_CTD=CTDnames{wh_CTD{~cellfun(@isempty,wh_CTD)}};
 
+if isfield(setup,wh_CTD)
 Meta_Data.CTD.name = setup.(wh_CTD).header;
 %TODO add the serial number in the SBE49 setup file. Maybe I want to get that after a the ds cmd.  
 % Also use SBE in TPS and NOT engineer format.
@@ -146,6 +147,7 @@ switch Meta_Data.CTD.name
             Meta_Data.CTD.cal=get_CalSBE(Meta_Data.CTD.CALfile(Meta_Data.CTD.CALpath,Meta_Data.CTD.SN));
         end
     case{'SBE41'}
+end
 end
 
 Meta_Data.SDIO=setup.SDIO;
