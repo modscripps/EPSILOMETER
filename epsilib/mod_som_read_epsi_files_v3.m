@@ -1,4 +1,4 @@
-function [epsi,ctd,alt,act,vnav,gps] = mod_som_read_epsi_files_vGPS(filename,Meta_Data)
+function [epsi,ctd,alt,act,vnav,gps,seg,spec] = mod_som_read_epsi_files_vGPS(filename,Meta_Data)
 
 % For now, only works for 'v3' of som_acq
 % It only works with a single file, since we're always calling it from a
@@ -47,11 +47,23 @@ efe_block_version = 'v3';
 
 [ind_efe_start, ind_efe_stop]   = regexp(str,'\$EFE([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
 [ind_sbe_start, ind_sbe_stop]   = regexp(str,'\$SB49([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
-[ind_alt_start,ind_alt_stop] = regexp(str,'\$ALT([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
-[ind_act_start,ind_act_stop] = regexp(str,'\$ACTU([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
-[ind_vnav_start,ind_vnav_stop] = regexp(str,'\$VNMAR([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
-[ind_gps_start, ind_gps_stop] = regexp(str,'\$GPGGA([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
+[ind_alt_start,ind_alt_stop]    = regexp(str,'\$ALT([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
+[ind_act_start,ind_act_stop]    = regexp(str,'\$ACTU([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
+[ind_vnav_start,ind_vnav_stop]  = regexp(str,'\$VNMAR([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
+[ind_gps_start, ind_gps_stop]   = regexp(str,'\$GPGGA([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
 
+[ind_seg_start, ind_seg_stop]   = regexp(str,'\$SEGM([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
+[ind_spec_start, ind_spec_stop]         = regexp(str,'\$SPEC([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
+[ind_avgspec_start, ind_avgspec_stop]   = regexp(str,'\$AVGS([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
+[ind_dissrate_start, ind_dissrate_stop] = regexp(str,'\$RATE([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
+
+
+    %ALB GROSCON
+    spltfilename=strsplit(filename,'/');
+    strdate=spltfilename{end}(12:end-4);
+    strdate=['20' strdate];
+    t0=(datenum(strdate,"yyyy_mm_dd_HHMMSS")-datenum("01-01-1970 00:00:00"))*86400;
+    t0=0;
 
 %% Define the header tag format
 % In the versions of the SOM acquisition software since 23 May 2021 (and
@@ -97,32 +109,6 @@ tag.laptoptime.length = strlength(tag.laptoptime.strvalue);
 tag.laptoptime.offset = -11;
 tag.laptoptime.indx = get_inds(tag.laptoptime);
 
-%% EFE-specific quantities
-efe.data.n_blocks           = numel(ind_efe_start); %Number of data blocks beginning with $EFE
-
-efe.data.n_channels         = 7;
-efe.data.sample_freq        = 320;
-efe.data.sample_period      = 1/efe.data.sample_freq;
-efe.data.bytes_per_channel  = 3;
-efe.data.timestamp_length   = 8;
-efe.data.n_elements         = efe.data.timestamp_length + ...
-    efe.data.n_channels*efe.data.bytes_per_channel; % 8 bytes timestamps + 3 bytes ADC
-efe.data.recs_per_block     = 80;
-efe.data.n_recs             = efe.data.n_blocks*efe.data.recs_per_block;
-
-efe.bit_counts              = 24;
-efe.gain                    = 1;
-efe.acc_offset              = 1.8/2;
-% NC on 16 July 2021 during BLT cruise - changed acc_factor from 0.5 to
-% 0.4. The accelerometer gain from the manual is 400 mV/g
-%efe.acc_factor              = 0.5;
-efe.acc_factor              = 0.4;
-efe.channels                = Meta_Data.PROCESS.channels;
-
-% These fields appear to be unused:
-%efe.data.nblocks            = 160;
-%efe.data.length = efe.data.nblocks*efe.data.nchannels*efe.data.bytes_per_channel;
-%efe.data.n_recs = numel(ind_efe_start);
 
 
 %% Process EFE data
@@ -131,6 +117,33 @@ if isempty(ind_efe_start)
     epsi=[];
 else
     disp('processing epsi data')
+    % EFE-specific quantities
+    efe.data.n_blocks           = numel(ind_efe_start); %Number of data blocks beginning with $EFE
+    
+    efe.data.n_channels         = 7;
+    efe.data.sample_freq        = 320;
+    efe.data.sample_period      = 1/efe.data.sample_freq;
+    efe.data.bytes_per_channel  = 3;
+    efe.data.timestamp_length   = 8;
+    efe.data.n_elements         = efe.data.timestamp_length + ...
+        efe.data.n_channels*efe.data.bytes_per_channel; % 8 bytes timestamps + 3 bytes ADC
+    efe.data.recs_per_block     = 80;
+    efe.data.n_recs             = efe.data.n_blocks*efe.data.recs_per_block;
+    
+    efe.bit_counts              = 24;
+    efe.gain                    = 1;
+    efe.acc_offset              = 1.8/2;
+    % NC on 16 July 2021 during BLT cruise - changed acc_factor from 0.5 to
+    % 0.4. The accelerometer gain from the manual is 400 mV/g
+    %efe.acc_factor              = 0.5;
+    efe.acc_factor              = 0.4;
+    efe.channels                = Meta_Data.PROCESS.channels;
+    
+    % These fields appear to be unused:
+    %efe.data.nblocks            = 160;
+    %efe.data.length = efe.data.nblocks*efe.data.nchannels*efe.data.bytes_per_channel;
+    %efe.data.n_recs = numel(ind_efe_start);
+    
     
     % Pre-allocate space for data
     epsi_timestamp   = nan(efe.data.n_recs,1);
@@ -233,6 +246,8 @@ else
     
     % If timestamp has values like 1.6e12, it is in milliseconds since Jan
     % 1, 1970. Otherwise it's in milliseconds since the start of the record
+    %ALB GROSCON
+%     epsi_timestamp=epsi_timestamp-epsi_timestamp(1)+t0*1000;
     if nanmedian(epsi_timestamp)>1e9
         % time_s - seconds since 1970
         % dnum - matlab datenum
@@ -240,7 +255,13 @@ else
     else
         % time_s - seconds since power on
         epsi.time_s = epsi_timestamp./1000;
+        epsi.dnum=now+epsi.time_s;
     end
+    
+    % Sort epsi fields
+    epsi = orderfields(epsi,{'dnum','time_s','t1_count','t2_count','s1_count',...
+        's2_count','a1_count','a2_count','a3_count','t1_volt','t2_volt','s1_volt',...
+        's2_volt','a1_g','a2_g','a3_g'});
     
 end %end if there is epsi data
 
@@ -337,6 +358,7 @@ else
                 
                 % The hexadecimal timestamp is the first 16 characters of the
                 % data
+
                 ctd_timestamp(n_rec) = hex2dec(element_ctd(1:16));
                 
                 % Everything after that is the data
@@ -363,13 +385,18 @@ else
     
     % If timestamp has values like 1.6e12, it is in milliseconds since Jan
     % 1, 1970. Otherwise it's in milliseconds since the start of the record
+        %ALB GROSCON
+%     ctd_timestamp=ctd_timestamp-ctd_timestamp(1)+t0*1000;
+
     if nanmedian(ctd_timestamp)>1e9
         % time_s - seconds since 1970
         % dnum - matlab datenum
         [ctd.time_s,ctd.dnum] = convert_timestamp(ctd_timestamp);
+        disp(datestr(ctd.dnum(1)))
     else
         % time_s - seconds since power on
         ctd.time_s = ctd_timestamp./1000;
+        ctd.dnum = now +ctd.time_s;
     end
     
     % If the data were in engineering units, convert to physical units
@@ -380,20 +407,27 @@ else
             ctd = sbe49_ascii_get_conductivity(ctd,sbe);
             
             ctd.S    = sw_salt(ctd.C*10./c3515,ctd.T,ctd.P);
-            ctd.sig  = sw_pden(ctd.S,ctd.T,ctd.P,0);
+            ctd.th   = sw_ptmp(ctd.S,ctd.T,ctd.P,0);
+            ctd.sgth  = sw_pden(ctd.S,ctd.T,ctd.P,0);
             ctd.dPdt = [0; diff(ctd.P)./diff(ctd.time_s)];
             
             % NC 17 July 2021 - added ctd.z and ctd.dzdt.
             % get_scan_spectra.m will use dzdt to define fall speed w.
             if ~isfield(Meta_Data.PROCESS,'latitude')
                 error('Need latitude to get depth from pressure data. Add to MetaProcess text file.')
+            else
+                ctd.z    = sw_dpth(ctd.P,Meta_Data.PROCESS.latitude);
+                ctd.dzdt = [0; diff(ctd.z)./diff(ctd.time_s)];
             end
-            ctd.z    = sw_dpth(ctd.P,Meta_Data.PROCESS.latitude);
-            ctd.dzdt = [0; diff(ctd.z)./diff(ctd.time_s)];
+
     end
     
     % Make sure ctd.S is real. Every once in a while, S comes out imaginary, I think only when SBE is on deck.
     ctd.S = real(ctd.S);
+    
+    % Sort ctd fields
+    ctd = orderfields(ctd,{'dnum','time_s','P_raw','T_raw','S_raw',...
+        'C_raw','PT_raw','P','z','T','S','C','th','sgth','dPdt','dzdt'});
 
 end %end loop if there is ctd data
 
@@ -431,6 +465,7 @@ else
         % For the altimeter, all the data is actually in the header
         alti.hextimestamp.value   = hex2dec(alt_block_str(tag.hextimestamp.inds));
         alt_timestamp(iB) = alti.hextimestamp.value;
+
         
         % The altimeter block does not have a hexlengthblock (hexadecimal
         % length of data block). It has the altimeter reading in that
@@ -443,6 +478,8 @@ else
     
     % If timestamp has values like 1.6e12, it is in milliseconds since Jan
     % 1, 1970. Otherwise it's in milliseconds since the start of the record
+    %GROSCON
+%     alt_timestamp=alt_timestamp-alt_timestamp(1)+t0*1000;
     if nanmedian(alt_timestamp)>1e9
         % time_s - seconds since 1970
         % dnum - matlab datenum
@@ -450,7 +487,11 @@ else
     else
         % time_s - seconds since power on
         alt.time_s = alt_timestamp./1000;
+        alt.dnum = now + alt.time_s;
     end
+    
+    % Order alt fields
+    alt = orderfields(alt,{'dnum','time_s','dst'});
     
 end %end loop if there is alt data
 
@@ -536,6 +577,7 @@ else
     
     % If timestamp has values like 1.6e12, it is in milliseconds since Jan
     % 1, 1970. Otherwise it's in milliseconds since the start of the record
+%     vnav_timestamp=vnav_timestamp-vnav_timestamp(1)+t0*1000;
     if nanmedian(vnav_timestamp)>1e9
         % time_s - seconds since 1970
         % dnum - matlab datenum
@@ -543,7 +585,11 @@ else
     else
         % time_s - seconds since power on
         vnav.time_s = vnav_timestamp./1000;
+        vnav.dnum = now + vnav.time_s;
     end
+    
+    % Order vnav fields 
+    vnav = orderfields(vnav,{'dnum','time_s','compass','acceleration','gyro'});
     
 end %end loop if there is vnav data
 
@@ -552,6 +598,7 @@ if isempty(ind_gps_start)
     disp('no gps data')
     gps = [];
 else
+    
     disp('processing gps data')
     
     % GPS-specific quantities
@@ -598,6 +645,7 @@ else
     gps.latitude = nan(gpsmeta.data.n_recs,1);
     gps.longitude = nan(gpsmeta.data.n_recs,1);
     
+    try
     % Loop through data blocks and parse strings
     for iB=1:gpsmeta.data.n_blocks
         
@@ -620,7 +668,236 @@ else
         
     end
     
+    catch
+            warning("gps issue")
+        gps.dnum(iB)      = nan;
+        gps.latitude(iB)  = nan;
+        gps.longitude(iB) = nan;
+        gps.longitude(iB) = nan;
+        end
+    
 end %end loop if there is gps data
+
+%% Process SEGM data
+if isempty(ind_seg_start)
+    disp('no segment data')
+    seg=[];
+else
+    disp('processing segment data')
+    
+    % Pre-allocate space for data
+    seg.data.n_blocks           = numel(ind_seg_start); %Number of data blocks beginning with $EFE
+    
+    seg.data.n_channels         = 3;
+    seg.data.sample_freq        = 320;
+    seg.data.sample_period      = 1/seg.data.sample_freq;
+    seg.data.sample_per_segment = 2048; %NFFT
+    seg.data.segment_per_block  = 1;
+    seg.data.timestamp_length   = 8;
+    seg.data.n_elements         = seg.data.timestamp_length+ ...
+                                  seg.data.n_channels*...
+                                  seg.data.sample_per_segment*4;
+    seg.channels ={'t1_volt','s1_volt','a3_g'};
+     
+%     seg.data.n_recs             = efe.data.n_blocks*efe.data.recs_per_block;
+    % The first 8 bytes are the timestamp. Timestamp in milliseconds since
+    % 1970 is too big for uint32, so use uint64
+    ind_time = 1:seg.data.timestamp_length;
+    mult = 256.^[0:7].';
+    
+
+    segment_timestamp           = nan(seg.data.n_blocks,1);
+    %epsi.time_s and epsi.dnum will be created from epsi_timestamp once
+    %all its records are filled
+    
+    % Loop through data blocks and parse strings
+    for iB = 1:seg.data.n_blocks
+        
+        % Grab the block of data starting with the header
+        seg_block_str = str(ind_seg_start(iB):ind_seg_stop(iB));
+        
+        % Get the header timestamp and length of data block (?)
+        seg.data.hextimestamp.value   = hex2dec(seg_block_str(tag.hextimestamp.inds));
+        seg.data.hexlengthblock.value = hex2dec(seg_block_str(tag.hexlengthblock.inds));
+        % It should be the case that
+        % efe.hexlengthblock.value==efe.data.element_length*efe.data.recs_per_block
+        
+        % Get the data after the header.
+        seg_block_data = seg_block_str(tag.data_offset:end-tag.chksum.length);
+        
+        % Does length(efe_block_data)=efe.hexlengthblock.value?
+        if (length(seg_block_data)~=seg.data.n_elements)
+            fprintf("SEG block %i has incorrect length\r\n",iB)
+        else
+            
+            segment_timestamp(iB)=double(uint64(seg_block_data(ind_time)))*mult;
+            
+            % Reshape the data
+            seg.data.raw_bytes{iB} = reshape(uint8(seg_block_data(ind_time(end)+1:end)),...
+                                             4,...
+                                             seg.data.sample_per_segment*...
+                                             seg.data.n_channels);
+                                         
+            for n=1:seg.data.sample_per_segment*seg.data.n_channels
+                seg.data.raw_float{iB}(n) = double(typecast(seg.data.raw_bytes{iB}(:,n).' , 'single'));
+%                 seg.data.raw_float{iB}(n) = double(uint32(seg.data.raw_bytes{iB}(:,n))).'*mult(1:4);
+            end
+            % Save data as 'counts'
+            for cha=1:seg.data.n_channels  
+                wh_channel=seg.channels{cha};
+                seg.(wh_channel){iB} = seg.data.raw_float{iB}(1+(cha-1)*seg.data.sample_per_segment:cha*seg.data.sample_per_segment);
+            end
+
+            % Get the checksum value
+            i1 = tag.data_offset+seg.data.hexlengthblock.value;
+            i2 = i1+tag.chksum.length-1;
+            % The full checksum looks like *8F__ so we get str indices from
+            % i1+1 to i2-2 to isolate just the 8F part
+            seg.checksum.data(iB) = hex2dec(seg_block_str(i1+1:i2-2));
+        end %end if efe data block is the correct size
+    end %end loop through efe blocks
+    
+    % Clean and concatenate efe.data.raw_bytes
+    % Check for empty raw_bytes cells and concatenate only the full ones
+    for cha=1:seg.data.n_channels
+        wh_channel=seg.channels{cha};
+        idnull=cellfun(@isempty,seg.(wh_channel));
+%         seg.(wh_channel)=cell2mat(seg.(wh_channel)(~idnull));
+        seg.(wh_channel)=seg.(wh_channel)(~idnull);
+    end
+    
+    if nanmedian(segment_timestamp(iB))>1e9
+        % time_s - seconds since 1970
+        % dnum - matlab datenum
+        [seg.time_s,seg.dnum] = convert_timestamp(segment_timestamp);
+    else
+        % time_s - seconds since power on
+        seg.time_s = arrayfun(@(x,y) linspace(x,y, ...
+                                             seg.data.sample_per_segment)./1000, ...
+                                    segment_timestamp(1:end-1), ...
+                                    segment_timestamp(2:end),'un',0);
+                                
+        % ALB 500 is 1000*0.5. 
+        % ALB 1000 because segment_timestampare in milisec/
+        % ALB 0.5 becasue I have 50% overlap.
+        seg.time_s{end+1}=linspace(segment_timestamp(end), ...
+                                   segment_timestamp(end)+500*seg.data.sample_per_segment/seg.data.sample_freq,...
+                                   seg.data.sample_per_segment)./1000;
+%         seg.time_s=cell2mat(seg.time_s.');
+         seg.dnum=cellfun(@(x) x.*nan,seg.time_s,'un',0);
+    end
+    
+    % Sort epsi fields
+    seg = orderfields(seg,{'dnum','time_s','t1_volt','s1_volt','a3_g','data','channels','checksum'});
+    
+end %end if there is epsi data
+
+%% Process SPEC data
+if isempty(ind_spec_start)
+    disp('no spec data')
+    spec=[];
+else
+    disp('processing spec data')
+    
+    % Pre-allocate space for data
+    spec.data.n_blocks           = numel(ind_spec_start); %Number of data blocks beginning with $EFE
+    
+    spec.data.n_channels          = 3;
+    spec.data.sample_freq       = 320;
+    spec.data.sample_per_spec   = 2048/2; %NFFT/2
+    spec.data.spec_per_block  = 1;
+    spec.data.timestamp_length   = 8;
+    spec.data.n_elements         = spec.data.timestamp_length+ ...
+                                  spec.data.n_channels*...
+                                  spec.data.sample_per_spec*4;
+    spec.channels ={'t1_volt','s1_volt','a3_g'};
+     
+%     seg.data.n_recs             = efe.data.n_blocks*efe.data.recs_per_block;
+    % The first 8 bytes are the timestamp. Timestamp in milliseconds since
+    % 1970 is too big for uint32, so use uint64
+    ind_time = 1:spec.data.timestamp_length;
+    mult = 256.^[0:7].';
+    
+
+    spec_timestamp           = nan(spec.data.n_blocks,1);
+    %epsi.time_s and epsi.dnum will be created from epsi_timestamp once
+    %all its records are filled
+    
+    % Loop through data blocks and parse strings
+    for iB = 1:spec.data.n_blocks
+        
+        % Grab the block of data starting with the header
+        spec_block_str = str(ind_spec_start(iB):ind_spec_stop(iB));
+        
+        % Get the header timestamp and length of data block (?)
+        spec.data.hextimestamp.value   = hex2dec(spec_block_str(tag.hextimestamp.inds));
+        spec.data.hexlengthblock.value = hex2dec(spec_block_str(tag.hexlengthblock.inds));
+        % It should be the case that
+        % efe.hexlengthblock.value==efe.data.element_length*efe.data.recs_per_block
+        
+        % Get the data after the header.
+        spec_block_data = spec_block_str(tag.data_offset:end-tag.chksum.length);
+        
+        % Does length(efe_block_data)=efe.hexlengthblock.value?
+        if (length(spec_block_data)~=spec.data.n_elements)
+            fprintf("SPEC block %i has incorrect length\r\n",iB)
+        else
+            
+            spec_timestamp(iB)=double(uint64(spec_block_data(ind_time)))*mult;
+            
+            % Reshape the data
+            spec.data.raw_bytes{iB} = reshape(uint8(spec_block_data(ind_time(end)+1:end)),...
+                                             4,...
+                                             spec.data.sample_per_spec*...
+                                             spec.data.n_channels);
+                                         
+            for n=1:spec.data.sample_per_spec*spec.data.n_channels
+                spec.data.raw_float{iB}(n) = double(typecast(spec.data.raw_bytes{iB}(:,n).' , 'single'));
+%                 seg.data.raw_float{iB}(n) = double(uint32(seg.data.raw_bytes{iB}(:,n))).'*mult(1:4);
+            end
+            % Save data as 'counts'
+            for cha=1:spec.data.n_channels  
+                wh_channel=spec.channels{cha};
+                spec.(wh_channel){iB} = spec.data.raw_float{iB}(1+(cha-1)*spec.data.sample_per_spec:cha*spec.data.sample_per_spec);
+            end
+
+            % Get the checksum value
+            i1 = tag.data_offset+spec.data.hexlengthblock.value;
+            i2 = i1+tag.chksum.length-1;
+            % The full checksum looks like *8F__ so we get str indices from
+            % i1+1 to i2-2 to isolate just the 8F part
+            spec.checksum.data(iB) = hex2dec(spec_block_str(i1+1:i2-2));
+        end %end if efe data block is the correct size
+    end %end loop through efe blocks
+    
+    % Clean and concatenate efe.data.raw_bytes
+    % Check for empty raw_bytes cells and concatenate only the full ones
+    for cha=1:spec.data.n_channels
+        wh_channel=spec.channels{cha};
+        idnull=cellfun(@isempty,spec.(wh_channel));
+        spec.(wh_channel)=spec.(wh_channel)(~idnull);
+    end
+    
+    if nanmedian(spec_timestamp)>1e9
+        % time_s - seconds since 1970
+        % dnum - matlab datenum
+        [spec.time_s,spec.dnum] = convert_timestamp(spec_timestamp);
+    else
+        % time_s - seconds since power on
+        spec.time_s = spec_timestamp./1000;
+        spec.dnum=spec.time_s.*nan;
+
+    end
+    
+    % Sort epsi fields
+    spec = orderfields(spec,{'dnum','time_s','t1_volt','s1_volt','a3_g','data','channels','checksum'});
+    
+end %end spec
+
+
+
+
+
 
 end
 

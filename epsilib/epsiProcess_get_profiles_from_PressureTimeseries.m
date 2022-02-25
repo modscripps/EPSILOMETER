@@ -1,4 +1,4 @@
-function [PT] = epsiProcess_get_profiles_from_PressureTimeseries(PressureTimeseries)
+function [PT] = epsiProcess_get_profiles_from_PressureTimeseries(PressureTimeseries,varargin)
  
 % INPUTS
 %   PressureTimeseries.dnum
@@ -10,20 +10,20 @@ plotFig = 0;
 PT = PressureTimeseries;
 
 % use nPoints median filter to smooth out the pressure field
-nPoints = 64; % To do: make this an input. This woudl change if the CTD sampling rate changes
+nPoints = 64; % To do: make this an input. This would change if the CTD sampling rate changes
 p = medfilt1(PT.P,nPoints);
 % try to smooth out the data a bit
 dp = conv2(diff(conv2(p,ones(nPoints,1)/nPoints,'same'),1,1)',ones(1,nPoints)/nPoints,'same');
 
 %downLim = 0.1;
 %downLim = 0.025;
-downLim = 0.025;
+downLim = 0.025; %minimum rate of change
 downCast = true;
 minLength = 20; % NC - Criteria for profile length - To do: add as an input
 
 persistent argsNameToCheck;
 if isempty(argsNameToCheck);
-    argsNameToCheck = {'downLim','threshold','upcast','downcast'};
+    argsNameToCheck = {'downLim','threshold','up','down','both'};
 end
 
 index = 1;
@@ -56,12 +56,12 @@ while (n_items > 0)
             end
             index = index +2;
             n_items = n_items-2;
-        case 3 % upcast
+        case 3 % up
             downCast = false;
             
             index = index + 1;
             n_items = n_items - 1;
-        case 4 % downcast
+        case 4 % down
             downCast = true;
             
             index = index + 1;
@@ -72,8 +72,8 @@ end
 %defining the threshold for going up and down
 if downCast && downLim < 0
     downLim = -downLim;
-elseif (~downCast) && downLim > 0% going up
-    downLim = -downLim;
+% elseif ~downCast && downLim > 0% going up
+%     downLim = -downLim;
 end
 
 if downCast
@@ -134,7 +134,7 @@ enddown(i+1)=dn(end);
 PT.startprof = startdown;
 PT.endprof = enddown;
 profLength = PT.P(PT.endprof)-PT.P(PT.startprof);
-longEnough = profLength>=minLength;
+longEnough = abs(profLength)>=minLength;
 PT.startprof = PT.startprof(longEnough);
 PT.endprof = PT.endprof(longEnough);
 

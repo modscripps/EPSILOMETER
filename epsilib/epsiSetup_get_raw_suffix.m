@@ -7,10 +7,10 @@ function [Meta_Data] = epsiSetup_get_raw_file_suffix(Meta_Data)
 % List possible suffix options. They need to be actual suffixes. Nothing
 % can exist after these characters because Epsi_MakeMatFromRaw creates
 % files based on the name BEFORE the suffix.
-suffixOptions = {'.ascii','_raw','.raw'};
+suffixOptions = {'.ascii','_raw','.raw','.epsi','.bin','.modraw'};
 
 % List files in raw directory
-rawDirContents = dir(Meta_Data.RAWpath);
+rawDirContents = dir(Meta_Data.paths.raw_data);
 
 % Todo: If there is nothing in the raw directory, list files in the main data
 % directory
@@ -25,3 +25,4 @@ end
 % We use the suffix option with the most match counts
 [~,idxChoice] = max(counts);
 Meta_Data.rawfileSuffix = suffixOptions{idxChoice};
+

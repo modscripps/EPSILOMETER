@@ -1,6 +1,6 @@
 function [Pa,sumP,fe]=mod_efe_scan_acceleration(scan,acceleration_channel,Meta_Data)
-% get epsilon and the cutting frequency 
-% 
+% get epsilon and the cutting frequency
+%
 % OUTPUTS
 %   Pa      = acceleration frequency power spectrum
 %   sumP    = integrated acceleratation frequency power spectrum between
@@ -9,10 +9,10 @@ function [Pa,sumP,fe]=mod_efe_scan_acceleration(scan,acceleration_channel,Meta_D
 
 nfft=Meta_Data.PROCESS.nfft;
 
-if isfield(Meta_Data,'AFE')
-    Fs=Meta_Data.AFE.FS; 
-else 
-    Fs=Meta_Data.PROCESS.Fs_epsi;  
+if isfield(Meta_Data,'AFE') && isclassfield(Meta_Data.AFE,'FS')
+    Fs=Meta_Data.AFE.FS;
+elseif isclassfield(Meta_Data.PROCESS,'Fs_epsi')
+    Fs=Meta_Data.PROCESS.Fs_epsi;
 end
 fc1=Meta_Data.PROCESS.fc1;
 fc2=Meta_Data.PROCESS.fc2;

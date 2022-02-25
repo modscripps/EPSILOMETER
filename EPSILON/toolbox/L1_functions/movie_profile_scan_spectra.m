@@ -8,7 +8,7 @@ function [] = movie_profile_scan_spectra(Meta_Data,Profile_or_profNum)
 
 if isnumeric(Profile_or_profNum) && ~isstruct(Profile_or_profNum)
     profNum = Profile_or_profNum;
-    load(fullfile(Meta_Data.L1path,sprintf('Profile%03.0f',profNum)));
+    load(fullfile(Meta_Data.paths.profiles,sprintf('Profile%03.0f',profNum)));
     eval(['Profile = ' sprintf('Profile%03.0f',profNum) ';']);
 elseif isstruct(Profile_or_profNum)
     Profile = Profile_or_profNum;

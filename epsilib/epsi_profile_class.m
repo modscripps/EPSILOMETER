@@ -1,0 +1,100 @@
+classdef epsi_profile_class < handle
+% epsi_profile_class
+%
+% Currently just a dumping ground for functions we want to add at the
+% Profile level
+%
+% % (1) get_hab - get height above bottom
+% if isfield(Profile,'alt')
+%     ctdZ = interp1(Profile.ctd.time_s,Profile.ctd.z,Profile.alt.time_s);
+%     hab = Profile.alt.dst;
+%     hab(hab>35) = nan;
+% end
+% 
+% % (2) Interpolate ctd and alt data to epsi timestamp
+% 
+% % (3) add n2
+% 
+% % (4) add Thorpe scale
+% 
+% % (5) add epsilon from thorpe scale
+% 
+% % (6) compute gamma_chi=chi/epsilon
+% 
+% % (7) add ozmidov scale (epsilon/N^3)^(1/2)
+% 
+% % (8) add Re_b= epsilon/nu / N^2
+% 
+
+    properties
+        profNum
+        filenames
+        Meta_Data
+        varInfo
+        qc
+        epsi
+        ctd
+        alt
+        vnav
+        nbscan
+        nfft
+        nfftc
+        tscan
+        fpump
+        f
+        k
+        Cs1a3_full
+        Cs2a3_full
+        dnum
+        pr
+        z
+        w
+        t
+        s
+        th
+        sgth
+        kvis
+        ind_range_ctd
+        ind_range_epsi
+        epsilon
+        epsilon_co
+        epsilon_final
+        epsi_qc
+        epsi_qc_final
+        sh_fc
+        chi
+        tg_fc
+        flag_tg_fc
+        fom
+        Ps_volt_f
+        Ps_shear_k
+        Ps_shear_co_k
+        Pt_volt_f
+        Pt_Tg_k
+        Pa_g_f
+    end
+    methods
+        function obj=epsi_profile_class(Profile)
+            field_names = fields(Profile);
+            for iField = 1:length(field_names)
+                obj.(field_names{iField}) = Profile.(field_names{iField});
+            end
+        end
+        function obj=f_update_paths(obj)
+            obj.Meta_Data.paths.process_library = input('process_library (path up to and including EPSILOMETER):  ','s');
+            obj.Meta_Data.paths.data = input('data (directory that includes raw, mat, etc:  ','s');
+
+            obj
+
+            obj.Meta_Data.paths.calibration = fullfile(obj.Meta_Data.paths.process_library,'CALIBRATION','ELECTRONICS');
+            obj.Meta_Data.paths.raw_data = fullfile(obj.Meta_Data.paths.data,'raw');
+            obj.Meta_Data.paths.mat_data = fullfile(obj.Meta_Data.paths.data,'mat');
+            obj.Meta_Data.paths.profiles = fullfile(obj.Meta_Data.paths.data,'profiles');
+            obj.Meta_Data.paths.figures = fullfile(obj.Meta_Data.paths.data,'figs');
+        end
+        function obj=f_plot_profile_and_spectra(obj,depth)
+
+            plot_profile_and_spectra(obj,depth)
+        end
+    end
+end

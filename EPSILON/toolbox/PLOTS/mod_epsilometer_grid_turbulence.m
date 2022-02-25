@@ -124,7 +124,7 @@ Map.N2=interp1(zaxis12,Map.N2,Map.z);
 Map.N2(Map.N2<=0)=nan;
 Map.N2=fillmissing(Map.N2,'linear');
 
-save(fullfile(Meta_Data.L1path,'Turbulence_grid.mat'), ...
+save(fullfile(Meta_Data.paths.profiles,'Turbulence_grid.mat'), ...
     'Map')
 
 

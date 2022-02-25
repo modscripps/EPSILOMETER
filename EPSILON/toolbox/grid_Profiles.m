@@ -7,13 +7,13 @@ function [gridProfiles] = grid_Profiles(Meta_Data)
 % -------------------------------------------------------------------------
 %% Get list of profiles in the deployment
 % -------------------------------------------------------------------------
-profList = list_profiles_in_dir(Meta_Data.L1path);
+profList = list_profiles_in_dir(Meta_Data.paths.profiles);
 
 % Number of profiles in the deployment
 nProfs = length(profList);
 
 %% Load the first profile to get variable names
-load(fullfile(Meta_Data.L1path,profList{1}));
+load(fullfile(Meta_Data.paths.profiles,profList{1}));
 %profNum = str2double(profList{1}(8:10));
 %eval(['Profile = ' sprintf('Profile%03.0f',profNum) ';']);
 
@@ -128,7 +128,7 @@ clear Profile*
 for iProf=1:length(profList)
     
     % Load profile
-    load(fullfile(Meta_Data.L1path,profList{iProf}));
+    load(fullfile(Meta_Data.paths.profiles,profList{iProf}));
     %profNum = str2double(profList{iProf}(8:10));
     %eval(['Profile = ' sprintf('Profile%03.0f',profNum) ';']);
     
@@ -244,5 +244,5 @@ gridProfiles.varInfo.Pt_volt_10_45Hz_avg = {'average temperature power spectral 
 gridProfiles.varInfo.iScan = {'scan indices',''};
 
 %% Save data
-save(fullfile(Meta_Data.L1path,'gridded_Profiles'),'gridProfiles')
+save(fullfile(Meta_Data.paths.profiles,'gridded_Profiles'),'gridProfiles')
 

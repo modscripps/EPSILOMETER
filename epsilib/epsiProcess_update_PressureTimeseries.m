@@ -1,4 +1,4 @@
-function [] = epsiProcess_update_PressureTimeseries(dirname,ctd)
+function [] = epsiProcess_update_PressureTimeseries(dirname,ctd,profile_dir)
 
 
 if ~exist(fullfile(dirname, 'PressureTimeseries.mat'),'file')
@@ -37,7 +37,7 @@ elseif exist(fullfile(dirname, 'PressureTimeseries.mat'),'file')
 end
 
 % Define (or redefine) the upcasts and downcasts
-[PressureTimeseries] = epsiProcess_get_profiles_from_PressureTimeseries(PressureTimeseries);
+[PressureTimeseries] = epsiProcess_get_profiles_from_PressureTimeseries(PressureTimeseries,profile_dir);
 save(fullfile(dirname, 'PressureTimeseries.mat'),'PressureTimeseries');
 
 end

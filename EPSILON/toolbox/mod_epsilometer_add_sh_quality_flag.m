@@ -6,7 +6,7 @@ function mod_epsilometer_add_sh_quality_flag(Meta_Data,H1,H2)
 %  Acceleration/speed spectra in s^-1 Hz^-1 
 %
 %  Created by Arnaud Le Boyer on 7/28/18.
-listfile=dir(fullfile(Meta_Data.L1path,'Turbulence_Profiles*.mat'));
+listfile=dir(fullfile(Meta_Data.paths.profiles,'Turbulence_Profiles*.mat'));
 listfilename=natsort({listfile.name});
 
 %% get channels
@@ -110,7 +110,7 @@ for f=1:length(listfile)
         sav_var_name=[sav_var_name sprintf(',''Profile%03i''',count)];
         count=count+1;
     end
-    save_file=fullfile(Meta_Data.L1path, ...
+    save_file=fullfile(Meta_Data.paths.profiles, ...
         ['Turbulence_Profiles' num2str((f-1)*10) '.mat']);
     cmd=['save(''' save_file '''' sav_var_name ',''nb_profile_perfile'')'];
     eval(cmd);

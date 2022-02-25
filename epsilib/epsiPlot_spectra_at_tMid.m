@@ -1,4 +1,4 @@
-function [Phi,f1,noise,ax] = epsiPlot_spectra_at_tMid(obj,tMid,tscan,makeFig,saveFig,replaceData,ax)
+function [Phi,f1,noise,ax] = epsiPlot_spectra_at_tMid(obj,tMid,tscan,nSec,makeFig,saveFig,replaceData,ax)
 % [Phi,f1,noise,ax] = epsiPlot_spectra_at_tMid(obj,tMid,tscan,makeFig,saveFig,replaceData,ax)
 %   ** Nicole Couto copied from mod_som_calibrate_epsi_tMid.m just to start giving
 %   consistent names to epsi_class plotting functions
@@ -12,6 +12,7 @@ function [Phi,f1,noise,ax] = epsiPlot_spectra_at_tMid(obj,tMid,tscan,makeFig,sav
 %                   Meta_Data as one of the fields
 %       tMid      - midpoint of timeseries for computing spectra (seconds)
 %       tScan     - length in seconds of the segment used to do an FFT (i.e tscan = NFFT * FS)
+%       nSec      - length of timeseries to plot
 %
 % OUTPUTS:
 %       Phi        - structure containing frequency spectra for each
@@ -31,15 +32,15 @@ function [Phi,f1,noise,ax] = epsiPlot_spectra_at_tMid(obj,tMid,tscan,makeFig,sav
 % --------------------------------------------------------------------------
 
 % If no makeFig flag, make figure by default
-if nargin<6
+if nargin<7
     ax = [];
-    if nargin<5
+    if nargin<6
         replaceData=0;
-        if nargin<4
+        if nargin<5
             makeFig = 1;
             saveFig = 0;
         end
-        if nargin==4
+        if nargin==5
             saveFig = 1;
         end
     end
@@ -68,9 +69,6 @@ if ~(isfield(obj,'ctd') || isclassfield(obj,'ctd'))
 elseif isfield(obj,'ctd') || isclassfield(obj,'ctd')
     CTD = obj.ctd;
     ind0=(CTD.time_s==0);
-    if~isempty(ind0)
-        warning("there are 0s in the CTD time")
-    end
     notNan = ~isnan(CTD.time_s);
     if sum(~ind0 & notNan)>3
         dPdt_interp = movmean(interp1(CTD.time_s(~ind0 & notNan),CTD.dPdt(~ind0 & notNan),EPSI.time_s),100);
@@ -78,15 +76,14 @@ elseif isfield(obj,'ctd') || isclassfield(obj,'ctd')
         CTD.dPdt = [];
     end
 end
-% Get rid of nans in the data. If you're plotting in realtime, there will
+% Get rid of nans in the data. If you're plotting in realtime, there might
 % be a lot of nans at the end
 EPSI = structfun(@(x) x(~isnan(x)),EPSI,'un',0);
 CTD = structfun(@(x) x(~isnan(x)),CTD,'un',0);
 
-timeaxis = EPSI.time_s;
+timeaxis = EPSI.time_s - nanmin(EPSI.time_s);
 L=length(timeaxis);
 FS=Meta_Data.AFE.FS;
-
 
 % %%
 % %figure('units','inch','position',[0,0,35,15]);
@@ -141,7 +138,6 @@ else
     
     % Lscan,defined later is the length of tscan. Lseg is the length of the
     % timeseries you want to plot. Let's plot 30 seconds of data
-    nSec = 30;
     Lseg = FS*nSec;
     idxSeg = floor(mean(idxScan) - Lseg/2):floor(mean(idxScan) + Lseg/2);
     % If the 30-second segment goes over the length of the timeseries, or
@@ -470,7 +466,7 @@ if makeFig
         % plot spectra
         % --------------------
         
-        hold(ax(6),'on')
+        % hold(ax(6),'on')
         % l0=loglog(ax(6),f1,squeeze(nanmean(P11(1,:,:),2)),'--','Color',cmap(4,:));
         % loglog(ax(6),f1,squeeze(nanmean(P11(2,:,:),2)),'--','Color',cmap(5,:))
         % loglog(ax(6),f1,squeeze(nanmean(P11(3,:,:),2)),'--','Color',cmap(6,:))
@@ -479,8 +475,8 @@ if makeFig
         % loglog(ax(6),f1,squeeze(nanmean(P11(6,:,:),2)),'--','Color',cmap(2,:))
         % loglog(ax(6),f1,squeeze(nanmean(P11(7,:,:),2)),'--','Color',cmap(3,:))
         
-        hold(ax(6),'on')
         l0=loglog(ax(6),f1,squeeze(nanmean(P11bis(1,:,:),2)),'--','Color',cols.t1);
+        hold(ax(6),'on')
         loglog(ax(6),f1,squeeze(nanmean(P11bis(2,:,:),2)),'--','Color',cols.t2)
         loglog(ax(6),f1,squeeze(nanmean(P11bis(3,:,:),2)),'--','Color',cols.s1)
         loglog(ax(6),f1,squeeze(nanmean(P11bis(4,:,:),2)),'--','Color',cols.s2)
@@ -536,7 +532,7 @@ if makeFig
     % --------------------
     if saveFig
         img = getframe(gcf);
-        imwrite(img.cdata,fullfile(Meta_Data.datapath,['figs/epsi_' Meta_Data.deployment '_t' num2str(tMid) '.png']));
+        imwrite(img.cdata,fullfile(Meta_Data.paths.data,['figs/epsi_' Meta_Data.deployment '_t' num2str(tMid) '.png']));
     end
     
 end % end if makeFig

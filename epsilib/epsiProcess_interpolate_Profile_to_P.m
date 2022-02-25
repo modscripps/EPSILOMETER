@@ -1,18 +1,40 @@
-function [gridP] = interpolateProfileToP(Profile,P)
+function [grid] = epsiProcess_interpolate_Profile_to_P(Profile,P)
 
-varList0 = {'dnum','profNum'};
-varList1 = {'w','t'};
-varList2 = {'epsilon','epsilon_co','chi'};
+grid.mission = Profile.Meta_Data.mission;
+grid.vehicle_name = Profile.Meta_Data.vehicle_name;
+grid.deployment = Profile.Meta_Data.deployment;
+
+varList0 = {'profNum','dnum','latitude','longitude'};
+varList1 = {'w','t','s','th','sgth'};
+varList2 = {'epsilon','epsilon_co','chi','fom'};
+
+% Add varList0
 for iVar=1:length(varList0) 
-    eval(['gridP.',varList0{iVar},' =  nanmean(Profile.(varList0{iVar}));']);
+    if isfield(Profile,varList0{iVar})
+    eval(['grid.',varList0{iVar},' =  nanmean(Profile.(varList0{iVar}));']);
+    end
 end
-gridP.P = P;
+
+% Add depth field and interpolate
+grid.pr = P(:);
+try
+    grid.z = sw_dpth(grid.pr,nanmean(grid.latitude));
+catch
+    grid.z = sw_dpth(grid.pr,Profile.Meta_Data.PROCESS.latitude);
+end
+
+% Add varList1
+notNan = ~isnan(Profile.pr);
 for iVar=1:length(varList1)
-    eval(['gridP.',varList1{iVar},' = interp1(Profile.pr,Profile.(varList1{iVar}),P);']);
+    if isfield(Profile,varList1{iVar})
+    grid.(varList1{iVar}) = interp1(Profile.pr(notNan),Profile.(varList1{iVar})(notNan),grid.pr);
+    end
 end
+
+% Add varList2
 for iVar=1:length(varList2) 
-    eval(['gridP.',varList2{iVar},'1 = interp1(Profile.pr,Profile.(varList2{iVar})(:,1),P);']);
-    eval(['gridP.',varList2{iVar},'2 = interp1(Profile.pr,Profile.(varList2{iVar})(:,2),P);']);
+    eval(['grid.',varList2{iVar},'1 = interp1(Profile.pr(notNan),Profile.(varList2{iVar})(notNan,1),grid.pr);']);
+    eval(['grid.',varList2{iVar},'2 = interp1(Profile.pr(notNan),Profile.(varList2{iVar})(notNan,2),grid.pr);']);
 end
 
 % Acceleration - find average power spectral density of verical
@@ -23,89 +45,21 @@ f2 = 45;
 for iScan=1:size(Profile.Pa_g_f.a1,1)
     [PSDavg(iScan,1)] = avg_psd_in_frange(Profile.Pa_g_f.a1(iScan,:),f,f1,f2);
 end
-eval(['gridP.a1_avg = interp1(Profile.pr,PSDavg,P);']);
+grid.a1_avg = interp1(Profile.pr(notNan),PSDavg(notNan),grid.pr);
 
 % Use altimeter and pressure to get bottom depth
 % Interpolate pressure to altimeter time, and use all times when altimeter < 35
-if isfield(Profile,'alttime')
-    pres = interp1(Profile.ctdtime,Profile.P,Profile.alttime);
-    alt = Profile.dst;
-    alt(alt>35) = nan;
-    bottom_depth = alt+pres;
+if isfield(Profile,'alt')
+    [~,iU] = unique(Profile.ctd.time_s);
+    ctdZ = interp1(Profile.ctd.time_s(iU),Profile.ctd.z(iU),Profile.alt.time_s);
+    hab = Profile.alt.dst;
+    hab(hab>35) = nan;
+    bottom_depth = hab+ctdZ;
     % Take the average of the deepest 20 measurements (20 seconds). This step
     % is an attempt to get rid of any spurious readings that might have
     % occurred further up in the profile
-    [~,idxDeep] = sort(pres);
+    [~,idxDeep] = sort(ctdZ);
     bottom_depth_mean = nanmean(bottom_depth(idxDeep(end-19:end)));
-    eval(['gridP.bottom_depth = bottom_depth_mean;']);
+    grid.bottom_depth = bottom_depth_mean;
 end
-
-% %% Grid to isotherms
-% 
-% clear P
-% 
-% T = [4:0.02:8.2].';
-% P = [];
-% EPS1 = [];
-% EPS2 = [];
-% EPS1CO = [];
-% EPS2CO = [];
-% DNUM = [];
-% W = [];
-% PROFNUM = [];
-% 
-% for iFile=1:length(fileList)
-%     
-%    load(fullfile(dataDir,fileList(iFile).name));
-%    
-%    % Find only non-nan values and sort by temperature
-%    notNan = find(~isnan(Profile.t));
-%    [~,idxSorted] = sort(Profile.t(notNan));
-%    idx = notNan(idxSorted);
-%    
-%    
-%    eps1 = interp1(Profile.t(idx),Profile.epsilon(idx,1),T);
-%    eps2 = interp1(Profile.t(idx),Profile.epsilon(idx,2),T);
-%    eps1co = interp1(Profile.t(idx),Profile.epsilon_co(idx,1),T);
-%    eps2co = interp1(Profile.t(idx),Profile.epsilon_co(idx,2),T);
-%    dnum = nanmean(Profile.dnum(idx));
-%    w = interp1(Profile.t(idx),Profile.w(idx),T);
-%    profNum = Profile.profNum;
-%    p = interp1(Profile.t(idx),Profile.pr(idx),T);
-%    
-%    EPS1 = [EPS1,eps1];
-%    EPS2 = [EPS2,eps2];
-%    EPS1CO = [EPS1CO,eps1co];
-%    EPS2CO = [EPS2CO,eps2co];
-%    DNUM = [DNUM,dnum];
-%    W = [W,w];
-%    PROFNUM = [PROFNUM,profNum];
-%    P = [P,p];
-%    
-%    clear Profile
-% end
-% 
-% gridT = struct('dnum',DNUM,...
-%                 'profnum',PROFNUM,...
-%                 'pres',P,...
-%                 'temp',T,...
-%                 'w',W,...
-%                 'eps1',EPS1,...
-%                 'eps2',EPS2,...
-%                 'eps1co',EPS1CO,...
-%                 'eps2co',EPS2CO);
-% 
-% save griddedProfiles -append gridT
-
-% %% Make a plot
-% pcolor(gridP.dnum,gridP.pres,log10(gridP.eps2co));
-% shading flat
-% hold on
-% [c,ch] = contour(gridP.dnum,gridP.pres,gridP.temp,'k','levellist',3.6:0.05:6);
-% clabel(c,ch)
-% ch.LabelSpacing = 300;
-% set(gca,'ydir','reverse','ylim',[1200,2000],'clim',[-10,-6])
-% colorbar
-% %datetick(gca,'x','HH:MM')
-
 

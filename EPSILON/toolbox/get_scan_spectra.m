@@ -53,9 +53,9 @@ else
     
     switch tempChoice
         case 'Tdiff'
-            Meta_Data.PROCESS.FPO7noise=load(fullfile(Meta_Data.CALIpath,'FPO7_noise.mat'),'n0','n1','n2','n3');
+            Meta_Data.PROCESS.FPO7noise=load(fullfile(Meta_Data.paths.calibration,'FPO7_noise.mat'),'n0','n1','n2','n3');
         otherwise
-            Meta_Data.PROCESS.FPO7noise=load(fullfile(Meta_Data.CALIpath,'FPO7_notdiffnoise.mat'),'n0','n1','n2','n3');
+            Meta_Data.PROCESS.FPO7noise=load(fullfile(Meta_Data.paths.calibration,'FPO7_notdiffnoise.mat'),'n0','n1','n2','n3');
     end
     FPO7noise   = Meta_Data.PROCESS.FPO7noise;
     
@@ -67,7 +67,7 @@ LCTD        = length(Profile.ctd.P);% length of profile
 % mod_som_read_epsi_files_v3.m to convert pressure to depth (z) and
 % calculate dzdt.  Now I'm using dzdt instead of dPdt to deefine scan.w.
 %scan.w      = nanmean(Profile.ctd.dPdt(ind_ctdscan(ind_ctdscan>0 & ind_ctdscan<LCTD)));
-if isfield(Profile,'dzdt')
+if isfield(Profile.ctd,'dzdt')
     scan.w      = nanmean(Profile.ctd.dzdt(ind_ctdscan(ind_ctdscan>0 & ind_ctdscan<LCTD)));
 else
     scan.w      = nanmean(Profile.ctd.dPdt(ind_ctdscan(ind_ctdscan>0 & ind_ctdscan<LCTD)));
@@ -86,7 +86,7 @@ end
 %         && ind_scan(1)>0 && ind_scan(end)<=length(Profile.epsi.time_s)
 if ind_ctdscan(1)>0 && ind_ctdscan(end)<=length(Profile.ctd.time_s) ...
         && ind_scan(1)>0 && ind_scan(end)<=length(Profile.epsi.time_s) ...
-        && ~isinf(scan.w) && ~isnan(scan.w);
+        && ~isinf(scan.w) && ~isnan(scan.w)
     
     % Put new variables in the structure
     varList = {'Pr','tscan','Fs_epsi','N_epsi',...
@@ -97,8 +97,11 @@ if ind_ctdscan(1)>0 && ind_ctdscan(end)<=length(Profile.ctd.time_s) ...
     end
     
     scan.pr     = nanmean(Profile.ctd.P(ind_ctdscan));
+    scan.z      = nanmean(Profile.ctd.z(ind_ctdscan));
     scan.t      = nanmean(Profile.ctd.T(ind_ctdscan));
     scan.s      = nanmean(Profile.ctd.S(ind_ctdscan));
+    scan.th     = nanmean(Profile.ctd.th(ind_ctdscan));
+    scan.sgth   = nanmean(Profile.ctd.sgth(ind_ctdscan));    
     if isfield(Profile.ctd,'dnum')
         scan.dnum   = nanmean(Profile.ctd.dnum(ind_ctdscan));
     else
@@ -159,7 +162,7 @@ if ind_ctdscan(1)>0 && ind_ctdscan(end)<=length(Profile.ctd.time_s) ...
         currChannel = chanList{iChan};
         
         [Ps_volt_f,Ps_shear_k,Ps_shear_co_k,epsilon,epsilon_co,f,k,fc,kc] = ...
-            mod_efe_scan_epsilon(scan,currChannel,'a3',Meta_Data);
+            mod_efe_scan_epsilon(scan,currChannel,Meta_Data);
         
         % Get Panchev spectrum
         if ~isempty(epsilon)

@@ -19,7 +19,6 @@ function [Phi,f1,noise,ax] = mod_som_calibrate_epsi_tMid(obj,tMid,tscan,makeFig,
 %       
 %
 %  Created by Arnaud Le Boyer on 7/28/18.
-%  Copyright © 2018 Arnaud Le Boyer. All rights reserved.
 %
 %   March 2021 - Nicole Couto edited to take tMid AND tscan
 %   April 2021 - Nicole Couto edited to include outputs
@@ -109,7 +108,8 @@ end
 % tscan is the number of seconds, tMid is the midpoint in time of the scan
 % you want to plot (you might get this by clicking on a timeseries of
 % pressure, dPdt
-[~,idxMid] =  nanmin(abs(timeaxis - tMid));
+% [~,idxMid] =  nanmin(abs(timeaxis - tMid));
+idxMid =  find(timeaxis>nanmean(timeaxis),1,'first');
 idxScan = floor(idxMid - FS*(tscan/2)) : floor(idxMid + FS*(tscan/2));
 
 % Lscan,defined later is the length of tscan. Lseg is the length of the
@@ -169,7 +169,11 @@ end
 df        = 1/tscan;
 f=(df:df:FS/2)'; % frequency vector for spectra
 %% Length of the EPSI
-T       = length(EPSI.epsitime);
+try
+    T       = length(EPSI.epsitime);
+catch
+    T       = length(EPSI.time_s);
+end
 %% define number of scan in the EPSI
 %Lscan   = floor(tscan*FS);
 Lscan   = numel(idxScan);
@@ -501,7 +505,7 @@ figureStamp(getFilename)
 % --------------------
 if saveFig
     img = getframe(gcf);
-    imwrite(img.cdata,fullfile(Meta_Data.datapath,['figs/epsi_' Meta_Data.deployment '_t' num2str(tMid) '.png']));
+    imwrite(img.cdata,fullfile(Meta_Data.paths.data,['figs/epsi_' Meta_Data.deployment '_t' num2str(tMid) '.png']));
 end
 
 end % end if makeFig

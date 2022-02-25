@@ -1,0 +1,13 @@
+latitude     = 16;
+tscan        = 6;
+nfft         = 1024;
+nfftc        = floor(1024/3);
+Fs_ctd       = 16;
+ctd_fc       = 45; 
+dz           = .25;  
+fc1          = 6;
+fc2          = 35;
+Prmin = @(x) nanmin(x) + 0.2*range(x);
+Prmax = @(x) nanmin(x) + 0.8*range(x);
+adjustTemp = false;
+coherent_acc_chan = 'a1';

@@ -5,8 +5,7 @@ function [epsilon,kc]=eps1_mmp(k,Psheark,kvis,kmax)
 %      Psheark is a vector array with the shear spectrum
 %      kvis is the kinematic viscocity, in m^2/s
 %      w is the vehicle speed, in m/s
-%      dk is the elementary wavenumber bandwidth, in cpm
-%      kmax is the maximum wavenumber determined by eps1_mmp
+%      dk is the elementary waveSD! 1enumber determined by eps1_mmp
 %      epsilon is the estimated dissipation rate, in W/kg
 %      kc is the wavenumber at which integration is cutoff, in cpm
 %   Function: To integrate airfoil shear versus k spectra to

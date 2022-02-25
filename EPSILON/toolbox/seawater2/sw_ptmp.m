@@ -3,7 +3,7 @@ function PT = sw_ptmp(S,T,P,PR)
 
 % SW_PTMP    Potential temperature
 %===========================================================================
-% SW_PTMP  $Revision: 1.3 $  $Date: 1994/10/10 05:45:13 $
+% SW_PTMP  $Revision: 1.1.1.1 $  $Date: 2001/06/11 17:02:05 $
 %          Copyright (C) CSIRO, Phil Morgan 1992. 
 %
 % USAGE:  ptmp = sw_ptmp(S,T,P,PR) 
@@ -12,10 +12,10 @@ function PT = sw_ptmp(S,T,P,PR)
 %    Calculates potential temperature as per UNESCO 1983 report.
 %   
 % INPUT:  (all must have same dimensions)
-%   S  = salinity    [cu      (PSS-78) ]
+%   S  = salinity    [psu      (PSS-78) ]
 %   T  = temperature [degree C (IPTS-68)]
-%   P  = pressure    [MPa]
-%   PR = Reference pressure  [MPa]
+%   P  = pressure    [db]
+%   PR = Reference pressure  [db]
 %        (P & PR may have dims 1x1, mx1, 1xn or mxn for S(mxn) )
 %
 % OUTPUT:
@@ -38,13 +38,9 @@ function PT = sw_ptmp(S,T,P,PR)
 %    and potential temperature of sea water."
 %    DEEP-SEA RES., 1973, Vol20,401-408.
 %=========================================================================
-% Modified to accept inputs with s in c.u. and p in MPa
-% M.Gregg, 2jul96
+
 % CALLER:  general purpose
 % CALLEE:  sw_adtg.m
-%Changed Back!! MHA 2/05
-%disp 'WARNING: This routine has been changed back to psu and dbar by MHA!!!! '
-%S=1000*S; P=100*P; PR=100*PR;
 
 %-------------
 % CHECK INPUTS
@@ -107,9 +103,7 @@ if mp == 1  % row vector
 
    Transpose = 1;
 end %if
-%***********************************************************
-%End $RCSfile: check_stp.Minc,v $
-%***********************************************************
+%***check_stp
 
 %------
 % BEGIN

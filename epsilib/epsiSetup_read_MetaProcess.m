@@ -10,4 +10,4 @@ for f=1:length(str_meta_data_process)
     end
 end
 
-save(fullfile(Meta_Data.datapath,'Meta_Data.mat'),'Meta_Data')
+save(fullfile(Meta_Data.paths.data,'Meta_Data.mat'),'Meta_Data')

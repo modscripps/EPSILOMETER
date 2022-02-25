@@ -63,43 +63,49 @@ box(6).Position = [0.7337    0.0050    0.2263    0.0872];
 %% Define some colors
 % ----------------------------------------------------------
 
-pp = set_epsi_plot_properties;
+pp = epsiSetup_set_plot_properties;
 cols = pp.Colors;
 cols.w = [0 0 0];
 cols.profInfo = [174 197 227]./255;
 cols.scanInfo = [0.9 0.9 0.9];
-cols.batch11 = [0.4902    0.1647    0.4706];
-cols.batch12 = [0.6784    0.1529    0.6431];
-cols.batch21 = [0.8353    0.1059    0.7922];
-cols.batch22 = [0.9679    0.4079    0.6317];
+cols.batch_s1s1 = [0.4902    0.1647    0.4706];
+cols.batch_s1s2 = [0.6784    0.1529    0.6431];
+cols.batch_s2s1 = [0.8353    0.1059    0.7922];
+cols.batch_s2s2 = [0.9679    0.4079    0.6317];
 cols.panchev1 = [0.4902    0.1647    0.4706];
 cols.panchev2 = [0.8353    0.1059    0.7922];
 
-%     cols.batch11 = [0.9679    0.4079    0.6317];
-%     cols.batch12 = [0.8661    0.2040    0.5917];
-%     cols.batch21 = [0.6822    0.0051    0.4945];
-%     cols.batch22 = [0.4785    0.0039    0.4666];
-%     cols.panchev1 = [0.9679    0.4079    0.6317];
-%     cols.panchev2 = [0.4785    0.0039    0.4666];
 
 %% Get profile data
 % ----------------------------------------------------------
-
-dTdV=[Meta_Data.AFE.t1.cal Meta_Data.AFE.t2.cal];
+try
+    dTdV=[Meta_Data.AFE.t1.cal Meta_Data.AFE.t2.cal];
+catch
+    dTdV=[Meta_Data.epsi.t1.cal Meta_Data.epsi.t2.cal];
+end
 
 % noise floor
 logf=log10(Profile.f);
-h_freq=get_filters_SOM(Meta_Data,Profile.f);
-switch Meta_Data.AFE.temp_circuit
+if isfield(Meta_Data,'MADRE')
+    h_freq=get_filters_MADRE(Meta_Data,Profile.f);
+else
+    h_freq=get_filters_SOM(Meta_Data,Profile.f);
+end
+if isfield(Meta_Data,'MAP')
+    temp_circuit = Meta_Data.MAP.temperature;
+elseif isfield(Meta_Data,'AFE')
+    temp_circuit = Meta_Data.AFE.temp_circuit;
+end
+switch temp_circuit
     case 'Tdiff'
-        FPO7noise=load(fullfile(Meta_Data.CALIpath,'FPO7_noise.mat'),'n0','n1','n2','n3');
+        FPO7noise=load(fullfile(Meta_Data.paths.calibration,'FPO7_noise.mat'),'n0','n1','n2','n3');
     otherwise
-        FPO7noise=load(fullfile(Meta_Data.CALIpath,'FPO7_notdiffnoise.mat'),'n0','n1','n2','n3');
+        FPO7noise=load(fullfile(Meta_Data.paths.calibration,'FPO7_notdiffnoise.mat'),'n0','n1','n2','n3');
 end
 n0=FPO7noise.n0; n1=FPO7noise.n1; n2=FPO7noise.n2; n3=FPO7noise.n3;
 tnoise=10.^(n0+n1.*logf+n2.*logf.^2+n3.*logf.^3);
 
-shearnoise=load(fullfile(Meta_Data.CALIpath,'shear_noise.mat'),'n0s','n1s','n2s','n3s');
+shearnoise=load(fullfile(Meta_Data.paths.calibration,'shear_noise.mat'),'n0s','n1s','n2s','n3s');
 n0s=shearnoise.n0s;
 n1s=shearnoise.n1s;
 n2s=shearnoise.n2s;
@@ -156,8 +162,8 @@ ax(4).XLabel.String = 'w (m s^{-1})';
 % ----------------------------------------------------------
 
 % Profile info1
-lM = length(Meta_Data.datapath);
-idxSlash = strfind(Meta_Data.datapath,'/');
+lM = length(Meta_Data.paths.data);
+idxSlash = strfind(Meta_Data.paths.data,'/');
 
 % There have been a few iterations of the Meta_Data strucutre. MADRE SN and
 % rev stored in different places depending on Meta_Data version.
@@ -174,17 +180,21 @@ end
 
 mapSN = '';
 mapRev = '';
-
+if isfield(Meta_Data,'CTD')
+    ctd_field = 'CTD';
+elseif isfield(Meta_Data,'aux1')
+    ctd_field = 'aux1';
+end
 if lM>61
     s = find(idxSlash<=61,1,'last');
     annotation('textbox',...
         box(1).Position,...
         'String',{strrep([Meta_Data.mission '  -  ' Meta_Data.vehicle_name '  -  ' Meta_Data.deployment],'_','\_'),...
-        strrep(Meta_Data.datapath(1:idxSlash(s)),'_','\_'),...
-        strrep(['  ', Meta_Data.datapath(idxSlash(s)+1:end)],'_','\_'),...
+        strrep(Meta_Data.paths.data(1:idxSlash(s)),'_','\_'),...
+        strrep(['  ', Meta_Data.paths.data(idxSlash(s)+1:end)],'_','\_'),...
         ['MADRE SN' madreSN ' rev ' madreRev],...
         ['MAP SN'   mapSN   ' rev ' mapRev],...
-        [Meta_Data.CTD.name ' ' Meta_Data.CTD.SN],...
+        [Meta_Data.(ctd_field).name ' ' Meta_Data.(ctd_field).SN],...
         },...
         'FontSize',infoFontSize,...
         'FontName','Monospaced',...
@@ -194,15 +204,15 @@ if lM>61
         'BackgroundColor',cols.profInfo,...
         'Color','k');
 elseif lM<=61
-    nEnd = min([61,length(Meta_Data.datapath)]);
+    nEnd = min([61,length(Meta_Data.paths.data)]);
     annotation('textbox',...
         box(1).Position,...
         'String',{strrep([Meta_Data.mission '  -  ' Meta_Data.vehicle_name '  -  ' Meta_Data.deployment],'_','\_'),...
-        strrep(Meta_Data.datapath(1:nEnd),'_','\_'),...
+        strrep(Meta_Data.paths.data(1:nEnd),'_','\_'),...
         '',...
         ['MADRE SN' madreSN ' rev ' madreRev],...
         ['MAP SN'   mapSN   ' rev ' mapRev],...
-        [Meta_Data.CTD.name ' ' Meta_Data.CTD.SN],...
+        [Meta_Data.(ctd_field).name ' ' Meta_Data.(ctd_field).SN],...
         },...
         'FontSize',infoFontSize,...
         'FontName','Monospaced',...
@@ -213,16 +223,23 @@ elseif lM<=61
         'Color','k');
 end
 
+
+if isfield(Meta_Data,'AFE')
+    field_name = 'AFE';
+elseif isfield(Meta_Data,'epsi')
+    field_name = 'epsi';
+end
+
 % Profile info2
 annotation('textbox',...
     box(2).Position,...
     'String',{
-    sprintf('t1 - SN:   %s',Meta_Data.AFE.s1.SN),...
-    sprintf('     dTdV: %3.2f ',Meta_Data.AFE.t1.cal),...
-    sprintf('     %s - %s',Meta_Data.AFE.t1.ADCfilter,Meta_Data.AFE.t1.ADCconf),...
-    sprintf('t2 - SN:   %s',Meta_Data.AFE.s2.SN),...
-    sprintf('     dTdV: %3.2f',Meta_Data.AFE.t2.cal),...
-    sprintf('     %s - %s',Meta_Data.AFE.t2.ADCfilter,Meta_Data.AFE.t2.ADCconf),...
+    sprintf('t1 - SN:   %s',Meta_Data.(field_name).s1.SN),...
+    sprintf('     dTdV: %3.2f ',Meta_Data.(field_name).t1.cal),...
+    sprintf('     %s - %s',Meta_Data.(field_name).t1.ADCfilter,Meta_Data.(field_name).t1.ADCconf),...
+    sprintf('t2 - SN:   %s',Meta_Data.(field_name).s2.SN),...
+    sprintf('     dTdV: %3.2f',Meta_Data.(field_name).t2.cal),...
+    sprintf('     %s - %s',Meta_Data.(field_name).t2.ADCfilter,Meta_Data.(field_name).t2.ADCconf),...
     },...
     'FontSize',infoFontSize,...
     'FontName','Monospaced',...
@@ -236,12 +253,12 @@ annotation('textbox',...
 annotation('textbox',...
     box(3).Position,...
     'String',{
-    sprintf('s1 - SN: %s', Meta_Data.AFE.s1.SN),...
-    sprintf('     Sv: %3.2f', Meta_Data.AFE.s1.cal),...
-    sprintf('     %s - %s', Meta_Data.AFE.s1.ADCfilter,Meta_Data.AFE.s1.ADCconf),...
-    sprintf('s2 - SN: %s',Meta_Data.AFE.s2.SN),...
-    sprintf('     Sv:%3.2f ',Meta_Data.AFE.s2.cal),...
-    sprintf('     %s - %s', Meta_Data.AFE.s2.ADCfilter,Meta_Data.AFE.s2.ADCconf),...
+    sprintf('s1 - SN: %s', Meta_Data.(field_name).s1.SN),...
+    sprintf('     Sv: %3.2f', Meta_Data.(field_name).s1.cal),...
+    sprintf('     %s - %s', Meta_Data.(field_name).s1.ADCfilter,Meta_Data.(field_name).s1.ADCconf),...
+    sprintf('s2 - SN: %s',Meta_Data.(field_name).s2.SN),...
+    sprintf('     Sv:%3.2f ',Meta_Data.(field_name).s2.cal),...
+    sprintf('     %s - %s', Meta_Data.(field_name).s2.ADCfilter,Meta_Data.(field_name).s2.ADCconf),...
     },...
     'FontSize',infoFontSize,...
     'FontName','Monospaced',...
@@ -257,15 +274,15 @@ annotation('textbox',...
 % Find scan number centered around depth choice
 [~,scanNum] = min(abs(Profile.pr - depth));
 
-dTdV=[Meta_Data.AFE.t1.cal,Meta_Data.AFE.t2.cal];
-Sv=[Meta_Data.AFE.s1.cal,Meta_Data.AFE.s2.cal];
+dTdV=[Meta_Data.(field_name).t1.cal,Meta_Data.(field_name).t2.cal];
+Sv=[Meta_Data.(field_name).s1.cal,Meta_Data.(field_name).s2.cal];
 Gr=9.81;
 
 for k=scanNum
     
     
     % Get scan data
-    scan = get_scan_spectra(Profile,k);
+    scan = get_scan_spectra_v2(Profile,k);
     
     if isfield(scan,'pr') %if there's data in this scan...
         
@@ -281,13 +298,13 @@ for k=scanNum
             scan.Cs2a.a2 = nan(size(scan.Cs2a.a1,1),size(scan.Cs2a.a1,2));
         end
         if ~isfield(scan.chi,'t1')
-            scan.chi.t1 = nan(size(scan.chi.t2,1),size(scan.chi.t2,2));
-            scan.Pt_Tg_k.t1 = nan(size(scan.Pt_Tg_k.t2,1),size(scan.Pt_Tg_k.t2,2));
+            scan.chi.t1 = nan(size(scan.chi.t1,1),size(scan.chi.t1,2));
+            scan.Pt_Tg_k.t1 = nan(size(scan.Pt_Tg_k.t1,1),size(scan.Pt_Tg_k.t1,2));
             scan.kc.t1 = nan;
         end
         if ~isfield(scan.chi,'t2')
-            scan.chi.t2 = nan(size(scan.chi.t1,1),size(scan.chi.t1,2));
-            scan.Pt_Tg_k.t2 = nan(size(scan.Pt_Tg_k.t1,1),size(scan.Pt_Tg_k.t1,2));
+            scan.chi.t2 = nan(size(scan.chi.t2,1),size(scan.chi.t2,2));
+            scan.Pt_Tg_k.t2 = nan(size(scan.Pt_Tg_k.t2,1),size(scan.Pt_Tg_k.t2,2));
         end
         
         % Get FPO7 noise
@@ -300,14 +317,14 @@ for k=scanNum
         snoise_k= (2*pi*k_noise).^2 .* snoise.*Profile.w(k)./TFshear;        % T1_k spec  as function of k
         
         % Get Batchelor spectrum for each combination of epsilon/chi
-        [kbatch11,Pbatch11] = batchelor(scan.epsilon.s1,scan.chi.t1, ...
+        [kbatch_s1t1,Pbatch_s1t1] = batchelor(scan.epsilon.s1,scan.chi.t1, ...
             scan.kvis,scan.ktemp);
-        [kbatch21,Pbatch21] = batchelor(scan.epsilon.s2,scan.chi.t1, ...
+        [kbatch_s2t1,Pbatch_s2t1] = batchelor(scan.epsilon.s2,scan.chi.t1, ...
             scan.kvis,scan.ktemp);
         
-        [kbatch12,Pbatch12] = batchelor(scan.epsilon.s1,scan.chi.t2, ...
+        [kbatch_s1t2,Pbatch_s1t2] = batchelor(scan.epsilon.s1,scan.chi.t2, ...
             scan.kvis,scan.ktemp);
-        [kbatch22,Pbatch22] = batchelor(scan.epsilon.s2,scan.chi.t2, ...
+        [kbatch_s2t2,Pbatch_s2t2] = batchelor(scan.epsilon.s2,scan.chi.t2, ...
             scan.kvis,scan.ktemp);
         
         % Smooth Tdiff wavenumber spectra
@@ -325,7 +342,6 @@ for k=scanNum
         Co22 = scan.Cs2a.a2;
         Co13 = scan.Cs1a.a3;
         Co23 = scan.Cs2a.a3;
-        
                
         %% Frequency plots
         % ----------------------------------------------------------
@@ -403,10 +419,10 @@ for k=scanNum
         p9(4) = loglog(scan.k,smTG2,'color',cols.t2);
         
         % Add Batchelor spectra
-        p9(5) = loglog(kbatch11,Pbatch11,'Color',cols.batch11);
-        p9(6) = loglog(kbatch12,Pbatch12,'Color',cols.batch12);
-        p9(7) = loglog(kbatch21,Pbatch21,'Color',cols.batch21);
-        p9(8) = loglog(kbatch22,Pbatch22,'Color',cols.batch22);
+        p9(5) = loglog(kbatch_s1t1,Pbatch_s1t1,'Color',cols.batch_s1s1);
+        p9(6) = loglog(kbatch_s1t2,Pbatch_s1t2,'Color',cols.batch_s1s2);
+        p9(7) = loglog(kbatch_s2t1,Pbatch_s2t1,'Color',cols.batch_s2s1);
+        p9(8) = loglog(kbatch_s2t2,Pbatch_s2t2,'Color',cols.batch_s2s2);
         
         % Add noise
         p9(9) = loglog(k_noise,tnoise_k,'k:');
@@ -419,12 +435,12 @@ for k=scanNum
         
         try
         legend('t1','t1smooth','t2','t2smooth',...
-            'batch11','batch12','batch21','batch22',...
+            'batch\_s1t1','batch\_s1t2','batch\s2t1','batch\s2t2',...
             'T-noise','t1_{cutoff}','t2_{cutoff}',...
             'location','southwest','numcolumns',3);
         catch
                     legend('t1','t1smooth','t2','t2smooth',...
-            'batch11','batch12','batch21','batch22',...
+            'batch\_s1t1','batch\_s1t2','batch\s2t1','batch\s2t2',...
             'T-noise','t1_{cutoff}','t2_{cutoff}',...
             'location','southwest');
         end
@@ -449,16 +465,18 @@ for k=scanNum
         p10(7) = scatter(scan.k(indkc),smS2(indkc),'filled','p','sizedata',450,'MarkerEdgeColor','k','markerfacecolor',cols.s2,'linewidth',2);
         
         % Add Panchev
-        p10(8) = loglog(scan.kpan.s1,scan.Ppan.s1,'Color',cols.panchev1);
-        p10(9) = loglog(scan.kpan.s2,scan.Ppan.s2,'Color',cols.panchev2);
+        if ~all(isnan(scan.Ppan.s1))
+        p10(8) = loglog(scan.k,scan.Ppan.s1,'Color',cols.panchev1);
+        p10(9) = loglog(scan.k,scan.Ppan.s2,'Color',cols.panchev2);
         hold on
         try
         legend('s1','s1smooth','s2','s2smooth','noise','s1_{cutoff}','s2_{cutoff}','Panchev1','Panchev2','location','southwest','numcolumns',2);
         catch
                     legend('s1','s1smooth','s2','s2smooth','noise','s1_{cutoff}','s2_{cutoff}','Panchev1','Panchev2','location','southwest');
         end
+        end
         xlim([6e-1 400])
-        ylim([1e-10 1e-1])
+%         ylim([1e-10 1e-1])
         grid on
         xlabel('k (cpm)')
         ylabel('\phi^2_{shear} (s^{-2} / cpm)')
@@ -477,7 +495,11 @@ for k=scanNum
         
         axes(ax(1))
         hold on
-        ax(1).XLim = [5e-11 min([1e-4,ax(1).XLim(2)])];
+        try
+            ax(1).XLim = [ nanmin(Profile.chi(:)) nanmax(Profile.chi(:))];
+        catch
+            ax(1).XLim = [5e-11 min([1e-4,ax(1).XLim(2)])];
+        end
         x = [1e-20 1e0];
         f(1) = fill(x([1 1 2 2 1]),y([1 2 2 1 1]),'k');
         f(1).FaceAlpha = 0.2;
@@ -485,7 +507,11 @@ for k=scanNum
         
         axes(ax(2))
         hold on
-        ax(2).XLim = [5e-11 min([1e-4,ax(2).XLim(2)])];
+        try
+            ax(2).XLim = [nanmin(Profile.epsilon_co(:)) nanmax(Profile.epsilon_co(:))];
+        catch
+            ax(1).XLim = [5e-11 min([1e-4,ax(1).XLim(2)])];
+        end
         x = [1e-20 1e0];
         f(2) = fill(x([1 1 2 2 1]),y([1 2 2 1 1]),'k');
         f(2).FaceAlpha = 0.2;
@@ -493,6 +519,9 @@ for k=scanNum
         
         axes(ax3(2))
         hold on
+        ax(3).XLim = [nanmin(Profile.s) nanmax(Profile.s)];
+        ax3(2).XLim = [nanmin(Profile.t) nanmax(Profile.t)];
+        
         x = [-3 40];
         f(3) = fill(x([1 1 2 2 1]),y([1 2 2 1 1]),'k');
         f(3).FaceAlpha = 0.2;
@@ -500,7 +529,7 @@ for k=scanNum
         
         axes(ax(4))
         hold on
-        ax(4).XLim = [max([0.5,ax(4).XLim(1)]) ax(4).XLim(2)];
+        ax(4).XLim = [nanmin(Profile.w) nanmax(Profile.w)];
         x = [0 4];
         f(4) = fill(x([1 1 2 2 1]),y([1 2 2 1 1]),'k');
         f(4).FaceAlpha = 0.2;
@@ -565,11 +594,11 @@ for k=scanNum
         drawnow
         
         %ax(1).XLim = [5e-11 max(max(Profile.chi))];
-        ax(2).XLim = [5e-11 min([1e-4,max(max(Profile.epsilon))])];
-        ax3(1).XLim = [min(Profile.s),max(Profile.s)];
-        ax3(2).XLim = [min(Profile.t),max(Profile.t)];
-        ax(4).XLim = [max([min(Profile.w),0.47]),max(Profile.w)];
-        [ax(5:8).XLim] = deal(Profile.f([1 end]));
+%         ax(2).XLim = [5e-11 min([1e-4,max(max(Profile.epsilon))])];
+%         ax3(1).XLim = [min(Profile.s),max(Profile.s)];
+%         ax3(2).XLim = [min(Profile.t),max(Profile.t)];
+%         ax(4).XLim = [max([min(Profile.w),0.47]),max(Profile.w)];
+%         [ax(5:8).XLim] = deal(Profile.f([1 end]));
         [ax(5:8).XTick] = deal([1 10 100]);
         [ax([5,6]).XTickLabel] = deal('');
         
@@ -627,13 +656,13 @@ for k=scanNum
 end %end loop through scans
 
 if saveFig
-   figName =  fullfile(Meta_Data.datapath,sprintf('figs/L1_Prof%03.0f_%03.0fm',Profile.profNum,depth));
-   eval(['export_fig ' figName ' -png -r200 -nocrop'])
+   figName =  fullfile(Meta_Data.paths.data,sprintf('figs/Prof%03.0f_%03.0fm.png',Profile.profNum,depth));
+   print('-dpng2',figName)
 end
 
 catch err
     for ii=1:length(err.stack)
-        disp([err.stack(ii).name ' - line ' num2str(err.stack(ii).line)])
+        disp(['error in ' err.stack(ii).name ' - line ' num2str(err.stack(ii).line)])
     end
     
 end

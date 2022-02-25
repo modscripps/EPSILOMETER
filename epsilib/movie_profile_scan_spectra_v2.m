@@ -15,15 +15,17 @@ v = VideoWriter(sprintf('%s_cast%i%s',Meta_Data.deployment,profNum,'.avi'));
 v.FrameRate=5;
 open(v)
 
-for scanNum = 1:Profile.nbscan
+for scanNum = 10:10:Profile.nbscan
+    
+    d = Profile.pr(scanNum);
     
     % Plot the scan data
-    [~,~,p5,p6,p7,p8,p9,p10,f] = plot_profile_scan_spectra_v2(Profile,scanNum);
+    [~,~,p5,p6,p7,p8,p9,p10,f] = plot_profile_and_spectra(Profile,d);
 
     % Grab frame for movie
     pause(.001)
     frame(scanNum)=getframe(gcf);
-    %writeVideo(v,frame)
+
     
     % Delete scan data, keep things that are constant for profile
     delete(p5(:));
@@ -33,11 +35,11 @@ for scanNum = 1:Profile.nbscan
     delete(p9(:));
     delete(p10(:));
     delete(f(:));
-    
+   
 end %end loop through scans
 
 %% Write and close movie
 % ----------------------------------------------------------
-writeVideo(v,frame);
+writeVideo(v,frame(scanNum))
 close(v)
 

@@ -5,17 +5,15 @@
 % May 2021
 % -------------------------------------------------------------------------
 
-raw_file_suffix = '.raw';
-str_to_match = '*07_24*';
+str_to_match = '*EPSI_B_PC2_22_02_16_14*';
 %str_to_match = '*';
 
 % Directories for Epsi:
-rawDir      = '/Volumes/GoogleDrive/Shared drives/MOD-data-Epsilometer/epsi/LJTC/cruise/BEYSTER02162022/data/epsi/d1/raw';
-awayDir     = '/Volumes/Berry/epsi_raw/Copy_of_EPSI_RAW_0724';
+% rawdir is wehre the data are
+rawDir      = '/Users/Shared/FCTD_EPSI/RAW';
+% awaydir is copy folder
+awayDir     = '/Users/Shared/Beyster_fish2';
 
-meta_data_process_file = [];
-
-%% ------------------------------------------------------------------------
 rawDirAway  = fullfile(awayDir,'raw');
 matDir      = fullfile(awayDir,'mat');
 FCTDmatDir  = fullfile(awayDir,'FCTDmat');
@@ -33,9 +31,11 @@ end
 
 % Group directories to input for Epsi_MakeMatFromRaw
 try
-    dirs = {rawDir; rawDirAway; matDir; FCTDmatDir};
+    %dirs = {rawDir; rawDirAway; matDir; FCTDmatDir};
+    dirs = {rawDir; matDir; FCTDmatDir}; %If using 'noSync' in epsiProcess_convert_new_raw_to_mat
 catch
-    dirs = {rawDir; rawDirAway; matDir};
+    %dirs = {rawDir; rawDirAway; matDir};
+    dirs = {rawDir; matDir}; %If using 'noSync' in epsiProcess_convert_new_raw_to_mat
 end
 
 cd(matDir)
@@ -44,6 +44,10 @@ cd ..
 % First, try reading configuration data from the
 % file. If that doesn't work, try reading from a
 % % configuration file. fg
+try
+    setupfile=dir(fullfile(rawDir,'*.raw*'));
+    setup=mod_som_read_setup_from_raw(fullfile(setupfile(1).folder,setupfile(1).name));
+catch
 try
     setupfile=dir(fullfile(rawDir,str_to_match,raw_file_suffix));
     setup=mod_som_read_setup_from_raw(setupfile(1).name);
@@ -55,9 +59,15 @@ catch
         error('mod_som_read_setup failed')
     end
 end
+end
+
 
 % Initialize obj with structures big enough to load at least one Epsi .mat
-% file into (epsi, ctd, and alt strucutres)
+% file into (epsi, ctd, and alt strucutres). Here, we're making a strucutre
+% that looks like an epsi class so that we can use epsi_class functions.
+% It's not an epsi_class, though. It's just a strucutre, so we need to
+% manually add some fields that would be automatically added by creating
+% an epsi_class.
 obj = epsiSetup_make_empty_structure;
 obj.plot_properties = epsiSetup_set_plot_properties;
 % Create Meta_Data

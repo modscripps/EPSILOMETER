@@ -18,14 +18,22 @@ switch fpo7_channel
         if isfield(Meta_Data,'AFE')
             dTdV = Meta_Data.AFE.t1.cal;
         else
-        dTdV=Meta_Data.epsi.t1.dTdV;
+            try
+                dTdV=Meta_Data.epsi.t1.dTdV;
+            catch
+                dTdV=Meta_Data.epsi.t1.cal;
+            end
         end
     case 't2_volt'
-                if isfield(Meta_Data,'AFE')
+        if isfield(Meta_Data,'AFE')
             dTdV = Meta_Data.AFE.t2.cal;
         else
-        dTdV=Meta_Data.epsi.t2.dTdV;
-                end
+            try
+            dTdV=Meta_Data.epsi.t2.dTdV;
+            catch
+                dTdV=Meta_Data.epsi.t2.cal;
+            end
+        end
     otherwise
         disp('wrong channel to compute chi, must be t1 or t2')
 end
@@ -36,9 +44,9 @@ if nargin<5
     % get FPO7 channel average noise to compute chi
     switch Meta_Data.MAP.temperature
         case 'Tdiff'
-            FPO7noise=load(fullfile(Meta_Data.CALIpath,'FPO7_noise.mat'),'n0','n1','n2','n3');
+            FPO7noise=load(fullfile(Meta_Data.paths.calibration,'FPO7_noise.mat'),'n0','n1','n2','n3');
         otherwise
-            FPO7noise=load(fullfile(Meta_Data.CALIpath,'FPO7_notdiffnoise.mat'),'n0','n1','n2','n3');
+            FPO7noise=load(fullfile(Meta_Data.paths.calibration,'FPO7_notdiffnoise.mat'),'n0','n1','n2','n3');
     end
 end
 
@@ -56,7 +64,8 @@ k = f./w;
 Pt_T_f = (Pt_volt_f*(dTdV^2)) ./ filter_TF;
 
 % Convert temperature frequency spectrum to temperature gradient wavenumber spectrum
-Pt_Tg_k = ((2*pi*k).^2).*Pt_T_f./w;
+% Pt_Tg_k = ((2*pi*k).^2).*Pt_T_f./w;
+Pt_Tg_k = ((2*pi*k).^2).*Pt_T_f.*w; %NC 9/2/21 - frequency spectrum should be MULTIPLIED by w, not divided
 
 % Calculate chi
 dk = nanmean(diff(k));

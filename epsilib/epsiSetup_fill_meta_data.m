@@ -21,16 +21,16 @@ spltpath=strsplit(path,':');
 % If epsilib directory is immediately inside EPSILOMETER directory, the
 % next two lines should appropriately define the process directory
 % ALB to NC: Pretty smart move :).
-epsilib_path=spltpath{~cellfun(@isempty, ...
+epsilib_path={spltpath{~cellfun(@isempty, ...
                                cellfun(@(x) ...
                                strfind(x,'epsilib'),spltpath, ...
-                               'UniformOutput',false))};
+                               'UniformOutput',false))}};
 
-Meta_Data.processpath=fileparts(epsilib_path);
-Meta_Data.datapath=pwd;
+Meta_Data.paths.process_library=fileparts(epsilib_path{cellfun(@length,epsilib_path)==min(cellfun(@length,epsilib_path))});
+Meta_Data.paths.data=pwd;
 
-Meta_Data.mission='';
-Meta_Data.vehicle_name='';
+Meta_Data.mission=setup.mission_name;
+Meta_Data.vehicle_name=setup.vehicle_name;
 Meta_Data.deployment=setup.SDIO.prefix_file;
 
 %% get controler (CTL) name
@@ -53,9 +53,9 @@ Meta_Data.AFE.name=wh_AFE;
 Meta_Data.AFE.rev='EFErev4'; %TODO get info from config file
 Meta_Data.AFE.SN='000';      %TODO get info from config file
 
-% Meta_Data.CALIpath=fullfile('..','CALIBRATION',[Meta_Data.CTL.rev '_' ...
+% Meta_Data.paths.calibration=fullfile('..','CALIBRATION',[Meta_Data.CTL.rev '_' ...
 %     Meta_Data.CTL.SN '-' Meta_Data.AFE.rev '_' Meta_Data.AFE.SN]);
-Meta_Data.CALIpath=fullfile(Meta_Data.processpath,'CALIBRATION','ELECTRONICS');
+Meta_Data.paths.calibration=fullfile(Meta_Data.paths.process_library,'CALIBRATION','ELECTRONICS');
 %% set process parameters
 Meta_Data.PROCESS.nb_channels = setup.(wh_AFE).nb_channel;
 Meta_Data.PROCESS.channels=cellfun(@(x) x.name, setup.(wh_AFE).sensors, 'un',0);
@@ -72,7 +72,7 @@ for n=1:numel(Meta_Data.PROCESS.channels)
     end
 end
 
-Meta_Data.AFE.shearcal_path=fullfile(Meta_Data.processpath,'CALIBRATION','SHEAR_PROBES');
+Meta_Data.AFE.shearcal_path=fullfile(Meta_Data.paths.process_library,'CALIBRATION','SHEAR_PROBES');
 
 for i=1:Meta_Data.PROCESS.nb_channels
     sensor=setup.(wh_AFE).sensors{i};
@@ -111,18 +111,19 @@ Meta_Data.AFE.shear='CAmp1.0'; %TODO get info from config file
 Meta_Data.Firmware.version='mod_som_som_eferev3_sdio_sampling_app_07152020.sls'; %TODO get info from config file
 
 %% add auxillary device field
-CTDnames={'SBE','SBE49','SBE41','RBR','S49','SB49'};% hard coded name of potential CTD we will use with epsi
+CTDnames={'SBE','SBE49','SBE41','SB41','RBR','S49','SB49'};% hard coded name of potential CTD we will use with epsi
 setup_fields=fieldnames(setup);
 % find the kind of CTD we used from the setup file. 
 wh_CTD=cellfun(@(y) find(cellfun(@(x) strcmp(x,y),CTDnames)),setup_fields,'un',0);
 wh_CTD=CTDnames{wh_CTD{~cellfun(@isempty,wh_CTD)}};
 
+if isfield(setup,wh_CTD)
 Meta_Data.CTD.name = setup.(wh_CTD).header;
 %TODO add the serial number in the SBE49 setup file. Maybe I want to get that after a the ds cmd.  
 % Also use SBE in TPS and NOT engineer format.
 Meta_Data.CTD.SN   = num2str(str2double(setup.(wh_CTD).sn),'%04.0f');
 Meta_Data.CTD.sample_per_record   = setup.(wh_CTD).sample_data_per_record;
-Meta_Data.CTD.CALpath   = fullfile(Meta_Data.processpath,'CALIBRATION','SBE49');
+Meta_Data.CTD.CALpath   = fullfile(Meta_Data.paths.process_library,'CALIBRATION','SBE49');
 
 Meta_Data.CTD.CALfile   = @(x,y) fullfile(x,[y '.cal']);
 
@@ -147,6 +148,7 @@ switch Meta_Data.CTD.name
         end
     case{'SBE41'}
 end
+end
 
 Meta_Data.SDIO=setup.SDIO;
 
@@ -155,7 +157,7 @@ Meta_Data.SDIO=setup.SDIO;
 
 
 fprintf('Saving Meta_Data in datapath \n')
-save(fullfile(Meta_Data.datapath,'Meta_Data.mat'),'Meta_Data');
+save(fullfile(Meta_Data.paths.data,'Meta_Data.mat'),'Meta_Data');
 
 % TODO: It does not work if the data does not have all the channels
 % .     I ll change that if needed

@@ -8,6 +8,7 @@ function H=get_filters_SOM(Meta_Data,f)
 %  coding
 % Feb 2019 ALB
 
+try
 switch Meta_Data.AFE.s1.ADCfilter
     case 'sinc4'
         Hs1filter=(sinc(f/(2*f(end)))).^4;
@@ -19,6 +20,14 @@ end
 switch Meta_Data.AFE.a1.ADCfilter
     case 'sinc4'
         Ha1filter=(sinc(f/(2*f(end)))).^4;
+end
+catch
+switch Meta_Data.Firmware.ADCfilter
+    case 'sinc4'
+        Hs1filter=(sinc(f/(2*f(end)))).^4;
+        Ht1filter=(sinc(f/(2*f(end)))).^4;
+        Ha1filter=(sinc(f/(2*f(end)))).^4;
+end
 end
 
 % shear channels
@@ -47,6 +56,7 @@ H.electFPO7 = H.gainFPO7.*Ht1filter;
 %tau=0.005 * speed^(-0.32); % thermistor time constant
 H.magsq=@(speed)(1 ./ (1+((2*pi*(0.005 * speed^(-0.32))).*f).^2)); % magnitude-squared no units
 H.phase=@(speed)(-2*atan( 2*pi*f*(0.005 * speed^(-0.32))));   % no units
+try
 switch Meta_Data.AFE.temp_circuit
     case {'Tdiff','tdiff'}
         Tdiff_filter = load('FILTER/Tdiff_filt.mat');
@@ -55,6 +65,17 @@ switch Meta_Data.AFE.temp_circuit
         H.FPO7=@(speed)(H.electFPO7.^2 .* H.magsq(speed) .* H.Tdiff.^2);
     otherwise
         H.FPO7=@(speed)(H.electFPO7.^2 .* H.magsq(speed));
+end
+catch
+    switch Meta_Data.MAP.temperature
+        case {'Tdiff','tdiff'}
+            Tdiff_filter = load('FILTER/Tdiff_filt.mat');
+            Tdiff_H = interp1(Tdiff_filter.freq,Tdiff_filter.coef_filt ,f);
+            H.Tdiff=Tdiff_H;
+            H.FPO7=@(speed)(H.electFPO7.^2 .* H.magsq(speed) .* H.Tdiff.^2);
+        otherwise
+            H.FPO7=@(speed)(H.electFPO7.^2 .* H.magsq(speed));
+    end
 end
 
 

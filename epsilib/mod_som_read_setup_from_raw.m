@@ -60,7 +60,7 @@ module{nb_module}.index=initialize_flag_offset+4;
 while unpack
     module{nb_module}.size=conv32d(double(uint8(str(module{nb_module}.index+(0:3)))));
     module{nb_module}.str=str(module{nb_module}.index+(0:module{nb_module}.size-1));
-    if ((module{nb_module}.index+module{nb_module}.size)>=length(str))
+    if (length(str)-(module{nb_module}.index+module{nb_module}.size)<6)%TDO make it so I am sure length(str) == the end of the modules.
         unpack=false;
     else
         nb_module=nb_module+1;
@@ -69,7 +69,12 @@ while unpack
 end
 
 %% parse modules
-modules_headers=["CALENDAR","CAL","EFE","EFE3","EFE4","SBE","SBE49","SBE41","S49","S41","SB49","SB41","SDIO","VOLT","ALT","ALTI","VOL","VOLT"];
+modules_headers=["CALENDAR","CAL", ...
+                 "EFE","EFE3","EFE4", ...
+                 "SBE","SBE49","SBE41","S49","S41","SB49","SB41", ...
+                 "SDIO", ...
+                 "VOLT","VOL","VOLT" ...
+                 "ALT","ALTI",];
 
 for i=1:nb_module
     id_module=cellfun(@(x)(strfind(module{i}.str.',x)),modules_headers,'un',0);
@@ -448,7 +453,7 @@ switch sensor.name
     case 'ch7'
         sensor.name='a3';
 end
-sensor.sn   = str(offset+(3:5)).';
+sensor.sn   = str(offset+(4:6)).';
 offset=offset+2;
 sensor.cal   = typecast( uint8(str(offset+(6:9))) , 'single');
 sensor.register.COMMS         = dec2hex(uint8(str(offset+(10))));
