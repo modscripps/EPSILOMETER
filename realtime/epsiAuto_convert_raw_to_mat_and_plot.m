@@ -7,6 +7,9 @@
 
 str_to_match = '*EPSI_B_PC2_22_02_16_14*';
 %str_to_match = '*';
+% ~~~ Make sure Meta_Data_Process is pointing to the correct text file
+% (line 75)
+
 
 % Directories for Epsi:
 % rawdir is wehre the data are

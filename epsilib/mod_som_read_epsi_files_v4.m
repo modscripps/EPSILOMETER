@@ -266,6 +266,7 @@ else
     else
         % time_s - seconds since power on
         epsi.time_s = epsi_timestamp./1000;
+        epsi.dnum = nan.*epsi.time_s;
     end
 
     % Sort epsi fields
@@ -384,6 +385,9 @@ else
                         ctd.T(n_rec)      = str2double(data_split{2});
                         ctd.S(n_rec)      = str2double(data_split{3});
                         ctd.C(n_rec)      = NaN;
+                        else
+                            bad_SB41sample_flag=1;
+                        end
                     case 'eng'
                         ctd.T_raw(n_rec)  = hex2dec(rec_ctd(:,1:6));
                         ctd.C_raw(n_rec)  = hex2dec(rec_ctd(:,(1:6)+6));
