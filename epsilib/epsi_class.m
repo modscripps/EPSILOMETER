@@ -649,12 +649,15 @@ classdef epsi_class < handle
             %
             switch obj.Meta_Data.vehicle_name
                 case 'FISH'
+                    obj.Meta_Data.PROCESS.profile_dir = 'down';
                     datachoice = 'datadown';
                     idxchoice = 'down';
                 case {'WW','SEACYCLER'}
+                    obj.Meta_Data.PROCESS.profile_dir = 'up';
                     datachoice = 'dataup';
                     idxchoice = 'up';
                 otherwise
+                    obj.Meta_Data.PROCESS.profile_dir = 'down';
                     datachoice = 'datadown';
                     idxchoice = 'down';
             end

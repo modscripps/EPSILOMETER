@@ -204,7 +204,7 @@ for i=1:length(myASCIIfiles)
         
         % Update pressure timeseries
         if ~isempty(ctd) && isfield(ctd,'dnum')
-            epsiProcess_update_PressureTimeseries(MatDir,ctd)
+            epsiProcess_update_PressureTimeseries(MatDir,ctd,Meta_Data.PROCESS.profile_dir)
         end
         
         %%%%% Save files for FCTD Format %%%%%% (Bethan 20 June 2021)
@@ -363,7 +363,7 @@ for i=1:length(myASCIIfiles)
         
         % Update pressure timeseries
         if ~isempty(ctd) && isfield(ctd,'dnum')
-            epsiProcess_update_PressureTimeseries(MatDir,ctd)
+            epsiProcess_update_PressureTimeseries(MatDir,ctd,Meta_Data.PROCESS.profile_dir)
         end
         
         
