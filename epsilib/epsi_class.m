@@ -255,7 +255,7 @@ classdef epsi_class < handle
             if nargin>0 && ~isempty(varargin)
                 version_number = varargin{1};
             else
-                version_number = 3;
+                version_number = 4;
             end
 
             % Copy raw files from datapath to RAWpath

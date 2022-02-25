@@ -59,7 +59,7 @@ end
 rSync = true;
 doGrid = false;
 doFCTD = false;
-version = 3;
+version = 4;
 
 index = 1;
 n_items = nargin-2;
@@ -73,7 +73,7 @@ while (n_items > 0)
     if isempty(i)
         error('MATLAB:epsiProcess_convert_new_raw_to_mat:wrongOption','Incorrect option specified: %s', varargin{index});
     end
-    
+
     switch i
         case 1 % noSync
             rSync = false;
@@ -116,7 +116,7 @@ if rSync
     %     need it at this step of Epsi processing
     %        GridDir = [dirs{5}]; %Bethan 20 June 2021: Changed from dirs{4} to dirs{5} to account for FCTD
     %     end
-    
+
     % check for valid directories
     if ~exist(RawDirDuplicate,'dir')
         error('Cannot find remote dir: %s',RawDirDuplicate);
@@ -154,7 +154,7 @@ if rSync
         suffixSearch = strrep([str_to_match,suffixSearch],'**','*'); %If you ended up with side-by-side *, delete one
     end
     com = sprintf('/usr/bin/rsync -av  --include ''%s'' --exclude ''*'' %s %s',suffixSearch,RawDir,RawDirDuplicate);  %NC - rsync only the files ending in .raw
-    
+
     fprintf(1,'Running: %s\n',com);
     unix(com);
     fprintf(1,'Done\n');
@@ -165,20 +165,21 @@ myASCIIfiles = dir([RawDir, suffixSearch]);
 
 for i=1:length(myASCIIfiles)
     indSuffix = strfind(myASCIIfiles(i).name,suffixStr);
-    
+
     base = myASCIIfiles(i).name(1:indSuffix-1);
     myMATfile = dir([MatDir base '.mat']);
     if doFCTD
         myFCTDMATfile = dir([FCTDdir base '.mat']);
     end
-    
+
     % if the MAT files are older than the data files, they will be retranslated
     if (~isempty(myMATfile) && datenum(myASCIIfiles(i).date)>datenum(myMATfile.date))
         fprintf(1,'Retranslating %s%s\n',MatDir,myMATfile.name);
-        
+
         filename = fullfile(RawDir,myASCIIfiles(i).name);
-        [matData, epsi,ctd,alt,act,vnav,gps] = read_data_file(filename,Meta_Data,version);
-        
+        matData = read_data_file(filename,Meta_Data,version);
+        use matData
+
         %             % Display file size, time, pressure, altimeter
         %             try
         %                 disp('~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ')
@@ -191,8 +192,8 @@ for i=1:length(myASCIIfiles)
         %                 disp(['ALTIMETER: ' num2str(alt.dst(end))])
         %             catch
         %             end
-        
-        
+
+
         if ~isempty(epsi) && isfield(epsi,'time_s')
             save([MatDir  base '.mat'],'epsi','ctd','alt');
             epsiProcess_update_TimeIndex(MatDir,base,epsi);
@@ -201,24 +202,24 @@ for i=1:length(myASCIIfiles)
             save([MatDir  base '.mat'],'epsi','ctd','alt','vnav');
             epsiProcess_update_TimeIndex(MatDir,base,ctd);
         end
-        
+
         % Update pressure timeseries
         if ~isempty(ctd) && isfield(ctd,'dnum')
             epsiProcess_update_PressureTimeseries(MatDir,ctd,Meta_Data.PROCESS.profile_dir)
         end
-        
+
         %%%%% Save files for FCTD Format %%%%%% (Bethan 20 June 2021)
         if doFCTD
             time_offset = 0; % 2021 07 03 SAN added to correct for time for the current deployment
             if ~isempty(ctd) && isfield(ctd,'time_s')
                 %Create new structure FCTD with data from alt, ctd and epsi renamed to work with current FCTD processing
-                
+
                 % Get CTD data
                 FCTD.time=ctd.dnum+time_offset; %Currently just ctdtime (seconds since powered on - will need to change this once we have gps data)
                 FCTD.pressure=ctd.P;
                 FCTD.temperature=ctd.T;
                 FCTD.conductivity=ctd.C;
-                
+
                 % Get altimeter data
                 if ~isempty(alt) && isfield(alt,'alttime')
                     FCTD.altDist=interp1(alt.altdnum,alt.dst,ctd.dnum);
@@ -226,7 +227,7 @@ for i=1:length(myASCIIfiles)
                     FCTD.altTime=nan(length(ctd.dnum),1);
                     disp(['No alt data ' myASCIIfiles(i).name]);
                 end
-                
+
                 % Get microconductivity (this is saved in shear channel 2
                 % of epsi - needs to be interpolated onto the same time
                 % base (x20 to account for higher sampling rate) as the
@@ -242,8 +243,8 @@ for i=1:length(myASCIIfiles)
                     FCTD.uConductivity=nan(length(ctd.dnum),20);
                     disp(['No uConductivity data ' myASCIIfiles(i).name]);
                 end
-                
-                
+
+
                 % If we want the fluorometer to be outputted as well then
                 % that is saved in shear channel 1
                 % Currently saving in the same format as uCond but we may
@@ -256,9 +257,9 @@ for i=1:length(myASCIIfiles)
                     FCTD.fluorometer=nan(length(ctd.dnum),20);
                     disp(['No fluorometer data ' myASCIIfiles(i).name]);
                 end
-                
+
                 % Get VectorNav data
-                
+
                 % Add vnav.vnavdnum data, interpolate to CTD
                 if ~isempty(vnav) && isfield(vnav,'vnavtime')
                     for ix=1:3
@@ -271,9 +272,9 @@ for i=1:length(myASCIIfiles)
                     FCTD.acceleration=nan(length(ctd.dnum),3);
                     FCTD.compass=nan(length(ctd.dnum),3);
                 end
-                
+
                 %%%%%% ADD GPS WHEN WE HAVE THAT DATA %%%%%%%
-                
+
                 if ~isempty(vnav) && isfield(vnav,'vnavtime')
                     for ix=1:3
                         FCTD.compass(:,ix)=interp1(vnav.vnavdnum,vnav.compass(:,ix),ctd.dnum);
@@ -285,9 +286,9 @@ for i=1:length(myASCIIfiles)
                     FCTD.acceleration=nan(length(ctd.dnum),3);
                     FCTD.compass=nan(length(ctd.dnum),3);
                 end
-                
+
                 % Add GPS data
-                
+
                 if ~isempty(gps) && isfield(gps,'gpstime')
                     FCTD.GPS.longitude=interp1(gps.gpstime,gps.longitude,ctd.dnum);
                     FCTD.GPS.latitude=interp1(gps.gpstime,gps.latitude,ctd.dnum);
@@ -295,8 +296,8 @@ for i=1:length(myASCIIfiles)
                     FCTD.GPS.longitude=nan(length(ctd.dnum),1);
                     FCTD.GPS.latitude=nan(length(ctd.dnum),1);
                 end
-                
-                
+
+
                 % Save FCTD mat files to the new FCTD mat directory FCTDmat
                 save([FCTDdir  base '.mat'],'FCTD');
                 FastCTD_UpdateMATFileTimeIndex(FCTDdir,base,FCTD);
@@ -309,9 +310,9 @@ for i=1:length(myASCIIfiles)
                 %                 end
             end %end Bethan's addition for FCTD data
         end %end if doFCTD
-        
-        
-        
+
+
+
         %         catch err
         %             disp(['So... this is the error for retranlating file ' myASCIIfiles(i).name]);
         %             disp(err);
@@ -320,16 +321,16 @@ for i=1:length(myASCIIfiles)
         %             end
         %             error('There was an error. See stack above')
         %         end
-        
+
         % If the files are new then a new MAT file will be created
     elseif isempty(myMATfile)
         fprintf(1,'Translating %s%s\n',RawDir,myASCIIfiles(i).name);
-        
-        filename = fullfile(RawDir,myASCIIfiles(i).name);
-        [matData, epsi,ctd,alt,act,vnav,gps] = read_data_file(filename,Meta_Data,version);
-        
 
-        
+        filename = fullfile(RawDir,myASCIIfiles(i).name);
+        matData = read_data_file(filename,Meta_Data,version);
+        use matData
+
+
         %             % Display file size, time, pressure, altimeter
         %             try
         %                 disp('~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ')
@@ -342,10 +343,10 @@ for i=1:length(myASCIIfiles)
         %                 disp(['ALTIMETER: ' num2str(alt.dst(end))])
         %             catch
         %             end
-        
+
         % Save the data in a mat file with the same name as the raw file
 
-        %ALB I am change the if loop belowe so we always save in the .mat file 
+        %ALB I am change the if loop belowe so we always save in the .mat file
         %ALB all the structure inside matData
         %ALB I am keeping the timeseries updates
         save(fullfile(MatDir,[base '.mat']),'-struct','matData');
@@ -360,25 +361,25 @@ for i=1:length(myASCIIfiles)
             epsiProcess_update_TimeIndex(MatDir,base,ctd);
             %fprintf(1,'%s: Wrote  %s%s.mat\n\n',datestr(now,'YY.mm.dd HH:MM:SS'),MatDir,base);
         end
-        
+
         % Update pressure timeseries
         if ~isempty(ctd) && isfield(ctd,'dnum')
             epsiProcess_update_PressureTimeseries(MatDir,ctd,Meta_Data.PROCESS.profile_dir)
         end
-        
-        
+
+
         if doFCTD
             % Bethan's addition for FCTD data
             time_offset = 0; % 2021 07 03 SAN added to correct for time for the current deployment
             if ~isempty(ctd) && isfield(ctd,'time_s')
                 %Create new structure FCTD with data from alt, ctd and epsi renamed to work with current FCTD processing
-                
+
                 % Get CTD data
                 FCTD.time=ctd.dnum+time_offset;
                 FCTD.pressure=ctd.P;
                 FCTD.temperature=ctd.T;
                 FCTD.conductivity=ctd.C;
-                
+
                 % Get altimeter data
                 if ~isempty(alt) && isfield(alt,'time_s')
                     FCTD.altDist=interp1(alt.dnum,alt.dst,ctd.dnum);
@@ -386,7 +387,7 @@ for i=1:length(myASCIIfiles)
                     FCTD.altTime=nan(length(ctd.dnum),1);
                     disp(['No alt data ' myASCIIfiles(i).name]);
                 end
-                
+
                 % Get microconductivity (this is saved in shear channel 2
                 % of epsi - needs to be interpolated onto the same time
                 % base (x20 to account for higher sampling rate) as the
@@ -402,8 +403,8 @@ for i=1:length(myASCIIfiles)
                     FCTD.uConductivity=nan(length(ctd.dnum),20);
                     disp(['No uConductivity data ' myASCIIfiles(i).name]);
                 end
-                
-                
+
+
                 % If we want the fluorometer to be outputted as well then
                 % that is saved in shear channel 1
                 % Currently saving in the same format as uCond but we may
@@ -416,10 +417,10 @@ for i=1:length(myASCIIfiles)
                     FCTD.fluorometer=nan(length(ctd.dnum),20);
                     disp(['No fluorometer data ' myASCIIfiles(i).name]);
                 end
-                
+
                 % Get VectorNav data
-                
-                
+
+
                 %Bethan to do:
                 % Add vnav.vnavdnum data, interpolate to CTD
                 if ~isempty(vnav) && isfield(vnav,'time_s')
@@ -433,9 +434,9 @@ for i=1:length(myASCIIfiles)
                     FCTD.acceleration=nan(length(ctd.dnum),3);
                     FCTD.compass=nan(length(ctd.dnum),3);
                 end
-                
+
                 % Add GPS data
-                
+
                 if ~isempty(gps) && isfield(gps,'dnum')
                     FCTD.GPS.longitude=interp1(gps.dnum,gps.longitude,ctd.dnum);
                     FCTD.GPS.latitude=interp1(gps.dnum,gps.latitude,ctd.dnum);
@@ -443,8 +444,8 @@ for i=1:length(myASCIIfiles)
                     FCTD.GPS.longitude=nan(length(ctd.dnum),1);
                     FCTD.GPS.latitude=nan(length(ctd.dnum),1);
                 end
-                
-                
+
+
                 % Save FCTD mat files to the new FCTD mat directory FCTDmat
                 save([FCTDdir  base '.mat'],'FCTD');
                 FastCTD_UpdateMATFileTimeIndex(FCTDdir,base,FCTD);
@@ -455,10 +456,10 @@ for i=1:length(myASCIIfiles)
                 %                     epsiProcess_update_TimeIndex(GridDir,base,FCTD_GridData);
                 %                     fprintf(1,'%s: Wrote  %s%s.mat\n\n',datestr(now,'YY.mm.dd HH:MM:SS'),GridDir,base);
                 %                 end
-                
+
             end %end Bethan's addition for FCTD data
         end %end if doFCTD
-        
+
         %         catch err
         %             disp(['So... this is the error for tranlating file ' myASCIIfiles(i).name]);
         %             disp(err);
@@ -479,22 +480,12 @@ end
 % ------------------------------
 % ----- SUBFUNCTIONS -----------
 % ------------------------------
-function  [matData, epsi,ctd,alt,act,vnav,gps] = read_data_file(filename,Meta_Data,version)
+function  [matData] = read_data_file(filename,Meta_Data,version)
 
 switch version
     case 4
-        [epsi,ctd,alt,act,vnav,gps,seg,spec,avgspec,dissrate,apf] = mod_som_read_epsi_files_v4(filename,Meta_Data);
-        matData.epsi     = epsi;
-        matData.ctd      = ctd;
-        matData.alt      = alt;
-        matData.act      = act;
-        matData.vnav     = vnav;
-        matData.gps      = gps;
-        matData.seg      = seg;
-        matData.spec     = spec;
-        matData.avgspec  = avgspec;
-        matData.dissrate = dissrate;
-        matData.apf      = apf;
+        [matData] = mod_som_read_epsi_files_v4(filename,Meta_Data);
+        use matData
     case 3
         [epsi,ctd,alt,act,vnav,gps] = mod_som_read_epsi_files_v3(filename,Meta_Data);
         matData.epsi = epsi;
@@ -529,11 +520,11 @@ switch version
         alt = [];
         vnav = [];
         gps = [];
-        
+
         t0 = Meta_Data.starttime;
         epsi.time_s=epsi.EPSInbsample/Meta_Data.PROCESS.Fs_epsi;
         ctd.time_s=ctd.Aux1Stamp/Meta_Data.PROCESS.Fs_epsi;
-        
+
         if (t0==0)
         epsi.dnum = epsi.time;
         ctd.dnum = ctd.time;
@@ -541,7 +532,7 @@ switch version
         ctd.dnum = ctd.time_s/86400 +t0;
         epsi.dnum = epsi.time_s/86400 +t0;
         end
-        
+
         % Add extra ctd variables
         % Define a constant for salinity calculation
         c3515 = 42.914;
@@ -549,7 +540,7 @@ switch version
         ctd.th   = sw_ptmp(ctd.S,ctd.T,ctd.P,0);
         ctd.sgth  = sw_pden(ctd.S,ctd.T,ctd.P,0);
         ctd.dPdt = [0; diff(ctd.P)./diff(ctd.time_s)];
-        
+
         % NC 17 July 2021 - added ctd.z and ctd.dzdt.
         % get_scan_spectra.m will use dzdt to define fall speed w.
         if ~isfield(Meta_Data.PROCESS,'latitude')
@@ -560,7 +551,7 @@ switch version
             ctd.z    = sw_dpth(ctd.P,Meta_Data.PROCESS.latitude);
             ctd.dzdt = [0; diff(ctd.z)./diff(ctd.time_s)];
         end
-        
+
         matData.epsi = epsi;
         matData.ctd = ctd;
 end
