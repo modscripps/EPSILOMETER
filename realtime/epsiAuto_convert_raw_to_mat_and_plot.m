@@ -5,31 +5,20 @@
 % May 2021
 % -------------------------------------------------------------------------
 
+raw_file_suffix = '.raw';
 str_to_match = '*07_24*';
 %str_to_match = '*';
-% ~~~ Make sure Meta_Data_Process is pointing to the correct text file
-% (line 75)
-
 
 % Directories for Epsi:
-rawDir      = '/Volumes/Berry/epsi_raw/Copy_of_EPSI_RAW_0724/raw2';
+rawDir      = '/Volumes/GoogleDrive/Shared drives/MOD-data-Epsilometer/epsi/LJTC/cruise/BEYSTER02162022/data/epsi/d1/raw';
 awayDir     = '/Volumes/Berry/epsi_raw/Copy_of_EPSI_RAW_0724';
+
+meta_data_process_file = [];
+
+%% ------------------------------------------------------------------------
 rawDirAway  = fullfile(awayDir,'raw');
 matDir      = fullfile(awayDir,'mat');
 FCTDmatDir  = fullfile(awayDir,'FCTDmat');
-
-% % Directories for Epsi:
-% rawDir      = '/Volumes/FCTD_EPSI/RAW';
-% awayDir     = '/Volumes/MOD_data_1/FCTD_EPSI/FCTD_RAW_0721';
-% rawDirAway  = fullfile(awayDir,'raw');
-% matDir      = fullfile(awayDir,'mat');
-% FCTDmatDir  = fullfile(awayDir,'FCTDmat');
-
-% % Directories for FCTD dye chase:
-% rawDir      = '/Volumes/FCTD_EPSI/RAW_FCTD';
-% rawDirAway  = '/Volumes/MOD_data_1/FCTD_EPSI/RAW_0704/raw';
-% matDir      = '/Volumes/MOD_data_1/FCTD_EPSI/RAW_0704/mat';
-% FCTDmatDir  = '/Volumes/MOD_data_1/FCTD_EPSI/RAW_0704/FCTDmat';
 
 % Create directories if they don't exist
 if ~exist(rawDirAway,'dir')
@@ -55,18 +44,17 @@ cd ..
 % First, try reading configuration data from the
 % file. If that doesn't work, try reading from a
 % % configuration file. fg
-% try
-%     setupfile=dir(fullfile(rawDir,'*_raw*'));
-%     setup=mod_som_read_setup_from_raw(setupfile(1).name);
-% catch
 try
-    setupfile=dir(fullfile(awayDir,'*config*'));
-    setup=mod_som_read_setup_from_config(setupfile.name);
+    setupfile=dir(fullfile(rawDir,str_to_match,raw_file_suffix));
+    setup=mod_som_read_setup_from_raw(setupfile(1).name);
 catch
-    error('mod_som_read_setup failed')
+    try
+        setupfile=dir(fullfile(awayDir,'*config*'));
+        setup=mod_som_read_setup_from_config(setupfile.name);
+    catch
+        error('mod_som_read_setup failed')
+    end
 end
-%end
-
 
 % Initialize obj with structures big enough to load at least one Epsi .mat
 % file into (epsi, ctd, and alt strucutres)
@@ -75,9 +63,9 @@ obj.plot_properties = epsiSetup_set_plot_properties;
 % Create Meta_Data
 obj.Meta_Data = epsiSetup_fill_meta_data(setup);
 obj.Meta_Data = epsiSetup_read_MetaProcess(obj.Meta_Data,...
-    fullfile(obj.Meta_Data.processpath,'Meta_Data_Process','Meta_Data_Process_blt.txt'));
-obj.Meta_Data.rawfileSuffix = '.raw';
-obj.Meta_Data.MATpath = matDir;
+    fullfile(obj.Meta_Data.paths.process_library,'Meta_Data_Process','Meta_Data_Process_blt.txt'));
+obj.Meta_Data.rawfileSuffix = raw_file_suffix;
+obj.Meta_Data.paths.mat_data = matDir;
 
 % Choose a starting tMax value for getting new data
 tMax.epsi = now-14;
