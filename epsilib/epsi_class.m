@@ -81,7 +81,7 @@ classdef epsi_class < handle
                         ~isclassfield(obj.Meta_Data.paths,'raw_data')
 %                         obj.Meta_Data = set_epsi_paths(obj.Meta_Data);
 
-                        rmpath(genpath(fullfile(process_dir,'archived_scripts')))
+                        rmpath(genpath(fullfile(obj.Meta_Data.paths.process_library,'archived_scripts')))
                         % Find the epsi library and add it as process path
                         spltpath=strsplit(path,':');
                         epsilib_path=spltpath{~cellfun(@isempty, ...
