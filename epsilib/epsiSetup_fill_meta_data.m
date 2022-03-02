@@ -1,5 +1,5 @@
 function Meta_Data=fill_meta_data(setup)
-%% fill up the Meta_Data structure. 
+%% fill up the Meta_Data structure.
 %  It is used to process and organize epsi data.
 %  The user will all necessarry informations to understand the epsi data
 %  - electronics name, serial numbers, revision
@@ -7,13 +7,13 @@ function Meta_Data=fill_meta_data(setup)
 %  - information on the CTD
 %  - information on the epsi vehicle (epsifish, wirewalker, glider,...)
 %  - firmware revision
-%  
-%  TODO look at the TODO in this file. Most of them imply changes in the firmware. 
-% 
+%
+%  TODO look at the TODO in this file. Most of them imply changes in the firmware.
+%
 %  written by A. Le Boyer 10/22/2020
 
 
-% get setup field name. 
+% get setup field name.
 % used to fill up the Meta_Data fields
 setup_fields=fieldnames(setup);
 
@@ -33,6 +33,16 @@ Meta_Data.mission=setup.mission_name;
 Meta_Data.vehicle_name=setup.vehicle_name;
 Meta_Data.deployment=setup.SDIO.prefix_file;
 
+% Add profile direction based on vehicle name %NC 3/1/22
+switch obj.Meta_Data.vehicle_name
+    case 'FISH'
+        Meta_Data.PROCESS.profile_dir = 'down';
+    case {'WW','SEACYCLER'}
+        Meta_Data.PROCESS.profile_dir = 'up';
+    otherwise
+        Meta_Data.PROCESS.profile_dir = 'down';
+end
+
 %% get controler (CTL) name
 Controlernames={'SOM','MADRE','PERSISTOR'};% hard coded name of potential CONTROLER
 wh_CTL=cellfun(@(y) find(cellfun(@(x) strcmp(x,y),Controlernames)),setup_fields,'un',0);
@@ -45,7 +55,7 @@ Meta_Data.CTL.SN='000';      %TODO get info from config file
 
 %% get analog front end (AFE) name
 Analog_names={'EFE','MAP','FLUO'};% hard coded name of potential CONTROLER
-% find the kind of CTD we used from the setup file. 
+% find the kind of CTD we used from the setup file.
 wh_AFE=cellfun(@(y) find(cellfun(@(x) strcmp(x,y),Analog_names)),setup_fields,'un',0);
 wh_AFE=Analog_names{wh_AFE{~cellfun(@isempty,wh_AFE)}};
 
@@ -97,13 +107,13 @@ for i=1:Meta_Data.PROCESS.nb_channels
             Meta_Data.AFE.(wh_name).ADCconf='Bipolar';
             Meta_Data.AFE.temp_circuit='tdiff';
     end
-    
+
     switch setup.EFE.sensors{i}.register.FILTER_0
         case '6003C'
             Meta_Data.AFE.(wh_name).ADCfilter='sinc4';
             Meta_Data.AFE.FS=320;
     end
-    
+
 end
 
 Meta_Data.AFE.shear='CAmp1.0'; %TODO get info from config file
@@ -113,13 +123,13 @@ Meta_Data.Firmware.version='mod_som_som_eferev3_sdio_sampling_app_07152020.sls';
 %% add auxillary device field
 CTDnames={'SBE','SBE49','SBE41','SB41','RBR','S49','SB49'};% hard coded name of potential CTD we will use with epsi
 setup_fields=fieldnames(setup);
-% find the kind of CTD we used from the setup file. 
+% find the kind of CTD we used from the setup file.
 wh_CTD=cellfun(@(y) find(cellfun(@(x) strcmp(x,y),CTDnames)),setup_fields,'un',0);
 wh_CTD=CTDnames{wh_CTD{~cellfun(@isempty,wh_CTD)}};
 
 if isfield(setup,wh_CTD)
 Meta_Data.CTD.name = setup.(wh_CTD).header;
-%TODO add the serial number in the SBE49 setup file. Maybe I want to get that after a the ds cmd.  
+%TODO add the serial number in the SBE49 setup file. Maybe I want to get that after a the ds cmd.
 % Also use SBE in TPS and NOT engineer format.
 Meta_Data.CTD.SN   = num2str(str2double(setup.(wh_CTD).sn),'%04.0f');
 Meta_Data.CTD.sample_per_record   = setup.(wh_CTD).sample_data_per_record;
