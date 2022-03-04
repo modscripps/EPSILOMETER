@@ -251,6 +251,7 @@ classdef epsi_class < handle
         function obj=f_readData(obj,varargin)
             % MISOBOB - f_readData(0)
             % BLT     - f_readData
+            % APEX    - f_readData
 
             if nargin>0 && ~isempty(varargin)
                 version_number = varargin{1};
@@ -550,7 +551,7 @@ classdef epsi_class < handle
             %   [P11,f] = mod_som_calibrate_epsi_tMid(obj,tmid,tscan,makeFig);
             %
             % INPUTS
-            %   tmid = midpoint of scan (seconds),  
+            %   tmid = midpoint of scan (seconds),
             %   default:  tmid= time_s(end) - 10.
             %   tscan = length of scan (seconds)
             %   makeFig = (OPTIONAL, flag to plot figure [0/1], default=1)

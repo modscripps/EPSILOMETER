@@ -1,0 +1,48 @@
+function [] = data_streaming_simulator(file_dir_in,file_dir_out,varargin)
+
+% Simulate streaming epsi data by slowly copying the contents of one raw
+% file directory into a new one. This way, you can test realtime scripts on
+% old data sets without needing to have an epsi actively collecting data.
+%
+% Nicole Couto | February 2022
+% -------------------------------------------------------------------------
+
+if ~exist(file_dir_out,'dir')
+    eval([ '!mkdir ' strrep(file_dir_out,' ','\ ')]);
+end
+
+% Check for suffix. If nothing is specified, use all files
+if nargin<3
+    suffixSearch = '*.*';
+    suffixStr = '.';
+else
+    suffixStr = varargin{1};
+    suffixSearch = ['*',suffixSearch];
+end
+
+% List the ascii files in the directory
+myASCIIfiles = dir(fullfile(file_dir_in, suffixSearch));
+
+% Loop through files and copy contents into new files in a file_dir_out
+for idx=1:length(myASCIIfiles)
+
+    myMATfile = fullfile(file_dir_in,myASCIIfiles(idx).name);
+    fid = fopen(myMATfile);
+    
+    if fid>0
+        newMATfile = fullfile(file_dir_out,myASCIIfiles(idx).name);
+        new_fid = fopen(newMATfile,'wt');
+        % loop until end of file is reached
+        while ~feof(fid)
+            % read the current line
+            line = fgetl(fid);
+            % Save data in new file
+            fprintf(new_fid,'\n%s',line);
+        end
+        
+        % close the files
+        fclose(fid);
+        fclose(new_fid);
+    end
+
+end

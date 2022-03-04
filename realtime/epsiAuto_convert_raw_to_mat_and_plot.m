@@ -21,19 +21,6 @@ rawDirAway  = fullfile(awayDir,'raw');
 matDir      = fullfile(awayDir,'mat');
 FCTDmatDir  = fullfile(awayDir,'FCTDmat');
 
-% % Directories for Epsi:
-% rawDir      = '/Volumes/FCTD_EPSI/RAW';
-% awayDir     = '/Volumes/MOD_data_1/FCTD_EPSI/FCTD_RAW_0721';
-% rawDirAway  = fullfile(awayDir,'raw');
-% matDir      = fullfile(awayDir,'mat');
-% FCTDmatDir  = fullfile(awayDir,'FCTDmat');
-
-% % Directories for FCTD dye chase:
-% rawDir      = '/Volumes/FCTD_EPSI/RAW_FCTD';
-% rawDirAway  = '/Volumes/MOD_data_1/FCTD_EPSI/RAW_0704/raw';
-% matDir      = '/Volumes/MOD_data_1/FCTD_EPSI/RAW_0704/mat';
-% FCTDmatDir  = '/Volumes/MOD_data_1/FCTD_EPSI/RAW_0704/FCTDmat';
-
 % Create directories if they don't exist
 if ~exist(rawDirAway,'dir')
     eval([ '!mkdir ' strrep(rawDirAway,' ','\ ')]);
@@ -65,10 +52,15 @@ try
     setup=mod_som_read_setup_from_raw(fullfile(setupfile(1).folder,setupfile(1).name));
 catch
 try
-    setupfile=dir(fullfile(awayDir,'*config*'));
-    setup=mod_som_read_setup_from_config(setupfile.name);
+    setupfile=dir(fullfile(rawDir,str_to_match,raw_file_suffix));
+    setup=mod_som_read_setup_from_raw(setupfile(1).name);
 catch
-    error('mod_som_read_setup failed')
+    try
+        setupfile=dir(fullfile(awayDir,'*config*'));
+        setup=mod_som_read_setup_from_config(setupfile.name);
+    catch
+        error('mod_som_read_setup failed')
+    end
 end
 end
 
@@ -85,7 +77,7 @@ obj.plot_properties = epsiSetup_set_plot_properties;
 obj.Meta_Data = epsiSetup_fill_meta_data(setup);
 obj.Meta_Data = epsiSetup_read_MetaProcess(obj.Meta_Data,...
     fullfile(obj.Meta_Data.paths.process_library,'Meta_Data_Process','Meta_Data_Process_blt.txt'));
-obj.Meta_Data.rawfileSuffix = '.raw';
+obj.Meta_Data.rawfileSuffix = raw_file_suffix;
 obj.Meta_Data.paths.mat_data = matDir;
 
 % Choose a starting tMax value for getting new data

@@ -38,7 +38,7 @@ matData.seg  = [];
 matData.spec = [];
 
 % NC - Only rsync files with the desired suffix
-suffixStr = Meta_Data.rawfileSuffix; %ex. *.raw, *.ascii, etc
+suffixStr = Meta_Data.rawfileSuffix; %ex. .raw, .ascii, etc
 suffixSearch = ['*' suffixStr];
 
 % NC - make sure all dirs have a / at the end
