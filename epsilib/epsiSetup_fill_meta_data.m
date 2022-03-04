@@ -34,7 +34,7 @@ Meta_Data.vehicle_name=setup.vehicle_name;
 Meta_Data.deployment=setup.SDIO.prefix_file;
 
 % Add profile direction based on vehicle name %NC 3/1/22
-switch obj.Meta_Data.vehicle_name
+switch Meta_Data.vehicle_name
     case 'FISH'
         Meta_Data.PROCESS.profile_dir = 'down';
     case {'WW','SEACYCLER'}

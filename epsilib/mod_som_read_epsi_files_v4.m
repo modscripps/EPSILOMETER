@@ -45,9 +45,9 @@ frewind(fid);
 str = fread(fid,'*char')';
 fclose(fid);
 
-% To do: Add the other versions and a switch to choose between them later. For
-% now, use 'v3' only.
-efe_block_version = 'v3';
+% % To do: Add the other versions and a switch to choose between them later. For
+% % now, use 'v3' only.
+% efe_block_version = 'v3';
 
 
 %% Get indices and tokens for each data type you will process

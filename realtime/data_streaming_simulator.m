@@ -4,6 +4,13 @@ function [] = data_streaming_simulator(file_dir_in,file_dir_out,varargin)
 % file directory into a new one. This way, you can test realtime scripts on
 % old data sets without needing to have an epsi actively collecting data.
 %
+% INPUTS
+%   file_dir_in - input directory where existing raw epsi files live
+%   file_dir_out - output directory where you want to copy files simulating
+%                  data coming in
+%   suffixSearch (optional) - character string to look for in raw files
+%                             (only copy the files that contain that string)
+%
 % Nicole Couto | February 2022
 % -------------------------------------------------------------------------
 % Change these parameters to adjust how quickly data "streams" in. 
@@ -11,7 +18,7 @@ function [] = data_streaming_simulator(file_dir_in,file_dir_out,varargin)
 %   seconds_between_blocks: amount of time in seconds to pause before copying
 %                           the next block
 block_length = 100;
-seconds_between_blocks = 1;
+seconds_between_blocks = 0.1;
 
 if ~exist(file_dir_out,'dir')
     eval([ '!mkdir ' strrep(file_dir_out,' ','\ ')]);
@@ -46,13 +53,24 @@ for idx=1:length(myASCIIfiles)
         while ~feof(fid)
             % read the current line
             line = fgetl(fid);
+
             % Save data in new file
-            fprintf(new_fid,'\n%s',line);
+            % Check if data is binary by looking for $EFE tag
+            [ind_efe_start, ind_efe_stop]   = regexp(line,'\$EFE([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
+
+            % If data is non-binary, print it to the new file with fprintf
+            if isempty(ind_efe_start)
+                fprintf(new_fid,'%s\n',line);
+            % If data is binary, print it to the new file with fwrite
+            elseif ~isempty(ind_efe_start)
+                fwrite(new_fid,line,'uint64','ieee-be'); %'ieee-be' for big-endian because big number comes first
+            end
+
             line_count = line_count+1;
 
-            if mod(line_count,block_length)==0  
-                pause(seconds_between_blocks);
-            end
+%             if mod(line_count,block_length)==0  
+%                 pause(seconds_between_blocks);
+%             end
         end
         
         % close the files

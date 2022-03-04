@@ -5,18 +5,16 @@
 % May 2021
 % -------------------------------------------------------------------------
 
-str_to_match = '*EPSI_B_PC2_22_02_16_14*';
-%str_to_match = '*';
-% ~~~ Make sure Meta_Data_Process is pointing to the correct text file
-% (line 75)
+% % Directories for Epsi:
+% rawDir      = '/Users/Shared/FCTD_EPSI/RAW'; % rawdir is where the data are
+% awayDir     = '/Users/Shared/Beyster_fish2'; % awaydir is copy folder
+% 
+% str_to_match = '*EPSI_B_PC2_22_02_16_14*';
+% Meta_Data_Process_file = fullfile(obj.Meta_Data.paths.process_library,...
+%     'Meta_Data_Process','Meta_Data_Process_blt.txt');
+% refresh_time_sec = 5;
 
-
-% Directories for Epsi:
-% rawdir is wehre the data are
-rawDir      = '/Users/Shared/FCTD_EPSI/RAW';
-% awaydir is copy folder
-awayDir     = '/Users/Shared/Beyster_fish2';
-
+% -------------------------------------------------------------------------
 rawDirAway  = fullfile(awayDir,'raw');
 matDir      = fullfile(awayDir,'mat');
 FCTDmatDir  = fullfile(awayDir,'FCTDmat');
@@ -75,8 +73,7 @@ obj = epsiSetup_make_empty_structure;
 obj.plot_properties = epsiSetup_set_plot_properties;
 % Create Meta_Data
 obj.Meta_Data = epsiSetup_fill_meta_data(setup);
-obj.Meta_Data = epsiSetup_read_MetaProcess(obj.Meta_Data,...
-    fullfile(obj.Meta_Data.paths.process_library,'Meta_Data_Process','Meta_Data_Process_blt.txt'));
+obj.Meta_Data = epsiSetup_read_MetaProcess(obj.Meta_Data,Meta_Data_Process_file);
 obj.Meta_Data.rawfileSuffix = raw_file_suffix;
 obj.Meta_Data.paths.mat_data = matDir;
 
@@ -118,7 +115,7 @@ EpsiConvert_timer.TimerFcn = [...
     ...%'unix(sprintf(''/usr/bin/rsync -av %s %s'',jpgDir,jpgDirAway)); '...
     ...%'unix(sprintf(''/usr/bin/rsync -av %s %s'',pngDir,pngDirAway)); '...
     'end;'];
-EpsiConvert_timer.Period = 5;
+EpsiConvert_timer.Period = refresh_time_sec;
 EpsiConvert_timer.BusyMode = 'drop';
 EpsiConvert_timer.Name = 'EpsiConvert_timer';
 EpsiConvert_timer.Tag = 'EpsiConvert_timer';
