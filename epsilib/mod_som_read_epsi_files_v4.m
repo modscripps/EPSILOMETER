@@ -63,7 +63,6 @@ end
 [ind_act_start,ind_act_stop]    = regexp(str,'\$ACTU([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
 [ind_vnav_start,ind_vnav_stop]  = regexp(str,'\$VNMAR([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
 [ind_gps_start, ind_gps_stop]   = regexp(str,'\$GPGGA([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
-
 [ind_seg_start, ind_seg_stop]           = regexp(str,'\$SEGM([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
 [ind_spec_start, ind_spec_stop]         = regexp(str,'\$SPEC([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
 [ind_avgspec_start, ind_avgspec_stop]   = regexp(str,'\$AVGS([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
@@ -71,7 +70,6 @@ end
 [ind_apf0_start, ind_apf0_stop]           = regexp(str,'\$APF0([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
 [ind_apf1_start, ind_apf1_stop]           = regexp(str,'\$APF1([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
 [ind_apf2_start, ind_apf2_stop]           = regexp(str,'\$APF2([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
-
 
 
 %% Define the header tag format
@@ -198,12 +196,11 @@ else
         end %end if efe data block is the correct size
     end %end loop through efe blocks
 
+
     % Clean and concatenate efe.data.raw_bytes
     % Check for empty raw_bytes cells and concatenate only the full ones
     idnull=cellfun(@isempty,efe.data.raw_bytes);
     efe.data.raw_bytes=cell2mat(efe.data.raw_bytes(~idnull).');
-
-
 
     % The first 8 bytes are the timestamp. Timestamp in milliseconds since
     % 1970 is too big for uint32, so use uint64
@@ -292,7 +289,8 @@ else
     switch Meta_Data.CTD.name
         case{"SBE49","SBE","S49","SB49"}
             sbe.data.format      = 'eng';
-            sbe.data.length      = 22;
+            %sbe.data.length      = 22;
+            sbe.data.length      = 24; %It's 24 for BLT data
             sbe.data.sample_freq = 16;
             sbe.cal              = Meta_Data.CTD.cal;
         case{"SBE41","S41","SB41"}

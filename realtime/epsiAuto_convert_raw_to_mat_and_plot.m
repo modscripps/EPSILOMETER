@@ -56,7 +56,10 @@ catch
     try
         setupfile=dir(fullfile(awayDir,'*config*'));
         setup=mod_som_read_setup_from_config(setupfile.name);
-    catch
+    catch err
+        for ii=1:length(err.stack)
+            disp(['error in ' err.stack(ii).name ' - line ' num2str(err.stack(ii).line)])
+        end
         error('mod_som_read_setup failed')
     end
 end

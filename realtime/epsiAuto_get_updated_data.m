@@ -125,7 +125,6 @@ else
             end
             
             % Now add the new data
-            trStop=1
             obj.ctd.(ctdFields{iField})(lastIdx+1:lastIdx+nNewCtd) = data.ctd.(ctdFields{iField})(idxNewCtd);
         end
     end

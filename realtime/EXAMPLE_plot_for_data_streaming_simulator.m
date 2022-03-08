@@ -1,3 +1,6 @@
+addpath(genpath('~/GitHub/EPSILOMETER'))
+rmpath(genpath('~/GitHub/EPSILOMETER/archived_scripts'))
+
 rawDir = '/Users/ncouto/Desktop/reprocess_blt_21_0708/RAW';
 awayDir = '/Users/ncouto/Desktop/reprocess_blt_21_0708/deployment/'; %Make sure there's a config file in here if you need one
 str_to_match = '*';
