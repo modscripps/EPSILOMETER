@@ -28,11 +28,11 @@ end
 % % Pick out profile drops from CTD pressure timeseries
 % obj.f_getProfileIndices;
 if Profile.Meta_Data.AFE.t1.cal==0 && Profile.Meta_Data.AFE.t2.cal==0
-    warning(sprintf(['\n !!!!!!!!! \n'...
-                    'The calibration value (dTdV) for both temperature probes is 0.\n',...
-                    'Run ec.f_calibrateTemperature or process_calibrate_dTdV.m before continuing.\n'...
-                    ' !!!!!!!!! \n',...
-                    'Hit any key to continue or ctrl-C to stop processing.']))
+    warning(sprintf(' !!!!!!!!! \n'...
+        'The calibration value (dTdV) for both temperature probes is 0.');
+    warning('Run ec.f_calibrateTemperature or process_calibrate_dTdV.m before continuing.');
+    warning(' !!!!!!!!! ')
+    warning('Hit any key to continue or ctrl-C to stop processing.')
     pause
 end
 

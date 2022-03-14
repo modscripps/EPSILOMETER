@@ -65,21 +65,21 @@ classdef epsi_class < handle
                     % directory
                     obj.Meta_Data.paths.data=pwd;
 
-%                     spltpath=strsplit(path,':');
-%                     archived_path=spltpath{~cellfun(@isempty, ...
-%                         cellfun(@(x) ...
-%                         strfind(x,'archived_scripts'),spltpath, ...
-%                         'UniformOutput',false))};
-%                     if ~isempty(archived_path)
-%                         rmpath(archived_path);
-%                     end
-    % Find the epsi library and add it as process path
+                    %                     spltpath=strsplit(path,':');
+                    %                     archived_path=spltpath{~cellfun(@isempty, ...
+                    %                         cellfun(@(x) ...
+                    %                         strfind(x,'archived_scripts'),spltpath, ...
+                    %                         'UniformOutput',false))};
+                    %                     if ~isempty(archived_path)
+                    %                         rmpath(archived_path);
+                    %                     end
+                    % Find the epsi library and add it as process path
 
                     if  ~isdir(obj.Meta_Data.paths.process_library) || ...
-                        ~isdir(obj.Meta_Data.paths.data) || ...
-                        ~isdir(obj.Meta_Data.paths.calibration) || ...
-                        ~isclassfield(obj.Meta_Data.paths,'raw_data')
-%                         obj.Meta_Data = set_epsi_paths(obj.Meta_Data);
+                            ~isdir(obj.Meta_Data.paths.data) || ...
+                            ~isdir(obj.Meta_Data.paths.calibration) || ...
+                            ~isclassfield(obj.Meta_Data.paths,'raw_data')
+                        %                         obj.Meta_Data = set_epsi_paths(obj.Meta_Data);
 
                         rmpath(genpath(fullfile(obj.Meta_Data.paths.process_library,'archived_scripts')))
                         % Find the epsi library and add it as process path
@@ -135,15 +135,23 @@ classdef epsi_class < handle
                             obj.Meta_Data = create_metadata_from_deployment_log_v2(dir_has_log.name);
                             obj.Meta_Data.AFE=obj.Meta_Data.epsi;
                         catch err
-                            error('Failed to find config data (1)')
+                          
+                            for j = 1:length(err.stack)
+                                disp([num2str(j) ' ' err.stack(j).name ' ' num2str(err.stack(j).line)]);
+                            end
+                              error('Failed to find config data (1)')
                         end
 
                     elseif ~isempty(dir_has_config) %if there is a config file...
 
                         try
                             setup=mod_som_read_setup_from_config(dir_has_config.name);
-                        catch
+                        catch err
+                            for j = 1:length(err.stack)
+                                disp([num2str(j) ' ' err.stack(j).name ' ' num2str(err.stack(j).line)]);
+                            end
                             error('Failed to find config data (2)')
+                            
                         end
                         % Fill Meta Data from setup data
                         try
@@ -151,7 +159,11 @@ classdef epsi_class < handle
 
                             fprintf('Meta_Data.paths.process_library is %s \n',obj.Meta_Data.paths.process_library);
                             fprintf('Meta_Data.paths.data is %s \n',obj.Meta_Data.paths.data);
-                        catch
+                        catch err
+                            
+                            for j = 1:length(err.stack)
+                                disp([num2str(j) ' ' err.stack(j).name ' ' num2str(err.stack(j).line)]);
+                            end
                             error('fill_meta_data failed (2)')
                         end
 
@@ -163,7 +175,10 @@ classdef epsi_class < handle
                             setupfile=dir(fullfile(obj.Meta_Data.paths.raw_data,...
                                 ['*' obj.Meta_Data.rawfileSuffix]));
                             setup=mod_som_read_setup_from_raw(fullfile(setupfile(1).folder,setupfile(1).name));
-                        catch
+                        catch err  
+                            for j = 1:length(err.stack)
+                                disp([num2str(j) ' ' err.stack(j).name ' ' num2str(err.stack(j).line)]);
+                            end
                             error('Failed to find config data (3)')
                         end
                         % Fill Meta Data from setup data
@@ -172,7 +187,10 @@ classdef epsi_class < handle
 
                             fprintf('Meta_Data.paths.process_library is %s \n',obj.Meta_Data.paths.process_library);
                             fprintf('Meta_Data.paths.data is %s \n',obj.Meta_Data.paths.data);
-                        catch
+                        catch err
+                            for j = 1:length(err.stack)
+                                disp([num2str(j) ' ' err.stack(j).name ' ' num2str(err.stack(j).line)]);
+                            end
                             error('fill_meta_data failed (3)')
                         end
 
@@ -736,7 +754,7 @@ classdef epsi_class < handle
             end
             Meta_Data = obj.Meta_Data;
             if ~process_all_profiles
-            obj = mod_epsilometer_calc_turbulence_v2(Meta_Data,Profile_or_profNum,saveData);
+                obj = mod_epsilometer_calc_turbulence_v2(Meta_Data,Profile_or_profNum,saveData);
             elseif process_all_profiles
                 profile_list = dir(fullfile(Meta_Data.paths.profiles,'Profile*.mat'));
                 for p=1:length(profile_list)
