@@ -33,7 +33,7 @@ if isfinite(scan.(shear_channel))
         Sv = Meta_Data.AFE.(shear_channel(1:2)).cal;
     else
         try
-        Sv = Meta_Data.epsi.(shear_channel(1:2)).Sv;
+            Sv = Meta_Data.epsi.(shear_channel(1:2)).Sv;
         catch
             Sv = Meta_Data.epsi.(shear_channel(1:2)).cal;
         end

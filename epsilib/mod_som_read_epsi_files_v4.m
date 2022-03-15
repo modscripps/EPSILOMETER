@@ -1009,7 +1009,7 @@ else
     % Pre-allocate space for data
     dissrate.data.n_blocks           = numel(ind_dissrate_start); %Number of data blocks beginning with $EFE
 
-    dissrate.channels         = {'pressure','temperature','salinity','chi','epsilon','nu','kappa'};
+    dissrate.channels         = {'pressure','temperature','salinity','dpdt','chi','epsilon','nu','kappa'};
     dissrate.data.n_channels         = length(dissrate.channels);
     dissrate.data.dissrate_per_block = 1;
     dissrate.data.timestamp_length   = 8;
@@ -1094,7 +1094,7 @@ else
 
     % Sort epsi fields
     dissrate = orderfields(dissrate,{'dnum','time_s','pressure','temperature', ...
-        'salinity','chi','epsilon','nu','kappa',...
+        'salinity','dpdt','chi','epsilon','nu','kappa',...
         'data','channels','checksum'});
 
 end %end spec
