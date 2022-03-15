@@ -343,11 +343,11 @@ Profile.Cs2a3_full = Profile.Cs2a3_full(:).';
 
 %% Define varInfo and sort Profile fields
 Profile = add_varInfo(Profile);
-% try
-%     Profile = sort_profile(Profile);
-% catch
-%     warning('Update sort_profile.m with the correct variable names');
-% end
+try
+    Profile = sort_profile(Profile);
+catch
+    warning('Update sort_profile.m with the correct variable names');
+end
 
 % Save files
 if saveData && isfield(Profile,'profNum')
