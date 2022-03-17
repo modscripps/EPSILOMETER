@@ -968,8 +968,8 @@ else
         end %end if efe data block is the correct size
     end %end loop through efe blocks
 
-    [~,fe]=pwelch(1.*(1:2048),2048,[], ...
-        2048,320);
+    [~,fe]=pwelch(1.*(1:Meta_Data.PROCESS.nfft),Meta_Data.PROCESS.nfft,[], ...
+        Meta_Data.PROCESS.nfft,Meta_Data.AFE.FS);
     avgspec.freq=fe(2:end);
 
 
@@ -1009,7 +1009,7 @@ else
     % Pre-allocate space for data
     dissrate.data.n_blocks           = numel(ind_dissrate_start); %Number of data blocks beginning with $EFE
 
-    dissrate.channels         = {'pressure','temperature','salinity','dpdt','chi','epsilon','nu','kappa'};
+    dissrate.channels         = {'pressure','temperature','salinity','dpdt','chi','chi_fom','epsilon','epsi_fom','nu','kappa'};
     dissrate.data.n_channels         = length(dissrate.channels);
     dissrate.data.dissrate_per_block = 1;
     dissrate.data.timestamp_length   = 8;
@@ -1094,7 +1094,7 @@ else
 
     % Sort epsi fields
     dissrate = orderfields(dissrate,{'dnum','time_s','pressure','temperature', ...
-        'salinity','dpdt','chi','epsilon','nu','kappa',...
+        'salinity','dpdt','chi','chi_fom','epsilon','epsi_fom','nu','kappa',...
         'data','channels','checksum'});
 
 end %end spec
