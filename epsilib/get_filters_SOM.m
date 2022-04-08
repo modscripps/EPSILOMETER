@@ -42,11 +42,11 @@ epsi_ca   = interp1(ca_filter.freq,ca_filter.coef_filt ,f);
 %gain_ca   = -(max(20*log10(epsi_ca))+2.5); %TODO set a coef to get a -2.5dB TF as a first approx. I might get fancier by getting probe Cap
 %gain_ca   = -(max(20*log10(epsi_ca))-2.5); %try with a 0 dB gain.
 gain_ca   = 1; %try with a 0 dB gain.
-H.electshear= epsi_ca*gain_ca;% 
+H.electshear= epsi_ca.*gain_ca;% 
 %H.electshear= epsi_ca*10.^(gain_ca/20);% 
 H.gainshear=1;
 H.adcshear=H.gainshear.* Hs1filter;
-H.shear=(1./H.electshear .* H.adcshear).^2;
+H.shear=(H.electshear .* H.adcshear).^2;
 
 %% FPO7 channels
 

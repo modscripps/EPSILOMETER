@@ -82,7 +82,7 @@ if kc2>kmax
 	kc2=kmax; % limit set by noise spectrum
 end
 krange=find(k>=2 & k<=kc2);
-eps2=7.5*kvis*nansum(Psheark(krange))*dk/.9; % .9 we want to get 90% of the shear variance
+eps2=7.5*kvis*nansum(Psheark(krange))*dk; % .9 we want to get 90% of the shear variance
 
 % third estimate: same as before.
 kc=0.0816*( eps2 / kvis^3 )^(1/4);

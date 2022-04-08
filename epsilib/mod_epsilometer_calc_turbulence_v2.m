@@ -247,9 +247,9 @@ Profile.Pt_Tg_k.t2 = nan(nbscan,length(f));
 Profile.Pa_g_f.a1 = nan(nbscan,length(f));
 Profile.Pa_g_f.a2 = nan(nbscan,length(f));
 Profile.Pa_g_f.a3 = nan(nbscan,length(f));
-Profile.Pa_sh_k.a1 = nan(nbscan, length(f));
-Profile.Pa_sh_k.a2 = nan(nbscan, length(f));
-Profile.Pa_sh_k.a3 = nan(nbscan, length(f));
+% Profile.Pa_sh_k.a1 = nan(nbscan, length(f));
+% Profile.Pa_sh_k.a2 = nan(nbscan, length(f));
+% Profile.Pa_sh_k.a3 = nan(nbscan, length(f));
 
 
 Profile.Meta_Data = Meta_Data;
@@ -326,9 +326,9 @@ for p = 1:nbscan % p is the scan index.
         Profile.Pa_g_f.a1(p,:) = scan.Pa_g_f.a1(:).';
         Profile.Pa_g_f.a2(p,:) = scan.Pa_g_f.a2(:).';
         Profile.Pa_g_f.a3(p,:) = scan.Pa_g_f.a3(:).';
-        Profile.Pa_sh_k.a1(p, :) = scan.Pa_g_f.a1(:).'./(abs(scan.w)*9.81^2);;
-        Profile.Pa_sh_k.a2(p, :) = scan.Pa_g_f.a2(:).'./(abs(scan.w)*9.81^2);;
-        Profile.Pa_sh_k.a3(p, :) = scan.Pa_g_f.a3(:).'./(abs(scan.w)*9.81^2);;
+%         Profile.Pa_sh_k.a1(p, :) = scan.Pa_g_f.a1(:).'./(abs(scan.w)*9.81^2);;
+%         Profile.Pa_sh_k.a2(p, :) = scan.Pa_g_f.a2(:).'./(abs(scan.w)*9.81^2);;
+%         Profile.Pa_sh_k.a3(p, :) = scan.Pa_g_f.a3(:).'./(abs(scan.w)*9.81^2);;
 
         
         Profile.z(p)    = scan.z;
