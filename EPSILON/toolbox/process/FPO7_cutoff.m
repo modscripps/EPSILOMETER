@@ -40,9 +40,12 @@ noise=n0+n1.*logf+n2.*logf.^2+n3.*logf.^3;
 %medspec=medfilt1(spec,5); % 5th order median filter
 %ALB
 medspec=smoothdata(spec,'movmean',15);
+% ALB really want to adjust the noise level to the high freqeuncy part (freq> 110Hz) of
+% the in-situ spectrum. The 110 Hz limit is arbitrary and means that 
+% I am overlapping the noise and data spectrum between 110 and 160 Hz. 
 indsup110=find(f>110);
-% adjust_spec=nanmean(medspec(indsup110)./10.^(noise(indsup110)));
-adjust_spec=1;
+adjust_spec=nanmedian(medspec(indsup110)./10.^(noise(indsup110)));
+% adjust_spec=1;
 if adjust_spec>10
     warning('temp noise way higher than bench')
 end

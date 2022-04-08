@@ -50,6 +50,7 @@ Profile.varInfo.f = {'frequency','Hz'};
 Profile.varInfo.k = {'wavenumber','cycles m^-^1'};
 Profile.varInfo.Pa_g_f = {'accleration frequency power spectrum', '[g]^2 Hz^{-1}'};
 Profile.varInfo.Ps_volt_f = {'shear frequency power spectrum', 'Volts^2 Hz^{-1}'};
+Profile.varInfo.Ps_velocity_f = {'Velocity frequency power spectrum', 'm^2 s^{-2} Hz^{-1}'};
 Profile.varInfo.Ps_shear_k = {'shear wavenumber power spectrum', 's{-1} cpm^{-1}'};
 Profile.varInfo.Ps_shear_co_k = {'coherence-corrected shear frequency power spectrum (full profile coherence with a3 channel has been removed)', ''};
 Profile.varInfo.Pt_volt_f = {'temperature frequency power spectrum','Volts^2 Hz{-1}'};

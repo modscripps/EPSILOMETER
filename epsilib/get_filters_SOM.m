@@ -46,7 +46,7 @@ H.electshear= epsi_ca*gain_ca;%
 %H.electshear= epsi_ca*10.^(gain_ca/20);% 
 H.gainshear=1;
 H.adcshear=H.gainshear.* Hs1filter;
-H.shear=(1./H.electshear .* H.adcshear).^2;
+H.shear=(H.electshear .* H.adcshear).^2;
 
 %% FPO7 channels
 

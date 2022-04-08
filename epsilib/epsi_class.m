@@ -378,8 +378,8 @@ classdef epsi_class < handle
                 data2.alt = obj.f_getFileAlt(fileName);
 
                 data.epsi = epsiProcess_merge_mat_files(data.epsi,data2.epsi);
-                data.ctd = epsiProcess_merge_mat_files(data.ctd,data2.ctd);
-                data.alt = epsiProcess_merge_mat_files(data.alt,data2.alt);
+                data.ctd  = epsiProcess_merge_mat_files(data.ctd,data2.ctd);
+                data.alt  = epsiProcess_merge_mat_files(data.alt,data2.alt);
             end
 
             obj.epsi = data.epsi;

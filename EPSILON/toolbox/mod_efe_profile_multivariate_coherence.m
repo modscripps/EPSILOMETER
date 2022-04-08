@@ -34,7 +34,6 @@ Coh_s1a=zeros(numel(Pr),nfft/2+1);
 Coh_s2a=zeros(numel(Pr),nfft/2+1);
 N_epsi      = (dof_coh-1)*Meta_Data.PROCESS.nfft;
 
-
 for p=1:numel(Pr)
     fprintf("Multivariate Pr=%3.1f, Pr(end)=%3.1f \r\n",Pr(p),Pr(end))
     % Find indices of ctd and epsi data that make up this scan
@@ -54,69 +53,83 @@ for p=1:numel(Pr)
     Csi=zeros(nb_accel_channel,nfft/2+1);
     Csj=zeros(nb_accel_channel,nfft/2+1);
     Aij=zeros(nb_accel_channel,nb_accel_channel,nfft/2+1);
-    MC=zeros(nb_accel_channel,nb_accel_channel,nfft/2+1);
+    MC=zeros(nb_accel_channel,nfft/2+1);
     
     df=Fs./nfft;
     if isfinite(Profile.s1_volt)
         for i=1:nb_accel_channel% nb of accel channel
             wh_accel_i=list_accel{i};
-            accel_i=detrend(Profile.(wh_accel_i)(ind_scan));
-            Csi(i,:)=cpsd(detrend(Profile.s1_volt(ind_scan)), accel_i,...
+            det_accel_i=detrend(Profile.(wh_accel_i)(ind_scan));
+            Csi(i,:)=cpsd(detrend(Profile.s1_volt(ind_scan)), det_accel_i, ...
                 nfft,[],nfft,Fs);
+            Csj(i,:)=cpsd(det_accel_i,detrend(Profile.s1_volt(ind_scan)),  ...
+                    nfft,[],nfft,Fs);
             
             for j=1:nb_accel_channel %nb of accel channel
                 wh_accel_j=list_accel{j};
-                accel_j=detrend(Profile.(wh_accel_j)(ind_scan));
+                det_accel_j=detrend(Profile.(wh_accel_j)(ind_scan));
                 
-                Csj(j,:)=cpsd(detrend(Profile.s1_volt(ind_scan)), accel_j,...
+                
+                Aij(i,j,:)=cpsd(det_accel_i,det_accel_j, ...
                     nfft,[],nfft,Fs);
-                
-                Aij(i,j,:)=cpsd(accel_i,accel_j, ...
-                    nfft,[],nfft,Fs);
-                
-                MC(i,j,:)=Csi(i,:).*conj(Csj(j,:))./ ...
-                    squeeze(Aij(i,j,:)).';
+            end
+        end
+        
+        for i=1:nb_accel_channel% nb of accel channel
+            for j=1:nb_accel_channel
+                MC(i,:)=MC(i,:)+Csi(j,:)./ squeeze(Aij(j,i,:)).'.*conj(Csj(j,:));
             end
         end
         % sum the MC (Mutlivariate Coeficients to get the correction)
         % Not sure about the df. It is in the Goodman2006 paper but I have a
         % doubt wether it is already included in the output of cpsd.
         % With the df It seems to do a good job in the correction.
-%         Coh_s1a(p,:)=squeeze(nansum(nansum(MC,1),2))*df;
-        Coh_s1a(p,:)=abs(squeeze(MC(3,3,:)+MC(2,2,:)+MC(1,1,:)));
+        Coh_s1a(p,:)=squeeze(nansum(MC))*df;
     end
     
     if isfinite(Profile.s2_volt)
+        
+        Csi=zeros(nb_accel_channel,nfft/2+1);
+        Csj=zeros(nb_accel_channel,nfft/2+1);
+        Aij=zeros(nb_accel_channel,nb_accel_channel,nfft/2+1);
+        MC=zeros(nb_accel_channel,nfft/2+1);
+
         for i=1:nb_accel_channel% nb of accel channel
             wh_accel_i=list_accel{i};
-            accel_i=detrend(Profile.(wh_accel_i)(ind_scan));
-            Csi(i,:)=cpsd(detrend(Profile.s2_volt(ind_scan)), accel_i,...
+            det_accel_i=detrend(Profile.(wh_accel_i)(ind_scan));
+            Csi(i,:)=cpsd(detrend(Profile.s2_volt(ind_scan)), det_accel_i,...
+                nfft,[],nfft,Fs);
+            Csj(i,:)=cpsd(det_accel_i,detrend(Profile.s2_volt(ind_scan)),  ...
                 nfft,[],nfft,Fs);
             
             for j=1:nb_accel_channel %nb of accel channel
                 wh_accel_j=list_accel{i};
-                accel_j=detrend(Profile.(wh_accel_j)(ind_scan));
+                det_accel_j=detrend(Profile.(wh_accel_j)(ind_scan));
                 
-                Csj(j,:)=cpsd(detrend(Profile.s2_volt(ind_scan)), accel_j,...
+                Aij(i,j,:)=cpsd(det_accel_i,det_accel_j, ...
                     nfft,[],nfft,Fs);
-                
-                Aij(i,j,:)=cpsd(accel_i,accel_j, ...
-                    nfft,[],nfft,Fs);
-                
-                MC(i,j,:)=Csi(i,:).*conj(Csj(j,:))./ ...
-                    squeeze(Aij(i,j,:)).';
-                
             end
         end
+        for i=1:nb_accel_channel% nb of accel channel
+            for j=1:nb_accel_channel
+                MC(i,:)=MC(i,:)+Csi(j,:)./ squeeze(Aij(j,i,:)).'.*conj(Csj(j,:));
+            end
+        end
+        
         % sum the MC (Mutlivariate Coeficients to get the correction)
         % Not sure about the df. It is in the Goodman2006 paper but I have a
         % doubt wether it is already included in the output of cpsd.
         % With the df It seems to do a good job in the correction.
-%         Coh_s2a(p,:)=squeeze(nansum(nansum(MC,1),2))*df;
-%         Coh_s2a(p,:)=squeeze(nanmean(nanmean(MC,1),2));
-        Coh_s2a(p,:)=abs(squeeze(MC(3,3,:)+MC(2,2,:)+MC(1,1,:)));
+        Coh_s2a(p,:)=squeeze(nansum(MC))*df;
 
     end
+%     check_multivariate
 end
+
+%ALB following the SCOR group recommendation average 20 scan
+dof_coherence=20;
+Coh_s2a=abs(smoothdata(Coh_s2a,'movmedian',dof_coherence));
+Coh_s1a=abs(smoothdata(Coh_s1a,'movmedian',dof_coherence));
+
 
 disp("multivariate done.")

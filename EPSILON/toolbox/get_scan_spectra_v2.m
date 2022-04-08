@@ -32,21 +32,17 @@ Meta_Data   = Profile.Meta_Data;
 Pr          = Profile.pr(id_scan);
 
 fpump       = Meta_Data.PROCESS.ctd_fc;
-tscan       = Meta_Data.PROCESS.tscan;
 try
     Fs_epsi = Meta_Data.PROCESS.Fs_epsi;
 catch
     Fs_epsi = Meta_Data.AFE.FS;
 end
-dof         = 3; % ALB TODO rm tscan in metadata and put dof
+
+dof         = Meta_Data.PROCESS.dof; % ALB TODO rm tscan in metadata and put dof
 Fs_ctd      = Meta_Data.PROCESS.Fs_ctd;
 N_epsi      = (dof-1)*Meta_Data.PROCESS.nfft;
 tscan       = N_epsi/Fs_epsi;
 N_ctd       = tscan.*Fs_ctd-mod(tscan*Fs_ctd,2);
-
-% N_epsi      = tscan.*Fs_epsi-mod(tscan*Fs_epsi,2);
-% N_ctd       = tscan.*Fs_ctd-mod(tscan*Fs_ctd,2);
-% dof         = 2*N_epsi/Meta_Data.PROCESS.nfft-1;
 
 h_freq      = Meta_Data.PROCESS.h_freq;
 
@@ -57,7 +53,6 @@ indP        = indP(1);
 ind_ctdscan = indP-N_ctd/2:indP+N_ctd/2-1; % ind_scan is even
 ind_Pr_epsi = find(Profile.epsi.time_s<Profile.ctd.time_s(indP),1,'last');
 ind_scan    = ind_Pr_epsi-N_epsi/2:ind_Pr_epsi+N_epsi/2-1; % ind_scan is even
-% ind_scan    = ind_scan(1:floor(dof)*Meta_Data.PROCESS.nfft); % ind_scan is even
 
 % get FPO7 channel average noise to compute chi
 try 
@@ -87,7 +82,6 @@ LCTD        = length(Profile.ctd.P);% length of profile
 % NC 17 July 2021 - scan.w should really be in m/s. I added steps in
 % mod_som_read_epsi_files_v3.m to convert pressure to depth (z) and
 % calculate dzdt.  Now I'm using dzdt instead of dPdt to deefine scan.w.
-%scan.w      = nanmean(Profile.ctd.dPdt(ind_ctdscan(ind_ctdscan>0 & ind_ctdscan<LCTD)));
 if isfield(Profile.ctd,'dzdt')
     scan.w      = nanmean(Profile.ctd.dzdt(ind_ctdscan(ind_ctdscan>0 & ind_ctdscan<LCTD)));
 else
@@ -102,9 +96,6 @@ end
 % coded into Meta_Data, not hard-coded here. I will leave a criteria that
 % scan.w needs to be not nan and not inf.
 %
-% limit_speed = 0.2;
-% if ind_ctdscan(1)>0 && ind_ctdscan(end)<=length(Profile.ctd.time_s) && scan.w>limit_speed ...
-%         && ind_scan(1)>0 && ind_scan(end)<=length(Profile.epsi.time_s)
 if ind_ctdscan(1)>0 && ind_ctdscan(end)<=length(Profile.ctd.time_s) ...
         && ind_scan(1)>0 && ind_scan(end)<=length(Profile.epsi.time_s) ...
         && ~isinf(scan.w) && ~isnan(scan.w)
@@ -154,8 +145,16 @@ if ind_ctdscan(1)>0 && ind_ctdscan(end)<=length(Profile.ctd.time_s) ...
     % ---------------------------------------------------------------------
     % Add full profile coherences
     scan.Cs1a3_full = Profile.Cs1a3_full;
-    scan.Cs2a3_full = Profile.Cs2a3_full; 
-
+    scan.Cs2a3_full = Profile.Cs2a3_full;
+    if (Meta_Data.PROCESS.multivariate)
+        scan.Cs1a_mv=Profile.Cs1a_mv(id_scan,:);
+        scan.Cs2a_mv=Profile.Cs2a_mv(id_scan,:);
+    else
+        scan.Cs1a_mv=Profile.Cs1a3_full.*nan;
+        scan.Cs2a_mv=Profile.Cs1a3_full.*nan;
+    end%end if Meta_Data.PROCESS.multivariate=1
+    
+    
     %ALB I am keeping accel spectra and Coh becasue it could be useful for
     %debug but I am not using them anymore to clean the shear spectra.
     idxA = contains(Meta_Data.PROCESS.timeseries,'a');
@@ -174,13 +173,17 @@ if ind_ctdscan(1)>0 && ind_ctdscan(end)<=length(Profile.ctd.time_s) ...
             mod_efe_scan_coherence(scan,currChannel,Meta_Data);
         
         % Put new variables in the structure
-        varList = {'Pa_g_f','sumPa_g','f','Cs1a','Cs2a','sumCs1a','sumCs2a'};
+        varList = {'Pa_g_f','sumPa_g','Cs1a','Cs2a','sumCs1a','sumCs2a'};
         for iVar=1:numel(varList)
             scan.(varList{iVar}).(currChannel(1:2)) = eval(varList{iVar});
         end
     end
+    % ALB I removed the fields scan.f.a1 a2 a3 and chagned to scan.f. 
+    scan.f=f;
+    scan.k=f./scan.w;
+
     
-    scan.accelNoise=45e-6^2+0*scan.f.a1;
+    scan.accelNoise=45e-6^2+0*scan.f;
     
     %% Compute shear spectra and epsilon
     % ---------------------------------------------------------------------
@@ -190,25 +193,18 @@ if ind_ctdscan(1)>0 && ind_ctdscan(end)<=length(Profile.ctd.time_s) ...
     for iChan=1:numel(chanList)
         currChannel = chanList{iChan};
         
-        if isfield(Meta_Data.PROCESS, "multivariate")
-            if (Meta_Data.PROCESS.multivariate)
-                scan.Cs1a3_full=Profile.Cs1a_mv(id_scan,:).';
-                scan.Cs2a3_full=Profile.Cs2a_mv(id_scan,:).';
-            end%end if Meta_Data.PROCESS.multivariate=1
-        end%end if Meta_Data.PROCESS is a field multivariate
-        [Ps_volt_f,Ps_shear_k,Ps_shear_co_k,epsilon,epsilon_co,f,k,fc,kc,Ppan,Ppan_co,fom] = ...
+        [Ps_volt_f,Ps_velocity_f,Ps_shear_k,Ps_shear_co_k,Ps_shear_mv_k,epsilon,epsilon_co,epsilon_mv,f,k,fc,kc,Ppan,Ppan_co,fom,calib_volt,calib_vel] = ...
             mod_efe_scan_epsilon(scan,currChannel,Meta_Data);
         
         
         % Put new variables in the structure
-        varList = {'Ps_volt_f','Ps_shear_k','Ps_shear_co_k',...
-            'epsilon','epsilon_co','f','k','fc','kc','Ppan','Ppan_co','fom'};
+        varList = {'Ps_volt_f','Ps_velocity_f','Ps_shear_k','Ps_shear_co_k','Ps_shear_mv_k',...
+            'epsilon','epsilon_co','epsilon_mv','fc','kc','Ppan','Ppan_co','fom','calib_volt','calib_vel'};
         for iVar=1:numel(varList)
             scan.(varList{iVar}).(currChannel(1:2)) = eval(varList{iVar});
         end
         
     end
-    
     
     
     %% Compute temperature spectra and chi
@@ -224,7 +220,7 @@ if ind_ctdscan(1)>0 && ind_ctdscan(end)<=length(Profile.ctd.time_s) ...
             mod_efe_scan_chi(scan,currChannel,Meta_Data,h_freq,FPO7noise);
         
         % Put new variables in the structure
-        varList = {'Pt_volt_f','Pt_Tg_k','chi','f','k','fc','kc','flag_tg_fc'};
+        varList = {'Pt_volt_f','Pt_Tg_k','chi','fc','kc','flag_tg_fc'};
         for iVar=1:numel(varList)
             scan.(varList{iVar}).(currChannel(1:2)) = eval(varList{iVar});
         end
@@ -262,9 +258,6 @@ if ind_ctdscan(1)>0 && ind_ctdscan(end)<=length(Profile.ctd.time_s) ...
         scan.epsilon_final = epsilons(scan.epsi_qc==min(scan.epsi_qc));
         scan.epsi_qc_final=min(scan.epsi_qc);
     end
-    %%
-    scan.f = scan.f.s1;
-    scan.k = scan.k.s1;
     
     %% Add variable descriptions and units
     % ---------------------------------------------------------------------
@@ -314,10 +307,13 @@ if ind_ctdscan(1)>0 && ind_ctdscan(end)<=length(Profile.ctd.time_s) ...
     scan.varInfo.sumCs2a = {'integrated Cu2a between Meta_Data.PROCESS.fc1 and Meta_Data.PROCESS.fc2','Volts^2'};
     scan.varInfo.accelNoise = {'',''};
     scan.varInfo.Ps_volt_f = {'shear frequency power spectrum', 'Volts^2 Hz^{-1}'};
+    scan.varInfo.Ps_velocity_f = {'Velocity frequency power spectrum', 'm s^{-1}^2 Hz^{-1}'};
     scan.varInfo.Ps_shear_k = {'shear wavenumber power spectrum', 's{-1} cpm^{-1}'};
     scan.varInfo.Ps_shear_co_k  = {'coherence-corrected shear frequency power spectrum (full profile coherence with a3 channel has been removed)', ''};
     scan.varInfo.epsilon = {'turbulent kinetic energy dissipation rate calculated from Ps_shear_k', ''};
     scan.varInfo.epsilon_co = {'turbulent kinetic energy dissipation rate calculated from Ps_shear_co_k', ''};
+    scan.varInfo.epsi_qc = {'quality control flag from epsilon_co. The loweer the better. Flag increase when shear channels do not match and if fom >3, ', ''};
+    scan.varInfo.fom = {'Figure of Merit: rms of the obs-panchev', ''};
     scan.varInfo.Ppan = {'frequency Panchev curve',''};
     scan.varInfo.Ppan_co = {'frequency Panchev curve',''};
     scan.varInfo.Pt_volt_f = {'temperature frequency power spectrum','Volts^2 Hz{-1}'};

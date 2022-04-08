@@ -87,7 +87,7 @@ if isfinite(scan.(shear_channel))
      calib_vel=max(Ps_velocity_f(idx))./max(scan.Pa_g_f.a3(idx));
 
     if abs(calib_vel-0.4)>0.4
-        Ps_velocity_f=Ps_velocity_f .* 0.5/calib_vel;
+        Ps_velocity_f=Ps_velocity_f
     end
     
     % Convert the frequency velocity spectrum to shear wavenumber spectrum
