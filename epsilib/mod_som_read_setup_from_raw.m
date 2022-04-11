@@ -21,9 +21,15 @@ vehicle_name_offset=mission_name_offset+mission_name_length+1;
 vehicle_name_length=24-1;
 firmware_offset=vehicle_name_offset+vehicle_name_length+1;
 firmware_length=40-1;
-gitid_offset=firmware_offset+firmware_length+1;
-gitid_length=24-1;
-rev_offset=gitid_offset+gitid_length+1;
+%ALB I am commenting these lines because
+%mod_som_epsi_epsifish2_telemetry-Feb 15 rev3 
+% does not have git ID
+% TODO change the MODSOM firmware so it has the git ID
+% gitid_offset=firmware_offset+firmware_length+1;
+% gitid_length=24-1;
+% rev_offset=gitid_offset+gitid_length+1;
+% rev_length=8-1;
+rev_offset=firmware_offset+firmware_length+1;
 rev_length=8-1;
 sn_offset=rev_offset+rev_length+1;
 sn_length=8-1;

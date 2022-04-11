@@ -45,24 +45,34 @@ cd ..
 % First, try reading configuration data from the
 % file. If that doesn't work, try reading from a
 % % configuration file. fg
-try
+try %Try reading the first raw file
     setupfile=dir(fullfile(rawDir,'*.raw*'));
     setup=mod_som_read_setup_from_raw(fullfile(setupfile(1).folder,setupfile(1).name));
-catch
-try
-    setupfile=dir(fullfile(rawDir,str_to_match,raw_file_suffix));
-    setup=mod_som_read_setup_from_raw(setupfile(1).name);
-catch
-    try
-        setupfile=dir(fullfile(awayDir,'*config*'));
-        setup=mod_som_read_setup_from_config(setupfile.name);
+catch err
+    for ii=1:length(err.stack)
+        disp(['error in ' err.stack(ii).name ' - line ' num2str(err.stack(ii).line)])
+    end
+    error('mod_som_read_setup failed')
+    
+    try %Try reading the first .[suffix] file
+        setupfile=dir(fullfile(rawDir,str_to_match,raw_file_suffix));
+        setup=mod_som_read_setup_from_raw(setupfile(1).name);
     catch err
         for ii=1:length(err.stack)
             disp(['error in ' err.stack(ii).name ' - line ' num2str(err.stack(ii).line)])
         end
         error('mod_som_read_setup failed')
+        
+        try %Try reading the config file
+            setupfile=dir(fullfile(awayDir,'*config*'));
+            setup=mod_som_read_setup_from_config(setupfile.name);
+        catch err
+            for ii=1:length(err.stack)
+                disp(['error in ' err.stack(ii).name ' - line ' num2str(err.stack(ii).line)])
+            end
+            error('mod_som_read_setup failed')
+        end
     end
-end
 end
 
 
