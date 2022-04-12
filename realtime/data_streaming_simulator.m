@@ -1,4 +1,4 @@
-function [] = data_streaming_simulator(file_dir_in,file_dir_out,open_choice,precision,varargin)
+function [] = data_streaming_simulator(file_dir_in,file_dir_out,varargin)
 
 % Simulate streaming epsi data by slowly copying the contents of one raw
 % file directory into a new one. This way, you can test realtime scripts on

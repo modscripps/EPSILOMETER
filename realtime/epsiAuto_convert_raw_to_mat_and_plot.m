@@ -1,10 +1,13 @@
 % autorunEpsiConvert.m
-% automation to convert .ASCII to .MAT
+% automation to convert .ASCII to .MAT and plot timeseries in realtime
 %
 % Nicole Couto adapted from autorunFastCTDConvert.m
 % May 2021
 % -------------------------------------------------------------------------
-
+% BEST PRACTICES:
+%   Run this as a script inside a parent script that specifies options for
+%   the data you wish to process (see EXAMPLE_plot_streaming_data.m)
+% 
 % % Directories for Epsi:
 % rawDir      = '/Users/Shared/FCTD_EPSI/RAW'; % rawdir is where the data are
 % awayDir     = '/Users/Shared/Beyster_fish2'; % awaydir is copy folder
@@ -13,7 +16,6 @@
 % Meta_Data_Process_file = fullfile(obj.Meta_Data.paths.process_library,...
 %     'Meta_Data_Process','Meta_Data_Process_blt.txt');
 % refresh_time_sec = 5;
-
 % -------------------------------------------------------------------------
 rawDirAway  = fullfile(awayDir,'raw');
 matDir      = fullfile(awayDir,'mat');
@@ -32,11 +34,11 @@ end
 
 % Group directories to input for Epsi_MakeMatFromRaw
 try
-    %dirs = {rawDir; rawDirAway; matDir; FCTDmatDir};
-    dirs = {rawDir; matDir; FCTDmatDir}; %If using 'noSync' in epsiProcess_convert_new_raw_to_mat
+    dirs = {rawDir; rawDirAway; matDir; FCTDmatDir};
+    %dirs = {rawDir; matDir; FCTDmatDir}; %If using 'noSync' in epsiProcess_convert_new_raw_to_mat
 catch
-    %dirs = {rawDir; rawDirAway; matDir};
-    dirs = {rawDir; matDir}; %If using 'noSync' in epsiProcess_convert_new_raw_to_mat
+    dirs = {rawDir; rawDirAway; matDir};
+    %dirs = {rawDir; matDir}; %If using 'noSync' in epsiProcess_convert_new_raw_to_mat
 end
 
 cd(matDir)
@@ -113,7 +115,7 @@ EpsiConvert_timer.TimerFcn = [...
     'else, '...
     'disp([datestr(now) '': Converting ascii data to mat...!'']); '...
     'try, '...
-    'matData = epsiProcess_convert_new_raw_to_mat(dirs,obj.Meta_Data,''noGrid'',''noSync'',''fileStr'',str_to_match); '...
+    'matData = epsiProcess_convert_new_raw_to_mat(dirs,obj.Meta_Data,''doFCTD'',''fileStr'',str_to_match,''version'',version); '...
     '[obj,tMax] = epsiAuto_get_updated_data(obj,matData,tMax); '...
     'catch err, '...
     'disp(err); '...

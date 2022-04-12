@@ -33,6 +33,9 @@ Meta_Data.mission=setup.mission_name;
 Meta_Data.vehicle_name=setup.vehicle_name;
 Meta_Data.deployment=setup.SDIO.prefix_file;
 
+% Get start time
+Meta_Data.start_dnum = setup.start_dnum;
+
 % Add profile direction based on vehicle name %NC 3/1/22
 switch Meta_Data.vehicle_name
     case 'FISH'

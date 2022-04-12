@@ -60,8 +60,10 @@ setup.rev=setup.rev(uint8(setup.rev)>0);
 setup.sn=str(sn_offset+(0:sn_length)).';
 setup.sn=setup.sn(uint8(setup.sn)>0);
 
-
 setup.initialize_flag=conv32d(double(uint8(str(initialize_flag_offset+(0:initialize_flag_length)))));
+
+% TO DO - GET START TIME
+setup.start_dnum = 0;
 
 %%
 nb_module=1;

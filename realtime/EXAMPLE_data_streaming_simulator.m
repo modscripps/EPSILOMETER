@@ -1,4 +1,4 @@
-file_dir_in = '/Users/ncouto/Desktop/reprocess_blt_21_0708/ORIGINAL';
-file_dir_out = '/Users/ncouto/Desktop/reprocess_blt_21_0708/RAW';
+file_dir_in = '/Volumes/FCTD_EPSI/RAW0704';
+file_dir_out = '/Volumes/FCTD_EPSI/playground/RAW';
 
-data_streaming_simulator(file_dir_in,file_dir_out,open_choice,precision);
+data_streaming_simulator(file_dir_in,file_dir_out);

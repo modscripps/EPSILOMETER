@@ -18,7 +18,7 @@ elseif nargin<3
 end
 
 %% If you're running in realtime, view the most recent nSec
-nSec = 2*60;
+nSec = 1*60;
 nDay = nSec/(3600*24);
 
 %% Set plot properties if you don't have them

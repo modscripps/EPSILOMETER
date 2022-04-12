@@ -1,4 +1,4 @@
-function [epsi,ctd,alt,act,vnav,gps,seg,spec] = mod_som_read_epsi_files_vGPS(filename,Meta_Data)
+function [epsi,ctd,alt,act,vnav,gps,seg,spec] = mod_som_read_epsi_files_v3(filename,Meta_Data)
 
 % For now, only works for 'v3' of som_acq
 % It only works with a single file, since we're always calling it from a
@@ -39,7 +39,6 @@ fclose(fid);
 % To do: Add the other versions and a switch to choose between them later. For
 % now, use 'v3' only.
 efe_block_version = 'v3';
-
 
 %% Get indices and tokens for each data type you will process
 % ind_*_start  = starting indices of all matches
@@ -146,9 +145,11 @@ else
     
     
     % Pre-allocate space for data
+    % epsi.time_s and epsi.dnum will be created from epsi_timestamp once
+    % all its records are filled
     epsi_timestamp   = nan(efe.data.n_recs,1);
-    %epsi.time_s and epsi.dnum will be created from epsi_timestamp once
-    %all its records are filled
+   
+    
     
     % Loop through data blocks and parse strings
     for iB = 1:efe.data.n_blocks
@@ -255,7 +256,7 @@ else
     else
         % time_s - seconds since power on
         epsi.time_s = epsi_timestamp./1000;
-        epsi.dnum=now+epsi.time_s;
+        epsi.dnum = Meta_Data.start_dnum + days(seconds(epsi.time_s));
     end
     
     % Sort epsi fields
@@ -396,7 +397,7 @@ else
     else
         % time_s - seconds since power on
         ctd.time_s = ctd_timestamp./1000;
-        ctd.dnum = now +ctd.time_s;
+        ctd.dnum = Meta_Data.start_dnum + days(seconds(ctd.time_s));
     end
     
     % If the data were in engineering units, convert to physical units
@@ -487,7 +488,7 @@ else
     else
         % time_s - seconds since power on
         alt.time_s = alt_timestamp./1000;
-        alt.dnum = now + alt.time_s;
+        alt.dnum = Meta_Data.start_dnum + days(seconds(alt.time_s));
     end
     
     % Order alt fields
@@ -585,7 +586,7 @@ else
     else
         % time_s - seconds since power on
         vnav.time_s = vnav_timestamp./1000;
-        vnav.dnum = now + vnav.time_s;
+        vnav.dnum = Meta_Data.start_dnum + days(seconds(vnav.time_s));
     end
     
     % Order vnav fields 

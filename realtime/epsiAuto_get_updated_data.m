@@ -19,7 +19,9 @@ else
     
     obj = oldData;
     %ALB hack to get fucking sig
-    newData.ctd.sig=newData.ctd.sgth;
+    if isfield(newData.ctd,'sgth')  
+        newData.ctd.sig=newData.ctd.sgth;
+    end
     data = newData;
     
     % Load most recent data file

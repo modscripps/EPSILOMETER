@@ -13,8 +13,6 @@ function [matData] = epsiProcess_convert_new_raw_to_mat(dirs,Meta_Data,varargin)
 %
 % OPTIONAL INPUTS:
 %   'noSync' - don't rsync files from RawDir to RawDir Away
-%   'noGrid' - don't grid fctd data (To do: remove this. We don't use this
-%              anymore)
 %   'doFCTD' - make FCTD files compatible with MOD FCTD processing library
 %   'fileStr', 'string_to_match' - use this flag along with a search string
 %       if you want to limit rsyncing files to only those that match a certain
@@ -26,6 +24,7 @@ function [matData] = epsiProcess_convert_new_raw_to_mat(dirs,Meta_Data,varargin)
 % Written by Jody Klymak
 % Updated 2011 06 21 by San Nguyen
 % Updated 2012 09 29 by San Nguyen for EquatorMix2012
+% Adapted 2021 by Nicole Couto for Epsilometer data
 
 % NC - Make matData for output even if there is no new data
 matData.epsi = [];
@@ -51,21 +50,21 @@ for ii=1:numel(dirs)
 end
 
 persistent argsNameToCheck;
-if isempty(argsNameToCheck);
-    argsNameToCheck = {'noSync','noGrid','doFCTD','fileStr','version'}; %Add flag for doFCTD - makes mat files in FCTD processing format
+if isempty(argsNameToCheck)
+    argsNameToCheck = {'noSync','doFCTD','fileStr','version'}; %Add flag for doFCTD - makes mat files in FCTD processing format
 end
 
-% TODO PLease comment on these parameters
-rSync = true;
-doGrid = false;
-doFCTD = false;
-version = 4;
+% Set default parameters (they will be changed if you specified them in
+% call to this function)
+rSync = true; %copy raw files from "rawDir" to "awayDir"
+doFCTD = false; % make separate .mat files in awayDir/FCTDmat readable by FCTD processing scripts
+version = 4; %Default version of mod_som_read_epsi_files
 
 index = 1;
 n_items = nargin-2;
 
 % Loop through the number of varargin arguments, check which
-% argsNameToCheck it matches, and switch on/off rSync,doGrid, and doFCTD
+% argsNameToCheck it matches, and switch on/off rSync, and doFCTD
 % accordingly
 while (n_items > 0)
     argsMatch = strcmpi(varargin{index},argsNameToCheck);
@@ -79,15 +78,11 @@ while (n_items > 0)
             rSync = false;
             index = index +1;
             n_items = n_items-1;
-        case 2 % noGrid
-            doGrid = false;
-            index = index +1;
-            n_items = n_items-1;
-        case 3 %doFCTD
+        case 2 %doFCTD
             doFCTD = true;
             index = index+1;
             n_items = n_items-1;
-        case 4 %fileStr % NC - added optional fileStr input
+        case 3 %fileStr % NC - added optional fileStr input
             fileStr = true;
             % Find the index of varargin that = 'fileStr'. The following
             % index contains 'str_to_match'
@@ -95,7 +90,7 @@ while (n_items > 0)
             str_to_match = varargin{idxFlag+1};
             index = index+2; %+2 because the following varargin will str_to_match
             n_items = n_items-2;
-        case 5 %version % NC 10/11/21 - added optional version input
+        case 4 %version % NC 10/11/21 - added optional version input
             % Find the index of varargin that = 'version'. The following
             % index contains the version number
             idxFlag = find(cell2mat(cellfun(@(C) ~isempty(strfind(C,'version')),varargin,'uniformoutput',0)));
@@ -112,11 +107,6 @@ if rSync
     if doFCTD
         FCTDdir = [dirs{4}]; % Bethan 20 June 2021: Added FCTD directory
     end
-    %     if doGrid %NC - doGrid is an option in FCTD processing, but we don't
-    %     need it at this step of Epsi processing
-    %        GridDir = [dirs{5}]; %Bethan 20 June 2021: Changed from dirs{4} to dirs{5} to account for FCTD
-    %     end
-
     % check for valid directories
     if ~exist(RawDirDuplicate,'dir')
         error('Cannot find remote dir: %s',RawDirDuplicate);
@@ -127,10 +117,6 @@ else
     if doFCTD
         FCTDdir=[dirs{3}]; % Bethan 20 June 2021: Added FCTD directory
     end
-    %     if doGrid %NC - doGrid is an option in FCTD processing, but we don't
-    %     need it at this step of Epsi processing
-    %         GridDir = [dirs{4}]; %Bethan 20 June 2021: Changed from dirs{3} to dirs{4} to account for FCTD
-    %     end
 end
 
 if ~exist(RawDir,'dir')
@@ -138,9 +124,6 @@ if ~exist(RawDir,'dir')
 end
 if ~exist(MatDir,'dir')
     error('Cannot find local MatDir: %s',MatDir);
-end
-if doGrid && ~exist(GridDir,'dir')
-    error('Cannot find local GridDir: %s',GridDir);
 end
 if doFCTD && ~exist(FCTDdir,'dir')
     error('Cannot find local FCTDdir: %s',FCTDdir);
@@ -236,8 +219,11 @@ for i=1:length(myASCIIfiles)
                 % WILL NEED TO MAKE SURE PROCESSING FURTHER DOWN THE LINE
                 % ACCOUNTS FOR THIS
                 if ~isempty(epsi) && isfield(epsi,'s2_count') && ~isempty(ctd)
+                    diff_not_neg = [0;diff(epsi.dnum)]>0;
+                    keep = ~isnan(epsi.dnum) & ~isinf(epsi.dnum) & diff_not_neg;
+                    
                     ucontime=linspace(ctd.dnum(1),ctd.dnum(end),length(ctd.dnum)*20);
-                    FCTD.uConductivity=reshape(interp1(epsi.dnum,double(epsi.s2_count),ucontime),20,[])';
+                    FCTD.uConductivity=reshape(interp1(epsi.dnum(keep),double(epsi.s2_count(keep)),ucontime),20,[])';
                     clear ucontime
                 else
                     FCTD.uConductivity=nan(length(ctd.dnum),20);
@@ -250,8 +236,11 @@ for i=1:length(myASCIIfiles)
                 % Currently saving in the same format as uCond but we may
                 % not need it to be so high resolution
                 if ~isempty(epsi) && isfield(epsi,'s1_volt')  && ~isempty(ctd)
+                    diff_not_neg = [0;diff(epsi.dnum)]>0;
+                    keep = ~isnan(epsi.dnum) & ~isinf(epsi.dnum) & diff_not_neg;
+                    
                     fluortime=linspace(ctd.dnum(1),ctd.dnum(end),length(ctd.dnum)*20);
-                    FCTD.fluorometer=reshape(interp1(epsi.dnum,epsi.s1_volt,fluortime),20,[])';
+                    FCTD.fluorometer=reshape(interp1(epsi.dnum(keep),epsi.s1_volt(keep),fluortime),20,[])';
                     clear fluortime
                 else
                     FCTD.fluorometer=nan(length(ctd.dnum),20);
@@ -261,17 +250,20 @@ for i=1:length(myASCIIfiles)
                 % Get VectorNav data
 
                 % Add vnav.vnavdnum data, interpolate to CTD
-                if ~isempty(vnav) && isfield(vnav,'vnavtime')
+                if ~isempty(vnav) && isfield(vnav,'time_s')
+                    diff_not_neg = [0;diff(vnav.dnum)]>0;
+                    keep = ~isnan(vnav.dnum) & ~isinf(vnav.dnum) & diff_not_neg;
                     for ix=1:3
-                        FCTD.compass(:,ix)=interp1(vnav.vnavdnum,vnav.compass(:,ix),ctd.dnum);
-                        FCTD.gyro(:,ix)=interp1(vnav.vnavdnum,vnav.gyro(:,ix),ctd.dnum);
-                        FCTD.acceleration(:,ix)=(interp1(vnav.vnavdnum,vnav.acceleration(:,ix),ctd.dnum))./9.81;
+                        FCTD.compass(:,ix)=interp1(vnav.dnum(keep),vnav.compass(keep,ix),ctd.dnum);
+                        FCTD.gyro(:,ix)=interp1(vnav.dnum(keep),vnav.gyro(keep,ix),ctd.dnum);
+                        FCTD.acceleration(:,ix)=interp1(vnav.dnum(keep),vnav.acceleration(keep,ix),ctd.dnum)./9.81;
                     end
                 else
                     FCTD.gyro=nan(length(ctd.dnum),3);
                     FCTD.acceleration=nan(length(ctd.dnum),3);
                     FCTD.compass=nan(length(ctd.dnum),3);
                 end
+
 
                 %%%%%% ADD GPS WHEN WE HAVE THAT DATA %%%%%%%
 
@@ -302,12 +294,6 @@ for i=1:length(myASCIIfiles)
                 save([FCTDdir  base '.mat'],'FCTD');
                 FastCTD_UpdateMATFileTimeIndex(FCTDdir,base,FCTD);
                 fprintf(1,'%s: Wrote  %s%s\n\n',datestr(now,'YY.mm.dd HH:MM:SS'), FCTDdir,myFCTDMATfile.name);
-                %                 if doGrid
-                %                     FCTD_GridData = Epsi_GridData(FCTD);
-                %                     save([GridDir base '.mat'],'FCTD_GridData');
-                %                     epsiProcess_update_TimeIndex(GridDir,base,FCTD_GridData);
-                %                     fprintf(1,'%s: Wrote  %s%s.mat\n\n',datestr(now,'YY.mm.dd HH:MM:SS'),GridDir,base);
-                %                 end
             end %end Bethan's addition for FCTD data
         end %end if doFCTD
 
@@ -424,10 +410,12 @@ for i=1:length(myASCIIfiles)
                 %Bethan to do:
                 % Add vnav.vnavdnum data, interpolate to CTD
                 if ~isempty(vnav) && isfield(vnav,'time_s')
+                    diff_not_neg = [0;diff(vnav.dnum)]>0;
+                    keep = ~isnan(vnav.dnum) & ~isinf(vnav.dnum) & diff_not_neg;
                     for ix=1:3
-                        FCTD.compass(:,ix)=interp1(vnav.dnum,vnav.compass(:,ix),ctd.dnum);
-                        FCTD.gyro(:,ix)=interp1(vnav.dnum,vnav.gyro(:,ix),ctd.dnum);
-                        FCTD.acceleration(:,ix)=(interp1(vnav.dnum,vnav.acceleration(:,ix),ctd.dnum))./9.81;
+                        FCTD.compass(:,ix)=interp1(vnav.dnum(keep),vnav.compass(keep,ix),ctd.dnum);
+                        FCTD.gyro(:,ix)=interp1(vnav.dnum(keep),vnav.gyro(keep,ix),ctd.dnum);
+                        FCTD.acceleration(:,ix)=(interp1(vnav.dnum(keep),vnav.acceleration(keep,ix),ctd.dnum))./9.81;
                     end
                 else
                     FCTD.gyro=nan(length(ctd.dnum),3);
@@ -450,24 +438,8 @@ for i=1:length(myASCIIfiles)
                 save([FCTDdir  base '.mat'],'FCTD');
                 FastCTD_UpdateMATFileTimeIndex(FCTDdir,base,FCTD);
                 fprintf(1,'%s: Wrote  %s%s\n\n',datestr(now,'YY.mm.dd HH:MM:SS'), FCTDdir,myFCTDMATfile.name);
-                %                 if doGrid
-                %                     FCTD_GridData = Epsi_GridData(FCTD);
-                %                     save([GridDir base '.mat'],'FCTD_GridData');
-                %                     epsiProcess_update_TimeIndex(GridDir,base,FCTD_GridData);
-                %                     fprintf(1,'%s: Wrote  %s%s.mat\n\n',datestr(now,'YY.mm.dd HH:MM:SS'),GridDir,base);
-                %                 end
-
             end %end Bethan's addition for FCTD data
         end %end if doFCTD
-
-        %         catch err
-        %             disp(['So... this is the error for tranlating file ' myASCIIfiles(i).name]);
-        %             disp(err);
-        %             for j = 1:length(err.stack)
-        %                 disp([num2str(j) ' ' err.stack(j).name ' ' num2str(err.stack(j).line)]);
-        %             end
-        %             error('There was an error. See stack above.')
-        %         end
     end
     clear FCTD
 end

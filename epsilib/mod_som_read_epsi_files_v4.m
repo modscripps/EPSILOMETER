@@ -14,7 +14,7 @@ function [data] = mod_som_read_epsi_files_v4(filename,Meta_Data)
 %   Add backwards compatability - look at mod_som_read_epsi_files_v3.m
 %
 % CALLED BY:
-%   Epsi_MakeMatFromRaw
+%   epsiProcess_convert_new_raw_to_mat
 %
 % INPUTS
 %   filename
@@ -45,9 +45,8 @@ frewind(fid);
 str = fread(fid,'*char')';
 fclose(fid);
 
-% % To do: Add the other versions and a switch to choose between them later. For
-% % now, use 'v3' only.
-% efe_block_version = 'v3';
+% Get time now
+Meta_Data.start_dnum = now;
 
 
 %% Get indices and tokens for each data type you will process
@@ -263,7 +262,7 @@ else
     else
         % time_s - seconds since power on
         epsi.time_s = epsi_timestamp./1000;
-        epsi.dnum = nan.*epsi.time_s;
+        epsi.dnum = Meta_Data.start_dnum + days(seconds(epsi.time_s));
     end
 
     % Sort epsi fields
@@ -404,7 +403,7 @@ else
             else
                 % time_s - seconds since power on
                 ctd.time_s = ctd_timestamp./1000;
-                ctd.dnum = nan.*ctd.time_s;
+                ctd.dnum = Meta_Data.start_dnum + days(seconds(ctd.time_s));
             end
 
             % If the data were in engineering units, convert to physical units
@@ -498,6 +497,7 @@ else
     else
         % time_s - seconds since power on
         alt.time_s = alt_timestamp./1000;
+        alt.dnum = Meta_Data.start_dnum + days(seconds(alt.time_s));
     end
 
     % Order alt fields
@@ -596,6 +596,7 @@ else
     else
         % time_s - seconds since power on
         vnav.time_s = vnav_timestamp./1000;
+        vnav.dnum = Meta_Data.start_dnum + days(seconds(vnav.time_s));
     end
 
     % Order vnav fields
@@ -778,7 +779,7 @@ else
             ,seg.data.sample_per_segment)./1000,segment_timestamp,'un',0);
 
         %         seg.time_s=cell2mat(seg.time_s.');
-        seg.dnum=cellfun(@(x) x.*nan,seg.time_s,'un',0);
+        seg.dnum = Meta_Data.start_dnum + days(seconds(seg.time_s));
     end
 
     % Sort epsi fields
@@ -880,8 +881,7 @@ else
     else
         % time_s - seconds since power on
         spec.time_s = spec_timestamp./1000;
-        spec.dnum=spec.time_s.*nan;
-
+        spec.dnum = Meta_Data.start_dnum + days(seconds(spec.time_s));
     end
 
     % Sort epsi fields
@@ -988,7 +988,7 @@ else
     else
         % time_s - seconds since power on
         avgspec.time_s = avgspec_timestamp./1000;
-        avgspec.dnum=avgspec.time_s.*nan;
+        avgspec.dnum = Meta_Data.start_dnum + days(seconds(avgspec.time_s));
 
     end
 
@@ -1088,7 +1088,7 @@ else
     else
         % time_s - seconds since power on
         dissrate.time_s = dissrate_timestamp./1000;
-        dissrate.dnum=dissrate.time_s.*nan;
+        dissrate.dnum = Meta_Data.start_dnum + days(seconds(dissrate.time_s));
 
     end
 
