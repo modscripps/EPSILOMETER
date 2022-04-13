@@ -32,7 +32,8 @@ myASCIIfiles = dir(fullfile(RawDir, suffixSearch));
 % Loop through the last N files
 for i=length(myASCIIfiles)-(N-1):length(myASCIIfiles)
     % Convert raw data to mat
-    [epsi,ctd,alt,act,vnav,gps] = mod_som_read_epsi_files_v3(fullfile(RawDir,myASCIIfiles(i).name),Meta_Data);
+    newData = mod_som_read_epsi_files_v4(fullfile(RawDir,myASCIIfiles(i).name),Meta_Data);
+    use newData
     
     % If you loaded more than one file, concatenate them. Otherwise, just
     % put into matData structure

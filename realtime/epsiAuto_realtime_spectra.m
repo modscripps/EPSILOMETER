@@ -28,14 +28,10 @@ tscan = 4; %Length of scan in seconds
 centerScan = tscan/2; %Plotted spectra will be centered tscan/2 seconds from the end of the timeseries
 
 % Directory containing streaming raw data
-rawDir      = '/Users/Shared/FCTD_EPSI/RAW1';
-
-% Raw file suffix
-% fileSuffix = '.modraw';
-fileSuffix = '.raw';
+rawDir      = '/Volumes/FCTD_EPSI/RAW/';
 
 % Choose time units
-time_units = 'seconds'; %uncomment this if you set the datetime on SOM
+time_units = 'dnum'; %uncomment this if you set the datetime on SOM
 %time_units = 'seconds'; %uncomment this if you did not set the datetime on SOM
 
 % --- END USER CHOICES ----------------------------------------------------
@@ -51,18 +47,21 @@ end
 % First, try reading configuration data from the
 % file. If that doesn't work, try reading from a
 % % configuration file.
-% try
-%     setupfile=dir(fullfile(rawDir,'*)_raw*'));
-%     setup=mod_som_read_setup_from_raw(setupfile(1).name);
-% catch
-try
-    setupfile=dir(['*' fileSuffix]);
-    setup=mod_som_read_setup_from_raw(setupfile(1).name);
-catch
-    try
-        setupfile=dir('*config*');
-        setup=mod_som_read_setup_from_config(setupfile.name);
-    catch
+Meta_Data.paths.raw_data = dirs.raw_incoming;
+[Meta_Data] = epsiSetup_get_raw_suffix(Meta_Data);
+raw_file_suffix = Meta_Data.rawfileSuffix;
+
+try %Try reading the first .[suffix] file
+    setupfile=dir(fullfile(rawDir,[str_to_match,raw_file_suffix]));
+    setup=mod_som_read_setup_from_raw(fullfile(setupfile(1).folder,setupfile(1).name));
+catch err
+    display_error_stack(err)
+    error('mod_som_read_setup failed')
+    try %Try reading the config file
+        setupfile=dir(fullfile(awayDir,'*config*'));
+        setup=mod_som_read_setup_from_config(fullfile(setupfile(1).folder,setupfile(1).name));
+    catch err
+        display_error_stack(err)
         error('mod_som_read_setup failed')
     end
 end
@@ -77,14 +76,15 @@ obj.plot_properties = epsiSetup_set_plot_properties;
 obj.Meta_Data = epsiSetup_fill_meta_data(setup);
 obj.Meta_Data = epsiSetup_read_MetaProcess(obj.Meta_Data,...
     fullfile(obj.Meta_Data.paths.process_library,'Meta_Data_Process','Meta_Data_Process_blt.txt'));
-obj.Meta_Data.rawfileSuffix = fileSuffix;
+obj.Meta_Data.rawfileSuffix = raw_file_suffix;
 
 % Apply TMAX to structure tMax. Since the instruments sample at different
 % rates, these will become slightly different from each other in the loop
 % as new data come in.
-tMax.epsi = TMAX;
-tMax.ctd = TMAX;
-tMax.alt = TMAX;
+field_list = {'epsi','ctd','alt','vnav','gps'};
+for iField=1:length(field_list)
+tMax.(field_list{iField}) = TMAX;
+end
 
 % Create an axes that will be the input for the first call to
 % epsiPlot_epsi_ctd_alt_timeseries. All subsequent calls will reuse the set
@@ -111,13 +111,15 @@ EpsiConvert_timer.TimerFcn = [...
             '[obj,tMax] = epsiAuto_get_updated_data(obj,matData,tMax); '...
             'matDataOld = matData; '...
         'catch err, '...
-            'disp(err); '...
+            'display_error_stack(err); '...
+            'tStop = 1;'...
         'end; '...
         'try, '...
             'tMid=nanmax(obj.epsi.time_s)-nanmin(obj.epsi.time_s)-centerScan;, '...
             '[~,~,~,ax] = epsiPlot_spectra_at_tMid(obj,tMid,tscan,plotSec,1,0,1,ax);, '...
         'catch err, '...
-            'disp(err); '...
+            'display_error_stack(err); '...
+            'tStop = 1;'...
         'end; '...
     'end;'];
 EpsiConvert_timer.Period = 1;

@@ -17,65 +17,50 @@
 %     'Meta_Data_Process','Meta_Data_Process_blt.txt');
 % refresh_time_sec = 5;
 % -------------------------------------------------------------------------
-rawDirAway  = fullfile(awayDir,'raw');
-matDir      = fullfile(awayDir,'mat');
-FCTDmatDir  = fullfile(awayDir,'FCTDmat');
+dirs.raw_incoming = rawDir;
+dirs.raw_copy  = fullfile(awayDir,'raw');
+dirs.mat       = fullfile(awayDir,'mat');
+dirs.fctd_mat  = fullfile(awayDir,'FCTDmat');
 
 % Create directories if they don't exist
-if ~exist(rawDirAway,'dir')
-    eval([ '!mkdir ' strrep(rawDirAway,' ','\ ')]);
+if ~exist(awayDir,'dir')
+    eval([ '!mkdir ' strrep(awayDir,' ','\ ')]);
 end
-if ~exist(matDir,'dir')
-    eval([ '!mkdir ' strrep(matDir,' ','\ ')]);
+if ~exist(dirs.raw_copy,'dir')
+    eval([ '!mkdir ' strrep(dirs.raw_copy,' ','\ ')]);
 end
-if ~exist(FCTDmatDir,'dir')
-    eval([ '!mkdir ' strrep(FCTDmatDir,' ','\ ')]);
+if ~exist(dirs.mat,'dir')
+    eval([ '!mkdir ' strrep(dirs.mat,' ','\ ')]);
 end
-
-% Group directories to input for Epsi_MakeMatFromRaw
-try
-    dirs = {rawDir; rawDirAway; matDir; FCTDmatDir};
-    %dirs = {rawDir; matDir; FCTDmatDir}; %If using 'noSync' in epsiProcess_convert_new_raw_to_mat
-catch
-    dirs = {rawDir; rawDirAway; matDir};
-    %dirs = {rawDir; matDir}; %If using 'noSync' in epsiProcess_convert_new_raw_to_mat
+if ~exist(dirs.fctd_mat,'dir')
+    eval([ '!mkdir ' strrep(dirs.fctd_mat,' ','\ ')]);
 end
 
-cd(matDir)
-cd ..
+
 % Read configuration data:
 % First, try reading configuration data from the
 % file. If that doesn't work, try reading from a
-% % configuration file. fg
-try %Try reading the first raw file
-    setupfile=dir(fullfile(rawDir,'*.raw*'));
+% % configuration file.
+Meta_Data.paths.raw_data = dirs.raw_incoming;
+[Meta_Data] = epsiSetup_get_raw_suffix(Meta_Data);
+raw_file_suffix = Meta_Data.rawfileSuffix;
+
+
+try %Try reading the first .[suffix] file
+    setupfile=dir(fullfile(rawDir,[str_to_match,raw_file_suffix]));
     setup=mod_som_read_setup_from_raw(fullfile(setupfile(1).folder,setupfile(1).name));
 catch err
-    for ii=1:length(err.stack)
-        disp(['error in ' err.stack(ii).name ' - line ' num2str(err.stack(ii).line)])
-    end
+    display_error_stack(err)
     error('mod_som_read_setup failed')
-    
-    try %Try reading the first .[suffix] file
-        setupfile=dir(fullfile(rawDir,str_to_match,raw_file_suffix));
-        setup=mod_som_read_setup_from_raw(setupfile(1).name);
+    try %Try reading the config file
+        setupfile=dir(fullfile(awayDir,'*config*'));
+        setup=mod_som_read_setup_from_config(fullfile(setupfile(1).folder,setupfile(1).name));
     catch err
-        for ii=1:length(err.stack)
-            disp(['error in ' err.stack(ii).name ' - line ' num2str(err.stack(ii).line)])
-        end
+        display_error_stack(err)
         error('mod_som_read_setup failed')
-        
-        try %Try reading the config file
-            setupfile=dir(fullfile(awayDir,'*config*'));
-            setup=mod_som_read_setup_from_config(setupfile.name);
-        catch err
-            for ii=1:length(err.stack)
-                disp(['error in ' err.stack(ii).name ' - line ' num2str(err.stack(ii).line)])
-            end
-            error('mod_som_read_setup failed')
-        end
     end
 end
+
 
 
 % Initialize obj with structures big enough to load at least one Epsi .mat
@@ -90,7 +75,7 @@ obj.plot_properties = epsiSetup_set_plot_properties;
 obj.Meta_Data = epsiSetup_fill_meta_data(setup);
 obj.Meta_Data = epsiSetup_read_MetaProcess(obj.Meta_Data,Meta_Data_Process_file);
 obj.Meta_Data.rawfileSuffix = raw_file_suffix;
-obj.Meta_Data.paths.mat_data = matDir;
+obj.Meta_Data.paths.mat_data = dirs.mat;
 
 % Choose a starting tMax value for getting new data. By default set it to
 % two weeks before now.
@@ -120,19 +105,15 @@ EpsiConvert_timer.TimerFcn = [...
     'matData = epsiProcess_convert_new_raw_to_mat(dirs,obj.Meta_Data,''doFCTD'',''fileStr'',str_to_match,''version'',version); '...
     '[obj,tMax] = epsiAuto_get_updated_data(obj,matData,tMax); '...
     'catch err, '...
-    'disp(err); '...
+    'display_error_stack(err); '...
     'tStop=1; '...
     'end; '...
     'try, '...
     'ax = epsiPlot_timeseries(obj,0,ax); '...
     'catch err, '...
-    'disp(err); '...
+    'display_error_stack(err); '...
     'tStop=1; '...
     'end; '...
-    ...%'unix(sprintf(''/usr/bin/rsync -av %s %s'',matDir,matDirAway)); '...
-    ...%'unix(sprintf(''/usr/bin/rsync -av %s %s'',pdfDir,pdfDirAway)); '...
-    ...%'unix(sprintf(''/usr/bin/rsync -av %s %s'',jpgDir,jpgDirAway)); '...
-    ...%'unix(sprintf(''/usr/bin/rsync -av %s %s'',pngDir,pngDirAway)); '...
     'end;'];
 EpsiConvert_timer.Period = refresh_time_sec;
 EpsiConvert_timer.BusyMode = 'drop';
