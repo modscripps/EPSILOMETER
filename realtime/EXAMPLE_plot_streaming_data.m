@@ -1,3 +1,5 @@
+close all
+
 EPSILOMETER_path = '/Volumes/FCTD Softwares used in BLT 2022/EPSILOMETER';
 addpath(genpath(EPSILOMETER_path))
 rmpath(genpath(fullfile(EPSILOMETER_path,'archived_scripts')))

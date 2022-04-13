@@ -18,8 +18,8 @@ plot_properties.FontName='Sans';
             plot_properties.Colors.S = [0 0 0.543];
             plot_properties.Colors.alt = 'm';
             plot_properties.Colors.gyro1 = [129 27 112]./255;
-            plot_properties.Colors.gyro2 = [235 64 61]./255;
+            plot_properties.Colors.gyro2 = = [235 64 61]./255;
             plot_properties.Colors.gyro3 = [245 199 118]./255;
-            plot_properties.Colors.compass1 = [0 0 0.543];
-            plot_properties.Colors.compass2 = [185 38 26]./255;
-            plot_properties.Colors.compass3 = 'k';
+            plot_properties.Colors.compass1
+            plot_properties.Colors.compass2
+            plot_properties.Colors.compass3
