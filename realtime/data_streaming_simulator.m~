@@ -14,10 +14,10 @@ function [] = data_streaming_simulator(file_dir_in,file_dir_out,varargin)
 % Nicole Couto | February 2022
 % -------------------------------------------------------------------------
 % Change these parameters to adjust how quickly data "streams" in.
-%   n_blocks:           number of lines that get copied before pausing
+%   block_length:           number of lines that get copied before pausing
 %   seconds_between_blocks: amount of time in seconds to pause before copying
 %                           the next block
-n_blocks = 100; %Number of blocks that will be copied before pausing
+block_length = 100; %Number of blocks that will be copied before pausing
 seconds_between_blocks = 1; %Number of seconds to pause between blocks
 do_pause = 1; %Switch pause on/off
 str_to_find = {'$EFE','$SB49','$SB41','$ALT'}; %Add more data header strings here if you want to copy them
@@ -78,9 +78,7 @@ T_length                    = 11; %Length of T timestamp header before all block
 for idx=1:length(myASCIIfiles)
 
     % Disregard the file if it starts with '.'
-    if strcmp(myASCIIfiles(idx).name(1),'.')
-        continue
-    end
+    if strcmp(myASCIIfiles(idx).name(1),'.'
     
     myRAWfile = fullfile(file_dir_in,myASCIIfiles(idx).name);
     fid = fopen(myRAWfile,'rb');
@@ -158,7 +156,7 @@ for idx=1:length(myASCIIfiles)
 
                 line_count = line_count+1;
 
-                if mod(line_count,n_blocks)==0 && do_pause
+                if mod(line_count,block_length)==0 && do_pause
                     pause(seconds_between_blocks);
                 end
             end

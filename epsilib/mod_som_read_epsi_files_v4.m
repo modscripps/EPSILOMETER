@@ -658,7 +658,7 @@ else
 
     % Loop through data blocks and parse strings
     for iB=1:gpsmeta.data.n_blocks
-
+try
         % Grab the block of data starting with the header
         gps_block_str = str(ind_gps_start(iB):ind_gps_stop(iB)); %Moved here by Bethan June 26
 
@@ -675,7 +675,9 @@ else
 
         gps.longitude(iB) = floor(str2double(data_split{5})/100) + mod(str2double(data_split{5}),100)/60; % then add minutes
         gps.longitude(iB) = gps.longitude(iB).*(2*strcmpi(data_split{6},'E')-1); % check for East or West (if west multiply by -1)
-
+catch err
+    iB
+end
     end
 
 end %end loop if there is gps data

@@ -32,18 +32,7 @@ str_to_match = '*';
 rawDir = '/Volumes/FCTD_EPSI/RAW/';
 dirs.raw_incoming = '/Volumes/FCTD_EPSI/RAW/';
 
-% Choose time units
-time_units = 'dnum'; %uncomment this if you set the datetime on SOM
-%time_units = 'seconds'; %uncomment this if you did not set the datetime on SOM
-
 % --- END USER CHOICES ----------------------------------------------------
-
-switch time_units
-    case 'seconds'
-        TMAX = 0;
-    case 'dnum'
-        TMAX = datenum(2021,1,1); %Will plot data after this starting point
-end
 
 % Read configuration data:
 % First, try reading configuration data from the

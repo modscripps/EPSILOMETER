@@ -50,14 +50,13 @@ try %Try reading the first .[suffix] file
     setupfile=dir(fullfile(rawDir,[str_to_match,raw_file_suffix]));
     setup=mod_som_read_setup_from_raw(fullfile(setupfile(1).folder,setupfile(1).name));
 catch err
-    display_error_stack(err)
-    error('mod_som_read_setup failed')
+    display('mod_som_read_setup_from_raw failed, trying mod_som_read_setup_from_config...')
     try %Try reading the config file
         setupfile=dir(fullfile(awayDir,'*config*'));
         setup=mod_som_read_setup_from_config(fullfile(setupfile(1).folder,setupfile(1).name));
     catch err
         display_error_stack(err)
-        error('mod_som_read_setup failed')
+        error('mod_som_read_setup_from_config failed')
     end
 end
 
