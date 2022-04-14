@@ -688,7 +688,7 @@ classdef epsi_class < handle
             dTdV_process = 'old';
             switch dTdV_process
                 case 'new'
-                    obj.Meta_Data = process_calibrate_dTdV(obj.Meta_Data);
+                    obj.Meta_Data = epsiProcess_calibrate_dTdV(obj.Meta_Data);
                 case 'old'
                     % Load the pressure timeseries and find the downcast or upcast with the
                     % greatest range in pressure.
