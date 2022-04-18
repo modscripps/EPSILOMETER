@@ -723,8 +723,9 @@ classdef epsi_class < handle
                     %                 tscanLongestProfile = floor(0.8*length(Profile.epsi.time_s)/Fs);
                     %                 tscanDefault = 50;
                     %                 tscan = min([tscanDefault,tscanLongestProfile]);
-
-                    obj.Meta_Data=mod_epsi_temperature_spectra_v3(obj.Meta_Data,Profile);
+                    
+                    % This is what actually calculates dTdV!
+                    obj.Meta_Data=mod_epsi_temperature_spectra_v4(obj.Meta_Data,Profile);
             end
 
         end

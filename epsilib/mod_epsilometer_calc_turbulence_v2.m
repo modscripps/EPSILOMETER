@@ -32,6 +32,13 @@ if isfield(Profile_or_profNum,'gps')
     Profile.longitude = nanmean(Profile_or_profNum.gps.longitude);
 end
 
+%% Get epsi sampling frequency
+try
+    Fs_epsi = Meta_Data.AFE.FS;
+catch
+    Fs_epsi = Meta_Data.PROCESS.Fs_epsi;
+end
+
 %% despiking shear and temp
 
 %fprintf('despiking Profile\r\n')
@@ -41,7 +48,8 @@ end
 %I am removing any outliers that are above  3 times the standard deviation of a
 %windows that is 10 * 16 samples. Arbitrarily using 10.
 % I am saving the percentage of outliers in the Profile structure
-movmean_window_width=10*16;
+movmean_window_width = Meta_Data.PROCESS.movmean_window_time*Fs_epsi;
+%movmean_window_width=10*16;
 if ~isempty(Profile.epsi)
     for c=1:Profile.Meta_Data.PROCESS.nb_channels
         wh_channel=Profile.Meta_Data.PROCESS.timeseries{c};
@@ -64,14 +72,9 @@ channels = Meta_Data.PROCESS.timeseries;
 
 nfft = Meta_Data.PROCESS.nfft;
 nfftc = Meta_Data.PROCESS.nfftc;
-try
-    Fs_epsi = Meta_Data.AFE.FS;
-catch
-    Fs_epsi = Meta_Data.PROCESS.Fs_epsi;
-end
 
-fpump = Meta_Data.PROCESS.ctd_fc;
-tscan = Meta_Data.PROCESS.tscan;
+%fpump = Meta_Data.PROCESS.ctd_fc;
+%tscan = Meta_Data.PROCESS.tscan; %We don't use tscan anymore
 % limit_speed = .2; % limit speed 20 cm s^{-1}
 dz  =   Meta_Data.PROCESS.dz;
 
@@ -202,8 +205,8 @@ Profile.pr         =  Pr(:);
 Profile.nbscan     =  nbscan;
 Profile.nfft       =  nfft;
 Profile.nfftc      =  nfftc;
-Profile.tscan      =  tscan;
-Profile.fpump      =  fpump; % arbitrary cut off frequency usually extract from coherence spectra shear/accel
+%Profile.tscan      =  tscan; %We don't use tscan anymore
+Profile.fpump      =  Meta_Data.PROCESS.ctd_fc; % arbitrary cut off frequency usually extract from coherence spectra shear/accel
 Profile.f          =  f(:).';
 
 
