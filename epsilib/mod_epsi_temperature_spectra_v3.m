@@ -174,7 +174,7 @@ B2=squeeze(nanmean(P11_epsi(indt1,:,:),2)).*dTdV(1).^2./h_freq.electFPO7.'.^2;
 % the batchprocess
 Meta_Data.AFE.t1.cal=dTdV(1);
 Meta_Data.AFE.t2.cal=dTdV(2);
-save(fullfile(Meta_Data.paths.data,'Meta_data.mat'),'Meta_Data');
+% save(fullfile(Meta_Data.paths.data,'Meta_data.mat'),'Meta_Data');
 
 % only for plotting: we getting the board noise
 try
@@ -242,7 +242,7 @@ else
     filename=fullfile(Meta_Data.paths.figures,'Tctd_Tepsi_comp_t1.png');
 end
 figureStamp(mfilename('fullpath'))
-print('-dpng2',filename)
+% print('-dpng2',filename)
 
 
 % t2
@@ -288,7 +288,7 @@ else
     filename=fullfile(Meta_Data.paths.figures,'Tctd_Tepsi_comp_t2.png');
 end
 figureStamp(mfilename('fullpath'))
-print('-dpng2',filename)
+% print('-dpng2',filename)
 
 
 

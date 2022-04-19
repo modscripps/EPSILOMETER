@@ -80,7 +80,7 @@ subplot(4,1,4)
     plot(lessthan,[0,abs(diff(num))],'^-k');
     ylabel('change in # obs.')
     xlabel('maximum temperature range')
-export_fig figs/dTdV_1_1d -png -r150 -nocrop
+% export_fig figs/dTdV_1_1d -png -r150 -nocrop
 
 % ----
 
@@ -107,7 +107,7 @@ subplot(4,1,4)
 plot(lessthan,[0,abs(diff(num))],'^-');
 ylabel('change in # obs.')
 xlabel('maximum temperature range')
-export_fig figs/dTdV_2_1d -png -r150 -nocrop
+% export_fig figs/dTdV_2_1d -png -r150 -nocrop
 
 % ----
 
@@ -160,37 +160,37 @@ elseif isfield(Meta_Data,'epsi')
     Meta_Data.epsi.t2.cal = dTdV(2);
 end
 
-save(fullfile(Meta_Data.paths.data,'Meta_Data.mat'),'Meta_Data');
+% save(fullfile(Meta_Data.paths.data,'Meta_Data.mat'),'Meta_Data');
 
 %% Plot t1 dTdV
-figure('units','inches','position',[0 0 10 13.1])
-
-subplot(4,1,1)
-scatter(PROFall,PRall,60,DTDVall_1,'filled')
-set(gca,'ydir','reverse')
-xlabel('Profile #')
-ylabel('Pressure')
-cb(1) = colorbar;
-cb(1).Label.String = 'dTdV - t1';
-title(sprintf('t1 - dTdV = %2.1f',dTdV(1)))
-
-subplot(4,1,2)
-scatter(PROFall,PRall,60,RANGETall,'filled')
-set(gca,'ydir','reverse')
-xlabel('Profile #')
-ylabel('Pressure')
-cb(2) = colorbar;
-cb(2).Label.String = 'T range';
-
-subplot(4,1,3:4)
-pcolor(XBINS,YBINS1,100*N1.');
-shading flat
-xlabel('T range')
-ylabel('dTdV - t1')
-cb(3) = colorbar;
-cb(3).Label.String = '% of total observations';
-
-export_fig figs/dTdV_1_2d -png -r150 -nocrop
+% figure('units','inches','position',[0 0 10 13.1])
+% 
+% subplot(4,1,1)
+% scatter(PROFall,PRall,60,DTDVall_1,'filled')
+% set(gca,'ydir','reverse')
+% xlabel('Profile #')
+% ylabel('Pressure')
+% cb(1) = colorbar;
+% cb(1).Label.String = 'dTdV - t1';
+% title(sprintf('t1 - dTdV = %2.1f',dTdV(1)))
+% 
+% subplot(4,1,2)
+% scatter(PROFall,PRall,60,RANGETall,'filled')
+% set(gca,'ydir','reverse')
+% xlabel('Profile #')
+% ylabel('Pressure')
+% cb(2) = colorbar;
+% cb(2).Label.String = 'T range';
+% 
+% subplot(4,1,3:4)
+% pcolor(XBINS,YBINS1,100*N1.');
+% shading flat
+% xlabel('T range')
+% ylabel('dTdV - t1')
+% cb(3) = colorbar;
+% cb(3).Label.String = '% of total observations';
+% 
+% export_fig figs/dTdV_1_2d -png -r150 -nocrop
 
 %% Plot t2 dTdV
 figure('units','inches','position',[0 0 10 13.1])
@@ -220,4 +220,4 @@ ylabel('dTdV - t2')
 cb(3) = colorbar;
 cb(3).Label.String = '% of total observations';
 
-export_fig figs/dTdV_2_2d -png -r150 -nocrop
+% export_fig figs/dTdV_2_2d -png -r150 -nocrop

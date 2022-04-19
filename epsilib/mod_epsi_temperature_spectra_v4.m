@@ -48,8 +48,9 @@ ctd_df = Meta_Data.PROCESS.Fs_ctd;
 
 % id profile
 tscanAlternate = floor(0.8*length(Profile.epsi.time_s)/epsi_df);
-tscanDefault = 50;
+tscanDefault = 5;
 tscan = min([tscanDefault,tscanAlternate]);
+% tscan = tscanAlternate;
 
 % define parameters to compute the spectra.
 epsi_Lscan  = tscan*epsi_df;
@@ -301,7 +302,7 @@ if  plotData
         filename=fullfile(Meta_Data.paths.figures,'Tctd_Tepsi_comp_t1.png');
     end
     figureStamp(mfilename('fullpath'))
-    print('-dpng2',filename)
+%     print('-dpng2',filename)
     
     
     % t2
@@ -347,7 +348,7 @@ if  plotData
         filename=fullfile(Meta_Data.paths.figures,'Tctd_Tepsi_comp_t2.png');
     end
     figureStamp(mfilename('fullpath'))
-    print('-dpng2',filename)
+%     print('-dpng2',filename)
    
 end
 end

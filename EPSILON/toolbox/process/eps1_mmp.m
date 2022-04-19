@@ -92,8 +92,8 @@ end
 krange=find(k>=2 & k<=kc);
 eps3 = 7.5*kvis*nansum(Psheark(krange))*dk; 
 
-if eps3<1e-11 || length(krange) < 4
-	epsilon=1e-11;
+if eps3<1e-10 || length(krange) < 4
+	epsilon=1e-10;
 else
   mf=epsilon2_correct(eps3,kvis);
 	epsilon=mf*eps3;
