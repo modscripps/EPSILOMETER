@@ -167,7 +167,7 @@ idxSlash = strfind(Meta_Data.paths.data,'/');
 
 % There have been a few iterations of the Meta_Data strucutre. MADRE SN and
 % rev stored in different places depending on Meta_Data version.
-if isfield(Meta_Data,'Hardware') 
+if isfield(Meta_Data,'Hardware')
    madreSN = Meta_Data.Hardware.SOM.SN;
    madreRev = Meta_Data.Hardware.SOM.rev;
 elseif isfield(Meta_Data,'MADRE')
@@ -279,17 +279,17 @@ Sv=[Meta_Data.(field_name).s1.cal,Meta_Data.(field_name).s2.cal];
 Gr=9.81;
 
 for k=scanNum
-    
-    
+
+
     % Get scan data
-    scan = get_scan_spectra_v2(Profile,k);
-    
+    scan = get_scan_spectra(Profile,k);
+
     if isfield(scan,'pr') %if there's data in this scan...
-        
-        
+
+
         %% Get scan data
         % -------------------------------------------
-        
+
         % Make nan arrays for missing scan data
         if ~isfield(scan,'a2_g')
             scan.a2_g = nan(size(scan.a1_g,1),size(scan.a1_g,2));
@@ -306,35 +306,35 @@ for k=scanNum
             scan.chi.t2 = nan(size(scan.chi.t2,1),size(scan.chi.t2,2));
             scan.Pt_Tg_k.t2 = nan(size(scan.Pt_Tg_k.t2,1),size(scan.Pt_Tg_k.t2,2));
         end
-        
+
         % Get FPO7 noise
         k_noise=Profile.f./Profile.w(k);
         noise_t=tnoise.*dTdV(1).^2./h_freq.FPO7(Profile.w(k));
         tnoise_k= (2*pi*k_noise).^2 .* noise_t.*Profile.w(k);        % T1_k spec  as function of k
-        
+
         % Get shear noise
         TFshear=(Sv(1).*Profile.w(k)/(2*Gr)).^2 .* h_freq.shear.* haf_oakey(Profile.f,Profile.w(k));
         snoise_k= (2*pi*k_noise).^2 .* snoise.*Profile.w(k)./TFshear;        % T1_k spec  as function of k
-        
+
         % Get Batchelor spectrum for each combination of epsilon/chi
         [kbatch_s1t1,Pbatch_s1t1] = batchelor(scan.epsilon.s1,scan.chi.t1, ...
             scan.kvis,scan.ktemp);
         [kbatch_s2t1,Pbatch_s2t1] = batchelor(scan.epsilon.s2,scan.chi.t1, ...
             scan.kvis,scan.ktemp);
-        
+
         [kbatch_s1t2,Pbatch_s1t2] = batchelor(scan.epsilon.s1,scan.chi.t2, ...
             scan.kvis,scan.ktemp);
         [kbatch_s2t2,Pbatch_s2t2] = batchelor(scan.epsilon.s2,scan.chi.t2, ...
             scan.kvis,scan.ktemp);
-        
+
         % Smooth Tdiff wavenumber spectra
         smTG1 = smoothdata(scan.Pt_Tg_k.t1,'movmean',10);
         smTG2 = smoothdata(scan.Pt_Tg_k.t2,'movmean',10);
-        
+
         % Smooth shear wavenumber spectra
         smS1 = smoothdata(scan.Ps_shear_k.s1,'movmean',10);
         smS2 = smoothdata(scan.Ps_shear_k.s2,'movmean',10);
-        
+
         % Get the coherences between each shear/acceleration pair
         Co11 = scan.Cs1a.a1;
         Co21 = scan.Cs2a.a1;
@@ -342,10 +342,10 @@ for k=scanNum
         Co22 = scan.Cs2a.a2;
         Co13 = scan.Cs1a.a3;
         Co23 = scan.Cs2a.a3;
-               
+
         %% Frequency plots
         % ----------------------------------------------------------
-        
+
         % ax(5) - Velocity spectra (vs frequency)
         axes(ax(5))
         p5(1) = loglog(Profile.f,scan.Ps_volt_f.s1,'color',cols.s1);
@@ -355,7 +355,7 @@ for k=scanNum
         legend({'s1','s2'},'location','northwest','numcolumns',2);
         ax(5).XLabel.String = '';
         ax(5).YLabel.String = 'volt^{2}/Hz';
-        
+
         % ax(7) - Acceleration spectra (vs frequency)
         axes(ax(7))
         p7(1) = loglog(Profile.f,scan.Pa_g_f.a1,'color',cols.a1);
@@ -370,8 +370,8 @@ for k=scanNum
         end
         ax(7).XLabel.String = 'Hz';
         ax(7).YLabel.String = 'g^2/Hz';
-        
-        
+
+
         % ax(6) - Plot coherence with shear channel 1 (vs frequency)
         axes(ax(6))
         p6(1) = semilogx(Profile.f,Co11,'color',cols.a1);
@@ -388,7 +388,7 @@ for k=scanNum
         ax(6).YAxisLocation='right';
         ax(6).YLabel.String = 'Coherence';
         ax(6).XLabel.String = '';
-        
+
         % ax(8) - Plot coherence with shear channel 2 (vs frequency)
         axes(ax(8))
         p8(1) = semilogx(Profile.f,Co21,'color',cols.a1);
@@ -405,11 +405,11 @@ for k=scanNum
         ax(8).YAxisLocation='right';
         ax(8).YLabel.String = 'Coherence';
         ax(8).XLabel.String = 'Hz';
-        
-        
+
+
         %% Wavenumber plots
         % ----------------------------------------------------------
-        
+
         % ax(9) - Plot Tdiff spectra (vs wavenumber)
         axes(ax(9))
         p9(1) = loglog(scan.k,scan.Pt_Tg_k.t1,':','color',cols.t1,'linewidth',2);
@@ -417,22 +417,22 @@ for k=scanNum
         p9(2) = loglog(scan.k,smTG1,'color',cols.t1,'linewidth',3);
         p9(3) = loglog(scan.k,scan.Pt_Tg_k.t2,':','color',cols.t2);
         p9(4) = loglog(scan.k,smTG2,'color',cols.t2);
-        
+
         % Add Batchelor spectra
         p9(5) = loglog(kbatch_s1t1,Pbatch_s1t1,'Color',cols.batch_s1s1);
         p9(6) = loglog(kbatch_s1t2,Pbatch_s1t2,'Color',cols.batch_s1s2);
         p9(7) = loglog(kbatch_s2t1,Pbatch_s2t1,'Color',cols.batch_s2s1);
         p9(8) = loglog(kbatch_s2t2,Pbatch_s2t2,'Color',cols.batch_s2s2);
-        
+
         % Add noise
         p9(9) = loglog(k_noise,tnoise_k,'k:');
-        
+
         % Add kc
         indkc=find(scan.k>scan.kc.t1,1,'first');
         p9(10) = scatter(scan.k(indkc),smTG1(indkc),'filled','d','sizedata',300,'MarkerEdgeColor','k','markerfacecolor',cols.t1,'linewidth',2);
         indkc=find(scan.k>scan.kc.t2,1,'first');
         p9(11) = scatter(scan.k(indkc),smTG2(indkc),'filled','p','sizedata',450,'MarkerEdgeColor','k','markerfacecolor',cols.t2,'linewidth',2);
-        
+
         try
         legend('t1','t1smooth','t2','t2smooth',...
             'batch\_s1t1','batch\_s1t2','batch\s2t1','batch\s2t2',...
@@ -449,7 +449,7 @@ for k=scanNum
         grid on
         xlabel('k (cpm)')
         ylabel('\phi^2_{TG} (C^2 m^{-2} / cpm)')
-        
+
         % ax(10) - Plot shear spectra (vs wavenumber)
         axes(ax(10))
         p10(1) = loglog(scan.k,scan.Ps_shear_k.s1,':','color',cols.s1);
@@ -463,7 +463,7 @@ for k=scanNum
         p10(6) = scatter(scan.k(indkc),smS1(indkc),'filled','d','sizedata',300,'MarkerEdgeColor','k','markerfacecolor',cols.s1,'linewidth',2);
         indkc=find(scan.k>scan.kc.s2,1,'first');
         p10(7) = scatter(scan.k(indkc),smS2(indkc),'filled','p','sizedata',450,'MarkerEdgeColor','k','markerfacecolor',cols.s2,'linewidth',2);
-        
+
         % Add Panchev
         if ~all(isnan(scan.Ppan.s1))
         p10(8) = loglog(scan.k,scan.Ppan.s1,'Color',cols.panchev1);
@@ -480,19 +480,19 @@ for k=scanNum
         grid on
         xlabel('k (cpm)')
         ylabel('\phi^2_{shear} (s^{-2} / cpm)')
-        
-        
+
+
         %% ax(1:4) - Shade location of scan on profile plots
-        
+
         % First, reset font size because it affects the x-limits
         drawnow
         [ax(:).FontSize] = deal(axFontSize);
         [ax3(:).FontSize] = deal(axFontSize);
-        
+
         prLongArray = interp1(Profile.ctd.time_s,Profile.ctd.P,Profile.epsi.time_s);
         prInScan = prLongArray(scan.ind_scan);
         y = [nanmin(prInScan) nanmax(prInScan)];
-        
+
         axes(ax(1))
         hold on
         try
@@ -504,7 +504,7 @@ for k=scanNum
         f(1) = fill(x([1 1 2 2 1]),y([1 2 2 1 1]),'k');
         f(1).FaceAlpha = 0.2;
         f(1).EdgeColor = 'none';
-        
+
         axes(ax(2))
         hold on
         try
@@ -516,17 +516,17 @@ for k=scanNum
         f(2) = fill(x([1 1 2 2 1]),y([1 2 2 1 1]),'k');
         f(2).FaceAlpha = 0.2;
         f(2).EdgeColor = 'none';
-        
+
         axes(ax3(2))
         hold on
         ax(3).XLim = [nanmin(Profile.s) nanmax(Profile.s)];
         ax3(2).XLim = [nanmin(Profile.t) nanmax(Profile.t)];
-        
+
         x = [-3 40];
         f(3) = fill(x([1 1 2 2 1]),y([1 2 2 1 1]),'k');
         f(3).FaceAlpha = 0.2;
         f(3).EdgeColor = 'none';
-        
+
         axes(ax(4))
         hold on
         ax(4).XLim = [nanmin(Profile.w) nanmax(Profile.w)];
@@ -534,10 +534,10 @@ for k=scanNum
         f(4) = fill(x([1 1 2 2 1]),y([1 2 2 1 1]),'k');
         f(4).FaceAlpha = 0.2;
         f(4).EdgeColor = 'none';
-        
+
         %% Add scan info boxes
         % --------------------------
-      
+
         % Scan info1
         annotation('textbox',...
             box(4).Position,...
@@ -554,7 +554,7 @@ for k=scanNum
             'LineWidth',1,...
             'BackgroundColor',cols.scanInfo,...
             'Color','k');
-        
+
         % Scan info2
         annotation('textbox',...
             box(5).Position,...
@@ -570,7 +570,7 @@ for k=scanNum
             'LineWidth',1,...
             'BackgroundColor',cols.scanInfo,...
             'Color','k');
-        
+
         % Scan info3
         annotation('textbox',...
             box(6).Position,...
@@ -587,12 +587,12 @@ for k=scanNum
             'LineWidth',1,...
             'BackgroundColor',cols.scanInfo,...
             'Color','k');
-        
-        
+
+
         %% Adjust axes properties
         % ----------------------------------------------------------
         drawnow
-        
+
         %ax(1).XLim = [5e-11 max(max(Profile.chi))];
 %         ax(2).XLim = [5e-11 min([1e-4,max(max(Profile.epsilon))])];
 %         ax3(1).XLim = [min(Profile.s),max(Profile.s)];
@@ -601,13 +601,13 @@ for k=scanNum
 %         [ax(5:8).XLim] = deal(Profile.f([1 end]));
         [ax(5:8).XTick] = deal([1 10 100]);
         [ax([5,6]).XTickLabel] = deal('');
-        
+
         [ax([1,2,4]).YLim] = deal([nanmin(Profile.pr),nanmax(Profile.pr)]);
         [ax3(:).YLim] = deal([nanmin(Profile.pr),nanmax(Profile.pr)]);
         ax(5).YLim = [1e-13 1e-3];
         ax(7).YLim = [1e-11 1e-3];
         [ax([6,8]).YLim] = deal([0 1]);
- 
+
         ax(1).XLabel.Units = 'normalized';
         ax(1).XLabel.Position(2) = -0.05;
         ax(1).XTick = logspace(-10,-1,10);
@@ -622,7 +622,7 @@ for k=scanNum
         ax3(2).XLabel.Position(2) = 0.94;
         ax(4).XLabel.Units = 'normalized';
         ax(4).XLabel.Position(2) = -0.05;
-        
+
         ax(5).YLabel.Units = 'normalized';
         ax(5).YLabel.Position(1) = -0.1;
         ax(7).YLabel.Units = 'normalized';
@@ -631,18 +631,18 @@ for k=scanNum
         ax(7).XLabel.Position(2) = -0.15;
         ax(8).XLabel.Units = 'normalized';
         ax(8).XLabel.Position(2) = -0.15;
-        
+
         ax(9).XLabel.Units = 'normalized';
         ax(9).XLabel.Position(2) = -0.05;
         ax(9).YLabel.Units = 'normalized';
         ax(9).YLabel.Position(1) = -0.05;
-        
+
         ax(10).XLabel.Units = 'normalized';
         ax(10).XLabel.Position(2) = -0.05;
         ax(10).YLabel.Units = 'normalized';
         ax(10).YLabel.Position(1) = -0.05;
-        
-        
+
+
     else
         p5 = [];
         p6 = [];
@@ -652,7 +652,7 @@ for k=scanNum
         p10 = [];
         f = [];
     end %end if there's data in this scan
-    
+
 end %end loop through scans
 
 if saveFig
@@ -664,5 +664,5 @@ catch err
     for ii=1:length(err.stack)
         disp(['error in ' err.stack(ii).name ' - line ' num2str(err.stack(ii).line)])
     end
-    
+
 end
