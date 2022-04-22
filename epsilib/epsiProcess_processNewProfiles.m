@@ -10,7 +10,7 @@ function obj = epsiProcess_processNewProfiles(obj,varargin)
 %
 % OPTIONAL INPUTS:
 %   'grid',z - 'grid' flag to grid some of the profile variables onto a
-%               standard pressure grid 
+%               standard pressure grid
 %            - z = the depth array to use
 %
 % If there are optional arguments they are 'grid' and P, the pressure array
@@ -27,14 +27,14 @@ end
 
 % % Pick out profile drops from CTD pressure timeseries
 % obj.f_getProfileIndices;
-if Profile.Meta_Data.AFE.t1.cal==0 && Profile.Meta_Data.AFE.t2.cal==0
-    warning(sprintf(['\n !!!!!!!!! \n'...
-                    'The calibration value (dTdV) for both temperature probes is 0.\n',...
-                    'Run ec.f_calibrateTemperature or process_calibrate_dTdV.m before continuing.\n'...
-                    ' !!!!!!!!! \n',...
-                    'Hit any key to continue or ctrl-C to stop processing.']))
-    pause
-end
+% if Profile.Meta_Data.AFE.t1.cal==0 && Profile.Meta_Data.AFE.t2.cal==0
+%     warning(sprintf(['\n !!!!!!!!! \n'...
+%                     'The calibration value (dTdV) for both temperature probes is 0.\n',...
+%                     'Run ec.f_calibrateTemperature or process_calibrate_dTdV.m before continuing.\n'...
+%                     ' !!!!!!!!! \n',...
+%                     'Hit any key to continue or ctrl-C to stop processing.']))
+%     pause
+% end
 
 % Load PressureTimeseries
 load(fullfile(obj.Meta_Data.paths.mat_data,'PressureTimeseries.mat'))
@@ -46,11 +46,11 @@ if ~isempty(profNumChar)
     lastProfNum = str2double(profNumChar(end,:));
     % Load the last profile
     lastProf = load(fullfile(obj.Meta_Data.paths.profiles,sprintf('Profile%03.f',lastProfNum)));
-    
+
     % Does the last profile have all its data? Or was more collected in the
     % last batch of files?
     lastProf_maxTime = nanmax(lastProf.Profile.ctd.dnum);
-    
+
     % If there is more data for the last profile in the PressureTimeseries,
     % rerun the last profile. In the next step, we'll run everything after the
     % lastProfNum, so subtract one from that value.
@@ -66,21 +66,31 @@ end
 % ones
 for iProf=1:length(PressureTimeseries.startprof)
     if iProf>lastProfNum
-            profIdx = PressureTimeseries.startprof(iProf):PressureTimeseries.endprof(iProf);
-            tMin = PressureTimeseries.dnum(PressureTimeseries.startprof(iProf));
-            tMax = PressureTimeseries.dnum(profIdx(end));
-            fprintf('Building Profile%03.0f of %03.0f\n',iProf,length(PressureTimeseries.startprof))
-            
-            Profile = obj.f_cropTimeseries(tMin,tMax);
-            Profile.profNum = iProf;
-            Profile = obj.f_computeTurbulence(Profile);
-            % Sort Profile by standard field order
-            Profile = sort_profile(Profile);
-            
-            % Save new profile
-            saveName = fullfile(obj.Meta_Data.paths.profiles,sprintf('Profile%03.0f',iProf));
-            save(saveName,'Profile');
-            clear Profile
+        profIdx = PressureTimeseries.startprof(iProf):PressureTimeseries.endprof(iProf);
+        tMin = PressureTimeseries.dnum(PressureTimeseries.startprof(iProf));
+        tMax = PressureTimeseries.dnum(profIdx(end));
+        fprintf('Building Profile%03.0f of %03.0f\n',iProf,length(PressureTimeseries.startprof))
+
+        Profile = obj.f_cropTimeseries(tMin,tMax);
+        Profile.profNum = iProf;
+
+        if iProf==1 && Profile.Meta_Data.AFE.t1.cal==0 && Profile.Meta_Data.AFE.t2.cal==0
+            warning(sprintf(['\n !!!!!!!!! \n'...
+                'The calibration value (dTdV) for both temperature probes is 0.\n',...
+                'Run ec.f_calibrateTemperature or process_calibrate_dTdV.m before continuing.\n'...
+                ' !!!!!!!!! \n',...
+                'Hit any key to continue or ctrl-C to stop processing.']))
+            pause
+        end
+
+        Profile = obj.f_computeTurbulence(Profile);
+        % Sort Profile by standard field order
+        Profile = sort_profile(Profile);
+
+        % Save new profile
+        saveName = fullfile(obj.Meta_Data.paths.profiles,sprintf('Profile%03.0f',iProf));
+        save(saveName,'Profile');
+        clear Profile
     end
 end
 end %end f_processNewProfiles

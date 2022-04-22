@@ -116,7 +116,12 @@ if isfinite(scan.(shear_channel))
             Ps_volt_mv_f(Ps_volt_mv_f<=0)=nan;
             Ps_volt_mv_f=fillmissing(Ps_volt_mv_f,'linear');
             Ps_velocity_mv_f = ((2*G/(Sv*w))^2).*Ps_volt_mv_f./filter_TF;
-
+        else
+            bias=nan;
+            Ps_volt_mv_f=nan;
+            Ps_volt_mv_f=nan;
+            Ps_volt_mv_f=nan;
+            Ps_velocity_mv_f =nan;
         end
     end
 

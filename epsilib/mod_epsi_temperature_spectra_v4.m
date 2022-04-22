@@ -263,13 +263,13 @@ if  plotData
     figure
     hold on
     if ~isempty(indt1)
-        loglog(epsi_f,P11_epsi_TF_mean(indt1,:),'c','linewidth',2)
+        loglog(epsi_f,P11_epsi_TF_mean(indt1,:),'c','linewidth',2,'displayname','t1')
     end
-    loglog(ctd_f,P11_ctd,'r','linewidth',2)
+    loglog(ctd_f,P11_ctd_mean,'r','linewidth',2,'displayname','CTD')
     %loglog(1/3:1/3:160,noise,'m','linewidth',2)
     %loglog(epsi_k,10.^(mmp_noise).*dTdV(1).^2,'m--','linewidth',2)
-    loglog(epsi_f,A1,'Color',.8* [1 1 1],'linewidth',2)
-    loglog(epsi_f,AA1,'Color',.6* [1 1 1],'linewidth',2)
+    loglog(epsi_f,A1,'Color',.8* [1 1 1],'linewidth',2,'displayname','raw(Volt^2/Hz)')
+    loglog(epsi_f,AA1,'Color',.6* [1 1 1],'linewidth',2,'displayname','corrected (Volt^2/Hz)')
     %loglog(epsi_k,B,'Color',.4* [1 1 1],'linewidth',2)
     if ~isempty(indt1)
         %    loglog(epsi_k,P11_T(indt1,:),'c','linewidth',2)
@@ -278,6 +278,7 @@ if  plotData
     set(gca,'XScale','log','YScale','log')
     xlabel('Hz','fontsize',20)
     ylabel('C^2/Hz','fontsize',20)
+
     % Title for figure
     titleStr = strrep([Meta_Data.mission ' ' Meta_Data.vehicle_name ' ' Meta_Data.deployment],'_','\_');
     if isfield(Profile,'profNum')
@@ -288,12 +289,13 @@ if  plotData
             sprintf('dTdV = %2.2f',dTdV(1))};
     end
     title(titleStr,'fontsize',20)
-    %legend('CTD','noise','raw','t1./TF_{elec}','t1','t2','location','southwest')
-    legend('t1','CTD','raw(Volt^2/Hz)','corrected (Volt^2/Hz)','location','northeast')
+
+    legend('location','northeast')
     grid on
     ylim([1e-13 1])
     xlim([1/15 170])
     set(gca,'fontsize',20)
+
     fig=gcf;fig.PaperPosition=[0 0 8 6];
     if isfield(Profile,'profNum')
         filename=fullfile(Meta_Data.paths.figures,sprintf('Tctd_Tepsi_comp_cast%i_t1.png',Profile.profNum));
@@ -309,13 +311,13 @@ if  plotData
     figure
     hold on
     if ~isempty(indt2)
-        loglog(epsi_f,P11_epsi_TF_mean(indt2,:),'c','linewidth',2)
+        loglog(epsi_f,P11_epsi_TF_mean(indt2,:),'c','linewidth',2,'displayname','t2')
     end
-    loglog(ctd_f,P11_ctd,'r','linewidth',2)
+    loglog(ctd_f,P11_ctd_mean,'r','linewidth',2,'displayname','CTD')
     %loglog(1/3:1/3:160,noise,'m','linewidth',2)
     %loglog(epsi_k,10.^(mmp_noise).*dTdV(1).^2,'m--','linewidth',2)
-    loglog(epsi_f,A2,'Color',.8* [1 1 1],'linewidth',2)
-    loglog(epsi_f,AA2,'Color',.6* [1 1 1],'linewidth',2)
+    loglog(epsi_f,A2,'Color',.8* [1 1 1],'linewidth',2,'displayname','raw(Volt^2/Hz)')
+    loglog(epsi_f,AA2,'Color',.6* [1 1 1],'linewidth',2,'displayname','corrected (Volt^2/Hz)')
     %loglog(epsi_k,B,'Color',.4* [1 1 1],'linewidth',2)
     if ~isempty(indt2)
         %    loglog(epsi_k,P11_T(indt2,:),'Color',.1* [1 1 1],'linewidth',2)
@@ -334,8 +336,8 @@ if  plotData
             sprintf('dTdV = %2.2f',dTdV(2))};
     end
     title(titleStr,'fontsize',20)
-    %legend('CTD','noise','raw','t1./TF_{elec}','t1','t2','location','southwest')
-    legend('t2','CTD','raw(Volt^2/Hz)','corrected (Volt^2/Hz)','location','northeast')
+    
+    legend('location','northeast')
     grid on
     ylim([1e-13 1])
     xlim([1/15 170])

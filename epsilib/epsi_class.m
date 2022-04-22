@@ -772,7 +772,12 @@ classdef epsi_class < handle
             %   'grid',P - 'grid' flag to grid some of the profile variables onto a
             %               standard pressure grid
             %            - P = the pressure array to use
-            %
+            
+            % If there are not yet any temperature calibration values,
+            % calibrate the temperature probes.
+            if obj.Meta_Data.AFE.t1.cal==0 && obj.Meta_Data.AFE.t2.cal==0
+                obj = f_calibrateTemperature(obj);
+            end
             if nargin>1
                 obj = epsiProcess_processNewProfiles(obj,varargin);
             else

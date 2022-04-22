@@ -96,16 +96,35 @@ if isfield(Meta_Data,'MAP')
 elseif isfield(Meta_Data,'AFE')
     temp_circuit = Meta_Data.AFE.temp_circuit;
 end
+
+% If the profiles were created on someone else's computer, the path to
+% calibration files is likely not going to work on your computer. Choose
+% calibration_path_1 is it exists, calibration_path_2 if it doesn't.
+calibration_path_1 = Meta_Data.paths.calibration;
+spltpath = strsplit(path,':');
+epsilib_path = {spltpath{~cellfun(@isempty, ...
+                               cellfun(@(x) ...
+                               strfind(x,'epsilib'),spltpath, ...
+                               'UniformOutput',false))}};
+process_library = fileparts(epsilib_path{cellfun(@length,epsilib_path)==min(cellfun(@length,epsilib_path))});
+calibration_path_2 = fullfile(process_library,'CALIBRATION','ELECTRONICS');
+
+if exist(calibration_path_1,'dir')==7
+    calibration_path = calibration_path_1;
+else
+    calibration_path = calibration_path_2;
+end
+
 switch temp_circuit
     case 'Tdiff'
-        FPO7noise=load(fullfile(Meta_Data.paths.calibration,'FPO7_noise.mat'),'n0','n1','n2','n3');
+        FPO7noise=load(fullfile(calibration_path,'FPO7_noise.mat'),'n0','n1','n2','n3');
     otherwise
-        FPO7noise=load(fullfile(Meta_Data.paths.calibration,'FPO7_notdiffnoise.mat'),'n0','n1','n2','n3');
+        FPO7noise=load(fullfile(calibration_path,'FPO7_notdiffnoise.mat'),'n0','n1','n2','n3');
 end
 n0=FPO7noise.n0; n1=FPO7noise.n1; n2=FPO7noise.n2; n3=FPO7noise.n3;
 tnoise=10.^(n0+n1.*logf+n2.*logf.^2+n3.*logf.^3);
 
-shearnoise=load(fullfile(Meta_Data.paths.calibration,'shear_noise.mat'),'n0s','n1s','n2s','n3s');
+shearnoise=load(fullfile(calibration_path,'shear_noise.mat'),'n0s','n1s','n2s','n3s');
 n0s=shearnoise.n0s;
 n1s=shearnoise.n1s;
 n2s=shearnoise.n2s;
