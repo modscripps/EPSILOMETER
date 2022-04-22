@@ -67,11 +67,28 @@ if Meta_Data.PROCESS.adjustTemp
 
 else
 
-    switch tempChoice
-        case 'Tdiff'
-            Meta_Data.PROCESS.FPO7noise=load(fullfile(Meta_Data.paths.calibration,'FPO7_noise.mat'),'n0','n1','n2','n3');
-        otherwise
-            Meta_Data.PROCESS.FPO7noise=load(fullfile(Meta_Data.paths.calibration,'FPO7_notdiffnoise.mat'),'n0','n1','n2','n3');
+calibration_path_1 = Meta_Data.paths.calibration;
+spltpath=strsplit(path,':');
+epsilib_path={spltpath{~cellfun(@isempty, ...
+                               cellfun(@(x) ...
+                               strfind(x,'epsilib'),spltpath, ...
+                               'UniformOutput',false))}};
+process_library=fileparts(epsilib_path{cellfun(@length,epsilib_path)==min(cellfun(@length,epsilib_path))});
+calibration_path_2 = fullfile(process_library,'CALIBRATION','ELECTRONICS');
+
+switch tempChoice
+    case 'Tdiff'
+        try
+            Meta_Data.PROCESS.FPO7noise=load(fullfile(calibration_path_1,'FPO7_noise.mat'),'n0','n1','n2','n3');
+        catch
+            Meta_Data.PROCESS.FPO7noise=load(fullfile(calibration_path_2,'FPO7_noise.mat'),'n0','n1','n2','n3');
+        end
+    otherwise
+        try
+            Meta_Data.PROCESS.FPO7noise=load(fullfile(calibration_path_1,'FPO7_notdiffnoise.mat'),'n0','n1','n2','n3');
+        catch
+            Meta_Data.PROCESS.FPO7noise=load(fullfile(calibration_path_2,'FPO7_noise.mat'),'n0','n1','n2','n3');
+        end
     end
     FPO7noise   = Meta_Data.PROCESS.FPO7noise;
 
