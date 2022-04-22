@@ -296,7 +296,8 @@ classdef epsi_class < handle
                 %                         obj.Meta_Data.paths.raw_data,'f'); %NC set mode to 'f' to copy file
                 %                 end
                 % Convert raw to mat
-                dirs = {obj.Meta_Data.paths.raw_data; obj.Meta_Data.paths.mat_data};
+                dirs.raw_incoming = obj.Meta_Data.paths.raw_data;
+                dirs.mat = obj.Meta_Data.paths.mat_data;
                 epsiProcess_convert_new_raw_to_mat(dirs,obj.Meta_Data,'noSync','version',version_number);
             end
 
