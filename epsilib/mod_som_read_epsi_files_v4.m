@@ -1262,7 +1262,8 @@ else
         apf.data.freq_diag{iB}=fe(1:apf.data.nfft_diag);
 
         % Does length(efe_block_data)=efe.hexlengthblock.value?
-        if (length(apf_block_data)~=apf.data.hexlengthblock.value)
+        if (1==0)
+%         if (length(apf_block_data)~=apf.data.hexlengthblock.value)
             fprintf("apf block %i has incorrect length\r\n",iB)
         else
             local_apf_block_counter=36;
