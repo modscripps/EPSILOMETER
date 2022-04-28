@@ -11,6 +11,17 @@ Meta_Data.paths.mat_data   = fullfile(Meta_Data.paths.data,'mat');
 Meta_Data.paths.profiles   = fullfile(Meta_Data.paths.data,'profiles');
 Meta_Data.paths.figures   = fullfile(Meta_Data.paths.data,'figs');
 
+suffixOptions = {'.ascii','_raw','.raw','.epsi','.bin','.modraw'};
+
+% Count files that match each of the suffix options
+for iOpt=1:length(suffixOptions)
+    try
+        copyfile(['*' suffixOptions{iOpt}],Meta_Data.paths.raw_data)
+    catch
+    end
+end
+
+
 % Create paths if they don't already exist
 pathList = {'raw_data','mat_data','profiles','figures'};
 for p=1:length(pathList)

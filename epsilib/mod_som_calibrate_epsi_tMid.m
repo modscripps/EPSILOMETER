@@ -109,7 +109,7 @@ end
 % you want to plot (you might get this by clicking on a timeseries of
 % pressure, dPdt
 % [~,idxMid] =  nanmin(abs(timeaxis - tMid));
-idxMid =  find(timeaxis>nanmean(timeaxis),1,'first');
+idxMid =  find(timeaxis>nanmean(timeaxis)+6,1,'first');
 idxScan = floor(idxMid - FS*(tscan/2)) : floor(idxMid + FS*(tscan/2));
 
 % Lscan,defined later is the length of tscan. Lseg is the length of the
@@ -231,7 +231,7 @@ for c=1:nb_channels
 end
 
 %% compute spectra
-[f1,~,P11,~]=get_profile_spectrum(data,f);
+[f1,~,P11,~]=mod_epsi_get_profile_spectrum(data,f);
 indf1=find(f1>=0);
 indf1=indf1(1:end-1);
 f1=f1(indf1);
