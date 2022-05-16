@@ -135,11 +135,11 @@ classdef epsi_class < handle
                             obj.Meta_Data = create_metadata_from_deployment_log_v2(dir_has_log.name);
                             obj.Meta_Data.AFE=obj.Meta_Data.epsi;
                         catch err
-                          
+
                             for j = 1:length(err.stack)
                                 disp([num2str(j) ' ' err.stack(j).name ' ' num2str(err.stack(j).line)]);
                             end
-                              error('Failed to find config data (1)')
+                            error('Failed to find config data (1)')
                         end
 
                     elseif ~isempty(dir_has_config) %if there is a config file...
@@ -151,7 +151,7 @@ classdef epsi_class < handle
                                 disp([num2str(j) ' ' err.stack(j).name ' ' num2str(err.stack(j).line)]);
                             end
                             error('Failed to find config data (2)')
-                            
+
                         end
                         % Fill Meta Data from setup data
                         try
@@ -160,7 +160,7 @@ classdef epsi_class < handle
                             fprintf('Meta_Data.paths.process_library is %s \n',obj.Meta_Data.paths.process_library);
                             fprintf('Meta_Data.paths.data is %s \n',obj.Meta_Data.paths.data);
                         catch err
-                            
+
                             for j = 1:length(err.stack)
                                 disp([num2str(j) ' ' err.stack(j).name ' ' num2str(err.stack(j).line)]);
                             end
@@ -175,7 +175,7 @@ classdef epsi_class < handle
                             setupfile=dir(fullfile(obj.Meta_Data.paths.raw_data,...
                                 ['*' obj.Meta_Data.rawfileSuffix]));
                             setup=mod_som_read_setup_from_raw(fullfile(setupfile(1).folder,setupfile(1).name));
-                        catch err  
+                        catch err
                             for j = 1:length(err.stack)
                                 disp([num2str(j) ' ' err.stack(j).name ' ' num2str(err.stack(j).line)]);
                             end
@@ -267,14 +267,49 @@ classdef epsi_class < handle
             obj.Meta_Data = Meta_Data;
         end
         function obj=f_readData(obj,varargin)
-            % MISOBOB - f_readData(0)
-            % BLT     - f_readData
+            % MISOBOB - f_readData('version',0)
+            % BLT2021 - f_readData('version',3)
+            % BLT2022 - f_readData('version',4)
             % APEX    - f_readData
 
-            if nargin>0 && ~isempty(varargin)
-                version_number = varargin{1};
-            else
-                version_number = 4;
+            % Set defaults
+            version_number = 4;
+            calc_micro = 0;
+
+            argsNameToCheck = {'calc_micro',...    %1
+                'version'};         %2
+
+            index = 1; %Initialize index of argsNameToCheck
+            % Number of items remaining (this is the number of argsNameToCheck minus
+            % the number of extra parameters that go with the arguments. For example,
+            % 'version' expects another parameter that follows it: 'version', 3.
+            % Similarly, 'fileStr' expects a string after it: 'fileStr',
+            % 'EPSI_22_04_12*'
+            n_items = nargin-2;
+
+            while (n_items > 0)
+                argsMatch = strcmpi(varargin{index},argsNameToCheck);
+                i = find(argsMatch,1);
+                if isempty(i)
+                    error('MATLAB:epsiProcess_convert_new_raw_to_mat:wrongOption','Incorrect option specified: %s', varargin{index});
+                end
+
+                switch i
+                    case 1 %calc_micro
+                        % Find the index of varargin that = 'calc_micro'. The following
+                        % index contains the version number
+                        idxFlag = find(cell2mat(cellfun(@(C) ~isempty(strfind(C,'calc_micro')),varargin,'uniformoutput',0)));
+                        calc_micro = varargin{idxFlag+1};
+                        index = index+2;
+                        n_items = n_items-2;
+                    case 2 %version
+                        % Find the index of varargin that = 'version'. The following
+                        % index contains the version number
+                        idxFlag = find(cell2mat(cellfun(@(C) ~isempty(strfind(C,'version')),varargin,'uniformoutput',0)));
+                        version = varargin{idxFlag+1};
+                        index = index+2; %+2 because the following varargin will be the version number
+                        n_items = n_items-2;
+                end
             end
 
             % Copy raw files from datapath to RAWpath
@@ -298,7 +333,7 @@ classdef epsi_class < handle
                 % Convert raw to mat
                 dirs.raw_incoming = obj.Meta_Data.paths.raw_data;
                 dirs.mat = obj.Meta_Data.paths.mat_data;
-                epsiProcess_convert_new_raw_to_mat(dirs,obj.Meta_Data,'noSync','version',version_number);
+                epsiProcess_convert_new_raw_to_mat(dirs,obj.Meta_Data,'noSync','version',version_number,'calc_micro',calc_micro);
             end
 
         end
@@ -522,7 +557,7 @@ classdef epsi_class < handle
         end
 
 
-        function  [P11,f,noise,ax]=f_plot_spectraAtTmid(obj,tmid,tscan,nSec,makeFig,saveFig,replaceData,ax)
+        function  [P11,f,noise,ax]=f_plot_spectra_at_tMid(obj,tmid,tscan,nSec,makeFig,saveFig,replaceData,ax)
             % Plots 30-sec timeseries from all channels and spectra from
             % user-defined tscan
             %
@@ -724,7 +759,7 @@ classdef epsi_class < handle
                     %                 tscanLongestProfile = floor(0.8*length(Profile.epsi.time_s)/Fs);
                     %                 tscanDefault = 50;
                     %                 tscan = min([tscanDefault,tscanLongestProfile]);
-                    
+
                     % This is what actually calculates dTdV!
                     obj.Meta_Data=mod_epsi_temperature_spectra_v4(obj.Meta_Data,Profile);
             end
@@ -772,7 +807,7 @@ classdef epsi_class < handle
             %   'grid',P - 'grid' flag to grid some of the profile variables onto a
             %               standard pressure grid
             %            - P = the pressure array to use
-            
+
             % If there are not yet any temperature calibration values,
             % calibrate the temperature probes.
             if obj.Meta_Data.AFE.t1.cal==0 && obj.Meta_Data.AFE.t2.cal==0

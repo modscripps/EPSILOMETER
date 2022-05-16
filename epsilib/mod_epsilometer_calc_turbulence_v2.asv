@@ -209,9 +209,6 @@ Profile.nfftc      =  nfftc;
 Profile.fpump      =  Meta_Data.PROCESS.ctd_fc; % arbitrary cut off frequency usually extract from coherence spectra shear/accel
 Profile.f          =  f(:).';
 
-
-
-
 %% Get data for each scan and store averages in Profile
 
 % ------------------------------------------------

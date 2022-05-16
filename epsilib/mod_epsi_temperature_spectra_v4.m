@@ -49,7 +49,7 @@ ctd_df = Meta_Data.PROCESS.Fs_ctd;
 % id profile
 tscanAlternate = floor(0.8*length(Profile.epsi.time_s)/epsi_df);
 tscanDefault = 50;
-tscan = min([tscanDefault,tscanAlternate]);
+tscan = min([tscanDefault,tscanAlternate/2]); %NC - alternate length is half the profile length, so you can have some overlap
 
 % define parameters to compute the spectra.
 epsi_Lscan  = tscan*epsi_df;
@@ -76,7 +76,7 @@ ctd_profile_duration=Profile.ctd.time_s(end)-Profile.ctd.time_s(1); %NC - epsiti
 
 % define number of segments.
 % NC - Added nbscan for ctd and compare the two. Sometimes it was making
-% one two many scans for ctd to use based on epsi
+% one too many scans for ctd to use based on epsi
 nbscan_epsi  = floor(epsi_T/epsi_Lscan);
 nbscan_ctd   = floor(ctd_T/ctd_Lscan);
 nbscan = min([nbscan_epsi,nbscan_ctd]);

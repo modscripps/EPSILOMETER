@@ -28,6 +28,6 @@ CTD.output_format=24
 %dropnumBaseonWinch=1
 %FILES
 %RecHeader.totalDrops=4
-Ascii_dataFile.runname='apf_'
+Ascii_dataFile.runname='ef2_'
 Ascii_dataFile.path='/Users/Shared/Student_Cruise/RAW/'
 Ascii_dataFile.dataFileSize=5000000

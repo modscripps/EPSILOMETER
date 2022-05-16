@@ -36,31 +36,31 @@ time.sleep(.1)
 print(bin_cmd)
 
 
-str_cmd  = "settings.mission MISSION VEHICLE \r\n" 
+str_cmd  = "settings.mission Outfall Epsifish1 \r\n"
 bin_cmd=str_cmd.encode()
 ser_write.write(bin_cmd)
 time.sleep(.1)
 print(bin_cmd)
 
 
-#efe.probe probe_id (1 , 2 ,3 ,4) channel name (t1,t2,s1,s2) probe serial number (3digits) probe calibration (0 for temp, Sv for shear)   
-str_cmd  = "efe.probe 1 t1 111 00\r\n" 
+#efe.probe probe_id (1 , 2 ,3 ,4) channel name (t1,t2,s1,s2) probe serial number (3digits) probe calibration (0 for temp, Sv for shear)
+str_cmd  = "efe.probe 1 t1 262 00\r\n"
 bin_cmd=str_cmd.encode()
 ser_write.write(bin_cmd)
 time.sleep(.1)
 print(bin_cmd)
 
 
-#efe.probe probe_id (1 , 2 ,3 ,4) channel name (t1,t2,s1,s2) probe serial number (3digits) probe calibration (0 for temp, Sv for shear)   
-str_cmd  = "efe.probe 2 t2 222 00\r\n" 
+#efe.probe probe_id (1 , 2 ,3 ,4) channel name (t1,t2,s1,s2) probe serial number (3digits) probe calibration (0 for temp, Sv for shear)
+str_cmd  = "efe.probe 2 t2 247 00\r\n"
 bin_cmd=str_cmd.encode()
 ser_write.write(bin_cmd)
 time.sleep(.1)
 print(bin_cmd)
 
 
-#efe.probe probe_id (1 , 2 ,3 ,4) channel name (t1,t2,s1,s2) probe serial number (3digits) probe calibration (0 for temp, Sv for shear)   
-str_cmd  = "efe.probe 3 s1 333 40\r\n" 
+#efe.probe probe_id (1 , 2 ,3 ,4) channel name (t1,t2,s1,s2) probe serial number (3digits) probe calibration (0 for temp, Sv for shear)
+str_cmd  = "efe.probe 3 s1 309 40\r\n"
 bin_cmd=str_cmd.encode()
 ser_write.write(bin_cmd)
 time.sleep(.1)
@@ -68,27 +68,22 @@ print(bin_cmd)
 
 
 
-#efe.probe probe_id (1 , 2 ,3 ,4) channel name (t1,t2,s1,s2) probe serial number (3digits) probe calibration (0 for temp, Sv for shear)   
-str_cmd  = "efe.probe 4 s2 444 40\r\n" 
+#efe.probe probe_id (1 , 2 ,3 ,4) channel name (t1,t2,s1,s2) probe serial number (3digits) probe calibration (0 for temp, Sv for shear)
+str_cmd  = "efe.probe 4 s2 324 40\r\n"
 bin_cmd=str_cmd.encode()
 ser_write.write(bin_cmd)
 time.sleep(.1)
 print(bin_cmd)
 
-str_cmd  = "som.standalone\r\n" 
-bin_cmd=str_cmd.encode()
-ser_write.write(bin_cmd)
-time.sleep(.1)
-print(bin_cmd)
-
-
-str_cmd  = "som.start\r\n" 
+str_cmd  = "som.standalone\r\n"
 bin_cmd=str_cmd.encode()
 ser_write.write(bin_cmd)
 time.sleep(.1)
 print(bin_cmd)
 
 
-    
-    
-    
+str_cmd  = "som.start\r\n"
+bin_cmd=str_cmd.encode()
+ser_write.write(bin_cmd)
+time.sleep(.1)
+print(bin_cmd)

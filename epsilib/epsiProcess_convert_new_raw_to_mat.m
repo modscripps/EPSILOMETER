@@ -18,6 +18,8 @@ function [matData] = epsiProcess_convert_new_raw_to_mat(dirs,Meta_Data,varargin)
 %       - don't rsync files from RawDir to RawDir Away
 %   'doFCTD'
 %       - make FCTD files compatible with MOD FCTD processing library
+%   'calc_micro'
+%       - true/false to calculate microstructure data
 %   'fileStr', 'string_to_match'
 %       - use this flag along with a search string
 %       if you want to limit rsyncing files to only those that match a certain
@@ -47,6 +49,7 @@ matData.vnav = [];
 matData.gps  = [];
 matData.seg  = [];
 matData.spec = [];
+matData.micro = [];
 
 % NC - Only rsync files with the desired suffix
 suffixStr = Meta_Data.rawfileSuffix; %ex. .raw, .ascii, etc
@@ -57,18 +60,21 @@ suffixSearch = ['*' suffixStr];
 % the next step
 rSync = true; %copy raw files from "rawDir" to "awayDir"
 doFCTD = false; % make separate .mat files in awayDir/FCTDmat readable by FCTD processing scripts
+calc_micro = false; %calculate epsilon, chi, for timeseries (before dividing into profiles)
 version = 4; %Default version of mod_som_read_epsi_files
 display_file_data_flag = false; % By default, DON'T display file information to the screen
 cruise_specifics.blt_2021 = false; %By default, DON'T add microconductivity and fluorometer data to FCTD structure
+
 
 %% Loop through the number of varargin arguments
 
 argsNameToCheck = {'noSync',...             %1
                    'doFCTD',...             %2
-                   'fileStr',...            %3
-                   'version',...            %4
-                   'display_file_data',...  %5
-                   'blt_2021'};             %6
+                   'calc_micro',...         %3
+                   'fileStr',...            %4
+                   'version',...            %5
+                   'display_file_data',...  %6
+                   'blt_2021'};             %7
 
 index = 1; %Initialize index of argsNameToCheck
 % Number of items remaining (this is the number of argsNameToCheck minus
@@ -94,7 +100,14 @@ while (n_items > 0)
             doFCTD = true;
             index = index+1;
             n_items = n_items-1;
-        case 3 %fileStr % NC - added optional fileStr input
+        case 3
+            % Find the index of varargin that = 'calc_micro'. The following
+            % index contains the version number
+            idxFlag = find(cell2mat(cellfun(@(C) ~isempty(strfind(C,'calc_micro')),varargin,'uniformoutput',0)));
+            calc_micro = varargin{idxFlag+1};
+            index = index+2;
+            n_items = n_items-2;
+        case 4 %fileStr % NC - added optional fileStr input
             fileStr = true;
             % Find the index of varargin that = 'fileStr'. The following
             % index contains 'str_to_match'
@@ -102,18 +115,18 @@ while (n_items > 0)
             str_to_match = varargin{idxFlag+1};
             index = index+2; %+2 because the following varargin will str_to_match
             n_items = n_items-2;
-        case 4 %version % NC 10/11/21 - added optional version input
+        case 5 %version % NC 10/11/21 - added optional version input
             % Find the index of varargin that = 'version'. The following
             % index contains the version number
             idxFlag = find(cell2mat(cellfun(@(C) ~isempty(strfind(C,'version')),varargin,'uniformoutput',0)));
             version = varargin{idxFlag+1};
             index = index+2; %+2 because the following varargin will be the version number
             n_items = n_items-2;
-        case 5 %display_file_data
+        case 6 %display_file_data
             display_file_data_flag = true;
             index = index+1;
             n_items = n_items-1;
-        case 6 %blt_2021
+        case 7 %blt_2021
             cruise_specifics.blt_2021 = true;
             index = index+1;
             n_items = n_items-1;
@@ -204,6 +217,12 @@ for i=1:length(myASCIIfiles)
         %Empty contents of matData structure
         use matData 
 
+        % Calculate microstructure data - NC added 5.16.22
+        if calc_micro
+            matData.micro = mod_epsilometer_calc_turbulence_v2(Meta_Data,matData,0);
+            save(fullfile(MatDir,base),'-struct','matData')
+        end
+
         % Update the .mat file time index
         if ~isempty(epsi) && isfield(epsi,'time_s')
             epsiProcess_update_TimeIndex(MatDir,base,epsi);
@@ -213,7 +232,7 @@ for i=1:length(myASCIIfiles)
         
         % Update pressure timeseries
         if ~isempty(ctd) && isfield(ctd,'dnum')
-            epsiProcess_update_PressureTimeseries(MatDir,ctd,Meta_Data.PROCESS.profile_dir)
+            epsiProcess_update_PressureTimeseries(Meta_Data,MatDir,ctd,Meta_Data.PROCESS.profile_dir)
         end
         
         % Save files for FCTD Format %%%%%% (Bethan 20 June 2021)
@@ -347,7 +366,6 @@ if ~isempty(alt) && isfield(alt,'time_s')
     FCTD.altDist=interp1(alt.dnum,alt.dst,ctd.dnum);
 else
     FCTD.altTime=nan(length(ctd.dnum),1);
-    disp(['No alt data ' myASCIIfiles(i).name]);
 end
 
 % Add VectorNav data

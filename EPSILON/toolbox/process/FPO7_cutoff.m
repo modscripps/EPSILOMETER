@@ -47,7 +47,7 @@ indsup110=find(f>110);
 adjust_spec=nanmedian(medspec(indsup110)./10.^(noise(indsup110)));
 % adjust_spec=1;
 if adjust_spec>10
-    warning('temp noise way higher than bench')
+    %warning('temp noise way higher than bench')
 end
 SN_min=2;
 noisy=find(medspec./adjust_spec<SN_min.*10.^(noise));

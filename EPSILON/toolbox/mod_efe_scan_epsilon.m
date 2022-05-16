@@ -139,6 +139,7 @@ if isfinite(scan.(shear_channel))
         fc(2)=kc(2).*w;
     catch
         epsilon_co=nan;
+        epsilon_mv=nan;
         kc(2)=nan;
         fc(2)=nan;
     end

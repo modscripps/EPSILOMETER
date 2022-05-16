@@ -2,7 +2,7 @@
 %TCPIPSocket.portnum=2342
 %UDPSocket.portnum=50210
 %SENSOR SETUP
-CTD.SerialNum='0133'
+CTD.SerialNum='0057'
 CTD.MicroCond='MOD-2'
 CTD.Compass=''
 %Display CTD data: 0=status, 1=engineer format, 2 = debug
@@ -13,6 +13,7 @@ CTD.engDispRate = 8
 %CTD.CTDPortName='/dev/tty.usbserial-FT3T1NJ5'
 %CTD.CTDPortName='/dev/tty.usbserial-A505VY8E'
 CTD.CTDPortName='/dev/tty.usbserial-A9PTNAGM'
+
 CTD.speed=230400
 %Length of CTD data: 24 or 72 (has micro-cond)84 with accels
 %CTD.CTDlength=84
@@ -27,6 +28,6 @@ CTD.output_format=24
 %dropnumBaseonWinch=1
 %FILES
 %RecHeader.totalDrops=4
-Ascii_dataFile.runname='apf_'
+Ascii_dataFile.runname='ef1_'
 Ascii_dataFile.path='/Users/Shared/Student_Cruise/RAW/'
 Ascii_dataFile.dataFileSize=5000000

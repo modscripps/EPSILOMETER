@@ -21,13 +21,12 @@ for iOpt=1:length(suffixOptions)
     end
 end
 
-
 % Create paths if they don't already exist
 pathList = {'raw_data','mat_data','profiles','figures'};
 for p=1:length(pathList)
     if ~exist(Meta_Data.paths.(pathList{p}),'dir')
-        eval([ '!mkdir ' strrep(Meta_Data.paths.(pathList{p}),' ','\ ')]);
-%         eval([ '!mkdir ' Meta_Data.paths.(pathList{p})]);
+        mkdir(Meta_Data.paths.(pathList{p}));
+        %eval([ '!mkdir ' strrep(Meta_Data.paths.(pathList{p}),' ','\ ')]);
         disp(['Created new directory: ' Meta_Data.paths.(pathList{p})])
     end
 end

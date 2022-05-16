@@ -61,11 +61,14 @@ end
 
 Meta_Data = obj.Meta_Data;
 EPSI = obj.epsi;
+CTD = obj.ctd;
 
 % If there's no CTD data...
-if ~(isfield(obj,'ctd') || isclassfield(obj,'ctd'))
-    CTD.time_s = [];
-    CTD.dPdt = [];
+if ~(isfield(obj,'ctd') || isclassfield(obj,'ctd')) 
+    if isempty(obj.ctd)
+        CTD.time_s = [];
+        CTD.dPdt = [];
+    end
 elseif isfield(obj,'ctd') || isclassfield(obj,'ctd')
     CTD = obj.ctd;
     ind0=(CTD.time_s==0);
