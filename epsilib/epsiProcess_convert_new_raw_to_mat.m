@@ -219,7 +219,7 @@ for i=1:length(myASCIIfiles)
 
         % Calculate microstructure data - NC added 5.16.22
         if calc_micro
-            matData.micro = mod_epsilometer_calc_turbulence_v2(Meta_Data,matData,0);
+            matData.micro = epsiProcess_calc_turbulence(Meta_Data,matData,0);
             save(fullfile(MatDir,base),'-struct','matData')
         end
 

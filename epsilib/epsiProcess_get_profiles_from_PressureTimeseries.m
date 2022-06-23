@@ -9,7 +9,7 @@ function [PT] = epsiProcess_get_profiles_from_PressureTimeseries(PressureTimeser
 % OPTIONAL INPUTS
 % 'downLim','threshold','up','down','both'
 
-plotFig = 1;
+plotFig = 0;
 PT = PressureTimeseries;
 
 % use nPoints median filter to smooth out the pressure field

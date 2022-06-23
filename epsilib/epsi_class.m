@@ -376,7 +376,7 @@ classdef epsi_class < handle
                 obj=[];
             end
         end
-
+        
 
         function obj=f_getFileData(obj,fileNumOrName)
             % fileNumOrName is an array of file indices of the list of raw
@@ -445,6 +445,12 @@ classdef epsi_class < handle
             else
                 obj=[];
             end
+        end
+        function var_timeseries = f_get_var_timeseries(obj,var_name)
+            var_timeseries = epsiProcess_get_var_timeseries(obj,var_name);
+        end
+        function var_timeseries = f_plot_var_timeseries(obj,var_name);
+            var_timeseries = epsiPlot_var_timeseries(obj,var_name);
         end
         function obj=f_getPlotProperties(obj)
             % Set default plot properties (fonts, colors, sizes)
