@@ -25,9 +25,11 @@ classdef epsi_class < handle
         vnav
     end
     methods
-        function obj=epsi_class(lastOrAll)
+        function obj=epsi_class(varargin)
             if nargin<1
-                lastOrAll=1;
+                epsi_path = pwd;
+            else 
+                epsi_path = varargin{1};
             end
             %           TODO only define Meta data if epsi.mat and ctd.mat does not
             %           exist
@@ -47,14 +49,14 @@ classdef epsi_class < handle
             end
 
             % Check to see if Meta_Data is already definedc
-            checkMD = dir('Meta_Data.mat');
+            checkMD = dir(fullfile(epsi_path,'Meta_Data.mat'));
 
             repeat = 1; %NC Initialize repeat flag to use if Meta_Data path names were not made on this machine
             while repeat==1
                 if ~isempty(checkMD) %Meta_Data already exists
 
                     fprintf('Initializing epsi_class with previously created Meta_Data \n')
-                    load('Meta_Data')
+                    load(fullfile(epsi_path,'Meta_Data'))
                     obj.Meta_Data = Meta_Data;
 
                     % Check that processpath, datapath, and CALIpath are
@@ -62,8 +64,8 @@ classdef epsi_class < handle
                     % created on a different computer and you need to
                     % remake the paths.
                     % NC 9/22/21 - Always redefine the data path as the current
-                    % directory
-                    obj.Meta_Data.paths.data=pwd;
+                    % directory or the directory you input
+                    obj.Meta_Data.paths.data=epsi_path;
 
                     %                     spltpath=strsplit(path,':');
                     %                     archived_path=spltpath{~cellfun(@isempty, ...
@@ -109,7 +111,7 @@ classdef epsi_class < handle
                     repeat = 0;
 
                     % Set epsi paths and define suffix for raw files
-                    obj.Meta_Data.paths.data = pwd;
+                    obj.Meta_Data.paths.data = epsi_path;
                     obj.Meta_Data = epsiSetup_set_epsi_paths(obj.Meta_Data);
                     obj.Meta_Data = epsiSetup_get_raw_suffix(obj.Meta_Data);
 
@@ -243,21 +245,7 @@ classdef epsi_class < handle
 
             % Define plot properties
             obj.f_getPlotProperties;
-
-            % Don't automatically read data. If you ran autoreadEpsi, you
-            % probably don't need to and you
-            %             %NC - Always check for new data by calling f_readData and then
-            %             %load data into epsi class
-            %             obj.f_readData();
-            %             if lastOrAll==1
-            %                 obj = obj.f_getLastData();
-            %             elseif lastOrAll==2
-            %                 obj = obj.f_getAllData();
-            %             end
-            %             cd(obj.Meta_Data.paths.data)
         end
-
-
         function obj=f_read_MetaProcess(obj,filename)
             if nargin==1
                 filename=fullfile(obj.Meta_Data.paths.process_library,'Meta_Data_Process',...
