@@ -215,9 +215,9 @@ A1=squeeze(nanmean(P11_epsi(indt1,:,:),2));
 AA1=squeeze(nanmean(P11_epsi(indt1,:,:),2))./TFtemp.';
 B1=squeeze(nanmean(P11_epsi(indt1,:,:),2)).*dTdV(1).^2./h_freq.electFPO7.'.^2;
 
-A2=squeeze(nanmean(P11_epsi(indt1,:,:),2));
-AA2=squeeze(nanmean(P11_epsi(indt1,:,:),2))./TFtemp.';
-B2=squeeze(nanmean(P11_epsi(indt1,:,:),2)).*dTdV(1).^2./h_freq.electFPO7.'.^2;
+A2=squeeze(nanmean(P11_epsi(indt2,:,:),2));
+AA2=squeeze(nanmean(P11_epsi(indt2,:,:),2))./TFtemp.';
+B2=squeeze(nanmean(P11_epsi(indt2,:,:),2)).*dTdV(2).^2./h_freq.electFPO7.'.^2;
 
 % Sensitivity of probe, nominal. Save dTdV in Meta Data it will be use in
 % the batchprocess
@@ -263,7 +263,7 @@ if  plotData
     figure
     hold on
     if ~isempty(indt1)
-        loglog(epsi_f,P11_epsi_TF_mean(indt1,:),'c','linewidth',2,'displayname','t1')
+        loglog(epsi_f,P11_epsi_TF_mean_calibrated(indt1,:),'c','linewidth',2,'displayname','t1')
     end
     loglog(ctd_f,P11_ctd_mean,'r','linewidth',2,'displayname','CTD')
     %loglog(1/3:1/3:160,noise,'m','linewidth',2)
@@ -311,7 +311,7 @@ if  plotData
     figure
     hold on
     if ~isempty(indt2)
-        loglog(epsi_f,P11_epsi_TF_mean(indt2,:),'c','linewidth',2,'displayname','t2')
+        loglog(epsi_f,P11_epsi_TF_mean_calibrated(indt2,:),'c','linewidth',2,'displayname','t2')
     end
     loglog(ctd_f,P11_ctd_mean,'r','linewidth',2,'displayname','CTD')
     %loglog(1/3:1/3:160,noise,'m','linewidth',2)

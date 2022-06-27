@@ -232,9 +232,16 @@ classdef epsi_class < handle
             elseif isclassfield(obj.Meta_Data,'epsi') && isclassfield(obj.Meta_Data,'AFE')
                 field_name = 'epsi';
             end
+            try
             if obj.Meta_Data.(field_name).s1.cal==0 || obj.Meta_Data.(field_name).s2.cal==0
                 obj.Meta_Data = obj.f_getSNshear;
                 obj.Meta_Data = obj.f_getSNtemp;
+            end
+            catch
+            if obj.Meta_Data.(field_name).s1.cal==0 
+                obj.Meta_Data = obj.f_getSNshear;
+                obj.Meta_Data = obj.f_getSNtemp;
+            end
             end
 
             % Read PROCESS Meta_Data from default text file
@@ -261,7 +268,7 @@ classdef epsi_class < handle
             % APEX    - f_readData
 
             % Set defaults
-            version_number = 4;
+            version_number = varargin{1};
             calc_micro = 0;
 
             argsNameToCheck = {'calc_micro',...    %1

@@ -29,8 +29,8 @@ centerScan = tscan/2; %Plotted spectra will be centered tscan/2 seconds from the
 str_to_match = '*';
 
 % Directory containing streaming raw data
-rawDir = '/Volumes/FCTD_EPSI/RAW/';
-dirs.raw_incoming = '/Volumes/FCTD_EPSI/RAW/';
+rawDir = '/Users/Shared/SOM_APEX/RAW/';
+dirs.raw_incoming = '/Users/Shared/SOM_APEX/RAW/';
 
 % Choose time units
 time_units = 'dnum'; %uncomment this if you set the datetime on SOM

@@ -50,8 +50,8 @@ if adjust_spec>10
     %warning('temp noise way higher than bench')
 end
 SN_min=2;
-%ALB I am *not* comparing the first 2 Fourier coef.
-noisy=find(medspec(3:end)./adjust_spec<SN_min.*10.^(noise(3:end)));
+%ALB I am not comparing the first 2 Fourier coef.
+noisy=find(medspec./adjust_spec<SN_min.*10.^(noise));
 if isempty(noisy)
 	fc_index=length(f);
 else

@@ -130,12 +130,8 @@ else
     % EFE-specific quantities
     efe.data.n_blocks           = numel(ind_efe_start); %Number of data blocks beginning with $EFE
 
-    efe.data.n_channels         = Meta_Data.PROCESS.nb_channels;
-    if efe.data.n_channels==3
-    efe.data.sample_freq        = 160;
-    else
+    efe.data.n_channels         = 7;
     efe.data.sample_freq        = 320;
-    end
     efe.data.sample_period      = 1/efe.data.sample_freq;
     efe.data.bytes_per_channel  = 3;
     efe.data.timestamp_length   = 8;
@@ -270,15 +266,9 @@ else
     end
 
     % Sort epsi fields
-    try
-        epsi = orderfields(epsi,{'dnum','time_s','t1_count','t2_count','s1_count',...
-            's2_count','a1_count','a2_count','a3_count','t1_volt','t2_volt','s1_volt',...
-            's2_volt','a1_g','a2_g','a3_g'});
-    catch
-        epsi = orderfields(epsi,{'dnum','time_s','t1_count','s1_count',...
-            'a3_count','a2_count','t1_volt','s1_volt',...
-            'a3_g','a2_g'});
-    end
+    epsi = orderfields(epsi,{'dnum','time_s','t1_count','t2_count','s1_count',...
+        's2_count','a1_count','a2_count','a3_count','t1_volt','t2_volt','s1_volt',...
+        's2_volt','a1_g','a2_g','a3_g'});
 
 end %end if there is epsi data
 
@@ -1123,7 +1113,7 @@ else
     ind_apf_stop=ind_apf0_stop;
 
 
-    sampling_freq=160;
+    sampling_freq=320;
     % Pre-allocate space for data
     apf.data.n_blocks           = numel(ind_apf_start); %Number of data blocks beginning with $EFE
 
@@ -1269,9 +1259,8 @@ else
         case 2
             %time, pressure, dpdt, epsilon, chi, avg_t, avg_s, avg_a
             apf.channels         = {'dnum', ...
-                'pressure','temperature','salinity','dpdt', ...
-                'epsilon','chi','kcut_shear','fcut_temp', ...
-                'epsi_fom','chi_fom' ...
+                'pressure','dpdt', ...
+                'epsilon','chi', ...
                 'avg_tg_k','avg_shear_k','avg_accel_k'};
     end
     if iB==1
@@ -1293,17 +1282,9 @@ else
                 % get pressure
                 local_apf_block_counter=local_apf_block_counter(end)+(1:apf.data.float_length);
                 apf.data.pressure{iB}(d) = double(typecast(uint8(apf_block_data(local_apf_block_counter)), 'single'));
-                if(apf.metadata.packet_format{iB}==2)
-                    % get temperature
-                    local_apf_block_counter=local_apf_block_counter(end)+(1:apf.data.float_length);
-                    apf.data.temperature{iB}(d) = double(typecast(uint8(apf_block_data(local_apf_block_counter)), 'single'));
-                    % get salinity
-                    local_apf_block_counter=local_apf_block_counter(end)+(1:apf.data.float_length);
-                    apf.data.salinity{iB}(d) = double(typecast(uint8(apf_block_data(local_apf_block_counter)), 'single'));
-                    % get dpdt
-                    local_apf_block_counter=local_apf_block_counter(end)+(1:apf.data.float_length);
-                    apf.data.dpdt{iB}(d)     = double(typecast(uint8(apf_block_data(local_apf_block_counter)), 'single'));
-                end
+                % get dpdt
+                local_apf_block_counter=local_apf_block_counter(end)+(1:apf.data.float_length);
+                apf.data.dpdt{iB}(d)     = double(typecast(uint8(apf_block_data(local_apf_block_counter)), 'single'));
                 % get dissrate
                 local_apf_block_counter=local_apf_block_counter(end)+(1:apf.data.dissrate_length);
                 apf.data.raw_dissrate{iB}(d,:) = uint8(apf_block_data(local_apf_block_counter));
@@ -1316,39 +1297,20 @@ else
                     uint32(apf.data.raw_dissrate{iB}(d,3)));
                 apf.data.chi{iB}(d) = convert_dissrate(double(tempo_chi));
 
-                if(apf.metadata.packet_format{iB}==2)
-                    % get kcuttoff shear
-                    local_apf_block_counter=local_apf_block_counter(end)+(2:apf.data.float_length+1);
-                    apf.data.kcutoff_shear{iB}(d) = double(typecast(uint8(apf_block_data(local_apf_block_counter)), 'single'));
-                    % get fcuttoff temp
-                    local_apf_block_counter=local_apf_block_counter(end)+(1:apf.data.float_length);
-                    apf.data.fcutoff_temp{iB}(d) = double(typecast(uint8(apf_block_data(local_apf_block_counter)), 'single'));
-                end
-                % get fom
-                local_apf_block_counter=local_apf_block_counter(end)+(0:apf.data.fom_length-1);
-                apf.data.fom{iB}(d,:) = uint8(apf_block_data(local_apf_block_counter));
-
-                tempo_fom_epsi     = uint32(bitshift(apf.data.fom{iB}(d),-4));
-                apf.data.epsi_fom{iB}(d) = convert_fom(double(tempo_fom_epsi));
-                tempo_fom_chi     = uint32(bitor(apf.data.fom{iB}(d),15));
-                apf.data.chi_fom{iB}(d) = convert_fom(double(tempo_fom_chi));
-
-                if(apf.metadata.packet_format{iB}==2)
-                    for ii=1:apf.metadata.nfftdiag{iB}
-                        % get avg sh k spectrum
-                        local_apf_block_counter=local_apf_block_counter(end)+(1:apf.data.foco_length);
-                        tempo_foco = double(uint8(apf_block_data(local_apf_block_counter)))*mult(1:2);
-                        apf.data.avg_shear_k{iB}{d}(ii)=convert_foco(tempo_foco);
-                        % get avg tg k spectrum
-                        local_apf_block_counter=local_apf_block_counter(end)+(1:apf.data.foco_length);
-                        tempo_foco = double(uint8(apf_block_data(local_apf_block_counter)))*mult(1:2);
-                        apf.data.avg_tg_k{iB}{d}(ii)=convert_foco(tempo_foco);
-                        % get avg a3 k spectrum
-                        local_apf_block_counter=local_apf_block_counter(end)+(1:apf.data.foco_length);
-                        tempo_foco = double(uint8(apf_block_data(local_apf_block_counter)))*mult(1:2);
-                        apf.data.avg_accel_k{iB}{d}(ii)=convert_foco(tempo_foco);
-                        fprintf("d:%i; ii:%i\r\n",d,ii);
-                    end
+                for ii=1:apf.metadata.nfftdiag{iB}
+                    % get avg sh k spectrum
+                    local_apf_block_counter=local_apf_block_counter(end)+(1:apf.data.foco_length);
+                    tempo_foco = double(uint8(apf_block_data(local_apf_block_counter)))*mult(1:2);
+                    apf.data.avg_shear_k{iB}{d}(ii)=convert_foco(tempo_foco);
+                    % get avg tg k spectrum
+                    local_apf_block_counter=local_apf_block_counter(end)+(1:apf.data.foco_length);
+                    tempo_foco = double(uint8(apf_block_data(local_apf_block_counter)))*mult(1:2);
+                    apf.data.avg_tg_k{iB}{d}(ii)=convert_foco(tempo_foco);
+                    % get avg a3 k spectrum
+                    local_apf_block_counter=local_apf_block_counter(end)+(1:apf.data.foco_length);
+                    tempo_foco = double(uint8(apf_block_data(local_apf_block_counter)))*mult(1:2);
+                    apf.data.avg_accel_k{iB}{d}(ii)=convert_foco(tempo_foco);
+                    fprintf("d:%i; ii:%i\r\n",d,ii);
                 end
 
             end %end if efe data block is the correct size
@@ -1393,16 +1355,14 @@ if (isempty(ind_apf2_start))
     disp('no apf2')
 else
     processed_data_types = [processed_data_types,'apf2'];
-            %time, pressure, dpdt, epsilon, chi, avg_t, avg_s, avg_a
-            apf.channels         = {'dnum', ...
-                'pressure','temperature','salinity','dpdt', ...
-                'epsilon','chi','kcut_shear','fcut_temp', ...
-                'epsi_fom','chi_fom' ...
-                'avg_tg_k','avg_shear_k','avg_accel_k'};
+    %time, pressure, temperature, salinity, dpdt, epsilon, chi, avg_t, avg_s, avg_a
+    apf.channels         = {'dnum', ...
+        'pressure','temperature','salinity', 'dpdt', ...
+        'epsilon','chi',...
+        'avg_tg_k','avg_shear_k','avg_accel_k'};
     ind_apf_start=ind_apf2_start;
     ind_apf_stop=ind_apf2_stop;
 
-    sampling_freq=160;
 
 
     % Pre-allocate space for data
@@ -1435,27 +1395,23 @@ else
     apf.data.foco_count0        = [];
     apf.data.fom_count0         = [];
 
-        %     apf.data.n_elements         = apf.data.timestamp_length+ ...
+    %     apf.data.n_elements         = apf.data.timestamp_length+ ...
     %                                       (apf.data.n_channels)*...
     %                                        apf.data.float_length;
     %read the metadata
-        %         uint32_t daq_timestamp;                 4//
-        %         uint8_t  profile_id;                    1
-        %         uint16_t modsom_sn;                     2
-        %         uint16_t efe_sn;                        2
-        %         uint32_t firmware_rev;                  4
-        %         uint16_t nfft;                          2
-        %         uint16_t nfftdiag;                      2
-        %         mod_som_apf_probe_t  probe1;            6
-        %         mod_som_apf_probe_t  probe2;            6
-        %         uint8_t  comm_telemetry_packet_format;  1
-        %         uint8_t  sd_format;                     1
-        %         uint16_t sample_cnt;                    2
-        %         uint32_t voltage;                       4
-        %         uint16_t end_metadata; //always 0xFFFF; 2
-    apf.metadata.size=4+1+2+2+4+2+2+6+6+1+1+2+4+2;
-
-
+    %         uint32_t daq_timestamp;                 4//
+    %         uint8_t  profile_id;                    1
+    %         uint16_t modsom_sn;                     2
+    %         uint16_t efe_sn;                        2
+    %         uint32_t firmware_rev;                  4
+    %         uint16_t nfft;                          2
+    %         mod_som_apf_probe_t  probe1;            5
+    %         mod_som_apf_probe_t  probe2;            5
+    %         uint8_t  comm_telemetry_packet_format;  1
+    %         uint8_t  sd_format;                     1
+    %         uint16_t sample_cnt;                    2
+    %         uint16_t end_metadata; //always 0xFFFF; 2
+    apf.metadata.size=4+1+2+2+4+2+5+5+1+1+2+2;
 
     % anonymous function to convert dissrate, foco, fom
     %            mod_epsilon  = (uint32_t) ceil(local_epsilon*
@@ -1508,7 +1464,7 @@ else
 
     apf.metadata.nfft=2048;
     [~,fe]=pwelch(1.*(1:apf.metadata.nfft),apf.metadata.nfft,[], ...
-        apf.metadata.nfft,sampling_freq);
+        apf.metadata.nfft,320);
 
     %epsi.time_s and epsi.dnum will be created from epsi_timestamp once
     %all its records are filled
@@ -1556,18 +1512,6 @@ else
             apf.data.epsilon(iB) = double(typecast(uint8(apf_block_data(local_apf_block_counter)), 'single'));
             local_apf_block_counter=local_apf_block_counter(end)+(1:apf.data.float_length);
             apf.data.chi(iB) = double(typecast(uint8(apf_block_data(local_apf_block_counter)), 'single'));
-            % get kcuttoff shear
-            local_apf_block_counter=local_apf_block_counter(end)+(1:apf.data.float_length);
-            apf.data.kcutoff_shear(iB) = double(typecast(uint8(apf_block_data(local_apf_block_counter)), 'single'));
-            % get fcuttoff temp
-            local_apf_block_counter=local_apf_block_counter(end)+(1:apf.data.float_length);
-            apf.data.fcutoff_temp(iB) = double(typecast(uint8(apf_block_data(local_apf_block_counter)), 'single'));
-            % get fom
-            local_apf_block_counter=local_apf_block_counter(end)+(1:apf.data.float_length);
-            apf.data.epsi_fom(iB) = double(typecast(uint8(apf_block_data(local_apf_block_counter)), 'single'));
-            local_apf_block_counter=local_apf_block_counter(end)+(1:apf.data.float_length);
-            apf.data.chi_fom(iB) = double(typecast(uint8(apf_block_data(local_apf_block_counter)), 'single'));
-
 
             for ii=1:apf.metadata.nfft/2
                 % get avg sh k spectrum
