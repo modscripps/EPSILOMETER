@@ -28,7 +28,7 @@ classdef epsi_class < handle
         function obj=epsi_class(varargin)
             if nargin<1
                 epsi_path = pwd;
-            else 
+            else
                 epsi_path = varargin{1};
             end
             %           TODO only define Meta data if epsi.mat and ctd.mat does not
@@ -232,17 +232,17 @@ classdef epsi_class < handle
             elseif isclassfield(obj.Meta_Data,'epsi') && isclassfield(obj.Meta_Data,'AFE')
                 field_name = 'epsi';
             end
-            try
+            %try
             if obj.Meta_Data.(field_name).s1.cal==0 || obj.Meta_Data.(field_name).s2.cal==0
                 obj.Meta_Data = obj.f_getSNshear;
                 obj.Meta_Data = obj.f_getSNtemp;
             end
-            catch
-            if obj.Meta_Data.(field_name).s1.cal==0 
-                obj.Meta_Data = obj.f_getSNshear;
-                obj.Meta_Data = obj.f_getSNtemp;
-            end
-            end
+            %catch
+            %if obj.Meta_Data.(field_name).s1.cal==0
+            %    obj.Meta_Data = obj.f_getSNshear;
+            %    obj.Meta_Data = obj.f_getSNtemp;
+            %end
+            %end
 
             % Read PROCESS Meta_Data from default text file
             obj.f_read_MetaProcess;
@@ -262,13 +262,17 @@ classdef epsi_class < handle
             obj.Meta_Data = Meta_Data;
         end
         function obj=f_readData(obj,varargin)
-            % MISOBOB - f_readData('version',0)
-            % BLT2021 - f_readData('version',3)
-            % BLT2022 - f_readData('version',4)
-            % APEX    - f_readData
+            % optional arguments:
+            %   'version'
+            %       ex) MISOBOB - f_readData('version',0)
+            %       ex) BLT2021 - f_readData('version',3)
+            %       ex) BLT2022 - f_readData('version',4)
+            %   'calc_micro'
+            %       ex) f_readData('calc_micro',1) will calculate microstructure
+            %       ex) f_readData('calc_micro',0) will not calculate microstructrure
 
             % Set defaults
-            version_number = varargin{1};
+            version_number = 4;
             calc_micro = 0;
 
             argsNameToCheck = {'calc_micro',...    %1
@@ -371,7 +375,7 @@ classdef epsi_class < handle
                 obj=[];
             end
         end
-        
+
 
         function obj=f_getFileData(obj,fileNumOrName)
             % fileNumOrName is an array of file indices of the list of raw
