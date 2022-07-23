@@ -17,6 +17,7 @@ userConfirmsProfiles = 1;
 adjustTemp 	= false;
 multivariate   	= 0;
 movmean_window_time = 10*(50e-3);
+rawfileSuffix  = '.raw';
 
 % Options for picking out profiles
 % 	nPoints = Fs_ctd*2  = number of points to smooth pressure

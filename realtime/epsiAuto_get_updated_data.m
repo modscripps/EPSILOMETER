@@ -65,9 +65,4 @@ else
         end %end if that periph exists
     end %end loop through periphs
 
-    nArray
-    obj.epsi
-    obj.ctd
-    obj.alt
-    clear data
 end %if isempty(newData.epsi)

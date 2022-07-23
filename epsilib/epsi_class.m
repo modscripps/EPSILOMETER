@@ -23,6 +23,7 @@ classdef epsi_class < handle
         ctd
         alt
         vnav
+        gps
     end
     methods
         function obj=epsi_class(varargin)
@@ -76,7 +77,6 @@ classdef epsi_class < handle
                     %                         rmpath(archived_path);
                     %                     end
                     % Find the epsi library and add it as process path
-
                     if  ~isdir(obj.Meta_Data.paths.process_library) || ...
                             ~isdir(obj.Meta_Data.paths.data) || ...
                             ~isdir(obj.Meta_Data.paths.calibration) || ...
@@ -93,7 +93,8 @@ classdef epsi_class < handle
 
                         obj.Meta_Data.paths.process_library=fileparts(epsilib_path);
                         obj.Meta_Data.paths.calibration = fullfile(obj.Meta_Data.paths.process_library,'CALIBRATION','ELECTRONICS');
-
+            % Read PROCESS Meta_Data from default text file
+            obj.f_read_MetaProcess;
                         % Set epsi paths and define suffix for raw files
                         obj.Meta_Data = epsiSetup_set_epsi_paths(obj.Meta_Data);
                         obj.Meta_Data = epsiSetup_get_raw_suffix(obj.Meta_Data);
@@ -111,7 +112,17 @@ classdef epsi_class < handle
                     repeat = 0;
 
                     % Set epsi paths and define suffix for raw files
+                    % Find the epsi library and add it as process path
+                    spltpath=strsplit(path,':');
+                    epsilib_path=spltpath{~cellfun(@isempty, ...
+                        cellfun(@(x) ...
+                        strfind(x,'epsilib'),spltpath, ...
+                        'UniformOutput',false))};
                     obj.Meta_Data.paths.data = epsi_path;
+                    obj.Meta_Data.paths.process_library=fileparts(epsilib_path);
+                    obj.Meta_Data.paths.calibration = fullfile(obj.Meta_Data.paths.process_library,'CALIBRATION','ELECTRONICS');
+            % Read PROCESS Meta_Data from default text file
+            obj.f_read_MetaProcess;
                     obj.Meta_Data = epsiSetup_set_epsi_paths(obj.Meta_Data);
                     obj.Meta_Data = epsiSetup_get_raw_suffix(obj.Meta_Data);
 
@@ -128,8 +139,8 @@ classdef epsi_class < handle
 
                     % Is there a log csv file? Is there a config file? Or
                     % is config data inside the raw data files?
-                    dir_has_log = dir('Log*.csv');
-                    dir_has_config = dir('*config*');
+                    dir_has_log = dir(fullfile(epsi_path,'Log*.csv'));
+                    dir_has_config = dir(fullfile(epsi_path,'*config*'));
 
                     if ~isempty(dir_has_log) %if there is a log file...
 
@@ -199,6 +210,8 @@ classdef epsi_class < handle
                     end
 
                     % Set epsi paths and define suffix for raw files
+                                % Read PROCESS Meta_Data from default text file
+            obj.f_read_MetaProcess;
                     obj.Meta_Data = epsiSetup_set_epsi_paths(obj.Meta_Data);
                     obj.Meta_Data = epsiSetup_get_raw_suffix(obj.Meta_Data);
                     Meta_Data = obj.Meta_Data;
@@ -231,18 +244,15 @@ classdef epsi_class < handle
                 field_name = 'epsi';
             elseif isclassfield(obj.Meta_Data,'epsi') && isclassfield(obj.Meta_Data,'AFE')
                 field_name = 'epsi';
+            else
+                field_name = [];
             end
-            %try
-            if obj.Meta_Data.(field_name).s1.cal==0 || obj.Meta_Data.(field_name).s2.cal==0
+            
+            if ~isempty(field_name)
                 obj.Meta_Data = obj.f_getSNshear;
                 obj.Meta_Data = obj.f_getSNtemp;
             end
-            %catch
-            %if obj.Meta_Data.(field_name).s1.cal==0
-            %    obj.Meta_Data = obj.f_getSNshear;
-            %    obj.Meta_Data = obj.f_getSNtemp;
-            %end
-            %end
+
 
             % Read PROCESS Meta_Data from default text file
             obj.f_read_MetaProcess;
