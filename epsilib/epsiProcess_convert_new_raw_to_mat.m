@@ -82,7 +82,7 @@ index = 1; %Initialize index of argsNameToCheck
 % 'version' expects another parameter that follows it: 'version', 3.
 % Similarly, 'fileStr' expects a string after it: 'fileStr',
 % 'EPSI_22_04_12*'
-n_items = nargin-2; 
+n_items = nargin-2;
 
 while (n_items > 0)
     argsMatch = strcmpi(varargin{index},argsNameToCheck);
@@ -90,7 +90,7 @@ while (n_items > 0)
     if isempty(i)
         error('MATLAB:epsiProcess_convert_new_raw_to_mat:wrongOption','Incorrect option specified: %s', varargin{index});
     end
-    
+
     switch i
         case 1 % noSync
             rSync = false;
@@ -134,8 +134,13 @@ while (n_items > 0)
 end
 
 %% Define directories and check that they exist
-% Incoming raw files
-RawDir = dirs.raw_incoming;
+% Incoming raw files - make sure RawDir includes a trailing '/' or '\' because it will be used in rsync to copy all the contents of the directory to another one
+if strfind(computer,'MAC')
+  div = '/';
+else
+  div = '\';
+end
+RawDir = strrep([dirs.raw_incoming,div],[div div],div);
 if ~exist(RawDir,'dir')
     error('Cannot find raw directory (dirs.raw_incoming): %s',RawDirDuplicate);
 end
@@ -167,8 +172,9 @@ if rSync
     if fileStr
         suffixSearch = strrep([str_to_match,suffixSearch],'**','*'); %If you ended up with side-by-side *, delete one
     end
-    com = sprintf('/usr/bin/rsync -av  --include ''%s'' --exclude ''*'' %s %s',suffixSearch,RawDir,RawDirDuplicate);  %NC - rsync only the files ending in .raw
-    
+    %com = sprintf('/usr/bin/rsync -av  --include ''%s'' --exclude ''*'' %s %s',suffixSearch,RawDir,RawDirDuplicate);  %The exclude was useful before... but now it actually excludes everything. Leaving this commented in case I need it again
+    com = sprintf('/usr/bin/rsync -av  --include ''%s'' %s %s',suffixSearch,RawDir,RawDirDuplicate);  %NC - rsync only the files with the str_to_search and suffix
+
     fprintf(1,'Running: %s\n',com);
     unix(com);
     fprintf(1,'Done\n');
@@ -179,43 +185,44 @@ end
 %% Loop through files in RawDir and convert to mat and fctd_mat
 myASCIIfiles = dir(fullfile(RawDir, suffixSearch));
 
+if ~isempty(myASCIIfiles)
 for i=1:length(myASCIIfiles)
     indSuffix = strfind(myASCIIfiles(i).name,suffixStr);
-    
+
     base = myASCIIfiles(i).name(1:indSuffix-1);
     myMATfile = dir(fullfile(MatDir, [base '.mat']));
     if doFCTD
     end
-    
+
     % Convert new data to .mat
     if ~isempty(myMATfile) && datenum(myASCIIfiles(i).date)<=datenum(myMATfile.date)
         % If the MAT file exists and is newer than the raw file, skip it. All
         % of the raw data has already been converted
         % (DO NOTHING.)
-        
+
     elseif (~isempty(myMATfile) && datenum(myASCIIfiles(i).date)>datenum(myMATfile.date)) ...
             || isempty(myMATfile)
         % If the MAT file exists already but is older than the raw data
         % file, it will be reconverted. OR, if the MAT file does not exist
         % yet, it will be converted.
-        
+
         fprintf(1,'Converting %s%s\n',MatDir,myMATfile.name);
-        
+
         % Read file and save data in matData structure
         filename = fullfile(RawDir,myASCIIfiles(i).name);
         matData = read_data_file(filename,Meta_Data,version);
-        
+
         % Option to display file data
         if display_file_data_flag
             display_file_data(myASCIIfiles,i,matData)
         end
-        
+
         % Save data in .mat file
         save(fullfile(MatDir,base),'-struct','matData')
         fprintf(1,'%s: Wrote  %s%s.mat\n',datestr(now,'YY.mm.dd HH:MM:SS'),MatDir,base);
-        
+
         %Empty contents of matData structure
-        use matData 
+        use matData
 
         % Calculate microstructure data - NC added 5.16.22
         if calc_micro
@@ -229,20 +236,20 @@ for i=1:length(myASCIIfiles)
         elseif isempty(epsi) &&  ~isempty(ctd) && isfield(ctd,'time_s') %For the case where the is no epsi data, but there is ctd data
             epsiProcess_update_TimeIndex(MatDir,base,ctd);
         end
-        
+
         % Update pressure timeseries
         if ~isempty(ctd) && isfield(ctd,'dnum')
             epsiProcess_update_PressureTimeseries(Meta_Data,MatDir,ctd,Meta_Data.PROCESS.profile_dir)
         end
-        
+
         % Save files for FCTD Format %%%%%% (Bethan 20 June 2021)
         if doFCTD && ~isempty(ctd) && isfield(ctd,'time_s')
             make_FCTD_mat(matData,FCTDdir,base,cruise_specifics);
         end %end if doFCTD
-        
+
     end %end if the data should be converted
 end %end loop through files
-
+end %end if there are files
 
 end
 
@@ -291,11 +298,11 @@ switch version
         alt = [];
         vnav = [];
         gps = [];
-        
+
         t0 = Meta_Data.starttime;
         epsi.time_s=epsi.EPSInbsample/Meta_Data.PROCESS.Fs_epsi;
         ctd.time_s=ctd.Aux1Stamp/Meta_Data.PROCESS.Fs_epsi;
-        
+
         if (t0==0)
             epsi.dnum = epsi.time;
             ctd.dnum = ctd.time;
@@ -303,7 +310,7 @@ switch version
             ctd.dnum = ctd.time_s/86400 +t0;
             epsi.dnum = epsi.time_s/86400 +t0;
         end
-        
+
         % Add extra ctd variables
         % Define a constant for salinity calculation
         c3515 = 42.914;
@@ -311,7 +318,7 @@ switch version
         ctd.th   = sw_ptmp(ctd.S,ctd.T,ctd.P,0);
         ctd.sgth  = sw_pden(ctd.S,ctd.T,ctd.P,0);
         ctd.dPdt = [0; diff(ctd.P)./diff(ctd.time_s)];
-        
+
         % NC 17 July 2021 - added ctd.z and ctd.dzdt.
         % get_scan_spectra.m will use dzdt to define fall speed w.
         if ~isfield(Meta_Data.PROCESS,'latitude')
@@ -322,7 +329,7 @@ switch version
             ctd.z    = sw_dpth(ctd.P,Meta_Data.PROCESS.latitude);
             ctd.dzdt = [0; diff(ctd.z)./diff(ctd.time_s)];
         end
-        
+
         matData.epsi = epsi;
         matData.ctd = ctd;
 end
@@ -405,19 +412,19 @@ if cruise_specifics.blt_2021
     % also save time_fast as an N x 20 array.
     time_fast = linspace(ctd.dnum(1),ctd.dnum(end),length(ctd.dnum)*20);
     FCTD.time_fast = time_fast;
-    
+
     % Interpolate data that is not nan, not inf, and where time
     % is increasing
     diff_not_neg = [0;diff(epsi.dnum)]>0;
     keep = ~isnan(epsi.dnum) & ~isinf(epsi.dnum) & diff_not_neg;
-    
+
     if ~isempty(epsi) && isfield(epsi,'s2_count') && ~isempty(ctd)
         FCTD.uConductivity=reshape(interp1(epsi.dnum(keep),double(epsi.s2_count(keep)),time_fast),20,[])';
     else
         FCTD.uConductivity=nan(length(ctd.dnum),20);
         disp(['No uConductivity data ' myASCIIfiles(i).name]);
     end
-    
+
     if ~isempty(epsi) && isfield(epsi,'s1_volt')  && ~isempty(ctd)
         FCTD.fluorometer=reshape(interp1(epsi.dnum(keep),epsi.s1_volt(keep),time_fast),20,[])';
     else
@@ -459,5 +466,3 @@ end
 save([dirname '/FastCTD_MATfile_TimeIndex.mat'],'FastCTD_MATfile_TimeIndex');
 end %end FastCTD_UpdateMATFileTimeIndex
 % ------------------------------------
-
-

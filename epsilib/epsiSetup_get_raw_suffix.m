@@ -4,6 +4,10 @@ function [Meta_Data] = epsiSetup_get_raw_file_suffix(Meta_Data)
 % epsiProcess_convert_new_raw_to_mat requires this information to know which files to
 % convert.
 
+% First check to see if suffix is already defined in Meta_Data.PROCESS
+if isfield(Meta_Data.PROCESS,'rawfileSuffix')
+    Meta_Data.rawfileSuffix = Meta_Data.PROCESS.rawfileSuffix;
+else
 % List possible suffix options. They need to be actual suffixes. Nothing
 % can exist after these characters because Epsi_MakeMatFromRaw creates
 % files based on the name BEFORE the suffix.
@@ -25,5 +29,5 @@ end
 % We use the suffix option with the most match counts
 [~,idxChoice] = max(counts);
 Meta_Data.rawfileSuffix = suffixOptions{idxChoice};
-
+end
 

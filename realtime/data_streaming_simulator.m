@@ -18,7 +18,7 @@ function [] = data_streaming_simulator(file_dir_in,file_dir_out,varargin)
 %   seconds_between_blocks: amount of time in seconds to pause before copying
 %                           the next block
 n_blocks = 100; %Number of blocks that will be copied before pausing
-seconds_between_blocks = 1; %Number of seconds to pause between blocks
+seconds_between_blocks = 15; %Number of seconds to pause between blocks
 do_pause = 1; %Switch pause on/off
 str_to_find = {'$EFE','$SB49','$SB41','$ALT'}; %Add more data header strings here if you want to copy them
 

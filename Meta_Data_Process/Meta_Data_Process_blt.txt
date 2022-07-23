@@ -1,6 +1,6 @@
 latitude     = 54;
 tscan        = 6;
-dof	    = 5;
+dof	         = 5;
 nfft         = 1024;
 nfftc        = floor(1024/3);
 Fs_ctd       = 16;
@@ -8,7 +8,7 @@ ctd_fc       = 45;
 dz           = .5;
 fc1          = 5;
 fc2          = 35;
-\profs_nPoints 	= 32;
+profs_nPoints 	= 32;
 profs_downLim 	= 0.02;
 profs_minLength = 5;
 Prmin = @(x) nanmin(x) + 0.2*range(x);
@@ -19,6 +19,7 @@ movmean_window_time = 10*(50e-3);
 multivariate   = 0;
 dof            = 5;
 dof_coh        = 10;
+rawfileSuffix  = '.raw';
 
 % movmean_window_width comes in during depicting shear and temp step of mod_epsilometer_calc_turbulence_v2.m
 %ALB Following the SCOR group recommendation
