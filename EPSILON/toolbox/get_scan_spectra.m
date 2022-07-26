@@ -336,7 +336,7 @@ if ind_ctdscan(1)>0 && ind_ctdscan(end)<=length(Profile.ctd.time_s) ...
     scan.varInfo.Ppan_co = {'frequency Panchev curve',''};
     scan.varInfo.Pt_volt_f = {'temperature frequency power spectrum','Volts^2 Hz{-1}'};
     scan.varInfo.Pt_Tg_k = {'temperature gradient wavenumber power spectrum', 'C^2 s{-1} cpm^{-1}'};
-    scan.varInfo.chi = {'temperature gradient dissipation rate',''};
+    scan.varInfo.chi = {'temperature gradient dissipation rate','°C^2 s^{-1}'};
     scan.varInfo.flag_tg_fc = {'temperature gradient cut off frequency is very high','0/1'};
 
 

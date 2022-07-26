@@ -91,9 +91,9 @@ classdef epsi_class < handle
                         Meta_Data = obj.Meta_Data;
                         save(fullfile(obj.Meta_Data.paths.data,'Meta_Data'),'Meta_Data');
 
-                        repeat = 0; %Stop repeating. Keep this Meta_Data.
+                        repeat = 0;
                     else
-                        checkMD = []; %Some parts are missing. Repeat to make new Meta_Data.
+                        checkMD = [];
                     end
 
                 elseif isempty(checkMD) %Meta_Data, epsi, and ctd .mat files do not already exist

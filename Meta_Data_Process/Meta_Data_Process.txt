@@ -6,6 +6,7 @@ nfftc        	= floor(1024/3);
 Fs_ctd       	= 16;
 ctd_fc       	= 45;
 dz           	= .5;
+dt            = 3;
 fc1          	= 5;
 fc2          	= 35;
 profs_nPoints 	= 32;
@@ -19,6 +20,9 @@ multivariate   	= 0;
 movmean_window_time = 10*(50e-3);
 rawfileSuffix  = '.raw';
 
+% dz = scan length in meters (for processing microstructure from profiles)
+% dt = scan length in seconds (for processing microstructure from timeseries)
+%
 % Options for picking out profiles
 % 	nPoints = Fs_ctd*2  = number of points to smooth pressure
 % 	downLim = 0.7*(fall speed / Fs_ctd) = cutoff speed the defines dropping/rising

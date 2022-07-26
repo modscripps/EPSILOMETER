@@ -100,7 +100,7 @@ while (n_items > 0)
             doFCTD = true;
             index = index+1;
             n_items = n_items-1;
-        case 3
+        case 3 %calc_micro
             % Find the index of varargin that = 'calc_micro'. The following
             % index contains the version number
             idxFlag = find(cell2mat(cellfun(@(C) ~isempty(strfind(C,'calc_micro')),varargin,'uniformoutput',0)));

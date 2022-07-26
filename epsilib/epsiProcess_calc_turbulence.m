@@ -59,8 +59,8 @@ nfftc = Meta_Data.PROCESS.nfftc;
 %fpump = Meta_Data.PROCESS.ctd_fc;
 %tscan = Meta_Data.PROCESS.tscan; %We don't use tscan anymore
 % limit_speed = .2; % limit speed 20 cm s^{-1}
-dz  =   Meta_Data.PROCESS.dz;
-dt = Meta_Data.PROCESS.dt;
+dz  = Meta_Data.PROCESS.dz;
+dt  = Meta_Data.PROCESS.dt;
 
 [~,Meta_Data.PROCESS.fe]  =  pwelch(0*(1:Meta_Data.PROCESS.nfft),...
     Meta_Data.PROCESS.nfft,[], ...
@@ -237,7 +237,7 @@ for s = 1:nbscan % s is the scan index.
 %==================================================================%%
 %================ Core of the processing ==========================%%    
     % Get spectral data for each scan
-    scan  =  get_scan_spectra_t(data_struct,s);
+    scan  =  get_scan_spectra(data_struct,s);
 %==================================================================%%    
 %==================================================================%%    
 

@@ -54,7 +54,7 @@ for iStruct=1:length(structIdx)
             idxVars2(iField) = true;
         end
     end
-    
+
     if sum(idxVars2)>0
         structList = repmat({fieldNames{structIdx(iStruct)}},sum(idxVars2),1);
         variableList2 = [variableList2;...
@@ -80,10 +80,10 @@ gridProfiles.dnum = nan(1,nProfs);
 % length as nbscan
 for iVar=1:length(variableList)
     currData = Profile.(variableList{iVar});
-    
+
     % 1-column arrays
     if (isa(currData,'double') || isa(currData,'logical')) && any(size(currData)==1)
-        
+
         switch variableList{iVar}
             case {'pr','dnum'}
                 % do nothing for pr or dnum. You've already made those
@@ -91,16 +91,16 @@ for iVar=1:length(variableList)
             otherwise
                 gridProfiles.(variableList{iVar}) = nan(nDepths,nProfs);
         end
-        
+
         % 2-column arrays
     elseif (isa(currData,'double') || isa(currData,'logical')) && ~any(size(currData)==1)
         gridProfiles.([variableList{iVar},'_1']) = nan(nDepths,nProfs);
         gridProfiles.([variableList{iVar},'_2']) = nan(nDepths,nProfs);
-        
+
         % cells
     elseif isa(currData,'cell')
         gridProfiles.(variableList{iVar}){nDepths,nProfs} = [];
-        
+
     end
 end %end loop through variableList
 
@@ -126,34 +126,34 @@ clear Profile*
 %% Loop through all the profiles in the deployment and populate the arrays
 % -------------------------------------------------------------------------
 for iProf=1:length(profList)
-    
+
     % Load profile
     load(fullfile(Meta_Data.paths.profiles,profList{iProf}));
     %profNum = str2double(profList{iProf}(8:10));
     %eval(['Profile = ' sprintf('Profile%03.0f',profNum) ';']);
-    
+
     % Add average values of power spectral densities and coherences between 10-45 Hz
     Profile = add_avg_psd_to_profile(Profile);
-    
-    
+
+
     % Add dummy iScan field so you can populate grid data later
     Profile.iScan = nan;
-    
+
     % Find the indices of gridProfiles.pr that correspond to Profile.pr
     idx = ismember(gridProfiles.pr,Profile.pr);
     % Make sure pressure array in this profile is in increments of dz and
     % that pressure idices are sequential
     if ~(all(diff(Profile.pr)==dz) && all(diff(find(idx))==1))
-        
+
         error('Profiles are not equally spaced. It might be time to rewrite gridProfiles to interpolate data to common pressure array.')
-        
+
     elseif all(diff(Profile.pr)==dz) && all(diff(find(idx))==1)
-        
+
         % Loop through variables not inside structures
         for iVar=1:length(variableList)
-            
+
             currData = Profile.(variableList{iVar});
-            
+
             % 1-column arrays
             if (isa(currData,'double') || isa(currData,'logical')) && any(size(currData)==1)
                 switch variableList{iVar}
@@ -167,20 +167,20 @@ for iProf=1:length(profList)
                     otherwise
                         gridProfiles.(variableList{iVar})(idx,iProf) = Profile.(variableList{iVar});
                 end
-                
+
                 % 2-column arrays
             elseif (isa(currData,'double') || isa(currData,'logical')) && ~any(size(currData)==1)
                 gridProfiles.([variableList{iVar},'_1'])(idx,iProf) = Profile.(variableList{iVar})(:,1);
                 gridProfiles.([variableList{iVar},'_2'])(idx,iProf) = Profile.(variableList{iVar})(:,2);
-                
+
                 % cells
             elseif isa(currData,'cell')
                 gridProfiles.(variableList{iVar})(idx,iProf) = Profile.(variableList{iVar});
-                
+
             end
         end %end loop through variableList
-        
-        
+
+
         % Loop through variables inside structures and keep the ones that
         % have one size element == 1
         for iVar=1:length(variableList2)
@@ -193,10 +193,10 @@ for iProf=1:length(profList)
                 end
             end
         end %end loop through variableList2
-        
-        
+
+
     end %end check if pressure array for this profile is okay
-    
+
     clear Profile*
 
 end %end loop through profList
@@ -218,22 +218,22 @@ for iVar=1:length(gridVars)
         otherwise
             gridProfiles.(gridVars{iVar})(excessRows,:) = [];
     end
-    
+
 end
 
 % Add Meta_Data
 gridProfiles.Meta_Data = Meta_Data;
 
 %% Add varInfo
-gridProfiles.varInfo.pr = {'CTD pressure','db'}; 
-gridProfiles.varInfo.dnum = {'datenum','Matlab datenum'}; 
+gridProfiles.varInfo.pr = {'CTD pressure','db'};
+gridProfiles.varInfo.dnum = {'datenum','Matlab datenum'};
 gridProfiles.varInfo.w = {'fall speed','db s^{-1}'};
 gridProfiles.varInfo.t = {'temperature','C'};
-gridProfiles.varInfo.s = {'salinity','psu'}; 
-gridProfiles.varInfo.kvis = {'kinematic viscosity',''}; 
+gridProfiles.varInfo.s = {'salinity','psu'};
+gridProfiles.varInfo.kvis = {'kinematic viscosity',''};
 gridProfiles.varInfo.epsilon = {'turbulent kinetic energy dissipation rate calculated from Ps_shear_k', ''};
 gridProfiles.varInfo.epsilon_co = {'turbulent kinetic energy dissipation rate calculated from Ps_shear_co_k', ''};
-gridProfiles.varInfo.chi = {'temperature gradient dissipation rate',''};
+gridProfiles.varInfo.chi = {'temperature gradient dissipation rate','°C^2 s^{-1}'};
 gridProfiles.varInfo.sh_fc = {'shear cutoff frequency, 1=uncorrected, 2=coherence-corrected', 'Hz'};
 gridProfiles.varInfo.tg_fc = {'temperature gradient cutoff frequency, 1=uncorrected, 2=coherence-corrected', 'Hz'};
 gridProfiles.varInfo.flag_tg_fc = {'temperature gradient cut off frequency is very high','0/1'};
@@ -245,4 +245,3 @@ gridProfiles.varInfo.iScan = {'scan indices',''};
 
 %% Save data
 save(fullfile(Meta_Data.paths.profiles,'gridded_Profiles'),'gridProfiles')
-

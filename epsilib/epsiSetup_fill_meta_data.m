@@ -1,5 +1,11 @@
-function Meta_Data=fill_meta_data(setup)
+function Meta_Data=fill_meta_data(Meta_Data,setup)
 %% fill up the Meta_Data structure.
+% There are two places where Meta_Data come from:
+%    setup = a structure that is read from the instrument or from a
+%            configuration file
+%    Meta_Data_process_file = a .txt file with process 
+% This function only adds Meta_Data from the setup structure.
+%
 %  It is used to process and organize epsi data.
 %  The user will all necessarry informations to understand the epsi data
 %  - electronics name, serial numbers, revision
