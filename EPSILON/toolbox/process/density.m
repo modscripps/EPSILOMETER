@@ -62,6 +62,7 @@ function rho = density(s,t,p)
 
 	if (p < 0) 
 	   !echo out of sea water
+       rho = nan; %NC added 5/18/22
 	   return
 	end
 	Kw = 1.965221e5 + 1484.206*t - 23.27105*t2 + 1.360477e-1*t3 ...

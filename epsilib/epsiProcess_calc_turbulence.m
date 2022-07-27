@@ -237,7 +237,7 @@ for s = 1:nbscan % s is the scan index.
 %==================================================================%%
 %================ Core of the processing ==========================%%    
     % Get spectral data for each scan
-    scan  =  get_scan_spectra(data_struct,s);
+    scan  =  get_scan_spectra_t(data_struct,s);
 %==================================================================%%    
 %==================================================================%%    
 

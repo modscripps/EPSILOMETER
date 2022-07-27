@@ -75,11 +75,11 @@ ser_write.write(bin_cmd)
 time.sleep(.1)
 print(bin_cmd)
 
-str_cmd  = "som.standalone\r\n"
-bin_cmd=str_cmd.encode()
-ser_write.write(bin_cmd)
-time.sleep(.1)
-print(bin_cmd)
+#str_cmd  = "som.standalone\r\n"
+#bin_cmd=str_cmd.encode()
+#ser_write.write(bin_cmd)
+#time.sleep(.1)
+#print(bin_cmd)
 
 
 str_cmd  = "som.start\r\n"

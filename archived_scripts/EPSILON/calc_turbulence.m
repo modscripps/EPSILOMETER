@@ -3,7 +3,7 @@ function Profile=calc_turbulence(CTDProfile,EpsiProfile,dz,Meta_Data)
 %  Profile structure for Micro Structure. Inside Profile you ll find
 %  temperature spectra in degC Hz^-1
 %  Horizontal  velocity spectra in m^2/s^-2 Hz^-1
-%  Acceleration/speed spectra in s^-1 Hz^-1 
+%  Acceleration/speed spectra in s^-1 Hz^-1
 %
 %  Created by Arnaud Le Boyer on 7/28/18.
 
@@ -23,10 +23,9 @@ tscan=Meta_Data.tscan;
 %% Gravity  ... of the situation :)
 G       = 9.81;
 twoG    =2*G;
-%% limit speed 20 cm s^{-1}
-limit_speed=.2;
-%% define the fall rate of the Profile. 
-%  Add Profile.w with w the vertical vel. 
+
+%% define the fall rate of the Profile.
+%  Add Profile.w with w the vertical vel.
 %  We are using the pressure from other sensors (CTD);
 
 %% TODO check the dimension of the raw time series to remove this line
@@ -40,9 +39,9 @@ switch Meta_Data.vehicle
         Profile.dPdt = compute_speed_upcast(CTDProfile);
         Profile.dPdt=-Profile.dPdt/1e7;
 end
-%% define a Pressure axis to an which I will compute epsilon and chi. 
-%  The spectra will be nfft long centered around P(z) +/- tscan/2. 
-%  
+%% define a Pressure axis to an which I will compute epsilon and chi.
+%  The spectra will be nfft long centered around P(z) +/- tscan/2.
+%
 
 Pr=ceil(min(Profile.P)):dz:floor(max(Profile.P));
 nbscan=length(Pr);
@@ -63,7 +62,7 @@ Sv1=Meta_Data.epsi.s1.Sv;
 Sv2=Meta_Data.epsi.s2.Sv;
 % Sensitivity of FPO7 probe, nominal
 dTdV(1)=Meta_Data.epsi.t1.dTdV; % define in mod_epsi_temperature_spectra
-dTdV(2)=Meta_Data.epsi.t2.dTdV; % define in mod_epsi_temperature_spectra 
+dTdV(2)=Meta_Data.epsi.t2.dTdV; % define in mod_epsi_temperature_spectra
 
 % get FPO7 channel average noise to compute chi
 switch Meta_Data.MAP.temperature
@@ -81,7 +80,7 @@ Profile.pr        = Pr;
 Profile.nbscan    = nbscan;
 Profile.nfft      = nfft;
 Profile.tscan     = tscan;
-Profile.fpump     = fpump; % arbitrary cut off frequency usually extract from coherence spectra shear/accel 
+Profile.fpump     = fpump; % arbitrary cut off frequency usually extract from coherence spectra shear/accel
 Profile.nbchannel = nb_channels;
 
 %initialize process flags
@@ -105,9 +104,10 @@ for p=1:nbscan % p is the scan index.
     indP=indP(1);
     ind_ctdscan = indP-N_ctd/2:indP+N_ctd/2; % ind_scan is even
     scan.w   = average_scan(Profile.dPdt,ind_ctdscan(ind_ctdscan>0 & ind_ctdscan<LCTD));
+    scan.pr   = average_scan(CTDProfile.P,ind_ctdscan(ind_ctdscan>0 & ind_ctdscan<LCTD));
     % check if the scan is not too shallow or too close to the end of the
-    % profile. Also check if the speed if >20 cm s^{-1}
-    if (ind_ctdscan(1)>0 && ind_ctdscan(end)<LCTD && scan.w>limit_speed) 
+    % profile.
+    if (ind_ctdscan(1)>0 && ind_ctdscan(end)<LCTD && scan.pr>0)
         ind_Pr_epsi = find(EpsiProfile.epsitime<CTDProfile.ctdtime(indP),1,'last');
         ind_epsiscan = ind_Pr_epsi-N_epsi/2:ind_Pr_epsi+N_epsi/2; % ind_scan is even
 
@@ -164,8 +164,7 @@ for p=1:nbscan % p is the scan index.
         Profile.t(p)=scan.t;
         Profile.s(p)=scan.s;
         Profile.dnum(p)=scan.dnum;
-        
+
     end
 end
 Profile.fe=fe;
-
