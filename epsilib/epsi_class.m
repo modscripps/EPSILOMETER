@@ -193,7 +193,10 @@ classdef epsi_class < handle
                             for j = 1:length(err.stack)
                                 disp([num2str(j) ' ' err.stack(j).name ' ' num2str(err.stack(j).line)]);
                             end
-                            error('Failed to find config data (3)')
+                            error(['Failed to read config data (3) - '...
+                                'this is often because mod_som_read_setup_from raw does not '...
+                                'have the correct offsets and lengths. When changes are made on '...
+                                'the hardware side, they have to be made here too.'])
                         end
                         % Fill Meta Data from setup data
                         try

@@ -15,7 +15,7 @@
 %               - plots the latest 30 seconds of epsi channel output
 %               (t1,t2,s1,s2,a1,a2,a3), the latest 30 seconds of dPdt and
 %               frequency spectra of the epsi channels centered on 'nSec'
-%               seconds from the end 
+%               seconds from the end
 % EpsiConvert_timer.Period sets the number of seconds for the timer
 %
 % Nicole Couto adapted from autorunFastCTDConvert.m
@@ -29,13 +29,9 @@ centerScan = tscan/2; %Plotted spectra will be centered tscan/2 seconds from the
 str_to_match = '*';
 
 % Directory containing streaming raw data
-<<<<<<< Updated upstream
-rawDir = '/Users/Shared/SOM_APEX/RAW/';
-dirs.raw_incoming = '/Users/Shared/SOM_APEX/RAW/';
-=======
-rawDir = '/Users/Shared/Student_Cruise/RAW';
-dirs.raw_incoming = '/Users/Shared/Student_Cruise/RAW';
->>>>>>> Stashed changes
+
+rawDir = '/Volumes/FCTD_EPSI/RAW/';
+dirs.raw_incoming = '/Volumes/FCTD_EPSI/RAW/';
 
 % Choose time units
 time_units = 'dnum'; %uncomment this if you set the datetime on SOM
@@ -54,43 +50,106 @@ end
 % First, try reading configuration data from the
 % file. If that doesn't work, try reading from a
 % % configuration file.
-Meta_Data.paths.raw_data = dirs.raw_incoming;
-[Meta_Data] = epsiSetup_get_raw_suffix(Meta_Data);
-raw_file_suffix = Meta_Data.rawfileSuffix;
+obj.Meta_Data.paths.raw_data = dirs.raw_incoming;
+obj.Meta_Data.paths.data = dirs.raw_incoming; %Need a place to save Meta_Data (we don't need it, but epsiSetup_fill_meta_data saves it automatically)
 
-try %Try reading the first .[suffix] file
-    setupfile=dir(fullfile(rawDir,[str_to_match,raw_file_suffix]));
-    setup=mod_som_read_setup_from_raw(fullfile(setupfile(1).folder,setupfile(1).name));
-catch err
-    display_error_stack(err)
-    %error('mod_som_read_setup failed')
-    try %Try reading the config file
-        setupfile=dir(fullfile(awayDir,'*config*'));
-        setup=mod_som_read_setup_from_config(fullfile(setupfile(1).folder,setupfile(1).name));
+% Is there a log csv file? Is there a config file? Or
+% is config data inside the raw data files?
+dir_has_log = dir(fullfile(dirs.raw_incoming,'Log*.csv'));
+dir_has_config = dir(fullfile(dirs.raw_incoming,'*config*'));
+
+                    spltpath=strsplit(path,':');
+                    epsilib_path=spltpath{~cellfun(@isempty, ...
+                        cellfun(@(x) ...
+                        strfind(x,'epsilib'),spltpath, ...
+                        'UniformOutput',false))};
+                    obj.Meta_Data.paths.process_library=fileparts(epsilib_path);
+
+if ~isempty(dir_has_log) %if there is a log file...
+    
+    try
+        obj.Meta_Data = create_metadata_from_deployment_log_v2(dir_has_log.name);
+        obj.Meta_Data.AFE=obj.Meta_Data.epsi;
     catch err
-        display_error_stack(err)
-        %error('mod_som_read_setup failed')
+        
+        for j = 1:length(err.stack)
+            disp([num2str(j) ' ' err.stack(j).name ' ' num2str(err.stack(j).line)]);
+        end
+        error('Failed to find config data (1)')
     end
+    
+elseif ~isempty(dir_has_config) %if there is a config file...
+    
+    try
+        setup=mod_som_read_setup_from_config(dir_has_config.name);
+    catch err
+        for j = 1:length(err.stack)
+            disp([num2str(j) ' ' err.stack(j).name ' ' num2str(err.stack(j).line)]);
+        end
+        error('Failed to find config data (2)')
+        
+    end
+    % Fill Meta Data from setup data
+    try
+        obj.Meta_Data = epsiSetup_fill_meta_data(obj.Meta_Data,setup);
+        
+        fprintf('Meta_Data.paths.process_library is %s \n',obj.Meta_Data.paths.process_library);
+        fprintf('Meta_Data.paths.data is %s \n',obj.Meta_Data.paths.data);
+    catch err
+        
+        for j = 1:length(err.stack)
+            disp([num2str(j) ' ' err.stack(j).name ' ' num2str(err.stack(j).line)]);
+        end
+        error('fill_meta_data failed (2)')
+    end
+    
+else %if there is no log file or config file, look for config data inside the raw files
+    % TODO 10/7/21 - Loop through more that just the
+    % first file to look for $SOM3
+    
+    try
+        setupfile=dir(fullfile(dirs.raw_incoming,'EPSI*'));
+        setup=mod_som_read_setup_from_raw(fullfile(setupfile(1).folder,setupfile(1).name));
+    catch err
+        for j = 1:length(err.stack)
+            disp([num2str(j) ' ' err.stack(j).name ' ' num2str(err.stack(j).line)]);
+        end
+        error(['Failed to read config data (3) - '...
+            'this is often because mod_som_read_setup_from raw does not '...
+            'have the correct offsets and lengths. When changes are made on '...
+            'the hardware side, they have to be made here too.'])
+    end
+    % Fill Meta Data from setup data
+    try
+        obj.Meta_Data = epsiSetup_fill_meta_data(obj.Meta_Data,setup);
+
+    catch err
+        for j = 1:length(err.stack)
+            disp([num2str(j) ' ' err.stack(j).name ' ' num2str(err.stack(j).line)]);
+        end
+        error('fill_meta_data failed (3)')
+    end
+    
 end
 
 %end
 
 % Initialize obj with structures big enough to load at least one Epsi .mat
 % file into (epsi, ctd, and alt strucutres)
-obj = epsiSetup_make_empty_structure(totalSec);
+obj.epsi = [];
+obj = epsiSetup_make_empty_structure(obj);
 obj.plot_properties = epsiSetup_set_plot_properties;
 % Create Meta_Data
-obj.Meta_Data = epsiSetup_fill_meta_data(setup);
+obj.Meta_Data = epsiSetup_fill_meta_data(obj.Meta_Data,setup);
 obj.Meta_Data = epsiSetup_read_MetaProcess(obj.Meta_Data,...
-    fullfile(obj.Meta_Data.paths.process_library,'Meta_Data_Process','Meta_Data_Process_blt.txt'));
-obj.Meta_Data.rawfileSuffix = raw_file_suffix;
+    fullfile(obj.Meta_Data.paths.process_library,'Meta_Data_Process','Meta_Data_Process_blt_2022.txt'));
 
 % Apply TMAX to structure tMax. Since the instruments sample at different
 % rates, these will become slightly different from each other in the loop
 % as new data come in.
 field_list = {'epsi','ctd','alt','vnav','gps'};
 for iField=1:length(field_list)
-tMax.(field_list{iField}) = TMAX;
+    tMax.(field_list{iField}) = TMAX;
 end
 
 % Create an axes that will be the input for the first call to
@@ -106,28 +165,28 @@ tStop = false;
 EpsiConvert_timer.StartFcn = 'disp(''Conversion of Epsi Data begins now!'');';
 EpsiConvert_timer.TimerFcn = [...
     'if tStop, '...
-        'stop(EpsiConvert_timer); '...
-        'delete(EpsiConvert_timer); '...
+    'stop(EpsiConvert_timer); '...
+    'delete(EpsiConvert_timer); '...
     'else, '...
-        'disp([datestr(now) '': Converting ascii data to mat...!'']); '...
-        'try, '...
-            'matData = epsiProcess_convert_lastN_raw_to_mat(rawDir,obj.Meta_Data); '...
-            'if range(matData.epsi.time_s)<plotSec && exist(''matDataOld''), '...
-                'matData = epsiProcess_convert_lastN_raw_to_mat(rawDir,obj.Meta_Data,2); '...
-            'end, '...
-            '[obj,tMax] = epsiAuto_get_updated_data(obj,matData,tMax); '...
-            'matDataOld = matData; '...
-        'catch err, '...
-            'display_error_stack(err); '...
-            'tStop = 1;'...
-        'end; '...
-        'try, '...
-            'tMid=nanmax(obj.epsi.time_s)-centerScan;, '...
-            '[~,~,~,ax] = epsiPlot_spectra_at_tMid(obj,tMid,tscan,plotSec,1,0,1,ax);, '...
-        'catch err, '...
-            'display_error_stack(err); '...
-            'tStop = 1;'...
-        'end; '...
+    'disp([datestr(now) '': Converting ascii data to mat...!'']); '...
+    'try, '...
+    'matData = epsiProcess_convert_lastN_raw_to_mat(rawDir,obj.Meta_Data); '...
+    'if range(matData.epsi.time_s)<plotSec && exist(''matDataOld''), '...
+    'matData = epsiProcess_convert_lastN_raw_to_mat(rawDir,obj.Meta_Data,2); '...
+    'end, '...
+    '[obj,tMax] = epsiAuto_get_updated_data(obj,matData,tMax); '...
+    'matDataOld = matData; '...
+    'catch err, '...
+    'display_error_stack(err); '...
+    'tStop = 1;'...
+    'end; '...
+    'try, '...
+    'tMid=nanmax(obj.epsi.time_s)-centerScan;, '...
+    '[~,~,~,ax] = epsiPlot_spectra_at_tMid(obj,tMid,tscan,plotSec,1,0,1,ax);, '...
+    'catch err, '...
+    'display_error_stack(err); '...
+    'tStop = 1;'...
+    'end; '...
     'end;'];
 EpsiConvert_timer.Period = 1;
 EpsiConvert_timer.BusyMode = 'drop';

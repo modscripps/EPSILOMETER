@@ -31,9 +31,12 @@ epsilib_path={spltpath{~cellfun(@isempty, ...
                                cellfun(@(x) ...
                                strfind(x,'epsilib'),spltpath, ...
                                'UniformOutput',false))}};
-
-Meta_Data.paths.process_library=fileparts(epsilib_path{cellfun(@length,epsilib_path)==min(cellfun(@length,epsilib_path))});
-Meta_Data.paths.data=pwd;
+                           
+% These paths should have already been defined before entering this
+% function -DON'T USE PWD BECAUSE YOU MIGHT BE WORKING IN A DIFFERENT
+% DIRECTORY THAN WHERE THE DATA ARE STORED
+%Meta_Data.paths.process_library=fileparts(epsilib_path{cellfun(@length,epsilib_path)==min(cellfun(@length,epsilib_path))});
+%Meta_Data.paths.data=pwd;
 
 Meta_Data.mission=setup.mission_name;
 Meta_Data.vehicle_name=setup.vehicle_name;

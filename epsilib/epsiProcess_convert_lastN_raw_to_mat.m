@@ -25,7 +25,7 @@ matData.vnav = [];
 matData.gps = [];
 
 % Find files in RawDir ending in suffixSearch
-suffixStr = Meta_Data.rawfileSuffix; %ex. *.raw, *.ascii, etc
+suffixStr = Meta_Data.PROCESS.rawfileSuffix; %ex. *.raw, *.ascii, etc
 suffixSearch = ['*' suffixStr];
 myASCIIfiles = dir(fullfile(RawDir, suffixSearch));
 

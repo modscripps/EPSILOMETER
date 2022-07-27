@@ -25,12 +25,12 @@ firmware_length=40-1;
 %mod_som_epsi_epsifish2_telemetry-Feb 15 rev3 
 % does not have git ID
 % TODO change the MODSOM firmware so it has the git ID
-gitid_offset=firmware_offset+firmware_length+1;
-gitid_length=24-1;
-rev_offset=gitid_offset+gitid_length+1;
-rev_length=8-1;
-% rev_offset=firmware_offset+firmware_length+1;
+% gitid_offset=firmware_offset+firmware_length+1;
+% gitid_length=24-1;
+% rev_offset=gitid_offset+gitid_length+1;
 % rev_length=8-1;
+rev_offset=firmware_offset+firmware_length+1;
+rev_length=8-1;
 sn_offset=rev_offset+rev_length+1;
 sn_length=8-1;
 
@@ -52,7 +52,7 @@ setup.vehicle_name=setup.vehicle_name(uint8(setup.vehicle_name)>0);
 setup.firmware=str(firmware_offset+(0:firmware_length)).';
 setup.firmware=setup.firmware(uint8(setup.firmware)>0);
 
-setup.gitid=str(firmware_offset+(0:firmware_length)).';
+%setup.gitid=str(firmware_offset+(0:firmware_length)).';
 
 setup.rev=str(rev_offset+(0:rev_length)).';
 setup.rev=setup.rev(uint8(setup.rev)>0);

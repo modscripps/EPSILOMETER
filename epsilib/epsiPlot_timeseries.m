@@ -51,12 +51,12 @@ cols = obj.plot_properties.Colors;
 
 if isclassfield(obj,'epsi') && ~isempty(obj.epsi)
     
-    % s1 and s2
+    % t1 and t2
     plot(ax(1),time_array.epsi,obj.epsi.t1_volt,'.','Color',cols.t1,'LineWidth',obj.plot_properties.LineWidth,'displayname','t1')
     hold(ax(1),'on')
     plot(ax(1),time_array.epsi,obj.epsi.t2_volt,'.','Color',cols.t2,'LineWidth',obj.plot_properties.LineWidth,'displayname','t2')
     
-    % t1 and t2
+    % s1 and s2
     plot(ax(2),time_array.epsi,obj.epsi.s1_volt,'.','Color',cols.s1,'LineWidth',obj.plot_properties.LineWidth,'displayname','s1')
     hold(ax(2),'on')
     plot(ax(2),time_array.epsi,obj.epsi.s2_volt,'.','Color',cols.s2,'LineWidth',obj.plot_properties.LineWidth,'displayname','s2')
@@ -191,8 +191,6 @@ ylabel(ax(10),'altimeter');
 ax(4).YAxisLocation = 'right';
 ax(6).YAxisLocation = 'right';
 ax(10).YAxisLocation = 'right';
-ax(4).Color = 'none';
-ax(6).Color = 'none';
 ax(10).Color = 'none';
 
 % Axes colors

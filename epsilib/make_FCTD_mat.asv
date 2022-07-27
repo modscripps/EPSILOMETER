@@ -77,7 +77,7 @@ if isfield(cruise_specifics,'blt_2022')
     % On BLT2022, we started adding microstructure values to .mat files
     keep = ~isnan(micro.dnum) & ~isinf(micro.dnum);
 
-    FCTD.epsilon = interp1(micro.dnum(keep),micro.epsilon(keep,:),ctd.dnum);
+    FCTD.epsilon = interp1(micro.dnum(keep),micro.epsilon_co(keep,:),ctd.dnum);
     FCTD.chi = interp1(micro.dnum(keep),micro.chi(keep,:),ctd.dnum);
 
 end %end cruise_specifics

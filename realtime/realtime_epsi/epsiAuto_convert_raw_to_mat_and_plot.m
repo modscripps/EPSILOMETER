@@ -14,7 +14,7 @@
 % input_struct contains the following fields
 %
 % Required:
-%   .raw_dir = path to directory where the data are streaming in
+%  .raw_dir = path to directory where the data are streaming in
 %  .away_dir = path to directory where data will be copied and where 
 %              subdirectories raw, mat, and FCTDmat will be created
 %  .Meta_Data_process_file = path to Meta_Data_Process text file
@@ -80,51 +80,15 @@ if ~exist(dirs.fctd_mat,'dir')
     eval([ '!mkdir ' strrep(dirs.fctd_mat,' ','\ ')]);
 end
 
+% Copy the first file from raw_incoming into raw_copy - you need to have
+% one file there for epsi_class to read the configuration information
+file_list = dir(fullfile(dirs.raw_incoming,'EPSI*'));
+eval(['!cp ' fullfile(file_list(1).folder,file_list(1).name) ' ' dirs.raw_copy]);
+
 % Initialize epsi_class in away_dir and create blank structures to fill
 % with data
 obj = epsi_class(away_dir,Meta_Data_process_file);
 obj = epsiSetup_make_empty_structure(obj);
-
-
-% % Read configuration data:
-% % First, try reading configuration data from the
-% % file. If that doesn't work, try reading from a
-% % % configuration file.
-% Meta_Data.paths.raw_data = dirs.raw_incoming;
-% Meta_Data = epsiSetup_read_MetaProcess(Meta_Data,Meta_Data_process_file);
-% Meta_Data = epsiSetup_get_raw_suffix(Meta_Data);
-% raw_file_suffix = Meta_Data.rawfileSuffix;
-
-
-% try %Try reading the first .[suffix] file
-%     setupfile=dir(fullfile(raw_dir,[str_to_match,raw_file_suffix]));
-%     setup=mod_som_read_setup_from_raw(fullfile(setupfile(1).folder,setupfile(1).name));
-% catch err
-%     display('mod_som_read_setup_from_raw failed, trying mod_som_read_setup_from_config...')
-%     try %Try reading the config file
-%         setupfile=dir(fullfile(away_dir,'*config*'));
-%         setup=mod_som_read_setup_from_config(fullfile(setupfile(1).folder,setupfile(1).name));
-%     catch err
-%         display_error_stack(err)
-%         error('mod_som_read_setup_from_config failed')
-%     end
-% end
-
-
-
-% % Initialize obj with structures big enough to load at least one Epsi .mat
-% % file into (epsi, ctd, and alt strucutres). Here, we're making a strucutre
-% % that looks like an epsi class so that we can use epsi_class functions.
-% % It's not an epsi_class, though. It's just a strucutre, so we need to
-% % manually add some fields that would be automatically added by creating
-% % an epsi_class.
-% obj = epsiSetup_make_empty_structure(obj); %make empty structure (default 5 minutes length)
-% obj.plot_properties = epsiSetup_set_plot_properties;
-% % Create Meta_Data
-% obj.Meta_Data = epsiSetup_fill_meta_data(setup);
-% obj.Meta_Data = epsiSetup_read_MetaProcess(obj.Meta_Data,Meta_Data_process_file);
-% obj.Meta_Data.rawfileSuffix = raw_file_suffix;
-% obj.Meta_Data.paths.mat_data = dirs.mat;
 
 field_list = {'epsi','ctd','alt','vnav','gps'};
 for iField=1:length(field_list)

@@ -29,31 +29,41 @@ centerScan = tscan/2; %Plotted spectra will be centered tscan/2 seconds from the
 str_to_match = '*';
 
 % Directory containing streaming raw data
+
 rawDir = '/Volumes/FCTD_EPSI/RAW/';
 dirs.raw_incoming = '/Volumes/FCTD_EPSI/RAW/';
 
+% Choose time units
+time_units = 'dnum'; %uncomment this if you set the datetime on SOM
+%time_units = 'seconds'; %uncomment this if you did not set the datetime on SOM
+
 % --- END USER CHOICES ----------------------------------------------------
+
+switch time_units
+    case 'seconds'
+        TMAX = 0;
+    case 'dnum'
+        TMAX = datenum(2021,1,1); %Will plot data after this starting point
+end
 
 % Read configuration data:
 % First, try reading configuration data from the
 % file. If that doesn't work, try reading from a
 % % configuration file.
 Meta_Data.paths.raw_data = dirs.raw_incoming;
-[Meta_Data] = epsiSetup_get_raw_suffix(Meta_Data);
-raw_file_suffix = Meta_Data.rawfileSuffix;
 
 try %Try reading the first .[suffix] file
     setupfile=dir(fullfile(rawDir,[str_to_match,raw_file_suffix]));
     setup=mod_som_read_setup_from_raw(fullfile(setupfile(1).folder,setupfile(1).name));
 catch err
     display_error_stack(err)
-    error('mod_som_read_setup failed')
+    %error('mod_som_read_setup failed')
     try %Try reading the config file
         setupfile=dir(fullfile(awayDir,'*config*'));
         setup=mod_som_read_setup_from_config(fullfile(setupfile(1).folder,setupfile(1).name));
     catch err
         display_error_stack(err)
-        error('mod_som_read_setup failed')
+        %error('mod_som_read_setup failed')
     end
 end
 
@@ -61,13 +71,12 @@ end
 
 % Initialize obj with structures big enough to load at least one Epsi .mat
 % file into (epsi, ctd, and alt strucutres)
-obj = epsiSetup_make_empty_structure(totalSec);
+obj = epsiSetup_make_empty_structure(obj);
 obj.plot_properties = epsiSetup_set_plot_properties;
 % Create Meta_Data
 obj.Meta_Data = epsiSetup_fill_meta_data(setup);
 obj.Meta_Data = epsiSetup_read_MetaProcess(obj.Meta_Data,...
-    fullfile(obj.Meta_Data.paths.process_library,'Meta_Data_Process','Meta_Data_Process_blt.txt'));
-obj.Meta_Data.rawfileSuffix = raw_file_suffix;
+    fullfile(obj.Meta_Data.paths.process_library,'Meta_Data_Process','Meta_Data_Process_blt_2022.txt'));
 
 % Apply TMAX to structure tMax. Since the instruments sample at different
 % rates, these will become slightly different from each other in the loop

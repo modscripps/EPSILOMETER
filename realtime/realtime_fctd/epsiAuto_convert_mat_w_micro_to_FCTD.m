@@ -1,3 +1,13 @@
+% To use FCTD_GUI with epsi data, we do things in a slightly different
+% order. Instead of automatically making FCTD .mat files when we make .mat
+% files as data is streaming in, we just make .mat files. 
+%
+% Then, in this step, we read the .mat files, calculate microstructure
+% variables and THEN make the FCTD .mat files.
+%
+% Run this timer script in one instance of Matlab, and run FastCTD_GUI in
+% another.
+
 %function [] = epsiAuto_convert_raw_to_mat_and_plot(input_struct);
 
 % automation to convert .ASCII to .MAT and plot timeseries in realtime
@@ -28,14 +38,18 @@
 %  .version      = version of mod_som_read_epsi_files.m to use (default 4)
 %  .starting_dnum = earliest datenum to plot (default 2 weeks before today)
 % -------------------------------------------------------------------------
+input_struct.data_dir = '/Users/ncouto/Desktop/reprocess_blt_21_0708/deployment/';
+input_struct.Meta_Data_process_file = ['/Users/ncouto/GitHub/EPSILOMETER/'...
+    'Meta_Data_Process/Meta_Data_Process_blt_2022.txt'];
+input_struct.cruise_specifics.blt_2022 = 1;
+
 % Check inputs and apply defaults
 field_list = fields(input_struct);
 % Check that all required fields are defined
-if ~any(contains(field_list,'raw_dir')) || ~any(contains(field_list,'away_dir')) || ~any(contains(field_list,'Meta_Data_process_file'))
-  error('You must define ''raw_dir,'' ''away_dir,'' and ''Meta_Data_process_file'' as fields in the input structure')
+if ~any(contains(field_list,'data_dir')) || ~any(contains(field_list,'Meta_Data_process_file'))
+  error('You must define ''data_dir,'' and ''Meta_Data_process_file'' as fields in input_struct')
 else
-  raw_dir = input_struct.raw_dir;
-  away_dir = input_struct.away_dir;
+  data_dir = input_struct.data_dir;
   Meta_Data_process_file = input_struct.Meta_Data_process_file;
 end
 % Check for optional inputs and define them
@@ -45,7 +59,7 @@ else
   str_to_match = input_struct.str_to_match;
 end
 if ~contains(field_list,'refresh_time_sec')
-  refresh_time_sec = 5;
+  refresh_time_sec = 60;
 else
   refresh_time_sec = input_struct.refresh_time_sec;
 end
@@ -60,19 +74,14 @@ else
     starting_dnum = input_struct.starting_dnum;
 end
 
-% Define the directories
-dirs.raw_incoming = raw_dir;
-dirs.raw_copy  = fullfile(away_dir,'raw');
-dirs.mat       = fullfile(away_dir,'mat');
-dirs.fctd_mat  = fullfile(away_dir,'FCTDmat');
+% Initialize epsi_class to get Meta_Data
+obj = epsi_class(data_dir,input_struct.Meta_Data_process_file);
 
-% Create directories if they don't exist
-if ~exist(away_dir,'dir')
-    eval([ '!mkdir ' strrep(away_dir,' ','\ ')]);
-end
-if ~exist(dirs.raw_copy,'dir')
-    eval([ '!mkdir ' strrep(dirs.raw_copy,' ','\ ')]);
-end
+% Define the directories
+dirs.mat       = fullfile(data_dir,'mat');
+dirs.fctd_mat  = fullfile(data_dir,'FCTDmat');
+
+% Create FCTD directory if it doesn't exist
 if ~exist(dirs.mat,'dir')
     eval([ '!mkdir ' strrep(dirs.mat,' ','\ ')]);
 end
@@ -80,28 +89,9 @@ if ~exist(dirs.fctd_mat,'dir')
     eval([ '!mkdir ' strrep(dirs.fctd_mat,' ','\ ')]);
 end
 
-% Copy the first file from raw_incoming into raw_copy - you need to have
-% one file there for epsi_class to read the configuration information
-file_list = dir(fullfile(dirs.raw_incoming,'EPSI*'));
-eval(['!cp ' fullfile(file_list(1).folder,file_list(1).name) ' ' dirs.raw_copy]);
-
-% Initialize epsi_class in away_dir and create blank structures to fill
-% with data
-obj = epsi_class(away_dir,Meta_Data_process_file);
-obj = epsiSetup_make_empty_structure(obj);
-
-
-field_list = {'epsi','ctd','alt','vnav','gps'};
-for iField=1:length(field_list)
-    tMax.(field_list{iField}) = starting_dnum;
-end
-% Create an axes that will be the input for the first call to
-% epsiPlot_epsi_ctd_alt_timeseries. All subsequent calls will reuse the set
-% of axes created by that function.
-ax = axes;
-ax = epsiPlot_timeseries(obj,0,ax);
-% ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
+% Loop through .mat files that have not been converted to FCTDmat. Always
+% also include the last FCTDmat file because it may have been made with a
+% yet unfinished mat file.
 EpsiConvert_timer = timer();
 s = false; %Stop switch
 
@@ -111,16 +101,9 @@ EpsiConvert_timer.TimerFcn = [...
     'stop(EpsiConvert_timer); '...
     'delete(EpsiConvert_timer); '...
     'else, '...
-    'disp([datestr(now) '': Converting ascii data to mat...'']); '...
+    'disp([datestr(now) '': Adding microstructure to mat files...'']); '...
     'try, '...
-    'matData = epsiProcess_convert_new_raw_to_mat(dirs,obj.Meta_Data,''fileStr'',str_to_match,''version'',version,''doFCTD''); '...
-    '[obj,tMax] = epsiAuto_get_updated_data(obj,matData,tMax); '...
-    'catch err, '...
-    'display_error_stack(err); '...
-    's=1; '...
-    'end; '...
-    'try, '...
-    'ax = epsiPlot_timeseries(obj,0,ax); '...
+    'convert_mat_w_micro_to_FCTD(dirs,Meta_Data,input_struct); '... 
     'catch err, '...
     'display_error_stack(err); '...
     's=1; '...
@@ -137,3 +120,5 @@ EpsiConvert_timer.TasksToExecute = Inf;
 EpsiConvert_timer.ErrorFcn = 'disp(''%%%%%%%%%%%%% Error %%%%%%%%%%%%%'');';
 
 start(EpsiConvert_timer);
+
+

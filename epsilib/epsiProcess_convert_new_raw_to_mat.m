@@ -447,23 +447,23 @@ end %end display_file_data
 
 
 
-function FastCTD_UpdateMATFileTimeIndex(dirname,filename,FCTD)
-if exist([dirname '/FastCTD_MATfile_TimeIndex.mat'],'file')
-    load([dirname '/FastCTD_MATfile_TimeIndex.mat']);
-    ind = strncmp(filename,FastCTD_MATfile_TimeIndex.filenames,length(filename));
-    if sum(ind) ~= 1
-        FastCTD_MATfile_TimeIndex.filenames = [FastCTD_MATfile_TimeIndex.filenames; {filename}];
-        FastCTD_MATfile_TimeIndex.timeStart = cat(1,FastCTD_MATfile_TimeIndex.timeStart,FCTD.time(1));
-        FastCTD_MATfile_TimeIndex.timeEnd = cat(1,FastCTD_MATfile_TimeIndex.timeEnd,FCTD.time(end));
-    else
-        FastCTD_MATfile_TimeIndex.timeStart(ind) = FCTD.time(1);
-        FastCTD_MATfile_TimeIndex.timeEnd(ind) = FCTD.time(end);
-    end
-else
-    FastCTD_MATfile_TimeIndex.filenames = {filename};
-    FastCTD_MATfile_TimeIndex.timeStart = FCTD.time(1);
-    FastCTD_MATfile_TimeIndex.timeEnd = FCTD.time(end);
-end
-save([dirname '/FastCTD_MATfile_TimeIndex.mat'],'FastCTD_MATfile_TimeIndex');
-end %end FastCTD_UpdateMATFileTimeIndex
-% ------------------------------------
+% function FastCTD_UpdateMATFileTimeIndex(dirname,filename,FCTD)
+% if exist([dirname '/FastCTD_MATfile_TimeIndex.mat'],'file')
+%     load([dirname '/FastCTD_MATfile_TimeIndex.mat']);
+%     ind = strncmp(filename,FastCTD_MATfile_TimeIndex.filenames,length(filename));
+%     if sum(ind) ~= 1
+%         FastCTD_MATfile_TimeIndex.filenames = [FastCTD_MATfile_TimeIndex.filenames; {filename}];
+%         FastCTD_MATfile_TimeIndex.timeStart = cat(1,FastCTD_MATfile_TimeIndex.timeStart,FCTD.time(1));
+%         FastCTD_MATfile_TimeIndex.timeEnd = cat(1,FastCTD_MATfile_TimeIndex.timeEnd,FCTD.time(end));
+%     else
+%         FastCTD_MATfile_TimeIndex.timeStart(ind) = FCTD.time(1);
+%         FastCTD_MATfile_TimeIndex.timeEnd(ind) = FCTD.time(end);
+%     end
+% else
+%     FastCTD_MATfile_TimeIndex.filenames = {filename};
+%     FastCTD_MATfile_TimeIndex.timeStart = FCTD.time(1);
+%     FastCTD_MATfile_TimeIndex.timeEnd = FCTD.time(end);
+% end
+% save([dirname '/FastCTD_MATfile_TimeIndex.mat'],'FastCTD_MATfile_TimeIndex');
+% end %end FastCTD_UpdateMATFileTimeIndex
+% % ------------------------------------

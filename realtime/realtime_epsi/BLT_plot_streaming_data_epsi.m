@@ -7,8 +7,9 @@ input_struct.Meta_Data_process_file = ...
 
 % OPTIONAL INPUTS
 input_struct.str_to_match = 'EPSI22_07_27*'; %CHANGE THIS FOR NEW DEPLOYMENT
-input_struct.refresh_time_sec = 2;
+input_struct.refresh_time_sec = 1;
 %input_struct.version = 4;
 input_struct.starting_dnum = datenum(2022,7,27);
 
-fctdAuto_convert_raw_to_mat_and_plot
+%epsiAuto_convert_raw_to_mat_and_plot(input_struct)
+epsiAuto_convert_raw_to_mat_and_plot

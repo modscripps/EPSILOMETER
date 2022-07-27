@@ -59,7 +59,7 @@ else
 
                 % Only keep the last nArray indices
                 obj.(periph).(field_list.(periph){iField}) = ...
-                    obj.(periph).(field_list.(periph){iField})(end-nArray.(periph)+1:end);
+                    obj.(periph).(field_list.(periph){iField})(end-nArray.(periph)+1:end,:);
 
             end %end loop through data fields
         end %end if that periph exists
