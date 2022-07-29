@@ -2,7 +2,7 @@ function DataGrid = FastCTD_GridData(FCTD,varargin)
 %  DataGrid = FCTDMakeGrid(FCTD);
 %
 %   Temperature, Conductivity, Pressure, Salinity and Potential Density
-%   will be placed on a grid of temperature versus depth
+%   will be placed on a grid of time versus depth
 %
 %  DataGrid = FCTDMakeGrid(FCTD,downcast,todo);
 %   in addition to the variables described above, one can specify other
@@ -20,12 +20,12 @@ if ~isfield(FCTD,'pressure')
     return;
 end;
 
-vars2Grid = {'pressure','temperature','conductivity'};
-vars2Grid_default = {'pressure','temperature','epsilon','density','chi'};
+vars2Grid = {'pressure','temperature','conductivity','epsilon1','epsilon2','chi1','chi2'};
+vars2Grid_default = {'pressure','temperature','conductivity','density','salinity'};
 pickDownCast = true;
 zInterval = 0.5;
 zMin = 0;
-zMax = 400;
+zMax = 2500;
 
 persistent argsNameToCheck;
 if isempty(argsNameToCheck);
@@ -269,32 +269,33 @@ end
 DataGrid.salinity = sw_salt(DataGrid.conductivity*10/sw_c3515,DataGrid.temperature,DataGrid.pressure);
 DataGrid.density = sw_pden(DataGrid.salinity,DataGrid.temperature,DataGrid.pressure,0);
 
-% % gridding in time
-% mintime = nanmin(DataGrid.time);
-% maxtime = nanmax(DataGrid.time);
-%
-% DataGrid.tGrid.time = mintime:2*nanmedian(diff(DataGrid.time)):maxtime; % every minute
-% DataGrid.tGrid.depth = DataGrid.depth;
-%
-%
-% % allocate space to grid data
-% for i = 1:length(vars2Grid)
-%     DataGrid.tGrid.(vars2Grid{i}) = NaN(length(DataGrid.tGrid.depth),length(DataGrid.tGrid.time)-1);
-% end
-%
-% for i = 1:length(DataGrid.tGrid.depth)
-%     for j = 1:length(vars2Grid)
-%        % size(DataGrid.tGrid.time),size(DataGrid.time)
-%        % vars2Grid{j}(i,:)
-%         DataGrid.tGrid.(vars2Grid{j})(i,:) = bindata1d(DataGrid.tGrid.time,...
-%             DataGrid.time, DataGrid.(vars2Grid{j})(i,:));
-%     end
-% end
-%
-% DataGrid.tGrid.salinity = sw_salt(DataGrid.tGrid.conductivity*10/sw_c3515,DataGrid.tGrid.temperature,DataGrid.tGrid.pressure);
-% DataGrid.tGrid.density = sw_pden(DataGrid.tGrid.salinity,DataGrid.tGrid.temperature,DataGrid.tGrid.pressure,0);
-%
-% DataGrid.tGrid.time = midpoints(DataGrid.tGrid.time);
+% gridding in time
+mintime = nanmin(DataGrid.time);
+maxtime = nanmax(DataGrid.time);
+
+DataGrid.tGrid.time = mintime:2*nanmedian(diff(DataGrid.time)):maxtime; % every minute
+DataGrid.tGrid.time = DataGrid.time; %Changed to plot every profile
+DataGrid.tGrid.depth = DataGrid.depth;
+
+
+% allocate space to grid data
+for i = 1:length(vars2Grid)
+    DataGrid.tGrid.(vars2Grid{i}) = NaN(length(DataGrid.tGrid.depth),length(DataGrid.tGrid.time)-1);
+end
+
+for i = 1:length(DataGrid.tGrid.depth)
+    for j = 1:length(vars2Grid)
+       % size(DataGrid.tGrid.time),size(DataGrid.time)
+       % vars2Grid{j}(i,:)
+        DataGrid.tGrid.(vars2Grid{j})(i,:) = bindata1d(DataGrid.tGrid.time,...
+            DataGrid.time, DataGrid.(vars2Grid{j})(i,:));
+    end
+end
+
+DataGrid.tGrid.salinity = sw_salt(DataGrid.tGrid.conductivity*10/sw_c3515,DataGrid.tGrid.temperature,DataGrid.tGrid.pressure);
+DataGrid.tGrid.density = sw_pden(DataGrid.tGrid.salinity,DataGrid.tGrid.temperature,DataGrid.tGrid.pressure,0);
+
+DataGrid.tGrid.time = midpoints(DataGrid.tGrid.time);
 
 return;
 end
@@ -317,17 +318,21 @@ if ~isfield(FCTD,'pressure')
     return;
 end;
 
+% ------ PARAMETERS TO ADJUST -----------
 % use 20 point median filter to smooth out the pressure field
 %p = medfilt1(FCTD.pressure,256);
-nPoints = 32;
+nPoints = 256;
+%downLim = 0.1;
+% downLim = 0.025;
+downLim = 0.003;
+downCast = true;
+minLength = 10;
+plotFig=0; %Flag to make plot to check that these parameters are picking out good profiles
+% ---------------------------------------
+
 p = medfilt1(FCTD.pressure,nPoints); %NC changed from 256 to 32 to not cut off as much data
 % try to smooth out the data a bit
 dp = conv2(diff(conv2(p,ones(nPoints,1)/nPoints,'same'),1,1)',ones(1,nPoints)/nPoints,'same');
-
-%downLim = 0.1;
-% downLim = 0.025;
-downLim = 0.025;
-downCast = true;
 
 persistent argsNameToCheck;
 if isempty(argsNameToCheck);
@@ -390,8 +395,28 @@ else
     dn = find(dp<downLim);
 end
 
-% find all indices of going down
+% Plot the criteria for dp
+if plotFig
+    figure
+    % Plot pressure timeseries
+    ax(1) = subplot(2,1,1);
+    plot(FCTD.time,FCTD.pressure,'k');
+    set(gca,'ydir','reverse')
+    title('P')
+    datetick('x','HH:MM','keeplimits')
 
+    % Plot dp
+    mid_dnum = nanmean([FCTD.time(1:end-1),...
+        FCTD.time(2:end)],2);
+    ax(2) = subplot(2,1,2);
+    plot(mid_dnum,dp,'b')
+    title(sprintf('dp, p smoothed over %3.0f points',nPoints))
+    dl = yline(downLim,'m');
+    legend(dl,sprintf('downLim = %3.3f', downLim),'location','best')
+    datetick('x','HH:MM','keeplimits')
+end
+
+% find all indices of going down
 if isempty(dn)
     return;
 end;
@@ -416,6 +441,31 @@ end;
 if startdown(end)<dn(end);
     startdown = [startdown dn(end)];
 end;
+
+% NC - Make sure profiles are at least a certain length
+enddown = nan(size(startdown,1),size(startdown,2));
+for i=1:(length(startdown)-1)
+    in = intersect(startdown(i):startdown(i+1)-1,dn);  
+    enddown(i) = in(end);
+end
+enddown(i+1)=dn(end);
+profLength = FCTD.pressure(enddown)-FCTD.pressure(startdown);
+longEnough = abs(profLength)>=minLength;
+startdown = startdown(longEnough);
+enddown = enddown(longEnough);
+
+if plotFig
+ax(1).NextPlot = 'add';
+plot(ax(1),FCTD.time(startdown),FCTD.pressure(startdown),'go')
+plot(ax(1),FCTD.time(enddown),FCTD.pressure(enddown),'r^')
+
+ax(2).NextPlot = 'add';
+plot(ax(2),mid_dnum(startdown),dp(startdown),'go')
+plot(ax(2),mid_dnum(enddown),dp(enddown),'r^')
+ax(2).YLim = [-downLim*4,downLim*4];
+
+pause
+end
 
 
 for i=1:(length(startdown)-1);

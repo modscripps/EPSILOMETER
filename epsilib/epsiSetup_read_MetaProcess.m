@@ -10,6 +10,8 @@ for f=1:length(str_meta_data_process)
     end
 end
 
+Meta_Data.PROCESS.filename = filename;
+
 if isfield(Meta_Data.paths,'data')
     save(fullfile(Meta_Data.paths.data,'Meta_Data.mat'),'Meta_Data')
 end

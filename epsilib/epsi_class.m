@@ -19,7 +19,7 @@ classdef epsi_class < handle
 
     properties
         Meta_Data %read from config file
-        filename
+        filedir
         plot_properties
         epsi
         ctd
@@ -33,10 +33,10 @@ classdef epsi_class < handle
                 data_path = pwd;
                 Meta_Data_process_file = []; %Default Meta_Data process file not specified
             elseif nargin==1 %varargin is either data directory or Meta_Data_Process_file
-                if exist(varagin{1},'dir') %if varargin is a directory
+                if exist(varargin{1},'dir') %if varargin is a directory
                     data_path = varargin{1};
                     Meta_Data_process_file = [];
-                elseif exist(varagin{1},'file') %if it's a file
+                elseif exist(varargin{1},'file') %if it's a file
                     Meta_Data_process_file = varargin{1};
                     data_path = pwd;
                 end
@@ -119,8 +119,10 @@ classdef epsi_class < handle
 
                     % Read PROCESS Meta_Data from default text file -
                     % if one is not specified, use the default
-                    if isempty(Meta_Data_process_file)
+                    if isempty(Meta_Data_process_file)  && ~isclassfield(Meta_Data.PROCESS,'filename')
                         Meta_Data_process_file = fullfile(obj.Meta_Data.paths.process_library,'Meta_Data_Process','Meta_Data_Process.txt');
+                    elseif isclassfield(Meta_Data.PROCESS,'filename')
+                        Meta_Data_process_file = obj.Meta_Data.PROCESS.filename;
                     end
                     obj.f_read_MetaProcess(Meta_Data_process_file);
 
@@ -257,12 +259,17 @@ classdef epsi_class < handle
                 obj.Meta_Data = obj.f_getSNtemp;
             end
 
-
-            % Read PROCESS Meta_Data from default text file
+            % Read PROCESS Meta_Data from default text file -
+            % if one is not specified, use the default
+            if isempty(Meta_Data_process_file)  && ~isclassfield(Meta_Data.PROCESS,'filename')
+                Meta_Data_process_file = fullfile(obj.Meta_Data.paths.process_library,'Meta_Data_Process','Meta_Data_Process.txt');
+            elseif isclassfield(Meta_Data.PROCESS,'filename')
+                Meta_Data_process_file = obj.Meta_Data.PROCESS.filename;
+            end
             obj.f_read_MetaProcess(Meta_Data_process_file);
 
             % Define filedir as path to raw data
-            obj.filename=obj.Meta_Data.paths.raw_data;
+            obj.filedir=obj.Meta_Data.paths.data;
 
             % Define plot properties
             obj.f_getPlotProperties;

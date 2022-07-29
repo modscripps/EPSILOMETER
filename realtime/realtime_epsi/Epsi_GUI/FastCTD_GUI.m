@@ -1,8 +1,5 @@
 function varargout = FastCTD_GUI(varargin)
 % FASTCTD_GUI MATLAB code for FastCTD_GUI_data.fig
-%
-% ~~~ Edit line 70 with the directory where FastCTD.mat files stream in. ~~~
-%
 %      FASTCTD_GUI, by itself, creates a new FASTCTD_GUI or raises the existing
 %      singleton*.
 %
@@ -27,7 +24,7 @@ function varargout = FastCTD_GUI(varargin)
 
 % Last Modified by GUIDE v2.5 09-May-2013 01:27:16
 
-% ~~~ Begin initialization code - DO NOT EDIT ~~~gui_mainfcn
+% Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
 gui_State = struct('gui_Name',       mfilename, ...
                    'gui_Singleton',  gui_Singleton, ...
@@ -44,7 +41,7 @@ if nargout
 else
     gui_mainfcn(gui_State, varargin{:});
 end
-% ~~~ End initialization code - DO NOT EDIT ~~~
+% End initialization code - DO NOT EDIT
 
 
 % --- Executes just before FastCTD_GUI is made visible.
@@ -64,23 +61,18 @@ guidata(hObject, handles);
 % UIWAIT makes FastCTD_GUI wait for user response (see UIRESUME)
 % uiwait(handles.FastCTD_GUI);
 
+global FastCTD_GUI_data;
+FastCTD_GUI_data.matDir = '/Users/ncouto/Desktop/reprocess_blt_21_0708/deployment/FCTDmat';
+FastCTD_GUI_data.saveDir = '/Users/ncouto/GitHub/EPSILOMETER/realtime/realtime_epsi/FastCTD_GUI'; %Save anything made here in this directory. Otherwise you may get errors later when using GUI for FCTD instead of Epsi
+
 initialize_FastCTD_GUI(handles);
 
-global FastCTD_GUI_data;
-FastCTD_GUI_data.matDir = '/Users/ncouto/Desktop/reprocess_blt_21_0708/deployment/FCTDmat/';
-FastCTD_GUI_data.epsimatDir = '/Users/ncouto/Desktop/reprocess_blt_21_0708/deployment/mat/';
 %FastCTD_GUI_data.matDir = '/Volumes/TTIDE2015_FCTD_Data/FCTD/MAT';
 % update_Plots(hObject, eventdata,handles);
 delete(timerfindall('Tag','FastCTD_Timer'));
 FastCTD_GUI_Timer = timer();
- FastCTD_GUI_Timer.StartFcn = 'disp(''Making FCTD .mat files'')';
-% FastCTD_GUI_Timer.TimerFcn = ['find_new_mat';...
-%     'calc_micro;',...
-%     'make_fctd_mat;',...
-%     'update_Plots(handles);'];
-% FastCTD_GUI_Timer.TimerFcn =  ['handles.output = hObject; ' ...
-%     'update_Plots(hObject,~,handles); '];
-FastCTD_GUI_Timer.TimerFcn =  {@update_Plots,handles};
+% FastCTD_GUI_Timer.StartFcn = {@update_Plots,handles};
+FastCTD_GUI_Timer.TimerFcn = {@update_Plots,handles};
 FastCTD_GUI_Timer.Period = 20;
 FastCTD_GUI_Timer.BusyMode = 'drop';
 FastCTD_GUI_Timer.ErrorFcn = 'disp([datestr(now,''[yyyy.mm.dd HH:MM:SS]'') ''Error Occurred in update_Plots function'']);';
@@ -101,7 +93,7 @@ else
 end
 
 % --- Outputs from this function are returned to the command line.
-function varargout = FastCTD_GUI_OutputFcn(hObject, eventdata, handles)
+function varargout = FastCTD_GUI_OutputFcn(hObject, eventdata, handles) 
 % varargout  cell array for returning output args (see VARARGOUT);
 % hObject    handle to figure
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -205,7 +197,7 @@ if FastCTD_GUI_data.settings.isCurrentTime{3}
     i.ExecutionMode = 'fixedDelay';
 %     i.ExecutionMode = 'singleShot';
     i.TasksToExecute = Inf;
-    start(i);
+    start(i);   
 else
     set(handles.yyyy,'Enable','on');
     set(handles.mm,'Enable','on');
@@ -219,7 +211,7 @@ else
     i.TasksToExecute = 1;
     stop(i);
 end
-save('FastCTD_GUI.mat','FastCTD_GUI_data');
+save(fullfile(FastCTD_GUI_data.saveDir,'FastCTD_GUI.mat'),'FastCTD_GUI_data');
 
 
 
@@ -364,13 +356,13 @@ dd = str2double(get(handles.dd,'String'));
 HH = str2double(get(handles.HH,'String'));
 MM = str2double(get(handles.MM,'String'));
 
-daymax = [31, 28+(mod(yyyy,4)==0), 31, 30, 31, 30, 31, 31, 30, 31, 30. 31];
+daymax = [31, 28+(mod(yyyy,4)==0), 31, 30, 31, 30, 31, 31, 30, 31, 30. 31]; 
 
 if (isempty(yyyy) || isnan(yyyy) || yyyy<2011) ||...
-   (isempty(mm) || isnan(mm) || mm<1 || mm > 12) ||...
+   (isempty(mm) || isnan(mm) || mm<1 || mm > 12) ||... 
    (isempty(dd) || isnan(dd) || dd<1 || dd > daymax(mm)) ||...
-   (isempty(HH) || isnan(HH) || HH<1 || HH > 24) ||...
-   (isempty(MM) || isnan(MM) || MM<1 || MM > 60)
+   (isempty(HH) || isnan(HH) || HH<0 || HH > 24) ||...
+   (isempty(MM) || isnan(MM) || MM<0 || MM > 60)
     set(handles.yyyy,'String',FastCTD_GUI_data.settings.yyyy{1});
     set(handles.mm,'String',FastCTD_GUI_data.settings.mm{1});
     set(handles.dd,'String',FastCTD_GUI_data.settings.dd{1});
@@ -382,7 +374,7 @@ else
     FastCTD_GUI_data.settings.dd{1} = sprintf('%02d',dd);
     FastCTD_GUI_data.settings.HH{1} = sprintf('%02d',HH);
     FastCTD_GUI_data.settings.MM{1} = sprintf('%02d',MM);
-
+    
     FastCTD_GUI_data.settings.yyyy{3} = FastCTD_GUI_data.settings.yyyy{1};
     FastCTD_GUI_data.settings.mm{3} = FastCTD_GUI_data.settings.mm{1};
     FastCTD_GUI_data.settings.dd{3} = FastCTD_GUI_data.settings.dd{1};
@@ -398,7 +390,7 @@ else
 %     update_Plots(hObject, eventdata,handles);
     i = timerfindall('Tag','FastCTD_Timer');
     if strcmp(get(i,'Running'),'off')
-        start(i);
+        start(i);   
     end
 end
 
@@ -530,6 +522,128 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 
+
+% EPS1
+
+function EpsMin_Callback(hObject, eventdata, handles)
+% hObject    handle to DensMin (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of DensMin as text
+%        str2double(get(hObject,'String')) returns contents of DensMin as a double
+global FastCTD_GUI_data;
+EpsMin = str2double(get(hObject,'String'));
+if isempty(EpsMin) || isnan(EpsMin) || EpsMin >= FastCTD_GUI_data.settings.EpsMax{3}
+    set(hObject,'String',FastCTD_GUI_data.settings.EpsMin{1});
+else
+    FastCTD_GUI_data.settings.EpsMin{3} = EpsMin;
+    FastCTD_GUI_data.settings.EpsMin{1} = get(hObject,'String');
+    setCorrectAxesProperties(handles);
+    update_ColorBars(handles);
+end
+
+% --- Executes during object creation, after setting all properties.
+function EpsMin_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to DensMin (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+function EpsMax_Callback(hObject, eventdata, handles)
+% hObject    handle to DensMin (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of DensMin as text
+%        str2double(get(hObject,'String')) returns contents of DensMin as a double
+global FastCTD_GUI_data;
+EpsMax = str2double(get(hObject,'String'));
+if isempty(EpsMax) || isnan(EpsMax) ||EpsMax <= FastCTD_GUI_data.settings.EpsMin{3}
+    set(hObject,'String',FastCTD_GUI_data.settings.EpsMax{1});
+else
+    FastCTD_GUI_data.settings.EpsMax{3} = EpsMax;
+    FastCTD_GUI_data.settings.EpsMax{1} = get(hObject,'String');
+    setCorrectAxesProperties(handles);
+    update_ColorBars(handles);
+end
+
+% --- Executes during object creation, after setting all properties.
+function EpsMax_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to DensMin (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+function ChiMin_Callback(hObject, eventdata, handles)
+% hObject    handle to DensMin (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of DensMin as text
+%        str2double(get(hObject,'String')) returns contents of DensMin as a double
+global FastCTD_GUI_data;
+ChiMin = str2double(get(hObject,'String'));
+if isempty(ChiMin) || isnan(ChiMin) ||ChiMin >= FastCTD_GUI_data.settings.ChiMax{3}
+    set(hObject,'String',FastCTD_GUI_data.settings.ChiMin{1});
+else
+    FastCTD_GUI_data.settings.DensMin{3} = ChiMin;
+    FastCTD_GUI_data.settings.DensMin{1} = get(hObject,'String');
+    setCorrectAxesProperties(handles);
+    update_ColorBars(handles);
+end
+
+% --- Executes during object creation, after setting all properties.
+function ChiMin_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to DensMin (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+function ChiMax_Callback(hObject, eventdata, handles)
+% hObject    handle to DensMin (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of DensMin as text
+%        str2double(get(hObject,'String')) returns contents of DensMin as a double
+global FastCTD_GUI_data;
+ChiMax = str2double(get(hObject,'String'));
+if isempty(ChiMax) || isnan(ChiMax) || ChiMax <= FastCTD_GUI_data.settings.ChiMin{3}
+    set(hObject,'String',FastCTD_GUI_data.settings.ChiMax{1});
+else
+    FastCTD_GUI_data.settings.DensMin{3} = ChiMax;
+    FastCTD_GUI_data.settings.DensMin{1} = get(hObject,'String');
+    setCorrectAxesProperties(handles);
+    update_ColorBars(handles);
+end
+
+% --- Executes during object creation, after setting all properties.
+function ChiMax_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to DensMin (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
 
 function SaltMax_Callback(hObject, eventdata, handles)
 % hObject    handle to SaltMax (see GCBO)
@@ -723,132 +837,25 @@ end
 
 
 
-function EpsMax_Callback(hObject, eventdata, handles)
-% hObject    handle to SaltMax (see GCBO)
+function TempScale_Callback(hObject, eventdata, handles)
+% hObject    handle to TempScale (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: get(hObject,'String') returns contents of SaltMax as text
-%        str2double(get(hObject,'String')) returns contents of SaltMax as a double
+% Hints: get(hObject,'String') returns contents of TempScale as text
+%        str2double(get(hObject,'String')) returns contents of TempScale as a double
 global FastCTD_GUI_data;
-EpsMax = str2double(get(hObject,'String'));
-if isempty(EpsMax) || isnan(EpsMax) || EpsMax < 0 ||EpsMax <= FastCTD_GUI_data.settings.EpsMin{3}
-    set(hObject,'String',FastCTD_GUI_data.settings.EpsMax{1});
+TempScale = str2double(get(hObject,'String'));
+if isempty(TempScale) || isnan(TempScale) || TempScale < 0
+    set(hObject,'String',FastCTD_GUI_data.settings.TempScale{1});
 else
-    FastCTD_GUI_data.settings.EpsMax{3} = EpsMax;
-    FastCTD_GUI_data.settings.EpsMax{1} = get(hObject,'String');
-    setCorrectAxesProperties(handles);
-    update_ColorBars(handles);
+    FastCTD_GUI_data.settings.TempScale{3} = TempScale;
+    FastCTD_GUI_data.settings.TempScale{1} = get(hObject,'String');
+    setCorrectAxesProperties(handles)    
 end
 
 % --- Executes during object creation, after setting all properties.
-function EpsMax_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to SaltMax (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
-function EpsMin_Callback(hObject, eventdata, handles)
-% hObject    handle to SaltMin (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'String') returns contents of SaltMin as text
-%        str2double(get(hObject,'String')) returns contents of SaltMin as a double
-global FastCTD_GUI_data;
-EpsMin = str2double(get(hObject,'String'));
-if isempty(EpsMin) || isnan(EpsMin) || EpsMin < 0 || EpsMin >= FastCTD_GUI_data.settings.EpsMax{3}
-    set(hObject,'String',FastCTD_GUI_data.settings.EpsMin{1});
-else
-    FastCTD_GUI_data.settings.EpsMin{3} = EpsMin;
-    FastCTD_GUI_data.settings.EpsMin{1} = get(hObject,'String');
-    setCorrectAxesProperties(handles)
-    update_ColorBars(handles);
-end
-
-% --- Executes during object creation, after setting all properties.
-function EpsMin_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to SaltMin (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
-
-
-
-function ChiMax_Callback(hObject, eventdata, handles)
-% hObject    handle to SaltMax (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'String') returns contents of SaltMax as text
-%        str2double(get(hObject,'String')) returns contents of SaltMax as a double
-global FastCTD_GUI_data;
-ChiMax = str2double(get(hObject,'String'));
-if isempty(ChiMax) || isnan(ChiMax) || ChiMax < 0 ||ChiMax <= FastCTD_GUI_data.settings.ChiMin{3}
-    set(hObject,'String',FastCTD_GUI_data.settings.EpsMax{1});
-else
-    FastCTD_GUI_data.settings.ChiMax{3} = ChiMax;
-    FastCTD_GUI_data.settings.ChiMax{1} = get(hObject,'String');
-    setCorrectAxesProperties(handles);
-    update_ColorBars(handles);
-end
-
-% --- Executes during object creation, after setting all properties.
-function ChiMax_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to SaltMax (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
-function ChiMin_Callback(hObject, eventdata, handles)
-% hObject    handle to SaltMin (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'String') returns contents of SaltMin as text
-%        str2double(get(hObject,'String')) returns contents of SaltMin as a double
-global FastCTD_GUI_data;
-ChiMin = str2double(get(hObject,'String'));
-if isempty(ChiMin) || isnan(ChiMin) || ChiMin < 0 || ChiMin >= FastCTD_GUI_data.settings.ChiMax{3}
-    set(hObject,'String',FastCTD_GUI_data.settings.ChiMin{1});
-else
-    FastCTD_GUI_data.settings.ChiMin{3} = ChiMin;
-    FastCTD_GUI_data.settings.ChiMin{1} = get(hObject,'String');
-    setCorrectAxesProperties(handles)
-    update_ColorBars(handles);
-end
-
-% --- Executes during object creation, after setting all properties.
-function ChiMin_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to SaltMin (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
-
-% --- Executes during object creation, after setting all properties.
-function DensScale_CreateFcn(hObject, eventdata, handles)
+function TempScale_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to TempScale (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
@@ -858,6 +865,8 @@ function DensScale_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
+
+
 
 function DensScale_Callback(hObject, eventdata, handles)
 % hObject    handle to DensScale (see GCBO)
@@ -877,8 +886,8 @@ else
 end
 
 % --- Executes during object creation, after setting all properties.
-function TempScale_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to TempScale (see GCBO)
+function DensScale_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to DensScale (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
@@ -887,86 +896,6 @@ function TempScale_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-
-function TempScale_Callback(hObject, eventdata, handles)
-% hObject    handle to DensScale (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'String') returns contents of DensScale as text
-%        str2double(get(hObject,'String')) returns contents of DensScale as a double
-global FastCTD_GUI_data;
-TempScale = str2double(get(hObject,'String'));
-if isempty(TempScale) || isnan(TempScale) || TempScale < 0
-    set(hObject,'String',FastCTD_GUI_data.settings.TempScale{1});
-else
-    FastCTD_GUI_data.settings.TempScale{3} = TempScale;
-    FastCTD_GUI_data.settings.TempScale{1} = get(hObject,'String');
-    setCorrectAxesProperties(handles)
-end
-
-
-% --- Executes during object creation, after setting all properties.
-function EpsScale_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to TempScale (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
-function EpsScale_Callback(hObject, eventdata, handles)
-% hObject    handle to DensScale (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'String') returns contents of DensScale as text
-%        str2double(get(hObject,'String')) returns contents of DensScale as a double
-global FastCTD_GUI_data;
-EpsScale = str2double(get(hObject,'String'));
-if isempty(EpsScale) || isnan(EpsScale) || EpsScale < 0
-    set(hObject,'String',FastCTD_GUI_data.settings.TempScale{1});
-else
-    FastCTD_GUI_data.settings.EpsScale{3} = EpsScale;
-    FastCTD_GUI_data.settings.EpsScale{1} = get(hObject,'String');
-    setCorrectAxesProperties(handles)
-end
-
-
-% --- Executes during object creation, after setting all properties.
-function ChiScale_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to TempScale (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
-function ChiScale_Callback(hObject, eventdata, handles)
-% hObject    handle to DensScale (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'String') returns contents of DensScale as text
-%        str2double(get(hObject,'String')) returns contents of DensScale as a double
-global FastCTD_GUI_data;
-ChiScale = str2double(get(hObject,'String'));
-if isempty(ChiScale) || isnan(ChiScale) || ChiScale < 0
-    set(hObject,'String',FastCTD_GUI_data.settings.TempScale{1});
-else
-    FastCTD_GUI_data.settings.ChiScale{3} = ChiScale;
-    FastCTD_GUI_data.settings.ChiScale{1} = get(hObject,'String');
-    setCorrectAxesProperties(handles)
-end
-
-
-
 
 
 
@@ -1533,9 +1462,9 @@ update_Colormap(handles);
 % --- update Colorbars
 function update_ColorBars(handles)
 global FastCTD_GUI_data;
-fields = {'Dens','Temp','Eps','Chi'};
-varNames = {'Density','Temperature','Epsilon','Chi'};
-varUnits = {'kg/m$^3$', '$^\circ$', 'W/kg','$^\circ$C$^2$/s'};
+fields = {'Dens','Temp','Salt','Cond'};
+varNames = {'Density','Temperature','Salinity','Conductivity'};
+varUnits = {'kg/m$^3$', '$^\circ$C', 'psu','S/m'};
 x = [0 1];
 for i = 1:4
    c = linspace(FastCTD_GUI_data.settings.(sprintf('%sMin',fields{i})){3}, FastCTD_GUI_data.settings.(sprintf('%sMax',fields{i})){3},FastCTD_GUI_data.settings.ColorCount{3})';
@@ -1545,7 +1474,7 @@ for i = 1:4
        'Rotation',270,'FontSize',14,'Interpreter','latex','units','normalized','Position',[4.6 .5 1]);
    caxis([FastCTD_GUI_data.settings.(sprintf('%sMin',fields{i})){3}, FastCTD_GUI_data.settings.(sprintf('%sMax',fields{i})){3}]);
 end
-save('FastCTD_GUI.mat','FastCTD_GUI_data');
+save(fullfile(FastCTD_GUI_data.saveDir,'FastCTD_GUI.mat'),'FastCTD_GUI_data');
 
 % --- update Colormap
 function update_Colormap(handles)
@@ -1556,7 +1485,7 @@ else
     colormap(eval(sprintf('%s(FastCTD_GUI_data.settings.ColorCount{3})',FastCTD_GUI_data.settings.Colormap{3})));
 end
 drawnow;
-save('FastCTD_GUI.mat','FastCTD_GUI_data');
+save(fullfile(FastCTD_GUI_data.saveDir,'FastCTD_GUI.mat'),'FastCTD_GUI_data');
 
 % --- update Control Panels Parameters
 function update_ControlPanelParams(handles)
@@ -1594,23 +1523,24 @@ else
     set(handles.TimeSet_OK,'Visible','on');
 end
 
-save('FastCTD_GUI.mat','FastCTD_GUI_data');
+save(fullfile(FastCTD_GUI_data.saveDir,'FastCTD_GUI.mat'),'FastCTD_GUI_data');
 
 function initialize_FastCTD_GUI(handles)
 
 global FastCTD_GUI_data;
 
 
-if ~exist('FastCTD_GUI.mat','file')
+if exist('FastCTD_GUI.mat')~=2
 
     setUpDefaultValues(handles);
-
+    
     % first cell will be data used by the UI display
     % third cell will be data used by numerical MATLAB
     % second cell is the type of UI display (1 = textbox, 2 =
     % textbox that is 2 char short, 3 = textbox that is 4 char short, 4 = dropdown, 5 = checkbox)
-
-elseif isempty(FastCTD_GUI_data)
+    
+%elseif isempty(FastCTD_GUI_data)
+else
     load('FastCTD_GUI.mat');
     if isempty(FastCTD_GUI_data)
         setUpDefaultValues(handles);
@@ -1646,7 +1576,7 @@ end
 for i=1:4
     cla(handles.(sprintf('Frame%1d',i)),'reset');
     set(handles.(sprintf('Frame%1d',i)),'nextPlot','replace');
-
+    
     cla(handles.(sprintf('Engineering%1d',i)),'reset');
     set(handles.(sprintf('Engineering%1d',i)),'nextPlot','replace');
 end
@@ -1683,7 +1613,7 @@ FastCTD_GUI_data.settings = struct(...
                                     'ColorCount',       {{'64',  1,      64}},...
                                     'isReverseColor',   {{0,     5,      false}},...
                                     'DepthMin',         {{'0',   1,      0}},...
-                                    'DepthMax',         {{'1300',1,      1300}},...
+                                    'DepthMax',         {{'2500',1,      2500}},...
                                     'DensMin',          {{'20',  1,      20}},...
                                     'DensMax',          {{'28',  1,      28}},...
                                     'TempMin',          {{'10',  1,      10}},...
@@ -1692,35 +1622,39 @@ FastCTD_GUI_data.settings = struct(...
                                     'SaltMax',          {{'36',  1,      36}},...
                                     'CondMin',          {{'0',   1,      0}},...
                                     'CondMax',          {{'50',  1,      50}},...
-                                    'EpsMin',      {{'-10', 1,     -10}},...
-                                    'EpsMax',      {{'-10', 1,     -6}},...
-                                    'ChiMin',      {{'-10', 1,     -10}},...
-                                    'ChiMax',      {{'-10', 1,     -6}},...
+                                    'Eps1Min',          {{'-10',  1,     -10}},...
+                                    'Eps1Max',          {{'-6',  1,      -6}},...
+                                    'Eps2Min',          {{'-10',  1,     -10}},...
+                                    'Eps2Max',          {{'-6',  1,      -6}},...
+                                    'Chi1Min',          {{'-10',  1,     -10}},...
+                                    'Chi1Max',          {{'-6',  1,      -6}},...
+                                    'Chi2Min',          {{'-10',   1,    -10}},...
+                                    'Chi2Max',          {{'-6',  1,      -6}},...
                                     'DensScale',        {{'1',   1,      1}},...
                                     'TempScale',        {{'1',   1,      1}},...
                                     'TimeSpan2',        {{'1',   1,      1}},...
                                     'TimeUnit2',        {{1,     4,      1/24}},...
-                                    'Engineering1Data', {{1,     4,      'pressure'}},...
-                                    'Engineering1Min',  {{'0',   1,      0}},...
-                                    'Engineering1Max',  {{'1300',1,      1300}},...
-                                    'Engineering2Data', {{1,     4,      'pressure'}},...
-                                    'Engineering2Min',  {{'0',   1,      0}},...
-                                    'Engineering2Max',  {{'1300',1,      1300}},...
-                                    'Engineering3Data', {{1,     4,      'pressure'}},...
-                                    'Engineering3Min',  {{'0',   1,      0}},...
-                                    'Engineering3Max',  {{'1300',1,      1300}},...
-                                    'Engineering4Data', {{1,     4,      'pressure'}},...
-                                    'Engineering4Min',  {{'0',   1,      0}},...
-                                    'Engineering4Max',  {{'1300',1,      1300}});
-
+                                    'Engineering1Data', {{1,     4,      'epsilon1'}},...
+                                    'Engineering1Min',  {{'-10',   1,      -10}},...
+                                    'Engineering1Max',  {{'-6',1,      -6}},...
+                                    'Engineering2Data', {{1,     4,      'epsilon2'}},...
+                                    'Engineering2Min',  {{'-10',   1,      -10}},...
+                                    'Engineering2Max',  {{'-6',1,      -6}},...
+                                    'Engineering3Data', {{1,     4,      'chi1'}},...
+                                    'Engineering3Min',  {{'-10',   1,      -10}},...
+                                    'Engineering3Max',  {{'-6',1,      -6}},...
+                                    'Engineering4Data', {{1,     4,      'chi2'}},...
+                                    'Engineering4Min',  {{'-10',   1,      -10}},...
+                                    'Engineering4Max',  {{'-6',1,      -6}});
+    
     FastCTD_GUI_data.availableData(1) = struct('type', 'pressure',...
                                           'description','Pressure',...
                                           'dispText','Pressure',...
                                           'dispUnit','dbar',...
                                           'dataMin', 0,...
-                                          'dataMax', 1300,...
+                                          'dataMax', 2500,...
                                           'dispMin', '0',...
-                                          'dispMax', '1300');
+                                          'dispMax', '2500');                            
     FastCTD_GUI_data.availableData(2) = struct('type', 'temperature',...
                                           'description','Temperature',...
                                           'dispText','Temperature',...
@@ -1914,40 +1848,38 @@ FastCTD_GUI_data.settings = struct(...
                                           'dataMax', 0.4,...
                                           'dispMin', '20',...
                                           'dispMax', '28');
-    FastCTD_GUI_data.availableData(26) = struct('type', 'Eps 1',...
-                                          'description','Eps 1',...
-                                          'dispText','$log_{10}\epsilon_1$',...
-                                          'dispUnit','W kg$^{-1}$',...
+    FastCTD_GUI_data.availableData(26) = struct('type', 'log10(epsilon1)',...
+                                          'description','epsilon1',...
+                                          'dispText','log10-eps1',...
+                                          'dispUnit','',...
                                           'dataMin', -10,...
                                           'dataMax', -6,...
-                                          'dispMin', '-10',...
-                                          'dispMax', '-6');
-    FastCTD_GUI_data.availableData(27) = struct('type', 'Eps 2',...
-                                          'description','Eps 2',...
-                                          'dispText','$log_{10}\epsilon_1$',...
-                                          'dispUnit','W kg$^{-1}$',...
+                                          'dispMin', '20',...
+                                          'dispMax', '28');
+    FastCTD_GUI_data.availableData(27) = struct('type', 'log10(epsilon2)',...
+                                          'description','epsilon2',...
+                                          'dispText','log10-eps2',...
+                                          'dispUnit','',...
                                           'dataMin', -10,...
                                           'dataMax', -6,...
-                                          'dispMin', '-10',...
-                                          'dispMax', '-6');
-    FastCTD_GUI_data.availableData(28) = struct('type', 'chi 1',...
-                                          'description','Chi 1',...
-                                          'dispText','$\chi_1$',...
-                                          'dispUnit','$^\circ$C$^2$ s$^{-1}$',...
-                                          'dataMin', 1e-10,...
-                                          'dataMax', 1e-6,...
-                                          'dispMin', '1e-10',...
-                                          'dispMax', '1e-6');
-    FastCTD_GUI_data.availableData(29) = struct('type', 'chi 2',...
-                                          'description','Chi 2',...
-                                          'dispText','$\chi_2$',...
-                                          'dispUnit','$^\circ$C$^2$ s$^{-1}$',...
-                                          'dataMin', 1e-10,...
-                                          'dataMax', 1e-6,...
-                                          'dispMin', '1e-10',...
-                                          'dispMax', '1e-6');
-
-
+                                          'dispMin', '20',...
+                                          'dispMax', '28');
+    FastCTD_GUI_data.availableData(28) = struct('type', 'log10(chi1)',...
+                                          'description','chi1',...
+                                          'dispText','log10(chi)',...
+                                          'dispUnit','',...
+                                          'dataMin', -10,...
+                                          'dataMax', -6,...
+                                          'dispMin', '20',...
+                                          'dispMax', '28');
+    FastCTD_GUI_data.availableData(29) = struct('type', 'log10(chi2)',...
+                                          'description','chi2',...
+                                          'dispText','log10-chi2',...
+                                          'dispUnit','',...
+                                          'dataMin', -10,...
+                                          'dataMax', -6,...
+                                          'dispMin', '20',...
+                                          'dispMax', '28');
     FastCTD_GUI_data.timeUnits = [1/24, 1/60/24, 1]; % time units in days (hour minute day)%
     FastCTD_GUI_data.currentTime = now;
     FastCTD_GUI_data.timeSpan = FastCTD_GUI_data.settings.TimeSpan{3}*FastCTD_GUI_data.settings.TimeUnit{3};
@@ -1958,10 +1890,10 @@ function setCorrectAxesProperties(handles)
 
 global FastCTD_GUI_data;
 
-save('FastCTD_GUI.mat','FastCTD_GUI_data');
+save(fullfile(FastCTD_GUI_data.saveDir,'FastCTD_GUI.mat'),'FastCTD_GUI_data');
 
 %set axis ij for all Time Series plots
-vars4Frames = {'Dens','Temp','Salt','Cond','Eps','Chi'};
+vars4Frames = {'Dens','Temp','Salt','Cond'};
 for i=1:4
     set(handles.(sprintf('Frame%1d',i)),...
         'ydir','reverse',...
@@ -1975,13 +1907,13 @@ for i=1:4
         'XLim',[-FastCTD_GUI_data.timeSpan 0]+FastCTD_GUI_data.currentTime,...
         'YLim',[FastCTD_GUI_data.settings.DepthMin{3}, FastCTD_GUI_data.settings.DepthMax{3}],...
         'Clim',[FastCTD_GUI_data.settings.(sprintf('%sMin',vars4Frames{i})){3}, FastCTD_GUI_data.settings.(sprintf('%sMax',vars4Frames{i})){3}]);
-
+    
     try
         datetick(handles.(sprintf('Frame%1d',i)),'x','keeplimits');
     catch err
-        clear err;
+        display_error_stack(err)
     end
-
+    
     if i == 1
         set(handles.(sprintf('Frame%1d',i)),...
             'XAxisLocation','top');
@@ -1993,10 +1925,10 @@ for i=1:4
         'XAxisLocation','bottom',...
         'XTickLabel',{});
     end
-
+    
 %     disp(sprintf('Engineering%1dMin',i));
 %     disp([FastCTD_GUI_data.settings.(sprintf('Engineering%1dMin',i)){3} FastCTD_GUI_data.settings.(sprintf('Engineering%1dMax',i)){3}]);
-
+    
     if FastCTD_GUI_data.settings.(sprintf('Engineering%1dData',i)){1} == 1
         set(handles.(sprintf('Engineering%1d',i)),...
             'ydir','reverse',...
@@ -2025,9 +1957,9 @@ for i=1:4
     try
         datetick(handles.(sprintf('Engineering%1d',i)),'x','keeplimits');
     catch err
-        clear err;
+        display_error_stack(err)   
     end
-
+    
     if i < 3
         set(handles.(sprintf('Engineering%1d',i)),...
             'XAxisLocation','top');
@@ -2035,9 +1967,9 @@ for i=1:4
         set(handles.(sprintf('Engineering%1d',i)),...
         'XAxisLocation','bottom');
     end
-
-
-
+    
+    
+    
     if mod(i,2)
         set(handles.(sprintf('Engineering%1d',i)),...
             'YAxisLocation','left');
@@ -2060,7 +1992,7 @@ for i=1:4
             'Rotation',270,...
             'Position',[1.16 0.5 1]);
     end
-
+    
 end
 
 xlabel(handles.Frame1,'Time [UTC]',...
@@ -2095,13 +2027,13 @@ xlabel(handles.Engineering3,'Time [UTC]',...
 for i=1:2
     % first clear out the old labels before putting new one on
     h = get(handles.(sprintf('CascadePlot%1d',i)),'Children');
-
+    
     for j = 1:length(h)
         if strcmpi(get(h(j),'Tag'),'PlotLabel')
             delete(h(j));
         end
     end
-
+    
     set(handles.(sprintf('CascadePlot%1d',i)),...
         'ydir','reverse',...
         'box','on',...
@@ -2116,9 +2048,9 @@ for i=1:2
     try
         datetick(handles.(sprintf('CascadePlot%1d',i)),'x','keeplimits');
     catch err
-        clear('err');
+        display_error_stack(err)   
     end
-
+    
     if i == 1
         set(handles.(sprintf('CascadePlot%1d',i)),...
             'XAxisLocation','top');
@@ -2128,7 +2060,7 @@ for i=1:2
             'Position',[.5 1.1 1],...
             'FontSize',12);
         axes(handles.(sprintf('CascadePlot%1d',i)));
-        text(min(xlim)+0.02*range(xlim),max(ylim)-0.05*range(ylim),'$log_{10}\epsilon$',...
+        text(min(xlim)+0.02*range(xlim),max(ylim)-0.05*range(ylim),'$\sigma_T$',...
             'Interpreter','LaTeX',...
             'HorizontalAlignment','left',...
             'VerticalAlignment','bottom',...
@@ -2146,7 +2078,7 @@ for i=1:2
             'Position',[.5 -0.12 1],...
             'FontSize',12);
         axes(handles.(sprintf('CascadePlot%1d',i)));
-        h = text(min(xlim)+0.02*range(xlim),max(ylim)-0.05*range(ylim),'$log_{10}\chi$',...
+        h = text(min(xlim)+0.02*range(xlim),max(ylim)-0.05*range(ylim),'Temperature',...
             'Interpreter','LaTeX',...
             'HorizontalAlignment','left',...
             'VerticalAlignment','bottom',...
@@ -2157,7 +2089,7 @@ for i=1:2
             'Tag','PlotLabel');
     end
 
-
+    
 end
 ylabel(handles.CascadePlot1,'Depth [m]',...
     'Rotation',90,...
@@ -2168,8 +2100,6 @@ ylabel(handles.CascadePlot1,'Depth [m]',...
 
 set(handles.UpdateStatusText,'String',['Last updated on ' datestr(now,'yyyy/mm/dd HH:MM:SS') '[UTC]']);
 drawnow;
-
-
 
 % --- update time 
 function update_Time()
@@ -2263,8 +2193,6 @@ if isstruct(myFCTD_GridData) && size(myFCTD_GridData.tGrid.density,2)>2
 
 
 % Cascade Plots
-
-
     depths2PlotIsopycnals = linspace(FastCTD_GUI_data.settings.DepthMin{3},FastCTD_GUI_data.settings.DepthMax{3},30);
     x = nanmean(isopycnal_depths,2);
     y = isopycnals;
@@ -2324,30 +2252,30 @@ if isstruct(myFCTD_GridData) && size(myFCTD_GridData.tGrid.density,2)>2
 %     L_Th = NaN(2,size(L_Th1,1),size(L_Th1,2));
 %     L_Th(1,:,:) = L_Th1;
 %     L_Th(2,:,:) = L_Th2;
-    salinity = myFCTD_GridData.salinity(:,time_ind2);
-    temperature = myFCTD_GridData.temperature(:,time_ind2);
-    pressure = myFCTD_GridData.pressure(:,time_ind2);
-    Eps = NaN(size(salinity));
-    L_T = NaN(size(salinity));
-    L = NaN(size(salinity));
-    
-    for i = 1:size(Eps,2)
-        try
-            [Eps(:,i),L_T(:,i),L(:,i)] =...
-                computeOverturns(salinity(:,i),temperature(:,i),pressure(:,i),...
-                'tempNoiseLevel',0.5e-4,'densNoiseLevel',1e-4,'UseBoth','tempR0Threshold',0.025,'densR0Threshold',0.025,'lat',20);
-        catch err2
-            disp(err2);
-            for j=1:numel(err2.stack)
-                disp([err2.stack(j).file ' : ' err2.stack(j).name ' : ' num2str(err2.stack(j).line)]);
-            end
-        end
-    end
-    L_Th = NaN(2,size(L_T,1),size(L_T,2));
-    L_Th(1,:,:) = L_T;
-    L_Th(2,:,:) = L_T;
-    for i = 1:2
-        dataC = myFCTD_GridData.(Vars2PlotInFrames{i})(:,time_ind2);
+
+% % Don't calculate Thorpe scales for epsilon/chi plots
+%     salinity = myFCTD_GridData.salinity(:,time_ind2);
+%     temperature = myFCTD_GridData.temperature(:,time_ind2);
+%     pressure = myFCTD_GridData.pressure(:,time_ind2);
+%     Eps = NaN(size(salinity));
+%     L_T = NaN(size(salinity));
+%     L = NaN(size(salinity));
+%     
+%     for i = 1:size(Eps,2)
+%         try
+%             [Eps(:,i),L_T(:,i),L(:,i)] =...
+%                 computeOverturns(salinity(:,i),temperature(:,i),pressure(:,i),...
+%                 'tempNoiseLevel',0.5e-4,'densNoiseLevel',1e-4,'UseBoth','tempR0Threshold',0.025,'densR0Threshold',0.025,'lat',20);
+%         catch err2
+%         display_error_stack(err2)   
+%         end
+%     end
+%     L_Th = NaN(2,size(L_T,1),size(L_T,2));
+%     L_Th(1,:,:) = L_T;
+%     L_Th(2,:,:) = L_T;
+
+    for i = 1:2 
+        dataC = myFCTD_GridData.(Vars2PlotInFrames{i+2})(:,time_ind2); %I want variables 3 and 4 in cascade plots 1 and 2. {i+2}
         
         p = polyfit(D(~isnan(dataC)),dataC(~isnan(dataC)),1);
         
@@ -2356,9 +2284,10 @@ if isstruct(myFCTD_GridData) && size(myFCTD_GridData.tGrid.density,2)>2
         SN_plotCascade(handles.(sprintf('CascadePlot%1d',i)),dataC-polyval(p,D),D,...
             'time',T,'b-','linewidth',0.75,'scale',FastCTD_GUI_data.settings.(sprintf('%sScale',VarsBoxNames{i})){3});
         hold(handles.(sprintf('CascadePlot%1d',i)),'on');
-        SN_plotCascade(handles.(sprintf('CascadePlot%1d',i)),dataC-polyval(p,D),D,...
-            'time',T,'ro','linewidth',0.5,'scale',FastCTD_GUI_data.settings.(sprintf('%sScale',VarsBoxNames{i})){3},...
-            'PointsToPlot',squeeze(L_Th(i,:,:))>2,'markerfacecolor','r','markersize',2);
+        % Don't plot overturns for epsilon/chi cascade plots
+%         SN_plotCascade(handles.(sprintf('CascadePlot%1d',i)),dataC-polyval(p,D),D,...
+%             'time',T,'ro','linewidth',0.5,'scale',FastCTD_GUI_data.settings.(sprintf('%sScale',VarsBoxNames{i})){3},...
+%             'PointsToPlot',squeeze(L_Th(i,:,:))>2,'markerfacecolor','r','markersize',2);
         
         contour(handles.(sprintf('CascadePlot%1d',i)),time,depth,...
             myFCTD_GridData.tGrid.density(:,time_ind),isopycnal2plot(~isnan(isopycnal2plot)),'color',[1 1 1]*0.5,'linewidth',.5);
@@ -2389,12 +2318,6 @@ if isstruct(FCTD) && size(FCTD.temperature,1) > 2
     end
 end
 
-
-
-
-
-
-% --- update time
 % --- function to update data conversion from Raw to MATLAB then Grid data
 function update_Plots(hObject, eventdata,handles)
 
@@ -2408,7 +2331,7 @@ TimeMin = FastCTD_GUI_data.currentTime - FastCTD_GUI_data.timeSpan;
 try
 load([FastCTD_GUI_data.matDir '/FastCTD_MATfile_TimeIndex.mat']);
 catch err
-    disp(err);
+        display_error_stack(err)   
     disp('Error loading time index');
     return;
 end
@@ -2439,7 +2362,7 @@ for i = 1:length(ind);
             try
                 load([FastCTD_GUI_data.matDir '/' FastCTD_MATfile_TimeIndex.filenames{ind(i)} '.mat']);
             catch err
-                disp(err);
+        display_error_stack(err)   
                 disp([FastCTD_GUI_data.matDir '/' FastCTD_MATfile_TimeIndex.filenames{ind(i)} '.mat']);
             end
         end
@@ -2451,9 +2374,7 @@ for i = 1:length(ind);
         end
     catch err
         disp(['There something wrong loading ' FastCTD_MATfile_TimeIndex.filenames{ind(i)} ]);
-        disp(err);
-        disp(err.message);
-        disp(err.stack);
+        display_error_stack(err)   
         disp([FastCTD_GUI_data.matDir '/' FastCTD_MATfile_TimeIndex.filenames{ind(i)} '.mat']);
     end
 end
@@ -2465,11 +2386,8 @@ try
     update_ControlPanelParams(handles);
     setCorrectAxesProperties(handles);
 catch err
-    disp('There was some error in the plotting, probably because the user closes the programs too early');
-    disp(err);
-    for i = 1:length(err.stack)
-        disp([num2str(i) ' ' err.stack(i).name ' ' num2str(err.stack(i).line)]);
-    end
+   disp('There was some error in the plotting, probably because the user closes the programs too early');
+   display_error_stack(err)   
 end
 
 disp([datestr(now,'[yyyy.mm.dd HH:MM:SS]') ' Done plotting...']);
@@ -2478,9 +2396,10 @@ disp([datestr(now,'[yyyy.mm.dd HH:MM:SS]') ' Saving figure...']);
 % we find that with all the LaTeX stuff, the renderer doesn't work very
 % well for rotated text
 try
-    SN_printfig([FastCTD_GUI_data.matDir '/../PDF/' 'FastCTD_GUI_data.pdf'],'Figure',handles.FastCTD_GUI);
-catch
+    %SN_printfig([FastCTD_GUI_data.matDir '/../PDF/' 'FastCTD_GUI_data.pdf'],'Figure',handles.FastCTD_GUI);
+catch err
     disp('There was some error in the plotting, probably because the user closes the programs too early');
+    display_error_stack(err)
 end
 
 % SN_printfig('testimg.png','Figure',handles.FastCTD_GUI,'Resolution',300);
@@ -2495,27 +2414,26 @@ try
 %     copyfile([FastCTD_GUI_data.matDir '/../PDF/' 'FastCTD_GUI_data.pdf'],'~/Sites/FCTD/PDF/FastCTD_GUI_data.pdf');
 %     copyfile([FastCTD_GUI_data.matDir '/../PNG/' 'FastCTD_GUI_data.png'],'~/Sites/FCTD/PNG/FastCTD_GUI_data.png');
 %     copyfile([FastCTD_GUI_data.matDir '/../JPG/' 'FastCTD_GUI_data.jpg'],'~/Sites/FCTD/JPG/FastCTD_GUI_data.jpg');
-    copyfile([FastCTD_GUI_data.matDir '/../PDF/' 'FastCTD_GUI_data.pdf'],'/Library/WebServer/Documents/TTide/PDF/FastCTD_GUI_data.pdf');
-    copyfile([FastCTD_GUI_data.matDir '/../PNG/' 'FastCTD_GUI_data.png'],'/Library/WebServer/Documents/TTide/PNG/FastCTD_GUI_data.png');
+    %copyfile([FastCTD_GUI_data.matDir '/../PDF/' 'FastCTD_GUI_data.pdf'],'/Library/WebServer/Documents/TTide/PDF/FastCTD_GUI_data.pdf');
+    %copyfile([FastCTD_GUI_data.matDir '/../PNG/' 'FastCTD_GUI_data.png'],'/Library/WebServer/Documents/TTide/PNG/FastCTD_GUI_data.png');
     if mod(floor(now*24*60),10)==0
         i = timerfindall('Tag','FastCTD_Timer');
         if ~isempty(i) && get(i,'TasksToExecute') > 1
             disp('copyfile');
-            copyfile([FastCTD_GUI_data.matDir '/../PDF/' 'FastCTD_GUI_data.pdf'],[FastCTD_GUI_data.matDir '/../PDF/' sprintf('FastCTD_GUI_%s.pdf',datestr(now,'yyyy-mm-dd_HHMM'))]);
+            %copyfile([FastCTD_GUI_data.matDir '/../PDF/' 'FastCTD_GUI_data.pdf'],[FastCTD_GUI_data.matDir '/../PDF/' sprintf('FastCTD_GUI_%s.pdf',datestr(now,'yyyy-mm-dd_HHMM'))]);
             copyfile([FastCTD_GUI_data.matDir '/../PNG/' 'FastCTD_GUI_data.png'],[FastCTD_GUI_data.matDir '/../PNG/' sprintf('FastCTD_GUI_%s.png',datestr(now,'yyyy-mm-dd_HHMM'))]);
-            copyfile([FastCTD_GUI_data.matDir '/../JPG/' 'FastCTD_GUI_data.jpg'],[FastCTD_GUI_data.matDir '/../JPG/' sprintf('FastCTD_GUI_%s.jpg',datestr(now,'yyyy-mm-dd_HHMM'))]);
-            copyfile([FastCTD_GUI_data.matDir '/../PDF/' 'FastCTD_GUI_data.pdf'],['/Library/WebServer/Documents/TTide/PDF/' sprintf('FastCTD_GUI_%s.pdf',datestr(now,'yyyy-mm-dd_HHMM'))]);
-            copyfile([FastCTD_GUI_data.matDir '/../PNG/' 'FastCTD_GUI_data.png'],['/Library/WebServer/Documents/TTide/PNG/' sprintf('FastCTD_GUI_%s.png',datestr(now,'yyyy-mm-dd_HHMM'))]);
-            unix(['cd ' FastCTD_GUI_data.matDir '/../PDF/; /usr/bin/scp FastCTD_GUI_data.pdf snguyen@nas-1:~/FCTD/PDF/; '...
-                sprintf('ssh snguyen@nas-1 ''cd FCTD/PDF/; cp FastCTD_GUI_data.pdf FastCTD_GUI_%s.pdf'';',datestr(now,'yyyy-mm-dd_HH'))]);
+            %copyfile([FastCTD_GUI_data.matDir '/../JPG/' 'FastCTD_GUI_data.jpg'],[FastCTD_GUI_data.matDir '/../JPG/' sprintf('FastCTD_GUI_%s.jpg',datestr(now,'yyyy-mm-dd_HHMM'))]);
+            %copyfile([FastCTD_GUI_data.matDir '/../PDF/' 'FastCTD_GUI_data.pdf'],['/Library/WebServer/Documents/TTide/PDF/' sprintf('FastCTD_GUI_%s.pdf',datestr(now,'yyyy-mm-dd_HHMM'))]);
+            %copyfile([FastCTD_GUI_data.matDir '/../PNG/' 'FastCTD_GUI_data.png'],['/Library/WebServer/Documents/TTide/PNG/' sprintf('FastCTD_GUI_%s.png',datestr(now,'yyyy-mm-dd_HHMM'))]);
+            %unix(['cd ' FastCTD_GUI_data.matDir '/../PDF/; /usr/bin/scp FastCTD_GUI_data.pdf snguyen@nas-1:~/FCTD/PDF/; '...
+                %sprintf('ssh snguyen@nas-1 ''cd FCTD/PDF/; cp FastCTD_GUI_data.pdf FastCTD_GUI_%s.pdf'';',datestr(now,'yyyy-mm-dd_HH'))]);
         end
     end
 catch err
-    disp('error in copy file');
-    disp(err);
+        display_error_stack(err)   
 end
 
 disp([datestr(now,'[yyyy.mm.dd HH:MM:SS]') ' Done saving figure...']);
 
 % save user selection/layout as default
-save('FastCTD_GUI.mat','FastCTD_GUI_data');
+save(fullfile(FastCTD_GUI_data.saveDir,'FastCTD_GUI.mat'),'FastCTD_GUI_data');

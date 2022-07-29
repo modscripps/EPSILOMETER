@@ -61,10 +61,12 @@ guidata(hObject, handles);
 % UIWAIT makes FastCTD_GUI wait for user response (see UIRESUME)
 % uiwait(handles.FastCTD_GUI);
 
+global FastCTD_GUI_data;
+FastCTD_GUI_data.matDir = '/Users/ncouto/Desktop/reprocess_blt_21_0708/deployment/FCTDmat/';
+FastCTD_GUI_data.saveDir = '/Users/ncouto/GitHub/EPSILOMETER/realtime/realtime_fctd/FastCTD_GUI/'; %Save anything made here in this directory. Otherwise you may get errors later when using GUI for FCTD instead of Epsi
+
 initialize_FastCTD_GUI(handles);
 
-global FastCTD_GUI_data;
-FastCTD_GUI_data.matDir = '/Volumes/TTIDE2015_FCTD_Data/FCTD/MAT/';
 %FastCTD_GUI_data.matDir = '/Volumes/TTIDE2015_FCTD_Data/FCTD/MAT';
 % update_Plots(hObject, eventdata,handles);
 delete(timerfindall('Tag','FastCTD_Timer'));
@@ -209,7 +211,7 @@ else
     i.TasksToExecute = 1;
     stop(i);
 end
-save('FastCTD_GUI.mat','FastCTD_GUI_data');
+save(fullfile(FastCTD_GUI_data.saveDir,'FastCTD_GUI.mat'),'FastCTD_GUI_data');
 
 
 
@@ -359,8 +361,8 @@ daymax = [31, 28+(mod(yyyy,4)==0), 31, 30, 31, 30, 31, 31, 30, 31, 30. 31];
 if (isempty(yyyy) || isnan(yyyy) || yyyy<2011) ||...
    (isempty(mm) || isnan(mm) || mm<1 || mm > 12) ||... 
    (isempty(dd) || isnan(dd) || dd<1 || dd > daymax(mm)) ||...
-   (isempty(HH) || isnan(HH) || HH<1 || HH > 24) ||...
-   (isempty(MM) || isnan(MM) || MM<1 || MM > 60)
+   (isempty(HH) || isnan(HH) || HH<0 || HH > 24) ||...
+   (isempty(MM) || isnan(MM) || MM<0 || MM > 60)
     set(handles.yyyy,'String',FastCTD_GUI_data.settings.yyyy{1});
     set(handles.mm,'String',FastCTD_GUI_data.settings.mm{1});
     set(handles.dd,'String',FastCTD_GUI_data.settings.dd{1});
@@ -1350,7 +1352,7 @@ for i = 1:4
        'Rotation',270,'FontSize',14,'Interpreter','latex','units','normalized','Position',[4.6 .5 1]);
    caxis([FastCTD_GUI_data.settings.(sprintf('%sMin',fields{i})){3}, FastCTD_GUI_data.settings.(sprintf('%sMax',fields{i})){3}]);
 end
-save('FastCTD_GUI.mat','FastCTD_GUI_data');
+save(fullfile(FastCTD_GUI_data.saveDir,'FastCTD_GUI.mat'),'FastCTD_GUI_data');
 
 % --- update Colormap
 function update_Colormap(handles)
@@ -1361,7 +1363,7 @@ else
     colormap(eval(sprintf('%s(FastCTD_GUI_data.settings.ColorCount{3})',FastCTD_GUI_data.settings.Colormap{3})));
 end
 drawnow;
-save('FastCTD_GUI.mat','FastCTD_GUI_data');
+save(fullfile(FastCTD_GUI_data.saveDir,'FastCTD_GUI.mat'),'FastCTD_GUI_data');
 
 % --- update Control Panels Parameters
 function update_ControlPanelParams(handles)
@@ -1399,14 +1401,14 @@ else
     set(handles.TimeSet_OK,'Visible','on');
 end
 
-save('FastCTD_GUI.mat','FastCTD_GUI_data');
+save(fullfile(FastCTD_GUI_data.saveDir,'FastCTD_GUI.mat'),'FastCTD_GUI_data');
 
 function initialize_FastCTD_GUI(handles)
 
 global FastCTD_GUI_data;
 
 
-if ~exist('FastCTD_GUI.mat','file')
+if exist('FastCTD_GUI.mat')~=2
 
     setUpDefaultValues(handles);
     
@@ -1415,7 +1417,8 @@ if ~exist('FastCTD_GUI.mat','file')
     % second cell is the type of UI display (1 = textbox, 2 =
     % textbox that is 2 char short, 3 = textbox that is 4 char short, 4 = dropdown, 5 = checkbox)
     
-elseif isempty(FastCTD_GUI_data)
+%elseif isempty(FastCTD_GUI_data)
+else
     load('FastCTD_GUI.mat');
     if isempty(FastCTD_GUI_data)
         setUpDefaultValues(handles);
@@ -1488,7 +1491,7 @@ FastCTD_GUI_data.settings = struct(...
                                     'ColorCount',       {{'64',  1,      64}},...
                                     'isReverseColor',   {{0,     5,      false}},...
                                     'DepthMin',         {{'0',   1,      0}},...
-                                    'DepthMax',         {{'1300',1,      1300}},...
+                                    'DepthMax',         {{'2500',1,      2500}},...
                                     'DensMin',          {{'20',  1,      20}},...
                                     'DensMax',          {{'28',  1,      28}},...
                                     'TempMin',          {{'10',  1,      10}},...
@@ -1503,25 +1506,25 @@ FastCTD_GUI_data.settings = struct(...
                                     'TimeUnit2',        {{1,     4,      1/24}},...
                                     'Engineering1Data', {{1,     4,      'pressure'}},...
                                     'Engineering1Min',  {{'0',   1,      0}},...
-                                    'Engineering1Max',  {{'1300',1,      1300}},...
+                                    'Engineering1Max',  {{'2500',1,      2500}},...
                                     'Engineering2Data', {{1,     4,      'pressure'}},...
                                     'Engineering2Min',  {{'0',   1,      0}},...
-                                    'Engineering2Max',  {{'1300',1,      1300}},...
+                                    'Engineering2Max',  {{'2500',1,      2500}},...
                                     'Engineering3Data', {{1,     4,      'pressure'}},...
                                     'Engineering3Min',  {{'0',   1,      0}},...
-                                    'Engineering3Max',  {{'1300',1,      1300}},...
+                                    'Engineering3Max',  {{'2500',1,      2500}},...
                                     'Engineering4Data', {{1,     4,      'pressure'}},...
                                     'Engineering4Min',  {{'0',   1,      0}},...
-                                    'Engineering4Max',  {{'1300',1,      1300}});
+                                    'Engineering4Max',  {{'2500',1,      2500}});
     
     FastCTD_GUI_data.availableData(1) = struct('type', 'pressure',...
                                           'description','Pressure',...
                                           'dispText','Pressure',...
                                           'dispUnit','dbar',...
                                           'dataMin', 0,...
-                                          'dataMax', 1300,...
+                                          'dataMax', 2500,...
                                           'dispMin', '0',...
-                                          'dispMax', '1300');                            
+                                          'dispMax', '2500');                            
     FastCTD_GUI_data.availableData(2) = struct('type', 'temperature',...
                                           'description','Temperature',...
                                           'dispText','Temperature',...
@@ -1725,7 +1728,7 @@ function setCorrectAxesProperties(handles)
 
 global FastCTD_GUI_data;
 
-save('FastCTD_GUI.mat','FastCTD_GUI_data');
+save(fullfile(FastCTD_GUI_data.saveDir,'FastCTD_GUI.mat'),'FastCTD_GUI_data');
 
 %set axis ij for all Time Series plots
 vars4Frames = {'Dens','Temp','Salt','Cond'};
@@ -1746,7 +1749,7 @@ for i=1:4
     try
         datetick(handles.(sprintf('Frame%1d',i)),'x','keeplimits');
     catch err
-        clear err;
+        display_error_stack(err)
     end
     
     if i == 1
@@ -1792,7 +1795,7 @@ for i=1:4
     try
         datetick(handles.(sprintf('Engineering%1d',i)),'x','keeplimits');
     catch err
-        clear err;
+        display_error_stack(err)   
     end
     
     if i < 3
@@ -1883,7 +1886,7 @@ for i=1:2
     try
         datetick(handles.(sprintf('CascadePlot%1d',i)),'x','keeplimits');
     catch err
-        clear('err');
+        display_error_stack(err)   
     end
     
     if i == 1
@@ -2102,10 +2105,7 @@ if isstruct(myFCTD_GridData) && size(myFCTD_GridData.tGrid.density,2)>2
                 computeOverturns(salinity(:,i),temperature(:,i),pressure(:,i),...
                 'tempNoiseLevel',0.5e-4,'densNoiseLevel',1e-4,'UseBoth','tempR0Threshold',0.025,'densR0Threshold',0.025,'lat',20);
         catch err2
-            disp(err2);
-            for j=1:numel(err2.stack)
-                disp([err2.stack(j).file ' : ' err2.stack(j).name ' : ' num2str(err2.stack(j).line)]);
-            end
+        display_error_stack(err2)   
         end
     end
     L_Th = NaN(2,size(L_T,1),size(L_T,2));
@@ -2167,7 +2167,7 @@ TimeMin = FastCTD_GUI_data.currentTime - FastCTD_GUI_data.timeSpan;
 try
 load([FastCTD_GUI_data.matDir '/FastCTD_MATfile_TimeIndex.mat']);
 catch err
-    disp(err);
+        display_error_stack(err)   
     disp('Error loading time index');
     return;
 end
@@ -2198,7 +2198,7 @@ for i = 1:length(ind);
             try
                 load([FastCTD_GUI_data.matDir '/' FastCTD_MATfile_TimeIndex.filenames{ind(i)} '.mat']);
             catch err
-                disp(err);
+        display_error_stack(err)   
                 disp([FastCTD_GUI_data.matDir '/' FastCTD_MATfile_TimeIndex.filenames{ind(i)} '.mat']);
             end
         end
@@ -2210,9 +2210,7 @@ for i = 1:length(ind);
         end
     catch err
         disp(['There something wrong loading ' FastCTD_MATfile_TimeIndex.filenames{ind(i)} ]);
-        disp(err);
-        disp(err.message);
-        disp(err.stack);
+        display_error_stack(err)   
         disp([FastCTD_GUI_data.matDir '/' FastCTD_MATfile_TimeIndex.filenames{ind(i)} '.mat']);
     end
 end
@@ -2225,10 +2223,7 @@ try
     setCorrectAxesProperties(handles);
 catch err
     disp('There was some error in the plotting, probably because the user closes the programs too early');
-    disp(err);
-    for i = 1:length(err.stack)
-        disp([num2str(i) ' ' err.stack(i).name ' ' num2str(err.stack(i).line)]);
-    end
+   display_error_stack(err)   
 end
 
 disp([datestr(now,'[yyyy.mm.dd HH:MM:SS]') ' Done plotting...']);
@@ -2254,27 +2249,26 @@ try
 %     copyfile([FastCTD_GUI_data.matDir '/../PDF/' 'FastCTD_GUI_data.pdf'],'~/Sites/FCTD/PDF/FastCTD_GUI_data.pdf');
 %     copyfile([FastCTD_GUI_data.matDir '/../PNG/' 'FastCTD_GUI_data.png'],'~/Sites/FCTD/PNG/FastCTD_GUI_data.png');
 %     copyfile([FastCTD_GUI_data.matDir '/../JPG/' 'FastCTD_GUI_data.jpg'],'~/Sites/FCTD/JPG/FastCTD_GUI_data.jpg');
-    copyfile([FastCTD_GUI_data.matDir '/../PDF/' 'FastCTD_GUI_data.pdf'],'/Library/WebServer/Documents/TTide/PDF/FastCTD_GUI_data.pdf');
-    copyfile([FastCTD_GUI_data.matDir '/../PNG/' 'FastCTD_GUI_data.png'],'/Library/WebServer/Documents/TTide/PNG/FastCTD_GUI_data.png');
+    %copyfile([FastCTD_GUI_data.matDir '/../PDF/' 'FastCTD_GUI_data.pdf'],'/Library/WebServer/Documents/TTide/PDF/FastCTD_GUI_data.pdf');
+    %copyfile([FastCTD_GUI_data.matDir '/../PNG/' 'FastCTD_GUI_data.png'],'/Library/WebServer/Documents/TTide/PNG/FastCTD_GUI_data.png');
     if mod(floor(now*24*60),10)==0
         i = timerfindall('Tag','FastCTD_Timer');
         if ~isempty(i) && get(i,'TasksToExecute') > 1
             disp('copyfile');
-            copyfile([FastCTD_GUI_data.matDir '/../PDF/' 'FastCTD_GUI_data.pdf'],[FastCTD_GUI_data.matDir '/../PDF/' sprintf('FastCTD_GUI_%s.pdf',datestr(now,'yyyy-mm-dd_HHMM'))]);
+            %copyfile([FastCTD_GUI_data.matDir '/../PDF/' 'FastCTD_GUI_data.pdf'],[FastCTD_GUI_data.matDir '/../PDF/' sprintf('FastCTD_GUI_%s.pdf',datestr(now,'yyyy-mm-dd_HHMM'))]);
             copyfile([FastCTD_GUI_data.matDir '/../PNG/' 'FastCTD_GUI_data.png'],[FastCTD_GUI_data.matDir '/../PNG/' sprintf('FastCTD_GUI_%s.png',datestr(now,'yyyy-mm-dd_HHMM'))]);
-            copyfile([FastCTD_GUI_data.matDir '/../JPG/' 'FastCTD_GUI_data.jpg'],[FastCTD_GUI_data.matDir '/../JPG/' sprintf('FastCTD_GUI_%s.jpg',datestr(now,'yyyy-mm-dd_HHMM'))]);
-            copyfile([FastCTD_GUI_data.matDir '/../PDF/' 'FastCTD_GUI_data.pdf'],['/Library/WebServer/Documents/TTide/PDF/' sprintf('FastCTD_GUI_%s.pdf',datestr(now,'yyyy-mm-dd_HHMM'))]);
-            copyfile([FastCTD_GUI_data.matDir '/../PNG/' 'FastCTD_GUI_data.png'],['/Library/WebServer/Documents/TTide/PNG/' sprintf('FastCTD_GUI_%s.png',datestr(now,'yyyy-mm-dd_HHMM'))]);
-            unix(['cd ' FastCTD_GUI_data.matDir '/../PDF/; /usr/bin/scp FastCTD_GUI_data.pdf snguyen@nas-1:~/FCTD/PDF/; '...
-                sprintf('ssh snguyen@nas-1 ''cd FCTD/PDF/; cp FastCTD_GUI_data.pdf FastCTD_GUI_%s.pdf'';',datestr(now,'yyyy-mm-dd_HH'))]);
+            %copyfile([FastCTD_GUI_data.matDir '/../JPG/' 'FastCTD_GUI_data.jpg'],[FastCTD_GUI_data.matDir '/../JPG/' sprintf('FastCTD_GUI_%s.jpg',datestr(now,'yyyy-mm-dd_HHMM'))]);
+            %copyfile([FastCTD_GUI_data.matDir '/../PDF/' 'FastCTD_GUI_data.pdf'],['/Library/WebServer/Documents/TTide/PDF/' sprintf('FastCTD_GUI_%s.pdf',datestr(now,'yyyy-mm-dd_HHMM'))]);
+            %copyfile([FastCTD_GUI_data.matDir '/../PNG/' 'FastCTD_GUI_data.png'],['/Library/WebServer/Documents/TTide/PNG/' sprintf('FastCTD_GUI_%s.png',datestr(now,'yyyy-mm-dd_HHMM'))]);
+            %unix(['cd ' FastCTD_GUI_data.matDir '/../PDF/; /usr/bin/scp FastCTD_GUI_data.pdf snguyen@nas-1:~/FCTD/PDF/; '...
+                %sprintf('ssh snguyen@nas-1 ''cd FCTD/PDF/; cp FastCTD_GUI_data.pdf FastCTD_GUI_%s.pdf'';',datestr(now,'yyyy-mm-dd_HH'))]);
         end
     end
 catch err
-    disp('error in copy file');
-    disp(err);
+        display_error_stack(err)   
 end
 
 disp([datestr(now,'[yyyy.mm.dd HH:MM:SS]') ' Done saving figure...']);
 
 % save user selection/layout as default
-save('FastCTD_GUI.mat','FastCTD_GUI_data');
+save(fullfile(FastCTD_GUI_data.saveDir,'FastCTD_GUI.mat'),'FastCTD_GUI_data');
