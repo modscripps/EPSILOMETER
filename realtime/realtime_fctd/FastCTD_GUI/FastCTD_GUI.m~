@@ -1444,7 +1444,7 @@ set(handles.FastCTD_GUI,'DeleteFcn',...
     ['disp([datestr(now,''[yyyy.mm.dd HH:MM:SS]'') '' Done Fast CTD GUI'']); ' ...
     'i = timerfindall(''Tag'',''FastCTD_Timer''); if ~isempty(i), stop(timerfindall(''Tag'',''FastCTD_Timer'')); delete(timerfindall(''Tag'',''FastCTD_Timer'')); end;']);
 
-dataDescriptions = cell(size(FastCTD_GUI_data.availableData));
+dataDescriptions = cell(size(FastCTD_GUI_data.availabopenleData));
 for i = 1:length(FastCTD_GUI_data.availableData)
     dataDescriptions{i} = FastCTD_GUI_data.availableData(i).description;
 end

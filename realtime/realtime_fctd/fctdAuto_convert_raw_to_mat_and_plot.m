@@ -65,6 +65,7 @@ dirs.raw_incoming = raw_dir;
 dirs.raw_copy  = fullfile(away_dir,'raw');
 dirs.mat       = fullfile(away_dir,'mat');
 dirs.fctd_mat  = fullfile(away_dir,'FCTDmat');
+dirs.fctd_rot  = fullfile(away_dir,'FCTDrot');
 
 % Create directories if they don't exist
 if ~exist(away_dir,'dir')
@@ -78,6 +79,9 @@ if ~exist(dirs.mat,'dir')
 end
 if ~exist(dirs.fctd_mat,'dir')
     eval([ '!mkdir ' strrep(dirs.fctd_mat,' ','\ ')]);
+end
+if ~exist(dirs.fctd_rot,'dir')
+    eval([ '!mkdir ' strrep(dirs.fctd_rot,' ','\ ')]);
 end
 
 % Copy the first file from raw_incoming the matches your criteria into

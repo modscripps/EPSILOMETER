@@ -180,7 +180,7 @@ if rSync
         names(~cellfun('isclass', names, 'char')) = {''};  % Care for non-strings
         matchC = reshape(strfind(names, str_to_match), size(raw_list));
         %Indices of all files that match string:
-        match  = ~cellfun('isempty', matchC); 
+        match  = ~cellfun('isempty', matchC);
         % Which of these is the earliest file? I think it will always be
         % sorted such that find(match,1,'first') is always the first. If
         % this isn't always the case, use 'times' to sort the matches by
@@ -188,15 +188,20 @@ if rSync
         ind = find(match,1,'first');
         first_file = fullfile(RawDir,names{ind});
 
-    end
+    %end
+
+    % Workaround because rsync won't repeat copying a file
+
 
     %com = sprintf('/usr/bin/rsync -av  --include ''%s'' --exclude ''*'' %s %s',suffixSearch,RawDir,RawDirDuplicate);  %The exclude was useful before... but now it actually excludes everything. Leaving this commented in case I need it again
     %com = sprintf('/usr/bin/rsync -av  --include ''%s'' %s %s',suffixSearch,RawDir,RawDirDuplicate);  %NC - rsync only the files with the str_to_search and suffix
-    com = sprintf('/usr/bin/rsync -uH --progress --files-from=<(find %s -newer %s -type f -exec basename {} %s) %s %s',RawDir,first_file,'\;',RawDir,RawDirDuplicate);
+    com = sprintf('/usr/bin/rsync -au --progress --files-from=<(find %s -newer %s -type f -exec basename {} %s) %s %s',RawDir,first_file,'\;',RawDir,RawDirDuplicate);
     fprintf(1,'Running: %s\n',com);
     unix(com);
     fprintf(1,'Done\n');
     RawDir = RawDirDuplicate;
+
+    end
 end
 
 
@@ -209,20 +214,50 @@ for i=1:length(myASCIIfiles)
 
     base = myASCIIfiles(i).name(1:indSuffix-1);
     myMATfile = dir(fullfile(MatDir, [base '.mat']));
+    myRAWRAWfile = dir(fullfile('/Volumes/FCTD_EPSI/RAW',[base '.modraw']));
     if doFCTD
     end
 
-    % Convert new data to .mat
-    if ~isempty(myMATfile) && datenum(myASCIIfiles(i).date)<=datenum(myMATfile.date)
-        % If the MAT file exists and is newer than the raw file, skip it. All
+
+    % Convert new data to .mat if ascii file is less than 5 MB (We used to
+    % do this by comparing the ascii date to the mat date, but the ascii
+    % date now tends to stay at a fixed value, even as it grows. ??? Maybe
+    % because of how we're rsyncing)
+    % Also, always convert the last file in the ASCII list, because it
+    % could have just finished growing to 5MB since the last iteration
+    if ~isempty(myMATfile) && myASCIIfiles(i).bytes>=5e6 && i~=length(myASCIIfiles)
+        % If the MAT file exists and the ascii file is bigger than 5MB, skip it. All
         % of the raw data has already been converted
         % (DO NOTHING.)
 
-    elseif (~isempty(myMATfile) && datenum(myASCIIfiles(i).date)>datenum(myMATfile.date)) ...
-            || isempty(myMATfile)
+        % debug.base_name{i} = base;
+        % debug.rawraw_date(i) = myRAWRAWfile.datenum;
+        % debug.rawraw_bytes(i) = myRAWRAWfile.bytes;
+        % debug.raw_date(i) = myASCIIfiles(i).datenum;
+        % debug.raw_bytes(i) = myASCIIfiles(i).bytes;
+        % debug.mat_date(i) = myMATfile.datenum;
+        % debug.mat_bytes(i) = myMATfile.bytes;
+        % debug.conversion_happens(i) = 0;
+
+
+    elseif (~isempty(myMATfile) && myASCIIfiles(i).bytes<5e6) ...
+            || isempty(myMATfile) || i==length(myASCIIfiles)
         % If the MAT file exists already but is older than the raw data
         % file, it will be reconverted. OR, if the MAT file does not exist
         % yet, it will be converted.
+
+        % % For debugging
+        % debug.base_name{i} = base;
+        % debug.rawraw_date(i) = myRAWRAWfile.datenum;
+        % debug.rawraw_bytes(i) = myRAWRAWfile.bytes;
+        % debug.raw_date(i) = myASCIIfiles(i).datenum;
+        % debug.raw_bytes(i) = myASCIIfiles(i).bytes;
+        % if ~isempty(myMATfile)
+        % debug.mat_date(i) = myMATfile.datenum;
+        % debug.mat_bytes(i) = myMATfile.bytes;
+        % end
+        % debug.conversion_happens(i) = 1;
+        % % End for debugging
 
         fprintf(1,'Converting %s%s\n',MatDir,myMATfile.name);
 
@@ -267,6 +302,8 @@ for i=1:length(myASCIIfiles)
 
     end %end if the data should be converted
 end %end loop through files
+
+%eval(['save ' fullfile('~/Desktop',strrep(strrep(datestr(now),':','_'),' ','_')) ' debug'])
 end %end if there are files
 
 end
@@ -378,22 +415,22 @@ end %end display_file_data
 
 % function [FCTD] =  make_FCTD_mat(matData,FCTDdir,base,cruise_specifics)
 % %THIS IS NOW A SEPARATE FUNCTION
-% 
+%
 % use matData %Empty contents of matData structure
-% 
+%
 % % Get CTD data
 % FCTD.time=ctd.dnum;
 % FCTD.pressure=ctd.P;
 % FCTD.temperature=ctd.T;
 % FCTD.conductivity=ctd.C;
-% 
+%
 % % Get altimeter data
 % if ~isempty(alt) && isfield(alt,'time_s')
 %     FCTD.altDist=interp1(alt.dnum,alt.dst,ctd.dnum);
 % else
 %     FCTD.altTime=nan(length(ctd.dnum),1);
 % end
-% 
+%
 % % Add VectorNav data
 % if ~isempty(vnav) && isfield(vnav,'time_s')
 %     diff_not_neg = [0;diff(vnav.dnum)]>0;
@@ -408,7 +445,7 @@ end %end display_file_data
 %     FCTD.acceleration=nan(length(ctd.dnum),3);
 %     FCTD.compass=nan(length(ctd.dnum),3);
 % end
-% 
+%
 % % Add GPS data
 % if ~isempty(gps) && isfield(gps,'gpstime')
 %     FCTD.GPS.longitude=interp1(gps.gpstime,gps.longitude,ctd.dnum);
@@ -417,7 +454,7 @@ end %end display_file_data
 %     FCTD.GPS.longitude=nan(length(ctd.dnum),1);
 %     FCTD.GPS.latitude=nan(length(ctd.dnum),1);
 % end
-% 
+%
 % % Extra outputs for BLT 2021 cruise
 % if cruise_specifics.blt_2021
 %     % Microconductivity and Fluorometer
@@ -431,19 +468,19 @@ end %end display_file_data
 %     % also save time_fast as an N x 20 array.
 %     time_fast = linspace(ctd.dnum(1),ctd.dnum(end),length(ctd.dnum)*20);
 %     FCTD.time_fast = time_fast;
-% 
+%
 %     % Interpolate data that is not nan, not inf, and where time
 %     % is increasing
 %     diff_not_neg = [0;diff(epsi.dnum)]>0;
 %     keep = ~isnan(epsi.dnum) & ~isinf(epsi.dnum) & diff_not_neg;
-% 
+%
 %     if ~isempty(epsi) && isfield(epsi,'s2_count') && ~isempty(ctd)
 %         FCTD.uConductivity=reshape(interp1(epsi.dnum(keep),double(epsi.s2_count(keep)),time_fast),20,[])';
 %     else
 %         FCTD.uConductivity=nan(length(ctd.dnum),20);
 %         disp(['No uConductivity data ' myASCIIfiles(i).name]);
 %     end
-% 
+%
 %     if ~isempty(epsi) && isfield(epsi,'s1_volt')  && ~isempty(ctd)
 %         FCTD.fluorometer=reshape(interp1(epsi.dnum(keep),epsi.s1_volt(keep),time_fast),20,[])';
 %     else
@@ -451,15 +488,15 @@ end %end display_file_data
 %         disp(['No fluorometer data ' myASCIIfiles(i).name]);
 %     end
 % end %end if blt_2021
-% 
+%
 % % Save FCTD mat files to the new FCTD mat directory FCTDmat
 % myFCTDMATfile = fullfile(FCTDdir,base);
 % save(myFCTDMATfile,'FCTD');
 % fprintf(1,'%s: Wrote  %s%s\n\n',datestr(now,'YY.mm.dd HH:MM:SS'), FCTDdir,myFCTDMATfile);
-% 
+%
 % % Update FCTD .mat time index
 % FastCTD_UpdateMATFileTimeIndex(FCTDdir,base,FCTD);
-% 
+%
 % end %end make_FCTD_mat
 % % ---------------------------------
 
