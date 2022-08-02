@@ -15,14 +15,14 @@
 %
 % Required:
 %  .raw_dir = path to directory where the data are streaming in
-%  .away_dir = path to directory where data will be copied and where 
+%  .away_dir = path to directory where data will be copied and where
 %              subdirectories raw, mat, and FCTDmat will be created
 %  .Meta_Data_process_file = path to Meta_Data_Process text file
 %
 % Optional:
-%  .str_to_match = String to search for files in raw_dir to copy. Often, we'll 
-%                have data from the entire cruise and divide deployments up by 
-%                day. You could select to only copy data from Feb 16th by 
+%  .str_to_match = String to search for files in raw_dir to copy. Often, we'll
+%                have data from the entire cruise and divide deployments up by
+%                day. You could select to only copy data from Feb 16th by
 %                setting this field to '*EPSI_B_PC2_22_02_16*'; (default '*')
 %  .refresh_time_sec = refresh period in seconds (default 5)
 %  .version      = version of mod_som_read_epsi_files.m to use (default 4)
@@ -32,27 +32,27 @@
 field_list = fields(input_struct);
 % Check that all required fields are defined
 if ~any(contains(field_list,'raw_dir')) || ~any(contains(field_list,'away_dir')) || ~any(contains(field_list,'Meta_Data_process_file'))
-  error('You must define ''raw_dir,'' ''away_dir,'' and ''Meta_Data_process_file'' as fields in the input structure')
+    error('You must define ''raw_dir,'' ''away_dir,'' and ''Meta_Data_process_file'' as fields in the input structure')
 else
-  raw_dir = input_struct.raw_dir;
-  away_dir = input_struct.away_dir;
-  Meta_Data_process_file = input_struct.Meta_Data_process_file;
+    raw_dir = input_struct.raw_dir;
+    away_dir = input_struct.away_dir;
+    Meta_Data_process_file = input_struct.Meta_Data_process_file;
 end
 % Check for optional inputs and define them
 if ~contains(field_list,'str_to_match')
-  str_to_match = '*';
+    str_to_match = '*';
 else
-  str_to_match = input_struct.str_to_match;
+    str_to_match = input_struct.str_to_match;
 end
 if ~contains(field_list,'refresh_time_sec')
-  refresh_time_sec = 5;
+    refresh_time_sec = 5;
 else
-  refresh_time_sec = input_struct.refresh_time_sec;
+    refresh_time_sec = input_struct.refresh_time_sec;
 end
 if ~contains(field_list,'version ')
-  version  = 4;
+    version  = 4;
 else
-  version  = input_struct.version;
+    version  = input_struct.version;
 end
 if ~contains(field_list,'starting_dnum')
     starting_dnum = now-14;
@@ -80,10 +80,25 @@ if ~exist(dirs.fctd_mat,'dir')
     eval([ '!mkdir ' strrep(dirs.fctd_mat,' ','\ ')]);
 end
 
-% Copy the first file from raw_incoming into raw_copy - you need to have
-% one file there for epsi_class to read the configuration information
-file_list = dir(fullfile(dirs.raw_incoming,'EPSI*'));
-eval(['!cp ' fullfile(file_list(1).folder,file_list(1).name) ' ' dirs.raw_copy]);
+% Copy the first file from raw_incoming the matches your criteria into
+% raw_copy - you need to have one file there for epsi_class to read the
+% configuration information
+raw_list = dir(fullfile(dirs.raw_incoming,'EPSI*'));
+
+% Identify the file you want
+names = {raw_list.name};
+times = datenum({raw_list.date});
+names(~cellfun('isclass', names, 'char')) = {''};  % Care for non-strings
+matchC = reshape(strfind(names, input_struct.str_to_match), size(raw_list));
+%Indices of all files that match string:
+match  = ~cellfun('isempty', matchC);
+% Which of these is the earliest file? I think it will always be
+% sorted such that find(match,1,'first') is always the first. If
+% this isn't always the case, use 'times' to sort the matches by
+% date created and find the earliest
+ind = find(match,1,'first');
+first_file = fullfile(dirs.raw_incoming,names{ind});
+eval(['!cp ' first_file ' ' dirs.raw_copy]);
 
 % Initialize epsi_class in away_dir and create blank structures to fill
 % with data

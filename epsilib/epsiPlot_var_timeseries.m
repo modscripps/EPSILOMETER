@@ -16,6 +16,6 @@ function [var_timeseries] = epsiPlot_var_timeseries(obj,var_name)
 
 % Plot the data
 figure
-plot(var_timeseries.dnum,var_timeseries.data);
+plot(var_timeseries.dnum,var_timeseries.data,'.');
 datetick('x','keeplimits')
 title(strrep(var_name,'_','\_'))

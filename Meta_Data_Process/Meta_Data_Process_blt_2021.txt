@@ -1,6 +1,7 @@
 latitude     = 54;
 tscan        = 6;
 dof	         = 5;
+dof_coh        = 10;
 nfft         = 1024;
 nfftc        = floor(1024/3);
 Fs_ctd       = 16;
@@ -18,8 +19,6 @@ userConfirmsProfiles = 1;
 adjustTemp = false;
 movmean_window_time = 10*(50e-3);
 multivariate   = 0;
-dof            = 5;
-dof_coh        = 10;
 rawfileSuffix  = '.raw';
 
 

@@ -5,8 +5,8 @@ grid.vehicle_name = Profile.Meta_Data.vehicle_name;
 grid.deployment = Profile.Meta_Data.deployment;
 
 varList0 = {'profNum','dnum','latitude','longitude'};
-varList1 = {'w','t','s','th','sgth'};
-varList2 = {'epsilon','epsilon_co','chi','fom'};
+varList1 = {'w','t','s','th','sgth','epsilon_final'};
+varList2 = {'chi','fom'}; %epsilon_final becomes epsilon
 
 % Add varList0
 for iVar=1:length(varList0) 
@@ -23,6 +23,8 @@ catch
     grid.z = sw_dpth(grid.pr,Profile.Meta_Data.PROCESS.latitude);
 end
 
+if ~isempty(Profile.w)
+
 % Add varList1
 notNan = ~isnan(Profile.pr);
 for iVar=1:length(varList1)
@@ -30,6 +32,9 @@ for iVar=1:length(varList1)
     grid.(varList1{iVar}) = interp1(Profile.pr(notNan),Profile.(varList1{iVar})(notNan),grid.pr);
     end
 end
+
+% Change epsilon to epsilon
+grid.epsilon = grid.epsilon_final;
 
 % Add varList2
 for iVar=1:length(varList2) 
@@ -63,3 +68,4 @@ if isfield(Profile,'alt')
     grid.bottom_depth = bottom_depth_mean;
 end
 
+end

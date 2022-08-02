@@ -45,7 +45,7 @@ classdef epsi_class < handle
                 if exist(varargin{1},'dir') %if the first input is a directory
                     data_path = varargin{1};
                     Meta_Data_process_file = varargin{2};
-                elseif exist(varagin{1},'file') %if the first input is a file
+                elseif exist(varargin{1},'file') %if the first input is a file
                     Meta_Data_process_file = varargin{1};
                     data_path = varargin{2};
                 end
@@ -117,12 +117,14 @@ classdef epsi_class < handle
                     % Add calibrations path
                     obj.Meta_Data.paths.calibration = fullfile(obj.Meta_Data.paths.process_library,'CALIBRATION','ELECTRONICS');
 
-                    % Read PROCESS Meta_Data from default text file -
+                    % Read PROCESS Meta_Data from text file -
                     % if one is not specified, use the default
                     if isempty(Meta_Data_process_file)  && ~isclassfield(Meta_Data.PROCESS,'filename')
                         Meta_Data_process_file = fullfile(obj.Meta_Data.paths.process_library,'Meta_Data_Process','Meta_Data_Process.txt');
-                    elseif isclassfield(Meta_Data.PROCESS,'filename')
+                    elseif isclassfield(obj.Meta_Data,'PROCESS') && isclassfield(obj.Meta_Data.PROCESS,'filename')
                         Meta_Data_process_file = obj.Meta_Data.PROCESS.filename;
+                    elseif ~isempty(Meta_Data_process_file)
+                        Meta_Data_process_file = Meta_Data_process_file;
                     end
                     obj.f_read_MetaProcess(Meta_Data_process_file);
 

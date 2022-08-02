@@ -63,7 +63,7 @@ guidata(hObject, handles);
 
 global FastCTD_GUI_data;
 FastCTD_GUI_data.matDir = '/Users/ncouto/Desktop/reprocess_blt_21_0708/deployment/FCTDmat';
-FastCTD_GUI_data.saveDir = '/Users/ncouto/GitHub/EPSILOMETER/realtime/realtime_epsi/FastCTD_GUI'; %Save anything made here in this directory. Otherwise you may get errors later when using GUI for FCTD instead of Epsi
+FastCTD_GUI_data.saveDir = '/Users/ncouto/GitHub/EPSILOMETER/realtime/realtime_epsi/Epsi_GUI'; %Save anything made here in this directory. Otherwise you may get errors later when using GUI for FCTD instead of Epsi
 
 initialize_FastCTD_GUI(handles);
 
@@ -524,8 +524,7 @@ end
 
 
 % EPS1
-
-function EpsMin_Callback(hObject, eventdata, handles)
+function Eps1Min_Callback(hObject, eventdata, handles)
 % hObject    handle to DensMin (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
@@ -533,18 +532,18 @@ function EpsMin_Callback(hObject, eventdata, handles)
 % Hints: get(hObject,'String') returns contents of DensMin as text
 %        str2double(get(hObject,'String')) returns contents of DensMin as a double
 global FastCTD_GUI_data;
-EpsMin = str2double(get(hObject,'String'));
-if isempty(EpsMin) || isnan(EpsMin) || EpsMin >= FastCTD_GUI_data.settings.EpsMax{3}
-    set(hObject,'String',FastCTD_GUI_data.settings.EpsMin{1});
+Eps1Min = str2double(get(hObject,'String'));
+if isempty(Eps1Min) || isnan(Eps1Min) || Eps1Min >= FastCTD_GUI_data.settings.Eps1Max{3}
+    set(hObject,'String',FastCTD_GUI_data.settings.Eps1Min{1});
 else
-    FastCTD_GUI_data.settings.EpsMin{3} = EpsMin;
-    FastCTD_GUI_data.settings.EpsMin{1} = get(hObject,'String');
+    FastCTD_GUI_data.settings.Eps1Min{3} = Eps1Min;
+    FastCTD_GUI_data.settings.Eps1Min{1} = get(hObject,'String');
     setCorrectAxesProperties(handles);
     update_ColorBars(handles);
 end
 
 % --- Executes during object creation, after setting all properties.
-function EpsMin_CreateFcn(hObject, eventdata, handles)
+function Eps1Min_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to DensMin (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
@@ -555,7 +554,7 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
     set(hObject,'BackgroundColor','white');
 end
 
-function EpsMax_Callback(hObject, eventdata, handles)
+function Eps1Max_Callback(hObject, eventdata, handles)
 % hObject    handle to DensMin (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
@@ -563,18 +562,18 @@ function EpsMax_Callback(hObject, eventdata, handles)
 % Hints: get(hObject,'String') returns contents of DensMin as text
 %        str2double(get(hObject,'String')) returns contents of DensMin as a double
 global FastCTD_GUI_data;
-EpsMax = str2double(get(hObject,'String'));
-if isempty(EpsMax) || isnan(EpsMax) ||EpsMax <= FastCTD_GUI_data.settings.EpsMin{3}
-    set(hObject,'String',FastCTD_GUI_data.settings.EpsMax{1});
+Eps1Max = str2double(get(hObject,'String'));
+if isempty(Eps1Max) || isnan(Eps1Max) ||Eps1Max <= FastCTD_GUI_data.settings.Eps1Min{3}
+    set(hObject,'String',FastCTD_GUI_data.settings.Eps1Max{1});
 else
-    FastCTD_GUI_data.settings.EpsMax{3} = EpsMax;
-    FastCTD_GUI_data.settings.EpsMax{1} = get(hObject,'String');
+    FastCTD_GUI_data.settings.Eps1Max{3} = Eps1Max;
+    FastCTD_GUI_data.settings.Eps1Max{1} = get(hObject,'String');
     setCorrectAxesProperties(handles);
     update_ColorBars(handles);
 end
 
 % --- Executes during object creation, after setting all properties.
-function EpsMax_CreateFcn(hObject, eventdata, handles)
+function Eps1Max_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to DensMin (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
@@ -585,7 +584,10 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
     set(hObject,'BackgroundColor','white');
 end
 
-function ChiMin_Callback(hObject, eventdata, handles)
+
+
+% EPS2
+function Eps2Min_Callback(hObject, eventdata, handles)
 % hObject    handle to DensMin (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
@@ -593,18 +595,18 @@ function ChiMin_Callback(hObject, eventdata, handles)
 % Hints: get(hObject,'String') returns contents of DensMin as text
 %        str2double(get(hObject,'String')) returns contents of DensMin as a double
 global FastCTD_GUI_data;
-ChiMin = str2double(get(hObject,'String'));
-if isempty(ChiMin) || isnan(ChiMin) ||ChiMin >= FastCTD_GUI_data.settings.ChiMax{3}
-    set(hObject,'String',FastCTD_GUI_data.settings.ChiMin{1});
+Eps2Min = str2double(get(hObject,'String'));
+if isempty(Eps2Min) || isnan(Eps2Min) || Eps2Min >= FastCTD_GUI_data.settings.Eps2Max{3}
+    set(hObject,'String',FastCTD_GUI_data.settings.Eps2Min{1});
 else
-    FastCTD_GUI_data.settings.DensMin{3} = ChiMin;
-    FastCTD_GUI_data.settings.DensMin{1} = get(hObject,'String');
+    FastCTD_GUI_data.settings.Eps2Min{3} = Eps2Min;
+    FastCTD_GUI_data.settings.Eps2Min{1} = get(hObject,'String');
     setCorrectAxesProperties(handles);
     update_ColorBars(handles);
 end
 
 % --- Executes during object creation, after setting all properties.
-function ChiMin_CreateFcn(hObject, eventdata, handles)
+function Eps2Min_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to DensMin (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
@@ -615,7 +617,7 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
     set(hObject,'BackgroundColor','white');
 end
 
-function ChiMax_Callback(hObject, eventdata, handles)
+function Eps2Max_Callback(hObject, eventdata, handles)
 % hObject    handle to DensMin (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
@@ -623,18 +625,80 @@ function ChiMax_Callback(hObject, eventdata, handles)
 % Hints: get(hObject,'String') returns contents of DensMin as text
 %        str2double(get(hObject,'String')) returns contents of DensMin as a double
 global FastCTD_GUI_data;
-ChiMax = str2double(get(hObject,'String'));
-if isempty(ChiMax) || isnan(ChiMax) || ChiMax <= FastCTD_GUI_data.settings.ChiMin{3}
+Eps2Max = str2double(get(hObject,'String'));
+if isempty(Eps2Max) || isnan(Eps2Max) ||Eps2Max <= FastCTD_GUI_data.settings.Eps2Min{3}
+    set(hObject,'String',FastCTD_GUI_data.settings.Eps2Max{1});
+else
+    FastCTD_GUI_data.settings.Eps2Max{3} = Eps2Max;
+    FastCTD_GUI_data.settings.Eps2Max{1} = get(hObject,'String');
+    setCorrectAxesProperties(handles);
+    update_ColorBars(handles);
+end
+
+% --- Executes during object creation, after setting all properties.
+function Eps2Max_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to DensMin (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function Chi1Min_Callback(hObject, eventdata, handles)
+% hObject    handle to DensMin (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of DensMin as text
+%        str2double(get(hObject,'String')) returns contents of DensMin as a double
+global FastCTD_GUI_data;
+Chi1Min = str2double(get(hObject,'String'));
+if isempty(Chi1Min) || isnan(Chi1Min) ||Chi1Min >= FastCTD_GUI_data.settings.Chi1Max{3}
+    set(hObject,'String',FastCTD_GUI_data.settings.Chi1Min{1});
+else
+    FastCTD_GUI_data.settings.Chi1Min{3} = Chi1Min;
+    FastCTD_GUI_data.settings.Chi1Min{1} = get(hObject,'String');
+    setCorrectAxesProperties(handles);
+    update_ColorBars(handles);
+end
+
+% --- Executes during object creation, after setting all properties.
+function Chi1Min_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to DensMin (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+function Chi1Max_Callback(hObject, eventdata, handles)
+% hObject    handle to DensMin (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of DensMin as text
+%        str2double(get(hObject,'String')) returns contents of DensMin as a double
+global FastCTD_GUI_data;
+Chi1Max = str2double(get(hObject,'String'));
+if isempty(Chi1Max) || isnan(Chi1Max) || Chi1Max <= FastCTD_GUI_data.settings.Chi1Min{3}
     set(hObject,'String',FastCTD_GUI_data.settings.ChiMax{1});
 else
-    FastCTD_GUI_data.settings.DensMin{3} = ChiMax;
-    FastCTD_GUI_data.settings.DensMin{1} = get(hObject,'String');
+    FastCTD_GUI_data.settings.Chi1Max{3} = Chi1Max;
+    FastCTD_GUI_data.settings.Chi1Max{1} = get(hObject,'String');
     setCorrectAxesProperties(handles);
     update_ColorBars(handles);
 end
 
 % --- Executes during object creation, after setting all properties.
-function ChiMax_CreateFcn(hObject, eventdata, handles)
+function Chi1Max_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to DensMin (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
@@ -644,6 +708,71 @@ function ChiMax_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
+
+
+
+function Chi2Min_Callback(hObject, eventdata, handles)
+% hObject    handle to DensMin (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of DensMin as text
+%        str2double(get(hObject,'String')) returns contents of DensMin as a double
+global FastCTD_GUI_data;
+Chi2Min = str2double(get(hObject,'String'));
+if isempty(Chi2Min) || isnan(Chi2Min) ||Chi2Min >= FastCTD_GUI_data.settings.Chi2Max{3}
+    set(hObject,'String',FastCTD_GUI_data.settings.Chi2Min{1});
+else
+    FastCTD_GUI_data.settings.Chi2Min{3} = Chi2Min;
+    FastCTD_GUI_data.settings.Chi2Min{1} = get(hObject,'String');
+    setCorrectAxesProperties(handles);
+    update_ColorBars(handles);
+end
+
+% --- Executes during object creation, after setting all properties.
+function Chi2Min_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to DensMin (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+function Chi2Max_Callback(hObject, eventdata, handles)
+% hObject    handle to DensMin (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of DensMin as text
+%        str2double(get(hObject,'String')) returns contents of DensMin as a double
+global FastCTD_GUI_data;
+Chi2Max = str2double(get(hObject,'String'));
+if isempty(Chi2Max) || isnan(Chi2Max) || Chi2Max <= FastCTD_GUI_data.settings.Chi2Min{3}
+    set(hObject,'String',FastCTD_GUI_data.settings.ChiMax{1});
+else
+    FastCTD_GUI_data.settings.Chi2Max{3} = Chi2Max;
+    FastCTD_GUI_data.settings.Chi2Max{1} = get(hObject,'String');
+    setCorrectAxesProperties(handles);
+    update_ColorBars(handles);
+end
+
+% --- Executes during object creation, after setting all properties.
+function Chi2Max_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to DensMin (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
 
 function SaltMax_Callback(hObject, eventdata, handles)
 % hObject    handle to SaltMax (see GCBO)
@@ -866,6 +995,66 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
     set(hObject,'BackgroundColor','white');
 end
 
+
+
+function Eps1Scale_Callback(hObject, eventdata, handles) 
+% hObject    handle to TempScale (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of TempScale as text
+%        str2double(get(hObject,'String')) returns contents of TempScale as a double
+global FastCTD_GUI_data;
+Eps1Scale = str2double(get(hObject,'String'));
+if isempty(Eps1Scale) || isnan(Eps1Scale) || Eps1Scale < 0
+    set(hObject,'String',FastCTD_GUI_data.settings.Eps1Scale{1});
+else
+    FastCTD_GUI_data.settings.Eps1Scale{3} = Eps1Scale;
+    FastCTD_GUI_data.settings.Eps1Scale{1} = get(hObject,'String');
+    setCorrectAxesProperties(handles)    
+end
+
+% --- Executes during object creation, after setting all properties.
+function Eps1Scale_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to TempScale (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+function Chi1Scale_Callback(hObject, eventdata, handles) 
+% hObject    handle to TempScale (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of TempScale as text
+%        str2double(get(hObject,'String')) returns contents of TempScale as a double
+global FastCTD_GUI_data;
+Chi1Scale = str2double(get(hObject,'String'));
+if isempty(Chi1Scale) || isnan(Chi1Scale) || Chi1Scale < 0
+    set(hObject,'String',FastCTD_GUI_data.settings.Chi1Scale{1});
+else
+    FastCTD_GUI_data.settings.Chi1Scale{3} = Chi1Scale;
+    FastCTD_GUI_data.settings.Chi1Scale{1} = get(hObject,'String');
+    setCorrectAxesProperties(handles)    
+end
+
+% --- Executes during object creation, after setting all properties.
+function Chi1Scale_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to TempScale (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
 
 
 function DensScale_Callback(hObject, eventdata, handles)
@@ -1462,9 +1651,9 @@ update_Colormap(handles);
 % --- update Colorbars
 function update_ColorBars(handles)
 global FastCTD_GUI_data;
-fields = {'Dens','Temp','Salt','Cond'};
-varNames = {'Density','Temperature','Salinity','Conductivity'};
-varUnits = {'kg/m$^3$', '$^\circ$C', 'psu','S/m'};
+fields = {'Dens','Temp','Eps1','Chi1'};
+varNames = {'Density','Temperature','Epsilon','Chi'};
+varUnits = {'kg/m$^3$', '$^\circ$C', 'W/kg','$^\circ$C^2/s'};
 x = [0 1];
 for i = 1:4
    c = linspace(FastCTD_GUI_data.settings.(sprintf('%sMin',fields{i})){3}, FastCTD_GUI_data.settings.(sprintf('%sMax',fields{i})){3},FastCTD_GUI_data.settings.ColorCount{3})';
@@ -1542,6 +1731,8 @@ if exist('FastCTD_GUI.mat')~=2
 %elseif isempty(FastCTD_GUI_data)
 else
     load('FastCTD_GUI.mat');
+    FastCTD_GUI_data.matDir = '/Users/ncouto/Desktop/reprocess_blt_21_0708/deployment/FCTDmat';
+    FastCTD_GUI_data.saveDir = '/Users/ncouto/GitHub/EPSILOMETER/realtime/realtime_epsi/Epsi_GUI'; %Save anything made here in this directory. Otherwise you may get errors later when using GUI for FCTD instead of Epsi
     if isempty(FastCTD_GUI_data)
         setUpDefaultValues(handles);
     end
@@ -1634,16 +1825,16 @@ FastCTD_GUI_data.settings = struct(...
                                     'TempScale',        {{'1',   1,      1}},...
                                     'TimeSpan2',        {{'1',   1,      1}},...
                                     'TimeUnit2',        {{1,     4,      1/24}},...
-                                    'Engineering1Data', {{1,     4,      'epsilon1'}},...
+                                    'Engineering1Data', {{1,     4,      'pressure'}},...
                                     'Engineering1Min',  {{'-10',   1,      -10}},...
                                     'Engineering1Max',  {{'-6',1,      -6}},...
-                                    'Engineering2Data', {{1,     4,      'epsilon2'}},...
+                                    'Engineering2Data', {{1,     4,      'pressure'}},...
                                     'Engineering2Min',  {{'-10',   1,      -10}},...
                                     'Engineering2Max',  {{'-6',1,      -6}},...
-                                    'Engineering3Data', {{1,     4,      'chi1'}},...
+                                    'Engineering3Data', {{1,     4,      'pressure'}},...
                                     'Engineering3Min',  {{'-10',   1,      -10}},...
                                     'Engineering3Max',  {{'-6',1,      -6}},...
-                                    'Engineering4Data', {{1,     4,      'chi2'}},...
+                                    'Engineering4Data', {{1,     4,      'pressure'}},...
                                     'Engineering4Min',  {{'-10',   1,      -10}},...
                                     'Engineering4Max',  {{'-6',1,      -6}});
     
@@ -1884,7 +2075,7 @@ FastCTD_GUI_data.settings = struct(...
     FastCTD_GUI_data.currentTime = now;
     FastCTD_GUI_data.timeSpan = FastCTD_GUI_data.settings.TimeSpan{3}*FastCTD_GUI_data.settings.TimeUnit{3};
     FastCTD_GUI_data.timeSpan2 = FastCTD_GUI_data.settings.TimeSpan2{3}*FastCTD_GUI_data.settings.TimeUnit2{3};
-    FastCTD_GUI_data.matDir = '/Volumes/S_ChinaSea2013_FCTD_2/RR1305/MAT/';
+    FastCTD_GUI_data.matDir = '/Users/ncouto/Desktop/reprocess_blt_21_0708/deployment/FCTDmat/';
 
 function setCorrectAxesProperties(handles)
 

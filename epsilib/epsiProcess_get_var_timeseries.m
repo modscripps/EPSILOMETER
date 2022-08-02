@@ -25,6 +25,7 @@ file_data = load(fullfile(obj.Meta_Data.paths.mat_data,TimeIndex.filenames{1}));
 field_list = fields(file_data);
 
 for iF=1:length(field_list)
+if ~isempty(file_data.(field_list{iF}))
     sub_list = fields(file_data.(field_list{iF}));
     iS = find(strcmp(sub_list,var_name));
     if ~isempty(iS)
@@ -32,6 +33,7 @@ for iF=1:length(field_list)
         dnum = file_data.(field_list{iF}).dnum;
         break
     end
+end
 end
 
 % Now concatenate data from the rest of the files

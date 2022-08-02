@@ -168,13 +168,31 @@ end
 %% rsync remote and local directories.
 % You must connect to the server to make this work.
 if rSync
-    % NC - added optional fileStr input
+    % NC - added optional fileStr - find first file to start rsync
     if fileStr
-        suffixSearch = strrep([str_to_match,suffixSearch],'**','*'); %If you ended up with side-by-side *, delete one
-    end
-    %com = sprintf('/usr/bin/rsync -av  --include ''%s'' --exclude ''*'' %s %s',suffixSearch,RawDir,RawDirDuplicate);  %The exclude was useful before... but now it actually excludes everything. Leaving this commented in case I need it again
-    com = sprintf('/usr/bin/rsync -av  --include ''%s'' %s %s',suffixSearch,RawDir,RawDirDuplicate);  %NC - rsync only the files with the str_to_search and suffix
+        % List all the files in RawDir and find the first one that matches
+        % suffixSearch
+        raw_list = dir(fullfile(RawDir,suffixSearch));
 
+        % Identify the file you want
+        names = {raw_list.name};
+        times = datenum({raw_list.date});
+        names(~cellfun('isclass', names, 'char')) = {''};  % Care for non-strings
+        matchC = reshape(strfind(names, str_to_match), size(raw_list));
+        %Indices of all files that match string:
+        match  = ~cellfun('isempty', matchC); 
+        % Which of these is the earliest file? I think it will always be
+        % sorted such that find(match,1,'first') is always the first. If
+        % this isn't always the case, use 'times' to sort the matches by
+        % date created and find the earliest
+        ind = find(match,1,'first');
+        first_file = fullfile(RawDir,names{ind});
+
+    end
+
+    %com = sprintf('/usr/bin/rsync -av  --include ''%s'' --exclude ''*'' %s %s',suffixSearch,RawDir,RawDirDuplicate);  %The exclude was useful before... but now it actually excludes everything. Leaving this commented in case I need it again
+    %com = sprintf('/usr/bin/rsync -av  --include ''%s'' %s %s',suffixSearch,RawDir,RawDirDuplicate);  %NC - rsync only the files with the str_to_search and suffix
+    com = sprintf('/usr/bin/rsync -uH --progress --files-from=<(find %s -newer %s -type f -exec basename {} %s) %s %s',RawDir,first_file,'\;',RawDir,RawDirDuplicate);
     fprintf(1,'Running: %s\n',com);
     unix(com);
     fprintf(1,'Done\n');

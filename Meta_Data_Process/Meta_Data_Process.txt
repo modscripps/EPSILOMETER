@@ -1,5 +1,5 @@
 latitude     	= 32.7;
-dof	     	= 3;
+dof	     	    = 5;
 dof_coh      	= 10;
 nfft         	= 1024;
 nfftc        	= floor(1024/3);

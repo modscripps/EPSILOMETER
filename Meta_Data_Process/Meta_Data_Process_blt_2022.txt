@@ -1,8 +1,9 @@
 latitude     = 54;
 tscan        = 6;
-dof	         = 5;
-nfft         = 1024;
-nfftc        = floor(1024/3);
+dof          = 3;
+dof_coh      = 10;
+nfft         = 512;
+nfftc        = floor(512/3);
 Fs_ctd       = 16;
 ctd_fc       = 45;
 dz           = .5;
@@ -18,8 +19,6 @@ userConfirmsProfiles = 1;
 adjustTemp = false;
 movmean_window_time = 10*(50e-3);
 multivariate   = 0;
-dof            = 5;
-dof_coh        = 10;
 rawfileSuffix  = '.modraw';
 
 % dz = scan length in meters (for processing microstructure from profiles)
