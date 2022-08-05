@@ -62,7 +62,7 @@ guidata(hObject, handles);
 % uiwait(handles.FastCTD_GUI);
 
 global FastCTD_GUI_data;
-FastCTD_GUI_data.matDir = '/Volumes/FCTD_EPSI/Deployments/0801_130mtest_ef1_pc1/FCTDmat';
+FastCTD_GUI_data.matDir = '/Volumes/FCTD_EPSI/FCTD_MAT/mat/';
 FastCTD_GUI_data.saveDir = '/Volumes/FCTD Softwares used in BLT 2022/EPSILOMETER_FCTD/realtime/realtime_fctd'; %Save anything made here in this directory. Otherwise you may get errors later when using GUI for FCTD instead of Epsi
 
 initialize_FastCTD_GUI(handles);
@@ -73,7 +73,7 @@ delete(timerfindall('Tag','FastCTD_Timer'));
 FastCTD_GUI_Timer = timer();
 % FastCTD_GUI_Timer.StartFcn = {@update_Plots,handles};
 FastCTD_GUI_Timer.TimerFcn = {@update_Plots,handles};
-FastCTD_GUI_Timer.Period = 20;
+FastCTD_GUI_Timer.Period = 60*5;
 FastCTD_GUI_Timer.BusyMode = 'drop';
 FastCTD_GUI_Timer.ErrorFcn = 'disp([datestr(now,''[yyyy.mm.dd HH:MM:SS]'') ''Error Occurred in update_Plots function'']);';
 FastCTD_GUI_Timer.StopFcn = '';
@@ -1425,7 +1425,7 @@ else
     end
 end
 
-FastCTD_GUI_data.matDir = '/Volumes/FCTD_EPSI/Deployments/0801_130mtest_ef1_pc1/FCTDmat';
+FastCTD_GUI_data.matDir = '/Volumes/FCTD_EPSI/FCTD_MAT/mat/';
 FastCTD_GUI_data.saveDir = '/Volumes/FCTD Softwares used in BLT 2022/EPSILOMETER_FCTD/realtime/realtime_fctd'; %Save anything made here in this directory. Otherwise you may get errors later when using GUI for FCTD instead of Epsi
 
 FastCTD_GUI_data.settings.yyyy{1} = datestr(FastCTD_GUI_data.currentTime,'yyyy');
@@ -2192,17 +2192,18 @@ disp([datestr(now,'[yyyy.mm.dd HH:MM:SS]') ' Loading FCTD MAT-Files...']);
 ind = find(FastCTD_MATfile_TimeIndex.timeEnd >= TimeMin & FastCTD_MATfile_TimeIndex.timeStart <= FastCTD_GUI_data.currentTime);
 for i = 1:length(ind);
     %load data for scientific display
+    current_file = fullfile(FastCTD_GUI_data.matDir,[FastCTD_MATfile_TimeIndex.filenames{ind(i)} '.mat']);
     try
         disp(FastCTD_MATfile_TimeIndex.filenames{ind(i)});
         try
-            load([FastCTD_GUI_data.matDir '/' FastCTD_MATfile_TimeIndex.filenames{ind(i)} '.mat']);
+            load(current_file);
         catch
             pause(0.05);
             try
-                load([FastCTD_GUI_data.matDir '/' FastCTD_MATfile_TimeIndex.filenames{ind(i)} '.mat']);
+                load(current_file);
             catch err
         display_error_stack(err)   
-                disp([FastCTD_GUI_data.matDir '/' FastCTD_MATfile_TimeIndex.filenames{ind(i)} '.mat']);
+                disp(current_file);
             end
         end
         if exist('FCTD','var')
@@ -2211,12 +2212,20 @@ for i = 1:length(ind);
             end
             clear FCTD;
         end
+    % Some time_fast were made with the wrong orientation. Make sure they're
+    % column vectors
+    if isfield(myFCTD,'time_fast')
+       myFCTD.time_fast = myFCTD.time_fast(:); 
+    end
     catch err
         disp(['There something wrong loading ' FastCTD_MATfile_TimeIndex.filenames{ind(i)} ]);
         display_error_stack(err)   
-        disp([FastCTD_GUI_data.matDir '/' FastCTD_MATfile_TimeIndex.filenames{ind(i)} '.mat']);
+        disp(current_file);
     end
 end
+
+
+
 disp([datestr(now,'[yyyy.mm.dd HH:MM:SS]') ' Done loading FCTD MAT-Files...']);
 disp([datestr(now,'[yyyy.mm.dd HH:MM:SS]') ' Plotting...']);
 try
@@ -2259,7 +2268,7 @@ try
         if ~isempty(i) && get(i,'TasksToExecute') > 1
             disp('copyfile');
             %copyfile([FastCTD_GUI_data.matDir '/../PDF/' 'FastCTD_GUI_data.pdf'],[FastCTD_GUI_data.matDir '/../PDF/' sprintf('FastCTD_GUI_%s.pdf',datestr(now,'yyyy-mm-dd_HHMM'))]);
-            copyfile([FastCTD_GUI_data.matDir '/../PNG/' 'FastCTD_GUI_data.png'],[FastCTD_GUI_data.matDir '/../PNG/' sprintf('FastCTD_GUI_%s.png',datestr(now,'yyyy-mm-dd_HHMM'))]);
+            %copyfile([FastCTD_GUI_data.matDir '/../PNG/' 'FastCTD_GUI_data.png'],[FastCTD_GUI_data.matDir '/../PNG/' sprintf('FastCTD_GUI_%s.png',datestr(now,'yyyy-mm-dd_HHMM'))]);
             %copyfile([FastCTD_GUI_data.matDir '/../JPG/' 'FastCTD_GUI_data.jpg'],[FastCTD_GUI_data.matDir '/../JPG/' sprintf('FastCTD_GUI_%s.jpg',datestr(now,'yyyy-mm-dd_HHMM'))]);
             %copyfile([FastCTD_GUI_data.matDir '/../PDF/' 'FastCTD_GUI_data.pdf'],['/Library/WebServer/Documents/TTide/PDF/' sprintf('FastCTD_GUI_%s.pdf',datestr(now,'yyyy-mm-dd_HHMM'))]);
             %copyfile([FastCTD_GUI_data.matDir '/../PNG/' 'FastCTD_GUI_data.png'],['/Library/WebServer/Documents/TTide/PNG/' sprintf('FastCTD_GUI_%s.png',datestr(now,'yyyy-mm-dd_HHMM'))]);

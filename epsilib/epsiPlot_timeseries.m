@@ -51,10 +51,16 @@ cols = obj.plot_properties.Colors;
 
 if isclassfield(obj,'epsi') && ~isempty(obj.epsi)
     
-    % t1 and t2
-    plot(ax(1),time_array.epsi,obj.epsi.t1_volt,'.','Color',cols.t1,'LineWidth',obj.plot_properties.LineWidth,'displayname','t1')
+    % t1 and t2 - differences from mean
+    plot(ax(1),time_array.epsi,obj.epsi.t1_volt-nanmean(obj.epsi.t1_volt),'.','Color',cols.t1,'LineWidth',obj.plot_properties.LineWidth,'displayname',sprintf('t1 - %1.1f',nanmean(obj.epsi.t1_volt)));
     hold(ax(1),'on')
-    plot(ax(1),time_array.epsi,obj.epsi.t2_volt,'.','Color',cols.t2,'LineWidth',obj.plot_properties.LineWidth,'displayname','t2')
+    plot(ax(1),time_array.epsi,obj.epsi.t2_volt-nanmean(obj.epsi.t2_volt),'.','Color',cols.t2,'LineWidth',obj.plot_properties.LineWidth,'displayname',sprintf('t2 - %1.1f',nanmean(obj.epsi.t2_volt)));
+    
+%     % t1 and t2
+%     plot(ax(1),time_array.epsi,obj.epsi.t1_volt,'.','Color',cols.t1,'LineWidth',obj.plot_properties.LineWidth,'displayname','t1');
+%     hold(ax(1),'on')
+%     plot(ax(1),time_array.epsi,obj.epsi.t2_volt,'.','Color',cols.t2,'LineWidth',obj.plot_properties.LineWidth,'displayname','t2');
+%    
     
     % s1 and s2
     plot(ax(2),time_array.epsi,obj.epsi.s1_volt,'.','Color',cols.s1,'LineWidth',obj.plot_properties.LineWidth,'displayname','s1')
@@ -150,8 +156,8 @@ if isfield(obj.epsi,'dnum') && ~all(isnan(obj.epsi.dnum)) && replaceData
     [ax(:).XTick] = deal(fliplr(nanmax(obj.epsi.dnum):-sec10:nanmax(obj.epsi.dnum)-nDay));
     [ax(:).XLim] = deal([nanmax(obj.epsi.dnum)-nDay,nanmax(obj.epsi.dnum)]);
     try
-        datetick(ax(10),'x','MM:SS','keepticks')
-        ax(10).XLabel.String = 'MM:SS';
+        datetick(ax(10),'x','HH:MM:SS','keepticks')
+        ax(10).XLabel.String = 'HH:MM:SS';
     catch
     end
 elseif ~replaceData
@@ -192,6 +198,7 @@ ax(4).YAxisLocation = 'right';
 ax(6).YAxisLocation = 'right';
 ax(10).YAxisLocation = 'right';
 ax(10).Color = 'none';
+ax(10).YLim = [0 40];
 
 % Axes colors
 ax(9).YColor = cols.P;

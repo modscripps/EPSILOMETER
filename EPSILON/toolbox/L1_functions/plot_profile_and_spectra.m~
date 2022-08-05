@@ -31,8 +31,8 @@ Meta_Data = Profile.Meta_Data;
 
 close all
 fig = figure;
-fig.Visible = 'off';
-disp('Figure is invisible')
+% fig.Visible = 'off';
+% disp('Figure is invisible')
 
 % Set figure size based on screen size
 defaultFigWidth = 1680;
@@ -389,10 +389,10 @@ for k=scanNum
         grid(ax(7),'on')
         try
         warning off
-        legend(ax(7),{'a1','a2','a3'},'location','northwest','numcolumns',2)
+        legend(ax(7),{'a1','a2'},'location','northwest','numcolumns',2)
         warning on
         catch %numcolumns only available in later versions of matlab
-        legend(ax(7),{'a1','a2','a3'},'Location','NorthWest')
+        legend(ax(7),{'a1','a2'},'Location','NorthWest')
         end
         ax(7).XLabel.String = 'Hz';
         ax(7).YLabel.String = 'g^2/Hz';
@@ -423,11 +423,11 @@ for k=scanNum
         p8(3) = semilogx(ax(a),Profile.f,Co23,'color',cols.a3);
         p8(4) = semilogx(ax(a),Profile.f,Profile.Cs1a3_full,'color',cols.s2);
         try
-            warning off
-            legend(ax(a),'s2a1','s2a2','s2a3','s2a3 full profile','location','northwest','numcolumns',2)
-            warning on
+        warning off
+        legend(ax(a),'s2a1','s2a2','s2a3','s2a3 full profile','location','northwest','numcolumns',2)
+        warning on
         catch
-            legend(ax(a),'s2a1','s2a2','s2a3','s2a3 full profile','location','northwest')
+                    legend('s2a1','s2a2','s2a3','s2a3 full profile','location','northwest')
         end
         ax(8).YAxisLocation='right';
         ax(8).YLabel.String = 'Coherence';
@@ -461,10 +461,10 @@ for k=scanNum
 
         try
             warning off
-            legend(ax(9),'t1','t1smooth','t2','t2smooth','Batchs1t1','Batchs1t2','Batchs2t1','Batchs2t2','noise','t1_{cutoff}','t2_{cutoff}','location','southeast','numcolumns',2);
+            legend('location','southwest','numcolumns',3);
             warning on
         catch
-            legend(ax(9),'t1','t1smooth','t2','t2smooth','Batchs1t1','Batchs1t2','Batchs2t1','Batchs2t2','noise','t1_{cutoff}','t2_{cutoff}','location','southeast');
+            legend('location','southwest');
         end
         xlim(ax(9),[6e-1 max(scan.k)])
         minTG=sort([scan.Pt_Tg_k.t1(:);scan.Pt_Tg_k.t2(:)]);
@@ -496,10 +496,10 @@ for k=scanNum
         grid(ax(10),'on')
         try
             warning off
-            legend(ax(10),'s1','s1smooth','s2','s2smooth','noise','s1_{cutoff}','s2_{cutoff}','Panchev1','Panchev2','location','southeast','numcolumns',2);
+            legend('s1','s1smooth','s2','s2smooth','noise','s1_{cutoff}','s2_{cutoff}','Panchev1','Panchev2','location','southwest','numcolumns',2);
             warning on
         catch
-            legend(ax(10),'s1','s1smooth','s2','s2smooth','noise','s1_{cutoff}','s2_{cutoff}','Panchev1','Panchev2','location','southeast');
+            legend('s1','s1smooth','s2','s2smooth','noise','s1_{cutoff}','s2_{cutoff}','Panchev1','Panchev2','location','southwest');
         end
         end
         xlim(ax(10),[6e-1 max(scan.k)])
@@ -522,8 +522,7 @@ for k=scanNum
 
         hold(ax(1),'on')
         try
-            minchi=sort(Profile.chi(:));
-            ax(1).XLim = [ nanmin(minchi(minchi>0)) nanmax(Profile.chi(:))];
+            ax(1).XLim = [ nanmin(Profile.chi(:)) nanmax(Profile.chi(:))];
         catch
             ax(1).XLim = [5e-11 min([1e-4,ax(1).XLim(2)])];
         end

@@ -16,7 +16,7 @@ function [matData] = epsiProcess_convert_new_raw_to_mat(dirs,Meta_Data,varargin)
 % OPTIONAL INPUTS:
 %   'noSync'
 %       - don't rsync files from RawDir to RawDir Away
-%   'doFCTD'
+%   'make_fctd'
 %       - make FCTD files compatible with MOD FCTD processing library
 %   'calc_micro'
 %       - true/false to calculate microstructure data
@@ -69,7 +69,7 @@ cruise_specifics.blt_2021 = false; %By default, DON'T add microconductivity and 
 %% Loop through the number of varargin arguments
 
 argsNameToCheck = {'noSync',...             %1
-                   'doFCTD',...             %2
+                   'make_fctd',...          %2
                    'calc_micro',...         %3
                    'fileStr',...            %4
                    'version',...            %5
@@ -225,7 +225,7 @@ for i=1:length(myASCIIfiles)
     % because of how we're rsyncing)
     % Also, always convert the last file in the ASCII list, because it
     % could have just finished growing to 5MB since the last iteration
-    if ~isempty(myMATfile) && myASCIIfiles(i).bytes>=5e6 && i~=length(myASCIIfiles)
+    if ~isempty(myMATfile) && myASCIIfiles(i).bytes>=myRAWRAWfile.bytes && i~=length(myASCIIfiles)
         % If the MAT file exists and the ascii file is bigger than 5MB, skip it. All
         % of the raw data has already been converted
         % (DO NOTHING.)
@@ -240,7 +240,7 @@ for i=1:length(myASCIIfiles)
         % debug.conversion_happens(i) = 0;
 
 
-    elseif (~isempty(myMATfile) && myASCIIfiles(i).bytes<5e6) ...
+    elseif (~isempty(myMATfile) && myASCIIfiles(i).bytes<myRAWRAWfile.bytes) ...
             || isempty(myMATfile) || i==length(myASCIIfiles)
         % If the MAT file exists already but is older than the raw data
         % file, it will be reconverted. OR, if the MAT file does not exist

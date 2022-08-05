@@ -1734,7 +1734,7 @@ else
     load('FastCTD_GUI.mat');
 FastCTD_GUI_data.matDir = '/Volumes/FCTD_EPSI/FCTD_MAT/mat/';
 FastCTD_GUI_data.saveDir = '/Volumes/FCTD Softwares used in BLT 2022/EPSILOMETER_FCTD/realtime/realtime_epsi'; %Save anything made here in this directory. Otherwise you may get errors later when using GUI for FCTD instead of Epsi
-FastCTD_GUI_data.epsi_profile_dir = '/Volumes/EPSI_PROCESSING/0802_d2_ef1_pc2/profiles';
+FastCTD_GUI_data.epsi_profile_dir = '/Volumes/EPSI_PROCESSING/0802_d1_ef1_pc2/profiles';
 
 
 if isempty(FastCTD_GUI_data)
@@ -2434,7 +2434,7 @@ if isstruct(myFCTD_GridData) && size(myFCTD_GridData.tGrid.density,2)>2
     %ALB plot epsi chi
     for i = 3:4
 %         hold(handles.(sprintf('Frame%1d',i)),'off');
-                                                                                                                        delete(get(handles.(sprintf('Frame%1d',i)),'children'));
+        delete(get(handles.(sprintf('Frame%1d',i)),'children'));
         data = grid.(Vars2PlotInFrames{i});
         contourf(handles.(sprintf('Frame%1d',i)),grid.dnum,grid.z,log10(data),...
         linspace(FastCTD_GUI_data.settings.(sprintf('%sMin',VarsBoxNames{i})){3}, ...

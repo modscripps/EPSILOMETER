@@ -30,8 +30,8 @@ str_to_match = '*';
 
 % Directory containing streaming raw data
 
-rawDir = '/Volumes/FCTD_EPSI/RAW/';
-dirs.raw_incoming = '/Volumes/FCTD_EPSI/RAW/';
+rawDir = '/Volumes/FCTD_EPSI/Deployments/0802_d1_ef1_pc2/raw';
+dirs.raw_incoming = '/Volumes/FCTD_EPSI/Deployments/0802_d1_ef1_pc2/raw';
 
 % Choose time units
 time_units = 'dnum'; %uncomment this if you set the datetime on SOM

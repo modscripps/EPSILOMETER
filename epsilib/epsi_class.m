@@ -291,15 +291,27 @@ classdef epsi_class < handle
             %       ex) BLT2021 - f_readData('version',3)
             %       ex) BLT2022 - f_readData('version',4)
             %   'calc_micro'
-            %       ex) f_readData('calc_micro',1) will calculate microstructure
-            %       ex) f_readData('calc_micro',0) will not calculate microstructrure
+            %       ex) f_readData('calc_micro') will calculate microstructure
+            %       ex) f_readData will not calculate microstructrure
+            %   'make_FCTD'
+            %       ex) f_readData('make_FCTD','path/to/fctd_mat_files') 
+            %                       will make FCTD-style .mat files in the 
+            %                       path specified in the second argument
+            %       ex) f_readData('make_FCTD') will make FCTD-style .mat 
+            %                       files in a directory called FCTDmat at 
+            %                       the same level as .mat and .raw directories
+            %       ex) f_readData will not not make FCTD-style .mat files     
+        
 
             % Set defaults
             version_number = 4;
             calc_micro = 0;
+            make_FCTD = 0;
+            fctd_mat_dir = '';
 
-            argsNameToCheck = {'calc_micro',...    %1
-                'version'};         %2
+            argsNameToCheck = {'calc_micro',...     %1
+                               'version',...        %2
+                               'make_FCTD'};        %3     
 
             index = 1; %Initialize index of argsNameToCheck
             % Number of items remaining (this is the number of argsNameToCheck minus
@@ -318,12 +330,12 @@ classdef epsi_class < handle
 
                 switch i
                     case 1 %calc_micro
-                        % Find the index of varargin that = 'calc_micro'. The following
-                        % index contains the version number
+                        % Find the index of varargin that = 'calc_micro'
+                        % and set calc_micro to 1
                         idxFlag = find(cell2mat(cellfun(@(C) ~isempty(strfind(C,'calc_micro')),varargin,'uniformoutput',0)));
-                        calc_micro = varargin{idxFlag+1};
-                        index = index+2;
-                        n_items = n_items-2;
+                        calc_micro = 1;
+                        index = index+1;
+                        n_items = n_items-1;
                     case 2 %version
                         % Find the index of varargin that = 'version'. The following
                         % index contains the version number
@@ -331,6 +343,13 @@ classdef epsi_class < handle
                         version = varargin{idxFlag+1};
                         index = index+2; %+2 because the following varargin will be the version number
                         n_items = n_items-2;
+                    case 3 %make_FCTD
+                        % Find the index of varargin that = 'make_FCTD' and
+                        % set make_FCTD to 1
+                        idxFlag = find(cell2mat(cellfun(@(C) ~isempty(strfind(C,'make_FCTD')),varargin,'uniformoutput',0)));
+                        make_FCTD = 1;
+                        index = index+1;
+                        n_items = n_items-1;
                 end
             end
 
@@ -355,7 +374,18 @@ classdef epsi_class < handle
                 % Convert raw to mat
                 dirs.raw_incoming = obj.Meta_Data.paths.raw_data;
                 dirs.mat = obj.Meta_Data.paths.mat_data;
-                epsiProcess_convert_new_raw_to_mat(dirs,obj.Meta_Data,'noSync','version',version_number,'calc_micro',calc_micro);
+                if make_FCTD
+                epsiProcess_convert_new_raw_to_mat(dirs,obj.Meta_Data,...
+                    'noSync',...
+                    'version',version_number,...
+                    'calc_micro',calc_micro,...
+                    'make_FCTD',fctd_mat_dir);
+                elseif make_FCTD
+                epsiProcess_convert_new_raw_to_mat(dirs,obj.Meta_Data,...
+                    'noSync',...
+                    'version',version_number,...
+                    'calc_micro',calc_micro);
+                end
             end
 
         end

@@ -13,9 +13,15 @@ if exist(fullfile(obj.Meta_Data.paths.profiles,'griddedProfiles.mat'),'file')==2
 else
     grid_exists = 0;
 end
+% Actually, always re-grid from the beginning since you might be
+% changing the depth array
+grid_exists = 0;
+clear grid
 
 fileList = dir(fullfile(obj.Meta_Data.paths.profiles,'Profile*.mat'));
 for iFile=1:length(fileList)
+
+    disp(sprintf('Gridding %03.0f of %03.f',iFile,length(fileList)))
 
     load(fullfile(obj.Meta_Data.paths.profiles,fileList(iFile).name))
 
@@ -66,8 +72,8 @@ for iFile=1:length(fileList)
         grid.vehicle_name = grid.vehicle_name(:).';
         grid.deployment = grid.deployment(:).';
 
-        saveName = fullfile(obj.Meta_Data.paths.profiles,'griddedProfiles.mat');
-        save(saveName,'grid');
+    end %End loop through profiles
 
-    end
+    saveName = fullfile(obj.Meta_Data.paths.profiles,'griddedProfiles.mat');
+    save(saveName,'grid');
 end

@@ -20,7 +20,7 @@ if ~isfield(FCTD,'pressure')
     return;
 end;
 
-vars2Grid = {'pressure','temperature','conductivity','epsilon1','epsilon2','chi1','chi2'};
+vars2Grid = {'pressure','temperature','conductivity'};
 vars2Grid_default = {'pressure','temperature','conductivity','density','salinity'};
 pickDownCast = true;
 zInterval = 0.5;
@@ -273,7 +273,7 @@ DataGrid.density = sw_pden(DataGrid.salinity,DataGrid.temperature,DataGrid.press
 mintime = nanmin(DataGrid.time);
 maxtime = nanmax(DataGrid.time);
 
-DataGrid.tGrid.time = mintime:2*nanmedian(diff(DataGrid.time)):maxtime; % every minute
+%DataGrid.tGrid.time = mintime:2*nanmedian(diff(DataGrid.time)):maxtime; % every minute
 DataGrid.tGrid.time = DataGrid.time; %Changed to plot every profile
 DataGrid.tGrid.depth = DataGrid.depth;
 

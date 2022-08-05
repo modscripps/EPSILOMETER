@@ -23,6 +23,18 @@ if isempty(FCTD2)
     return;
 end
 
+% There were some structres where time_fast was the wrong orientation. Make
+% sure it's a column vector
+if isfield(FCTD1,'time_fast')
+    FCTD1.time_fast = FCTD1.time_fast(:);
+end
+if isfield(FCTD2,'time_fast')
+    FCTD2.time_fast = FCTD2.time_fast(:);
+end
+
+
+
+
 fNames = fieldnames(FCTD1);
 
 for i = 1:length(fNames)

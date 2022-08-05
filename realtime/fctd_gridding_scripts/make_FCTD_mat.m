@@ -51,7 +51,7 @@ if isfield(cruise_specifics,'blt_2021');
     % uConductivity/fluorometer data points for every 1 SBE data point. We
     % also save time_fast as an N x 20 array.
     time_fast = linspace(ctd.dnum(1),ctd.dnum(end),length(ctd.dnum)*20);
-    FCTD.time_fast = time_fast;
+    FCTD.time_fast = time_fast(:);
 
     % Interpolate data that is not nan, not inf, and where time
     % is increasing

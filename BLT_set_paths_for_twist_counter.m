@@ -1,4 +1,5 @@
 % Add Epsi library
+startup
 Epsi_library = '/Volumes/FCTD Softwares used in BLT 2022/FCTD_MATLAB/';
 addpath(genpath(Epsi_library));
 
@@ -15,5 +16,5 @@ listeners = cmdWinDoc.getDocumentListeners;
 %find text area part
 jTextArea=listeners(5); %or listeners(3) or listeners (4) depending on matlab
 %set colour of command window
-jTextArea.setBackground(java.awt.Color.pink) %for cyan. can also use yellow, pink, etc. and white to turn back 
+jTextArea.setBackground(java.awt.Color.purple) %for cyan. can also use yellow, pink, etc. and white to turn back 
 

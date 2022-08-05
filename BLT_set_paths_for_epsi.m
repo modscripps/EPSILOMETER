@@ -1,4 +1,5 @@
 % Add Epsi library
+startup
 Epsi_library = '/Volumes/FCTD Softwares used in BLT 2022/EPSILOMETER_FCTD/';
 addpath(genpath(Epsi_library));
 
