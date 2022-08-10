@@ -1,14 +1,16 @@
 % -------------------------------------------
-lab_dir = '/Volumes/FCTD_EPSI/Deployments/0804_d2_ef1_pc2/';
-dir1 = '/Users/Shared/EPSI_PROCESSING/0804_d2_ef1_pc2';
+depl_dir = '0808_sta07_d13_ef1_pc2';
 % -------------------------------------------
 
+lab_dir = fullfile('/Volumes/FCTD_EPSI/Deployments/',depl_dir);
+processing_dir = fullfile('/Users/Shared/EPSI_PROCESSING/',depl_dir);
 md = '/Volumes/FCTD Softwares used in BLT 2022/EPSILOMETER_FCTD/Meta_Data_Process/Meta_Data_Process_blt_2022.txt';
 
-com = sprintf('/usr/bin/rsync -auv %s %s',lab_dir,dir1);  %NC - rsync only the files with the str_to_search and suffix
-unix(com);
+% % Rsync deployment files to the processing directory
+% com = sprintf('/usr/bin/rsync -auv %s %s',lab_dir,processing_dir);  %
+% unix(com);
 
-ec1 = epsi_class(dir1,md);
+ec1 = epsi_class(processing_dir,md);
 t1 = ec1.f_get_var_timeseries('t1_volt');
 t2 = ec1.f_get_var_timeseries('t2_volt');
 s1 = ec1.f_get_var_timeseries('s1_volt');

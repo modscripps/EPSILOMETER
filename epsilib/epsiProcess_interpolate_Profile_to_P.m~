@@ -1,4 +1,4 @@
-function [GRID] = epsiProcess_interpolate_Profile_to_P(Profile,P)
+function [grid] = epsiProcess_interpolate_Profile_to_P(Profile,P)
 
 GRID.experiment = Profile.Meta_Data.experiment;
 GRID.mission = Profile.Meta_Data.mission;

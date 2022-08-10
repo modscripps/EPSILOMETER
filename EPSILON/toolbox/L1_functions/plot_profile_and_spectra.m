@@ -31,8 +31,8 @@ Meta_Data = Profile.Meta_Data;
 
 close all
 fig = figure;
-fig.Visible = 'off';
-disp('Figure is invisible')
+%fig.Visible = 'off';
+%disp('Figure is invisible')
 
 % Set figure size based on screen size
 defaultFigWidth = 1680;

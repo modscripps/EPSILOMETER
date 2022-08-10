@@ -41,9 +41,18 @@ elseif replaceData
         fig = ax(1).Parent;
         tb = findall(fig,'type','textboxshape');
         delete(tb)
+        
+        % Delete any other figures (like the blank one set up when you call
+        % this in a timer function)
+        all_figs = findobj('type','figure');
+        for f=1:length(all_figs)
+            if ~strcmp(all_figs(f).Children(end).Tag,'shear')
+                delete(all_figs(f))
+            end
+        end
     else
         ax = setup_figure;
-    end
+    end 
 end
 cols = obj.plot_properties.Colors;
 
@@ -198,7 +207,8 @@ ax(4).YAxisLocation = 'right';
 ax(6).YAxisLocation = 'right';
 ax(10).YAxisLocation = 'right';
 ax(10).Color = 'none';
-ax(10).YLim = [0 40];
+ax(10).YLim = [0 30];
+ax(10).YGrid = 'on';
 
 % Axes colors
 ax(9).YColor = cols.P;

@@ -85,11 +85,13 @@ for iProf=1:length(PressureTimeseries.startprof)
 
         Profile = obj.f_computeTurbulence(Profile);
         % Sort Profile by standard field order
-        Profile = sort_profile(Profile);
-
-        % Save new profile
-        saveName = fullfile(obj.Meta_Data.paths.profiles,sprintf('Profile%03.0f',iProf));
-        save(saveName,'Profile');
+        if ~isempty(Profile)
+            Profile = sort_profile(Profile);
+            
+            % Save new profile
+            saveName = fullfile(obj.Meta_Data.paths.profiles,sprintf('Profile%03.0f',iProf));
+            save(saveName,'Profile');
+        end
         clear Profile
     end
 end

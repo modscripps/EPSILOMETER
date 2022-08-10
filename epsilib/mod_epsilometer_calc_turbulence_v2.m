@@ -112,9 +112,14 @@ Prmax = Meta_Data.PROCESS.Prmax(Profile.ctd.P);
 inRange = Profile.ctd.P>=Prmin & Profile.ctd.P<=Prmax;
 ctdtime = Profile.ctd.time_s(inRange);
 
+% ALB data drops can choke the code here (i.e. inRange is empty)
 
+if sum(inRange)==0
+    disp('no CTD data is that Profile')
+    Profile=[];
+else
 % Remove epsi values outside the time period defined by ctdtime
-%ALB why did I add the suffix _coh here?
+% ALB why did I add the suffix _coh here?
 keepEpsi = Profile.epsi.time_s>=nanmin(ctdtime) & Profile.epsi.time_s<=nanmax(ctdtime);
 for iChan=1:numel(channels)
     wh_channel = channels{iChan};
@@ -277,7 +282,11 @@ for p = 1:nbscan % p is the scan index.
 %==================================================================%%
 %================ Core of the processing ==========================%%    
     % Get spectral data for each scan
+    try
     scan  =  get_scan_spectra(Profile,p);
+    catch
+        disp ('pb with scan')
+    end
 %==================================================================%%    
 %==================================================================%%    
 
@@ -381,4 +390,5 @@ end
 % Sort Profile by standard field order
 Profile = sort_profile(Profile);
 
+end
 end

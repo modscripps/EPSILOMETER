@@ -9,14 +9,14 @@ function obj = epsiProcess_gridProfiles(obj,z)
 if exist(fullfile(obj.Meta_Data.paths.profiles,'griddedProfiles.mat'),'file')==2
     grid_exists = 1;
     G = load(fullfile(obj.Meta_Data.paths.profiles,'griddedProfiles'));
-    grid = G.grid;
+    GRID = G.GRID;
 else
     grid_exists = 0;
 end
 % Actually, always re-grid from the beginning since you might be
 % changing the depth array
 grid_exists = 0;
-clear grid
+clear GRID
 
 fileList = dir(fullfile(obj.Meta_Data.paths.profiles,'Profile*.mat'));
 for iFile=1:length(fileList)
@@ -30,20 +30,20 @@ for iFile=1:length(fileList)
         % Interpolate this profile to standard pressure grid
         gridNew = epsiProcess_interpolate_Profile_to_P(Profile,z);
 
-        % Add gridded profile to full grid. If full grid doesn't
+        % Add gridded profile to full GRID. If full grid doesn't
         % exist yet, create it.
         if grid_exists
-            varList = fields(grid);
+            varList = fields(GRID);
             for iVar=1:length(varList)
                 if ~strcmp(varList{iVar},'mission') && ~strcmp(varList{iVar},'vehicle_name') && ~strcmp(varList{iVar},'deployment')
-                    grid.(varList{iVar})(:,end+1) = gridNew.(varList{iVar});
+                    GRID.(varList{iVar})(:,end+1) = gridNew.(varList{iVar});
                 end
 
             end
         else
             varList = fields(gridNew);
             for iVar=1:length(varList)
-                grid.(varList{iVar})(:,1) = gridNew.(varList{iVar});
+                GRID.(varList{iVar})(:,1) = gridNew.(varList{iVar});
             end
             grid_exists = 1;
         end
@@ -53,27 +53,27 @@ for iFile=1:length(fileList)
         % rest of it.
         % ... but keep the last one if there is more than one.
         % TO DO: make this step less janky
-        profNumX = fliplr(1:length(grid.profNum));
-        profNumY = fliplr(grid.profNum);
+        profNumX = fliplr(1:length(GRID.profNum));
+        profNumY = fliplr(GRID.profNum);
         [~,u] = unique(profNumY);
         for iVar=1:length(varList)
             if ~strcmp(varList{iVar},'mission') && ~strcmp(varList{iVar},'vehicle_name') ...
                     && ~strcmp(varList{iVar},'deployment') && ~strcmp(varList{iVar},'pr') ...
                     && ~strcmp(varList{iVar},'z')
-                grid.(varList{iVar}) = grid.(varList{iVar})(:,profNumX(u));
+                GRID.(varList{iVar}) = GRID.(varList{iVar})(:,profNumX(u));
             end
         end
 
         close
 
-        grid.pr = grid.pr(:,1);
-        grid.z = grid.z(:,1);
-        grid.mission = grid.mission(:).';
-        grid.vehicle_name = grid.vehicle_name(:).';
-        grid.deployment = grid.deployment(:).';
+        GRID.pr = GRID.pr(:,1);
+        GRID.z = GRID.z(:,1);
+        GRID.mission = GRID.mission(:).';
+        GRID.vehicle_name = GRID.vehicle_name(:).';
+        GRID.deployment = GRID.deployment(:).';
 
     end %End loop through profiles
 
     saveName = fullfile(obj.Meta_Data.paths.profiles,'griddedProfiles.mat');
-    save(saveName,'grid');
+    save(saveName,'GRID');
 end

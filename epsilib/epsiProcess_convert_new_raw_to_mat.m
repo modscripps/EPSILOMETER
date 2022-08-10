@@ -7,7 +7,9 @@ function [matData] = epsiProcess_convert_new_raw_to_mat(dirs,Meta_Data,varargin)
 % --------------------------------------------------------
 % INPUTS:
 %   dirs.raw_incoming  - where raw data is streaming in
-%       .raw_copy      - where raw data should be copied
+%       .raw_copy      - where raw data should be copied for timeseries
+%                        viewing
+%       .processing    - where raw data should be copied for processing
 %       .mat           - directory for .mat files converted from raw files
 %       .fctd_mat      - directory for .mat files formatted for FCTD
 %                        processing
@@ -26,7 +28,8 @@ function [matData] = epsiProcess_convert_new_raw_to_mat(dirs,Meta_Data,varargin)
 %       pattern. This is useful if you're storing all the raw data from a
 %       cruise in RawDir, but you want to separate deployments into different
 %       RawDirAway. You could specify only files from July 17th as
-%       'fileStr','*07_17*
+%       'fileStr','*07_17*com =
+
 %    'version, version_number
 %       - specify the version number (1,2,3,4) of mod_som_read_epsi_files.m
 %    'display_file_data'
@@ -69,7 +72,7 @@ cruise_specifics.blt_2021 = false; %By default, DON'T add microconductivity and 
 %% Loop through the number of varargin arguments
 
 argsNameToCheck = {'noSync',...             %1
-                   'make_fctd',...          %2
+                   'doFCTD',...          %2
                    'calc_micro',...         %3
                    'fileStr',...            %4
                    'version',...            %5
@@ -189,17 +192,29 @@ if rSync
         first_file = fullfile(RawDir,names{ind});
 
     %end
+    
+    
 
     % Workaround because rsync won't repeat copying a file
 
 
     %com = sprintf('/usr/bin/rsync -av  --include ''%s'' --exclude ''*'' %s %s',suffixSearch,RawDir,RawDirDuplicate);  %The exclude was useful before... but now it actually excludes everything. Leaving this commented in case I need it again
     %com = sprintf('/usr/bin/rsync -av  --include ''%s'' %s %s',suffixSearch,RawDir,RawDirDuplicate);  %NC - rsync only the files with the str_to_search and suffix
-    com = sprintf('/usr/bin/rsync -au --progress --files-from=<(find %s -newer %s -type f -exec basename {} %s) %s %s',RawDir,first_file,'\;',RawDir,RawDirDuplicate);
+    
+    % Rsync the files to a directory for later profile processing
+    com = sprintf('/usr/bin/rsync -au --progress --files-from=<(find %s -newer %s -type f -exec basename {} %s) %s %s',RawDir,first_file,'\;',RawDir,fullfile(dirs.processing,'raw'));
+    fprintf(1,'Running: %s\n',com);
+    unix(com);
+    fprintf(1,'Done\n');
+    
+    % Rsync the files to a directory for realtime timeseries plotting
+    com = sprintf('/usr/bin/rsync -auq --progress --files-from=<(find %s -newer %s -type f -exec basename {} %s) %s %s',RawDir,first_file,'\;',RawDir,RawDirDuplicate);
     fprintf(1,'Running: %s\n',com);
     unix(com);
     fprintf(1,'Done\n');
     RawDir = RawDirDuplicate;
+    
+    
 
     end
 end
