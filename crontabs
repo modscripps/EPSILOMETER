@@ -1,0 +1,25 @@
+I made a cron job on DEV1 to rsync files to DEV3. It still didn't work on it's own so I added a ssh command. In order to get the ssh to work without having to enter the password, I added the password to an .ssh keychain.
+
+To add the  password to the MATLAB computer:
+ssh-keygen -t rsa (just click enter to leave the file in the default location and have no password)
+ls -lah .ssh  (to check that the file is there)
+cat .ssh/id_rsa.pub | ssh mod_admin@192.168.1.168 'cat >> .ssh/authorized_keys'
+
+To make the cron job:
+- make a file in /Users/Shared/FCTD_EPSI called copy_raw_to_DEV3 in vi. The contents are:
+rsync -auq /Users/Shared/FCTD_EPSI/RAW/ mod_admin@192.168.1.168:/Users/Shared/EPSI_PROCESSING/RAW
+
+To make the file excecutable
+chmod a+x copy_raw_to_DEV3
+
+To add to the crontab
+crontab -e
+
+Type the following and save with :w
+* * * * * /Users/Shared/FCTD_EPSI/copy_raw_to_DEV3
+(The asterisks say when and how often to run the file. All 5 asterisks mean run it every minute.)
+
+To check that it's in the crontab
+crontab -l
+
+In theory, we should be able to set up an .ssh keychain on DEV3 and have it try to rsync within the Matlab script from DEV1. I set up the keychain password, but Matlab doesn't seem to like looking for files in mod_admin@192.168.1.158. I haven't figured out how to solve this.

@@ -1,12 +1,12 @@
 ccc
-while 1<2
+while 1
 %% Define some things
 % -------------------------------------------
 experiment_name     = 'BLT';
-station_number      = 7;
-deployment_number   = 13;
-depl_dir            = '0808_sta07_d13_ef1_pc2';
-depth_range         = 900:1500;
+station_number      = 8;
+deployment_number   = 15;
+depl_dir            = '0810_sta08_d15_ef1_pc2';
+depth_range         = 900:1550;
 minutes_between_processing = 13;
 % -------------------------------------------
 

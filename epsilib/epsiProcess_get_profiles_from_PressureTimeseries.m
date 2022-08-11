@@ -100,7 +100,7 @@ if plotFig
 
     % Plot dp
     mid_dnum = nanmean([PressureTimeseries.dnum(1:end-1),...
-        PressureTimeseries.dnum(2:end)],2);
+    PressureTimeseries.dnum(2:end)],2);
     ax(2) = subplot(2,1,2);
     plot(mid_dnum,dp,'b')
     title(sprintf('dp, p smoothed over %3.0f points',nPoints))
@@ -147,13 +147,6 @@ if startdown(end)<dn(end)
     startdown = [startdown dn(end)];
 end
 
-% % NC - Make sure startdowns are a certain distance apart
-% distBetweenStartdowns = 1*60*16; %(1 minutes at 16Hz sampling)
-% startdowndiff = [0,diff(startdown)];
-% idxKeep = startdowndiff>distBetweenStartdowns;
-% startdown = startdown(idxKeep);
-
-
 % PT.drop is an array (the same size as other PT structure arrays)
 % containing profile numbers.
 enddown = nan(size(startdown,1),size(startdown,2));
@@ -173,5 +166,7 @@ profLength = PT.P(PT.endprof)-PT.P(PT.startprof);
 longEnough = abs(profLength)>=minLength;
 PT.startprof = PT.startprof(longEnough);
 PT.endprof = PT.endprof(longEnough);
+
+
 
 
