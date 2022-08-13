@@ -238,10 +238,8 @@ Profile.epsilon         = nan(nbscan,2);
 Profile.epsilon_co      = nan(nbscan,2);
 Profile.epsilon_mv      = nan(nbscan,2);
 Profile.sh_fc           = nan(nbscan,2);
-Profile.sh_kc           = nan(nbscan,2);
 Profile.chi             = nan(nbscan,2);
 Profile.tg_fc           = nan(nbscan,2);
-Profile.tg_kc           = nan(nbscan,2);
 Profile.flag_tg_fc      = nan(nbscan,2);
 Profile.epsi_qc         = nan(nbscan,2);
 
@@ -317,10 +315,10 @@ for p = 1:nbscan % p is the scan index.
         Profile.epsi_qc(p,1) = scan.epsi_qc(1);
         Profile.epsi_qc(p,2) = scan.epsi_qc(2);
         Profile.epsi_qc_final(p) = scan.epsi_qc_final;
-        Profile.sh_fc(p,1) = scan.fc.s1(1); %only saving the shear_co limit NC-changed to 1st index instead of 2nd. Arnaud must have changed how cutoff number is stored
-        Profile.sh_fc(p,2) = scan.fc.s2(1); %only saving the shear_co limit
-        Profile.sh_kc(p,1) = scan.kc.s1(1); 
-        Profile.sh_kc(p,2) = scan.kc.s2(1); 
+        Profile.sh_fc(p,1) = scan.fc.s1(2); %only saving the shear_co limit
+        Profile.sh_fc(p,2) = scan.fc.s2(2); %only saving the shear_co limit
+        Profile.sh_kc(p,1) = scan.kc.s1(2); 
+        Profile.sh_kc(p,2) = scan.kc.s2(2); 
         Profile.kvis(p,1) = scan.kvis;
         
         if isfield(scan.chi,'t1')

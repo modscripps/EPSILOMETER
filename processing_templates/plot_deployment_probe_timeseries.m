@@ -1,5 +1,5 @@
 % -------------------------------------------
-depl_dir = '0810_sta08_d15_ef1_pc2';
+depl_dir = '0812_sta08_d16_fctda';
 % -------------------------------------------
 
 %lab_dir = fullfile('/Volumes/FCTD_EPSI/Deployments/',depl_dir);

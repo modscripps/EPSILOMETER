@@ -4,9 +4,9 @@ while 1
 % -------------------------------------------
 experiment_name     = 'BLT';
 station_number      = 8;
-deployment_number   = 15;
-depl_dir            = '0810_sta08_d15_ef1_pc2';
-depth_range         = 900:1550;
+deployment_number   = 17;
+depl_dir            = '0812_sta08_d17_ef1_pc2';
+depth_range         = 800:1550;
 minutes_between_processing = 13;
 % -------------------------------------------
 
@@ -18,7 +18,6 @@ processing_dir = fullfile('/Users/Shared/EPSI_PROCESSING/Processing',depl_dir);
 % Meta_Data Process file
 md = ['/Volumes/FCTD Softwares used in BLT 2022/EPSILOMETER_FCTD/'...
     'Meta_Data_Process/Meta_Data_Process_blt_2022.txt'];
-
 % % Rsync from Deployment raw directory to EPSI_PROCESSING raw directory
 % lab_dir_raw = fullfile(lab_dir,'raw');
 % processing_dir_raw = fullfile(processing_dir,'raw');
@@ -76,7 +75,7 @@ ylabel(cax1,'Celsius','fontname','Times New Roman','fontsize',20)
 ax(2) = subtightplot(3,1,2);
 pcolor(data.GRID.dnum(dnummask),data.GRID.z,log10(data.GRID.epsilon_final(:,dnummask)));
 shading flat
-cax2=colorbar
+cax2=colorbar;
 title('Epsilon')
 ylabel('Depth','fontname','Times New Roman','fontsize',20);
 hold on

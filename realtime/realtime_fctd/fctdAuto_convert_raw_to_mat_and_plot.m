@@ -105,7 +105,9 @@ match  = ~cellfun('isempty', matchC);
 % date created and find the earliest
 ind = find(match,1,'first');
 first_file = fullfile(dirs.raw_incoming,names{ind});
-eval(['!cp ' first_file ' ' dirs.raw_copy]);
+if ~exist(fullfile(dirs.raw_copy,names{ind}),'file')
+    eval(['!cp ' first_file ' ' dirs.raw_copy]);
+end
 
 % Initialize epsi_class in away_dir and create blank structures to fill
 % with data

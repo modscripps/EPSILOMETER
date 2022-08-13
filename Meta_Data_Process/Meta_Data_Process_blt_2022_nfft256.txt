@@ -1,8 +1,8 @@
 latitude     = 54;
 dof          = 3;
 dof_coh      = 10;
-nfft         = 1024;
-nfftc        = floor(1024/3);
+nfft         = 256;
+nfftc        = floor(256/3);
 Fs_ctd       = 16;
 ctd_fc       = 45;
 dz           = .5;

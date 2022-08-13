@@ -29,13 +29,12 @@ firmware_length=40-1;
 % gitid_length=24-1;
 % rev_offset=gitid_offset+gitid_length+1;
 % rev_length=8-1;
-rev_offset=firmware_offset+firmware_length+1;
-rev_length=8-1;
-sn_offset=rev_offset+rev_length+1;
-sn_length=8-1;
+% rev_offset=firmware_offset+firmware_length+1;
+% rev_length=8-1;
+% sn_offset=rev_offset+rev_length+1;
+% sn_length=8-1;
 
-initialize_flag_offset=sn_offset+sn_length+1;
-initialize_flag_length=4-1;
+
 
 % parse config
 setup.size=conv32d(double(uint8(str(size_offset+(0:size_length)))));
@@ -52,7 +51,20 @@ setup.vehicle_name=setup.vehicle_name(uint8(setup.vehicle_name)>0);
 setup.firmware=str(firmware_offset+(0:firmware_length)).';
 setup.firmware=setup.firmware(uint8(setup.firmware)>0);
 
-%setup.gitid=str(firmware_offset+(0:firmware_length)).';
+if strfind(setup.firmware,'mod_som3mez_fctd_blt_app') %for fctd
+    setup.gitid=str(firmware_offset+(0:firmware_length)).';
+    gitid_offset=firmware_offset+firmware_length+1;
+    gitid_length=24-1;
+    rev_offset=gitid_offset+gitid_length+1;
+    rev_length=8-1;
+else %for epsi
+    rev_offset=firmware_offset+firmware_length+1;
+    rev_length=8-1;
+end
+sn_offset=rev_offset+rev_length+1;
+sn_length=8-1;
+initialize_flag_offset=sn_offset+sn_length+1;
+initialize_flag_length=4-1;
 
 setup.rev=str(rev_offset+(0:rev_length)).';
 setup.rev=setup.rev(uint8(setup.rev)>0);
