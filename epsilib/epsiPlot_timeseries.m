@@ -46,10 +46,18 @@ elseif replaceData
         % this in a timer function)
         all_figs = findobj('type','figure');
         for f=1:length(all_figs)
-            if ~strcmp(all_figs(f).Children(end).Tag,'shear')
+            fig_axes = findobj(all_figs(f),'type','axes');
+            old = 0;
+            for a=1:length(fig_axes)
+                if isempty(fig_axes(a).Tag) %I give all the axes a tag name, so if this is empty, it's an old empty figure
+                    old = 1;
+                end
+            end
+            if old==1
                 delete(all_figs(f))
             end
         end
+        
     else
         ax = setup_figure;
     end 
