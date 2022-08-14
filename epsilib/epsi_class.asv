@@ -133,9 +133,9 @@ classdef epsi_class < handle
                     elseif isclassfield(obj.Meta_Data,'PROCESS') && isclassfield(obj.Meta_Data.PROCESS,'filename')
                         % Use the .txt file save in Meta_Data, but find it
                         % in the current user's path
-                        [~,fname,fsuffix] = fileparts(obj.Meta_Data.PROCESS.filename);
+                        [~,fname,fsuffix] = filepaths(obj.Meta_Data.PROCESS.filename);
                         Meta_Data_process_file = fullfile(obj.Meta_Data.paths.process_library,...
-                            'Meta_Data_Process',[fname,fsuffix]);
+                            'Meta_Data_Process',[fname])
                     elseif ~isempty(Meta_Data_process_file)
                         Meta_Data_process_file = Meta_Data_process_file;
                     end
