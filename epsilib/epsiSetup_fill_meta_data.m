@@ -133,6 +133,7 @@ Meta_Data.AFE.shear='CAmp1.0'; %TODO get info from config file
 Meta_Data.Firmware.version='mod_som_som_eferev3_sdio_sampling_app_07152020.sls'; %TODO get info from config file
 
 %% add auxillary device field
+
 CTDnames={'SBE','SBE49','SBE41','SB41','RBR','S49','SB49'};% hard coded name of potential CTD we will use with epsi
 setup_fields=fieldnames(setup);
 % find the kind of CTD we used from the setup file.
@@ -155,7 +156,25 @@ Meta_Data.CTD.CALfile   = @(x,y) fullfile(x,[y '.cal']);
 % Meta_Data.CTD.cal = get_CalSBE(Meta_Data.CTD.CALfile(Meta_Data.CTD.CALpath,Meta_Data.CTD.SN));
 
 % TO DO - Get CTD SN from raw file header
-%
+% NC 13 Aug. 2022 - For now, SBE serial number is in the file header but
+% not in the SOM3 line. Open the setup file back up and read the serial
+% number from the header
+if isfield(setup,'filepath')
+
+    fid=fopen(setup.filepath);
+    total_str = fread(fid,'*char');
+    [ind_sbe_start,ind_sbe_stop, ind_settings_tokens] = regexp(total_str.','\CTD.SerialNum([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end','tokenExtents');
+    
+    % A really crude way to get the serial number - might not work every
+    % time. For example, if there are spaces before the number. Brute force
+    % for now.
+    SBE_sn = total_str(ind_sbe_start+15:ind_sbe_start+18).';
+
+    Meta_Data.CTD.name = 'SBE49';
+    Meta_Data.CTD.SN = SBE_sn;
+
+end
+
 switch Meta_Data.CTD.name
     case{'SBE49','SBE','S49','SB49'}
         try

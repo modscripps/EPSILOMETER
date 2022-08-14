@@ -4,6 +4,9 @@ function setup=mod_som_read_setup_from_raw(filepath)
 fid=fopen(filepath);
 total_str = fread(fid,'*char');
 
+% NC 13 Aug 2022 - Save filepath so you can open it up again later to get the SBE number
+setup.filepath = filepath;
+
 [ind_settings_start,ind_settings_stop, ind_settings_tokens] = regexp(total_str.','\$SOM3([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end','tokenExtents');
 
 % 
@@ -125,9 +128,10 @@ for i=1:nb_module
     catch
         fprintf("No module name for %s.\r",module{i}.str(1:10))
     end
-end
+end %end loop through modules
 
-end
+end %end mod_som_read_setup_from_raw
+
 %% CALENDAR
 % typedef struct{
 % 	uint32_t size;
