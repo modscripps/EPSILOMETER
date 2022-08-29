@@ -128,7 +128,7 @@ classdef epsi_class < handle
 
                     % Read PROCESS Meta_Data from text file -
                     % if one is not specified, use the default
-                    if isempty(Meta_Data_process_file)  && ~isclassfield(Meta_Data.PROCESS,'filename')
+                    if isempty(Meta_Data_process_file)  && ~isclassfield(obj.Meta_Data.PROCESS,'filename')
                         Meta_Data_process_file = fullfile(obj.Meta_Data.paths.process_library,'Meta_Data_Process','Meta_Data_Process.txt');
                     elseif isclassfield(obj.Meta_Data,'PROCESS') && isclassfield(obj.Meta_Data.PROCESS,'filename')
                         % Use the .txt file save in Meta_Data, but find it
