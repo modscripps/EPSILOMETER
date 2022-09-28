@@ -23,4 +23,4 @@ input_struct.starting_dnum = datenum(2022,7,31);
 input_struct.FCTDmat = '/Users/Shared/EPSI_PROCESSING/FCTD_mat/mat/';
 input_struct.FCTDrot = '/Users/Shared/EPSI_PROCESSING/FCTD_mat/rot/';
 
-epsiAuto_convert_raw_to_mat_and_plot
+fctdAuto_convert_raw_to_mat_and_plot
