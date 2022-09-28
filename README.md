@@ -21,4 +21,8 @@ Logic flow of the derivations:
 - compute spectra over these segments
 - compute epsi and chi over these segments. 
 
+Epsi processing manual can be found at https://www.overleaf.com/read/qbpchcnywdqp
+Contact Nicole Couto for questions or suggestions - ncouto@ucsd.edu
+
+
 
