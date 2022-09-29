@@ -19,16 +19,29 @@ elseif isclassfield(Meta_Data,'epsi') && isclassfield(Meta_Data,'AFE')
     field_name = 'epsi';
 end
 
-% get SN 
-if isnan(str2double(Meta_Data.(field_name).s1.SN)) || str2double(Meta_Data.(field_name).s1.SN)==0
-fprintf('**** s1 SN (currently SN = %s, cal = %3.2f)',Meta_Data.(field_name).s1.SN,Meta_Data.(field_name).s1.cal)
-Meta_Data.(field_name).s1.SN = input(': ','s');
+possible_sensor_name={'s1','s2'};
+
+for s=1:length(possible_sensor_name)
+    wh_sensor=possible_sensor_name{s};
+    if isfield(Meta_Data.(field_name),wh_sensor)
+        % get SN
+        if isnan(str2double(Meta_Data.(field_name).(wh_sensor).SN)) || str2double(Meta_Data.(field_name).(wh_sensor).SN)==0
+            fprintf('**** %s SN (currently SN = %s, cal = %3.2f)', ...
+                wh_sensor,...
+                Meta_Data.(field_name).(wh_sensor).SN, ...
+                Meta_Data.(field_name).(wh_sensor).cal)
+            Meta_Data.(field_name).(wh_sensor).SN = input(': ','s');
+        end
+    else
+        Meta_Data.(field_name).(wh_sensor).SN=nan;
+        Meta_Data.(field_name).(wh_sensor).cal=nan;
+    end
 end
 
-if isnan(str2double(Meta_Data.(field_name).s2.SN)) || str2double(Meta_Data.(field_name).s2.SN)==0
-    fprintf('**** s2 SN (currently SN = %s, cal = %3.2f)',Meta_Data.(field_name).s2.SN,Meta_Data.(field_name).s2.cal)
-    Meta_Data.(field_name).s2.SN = input(': ','s');
-end
+% if isnan(str2double(Meta_Data.(field_name).s2.SN)) || str2double(Meta_Data.(field_name).s2.SN)==0
+%     fprintf('**** s2 SN (currently SN = %s, cal = %3.2f)',Meta_Data.(field_name).s2.SN,Meta_Data.(field_name).s2.cal)
+%     Meta_Data.(field_name).s2.SN = input(': ','s');
+% end
 
 Meta_Data=mod_som_get_shear_probe_calibration_v2(Meta_Data);
 

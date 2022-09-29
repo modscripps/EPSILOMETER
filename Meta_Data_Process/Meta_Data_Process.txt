@@ -18,7 +18,7 @@ userConfirmsProfiles = 1;
 adjustTemp 	= false;
 multivariate   	= 0;
 movmean_window_time = 10*(50e-3);
-rawfileSuffix  = '.raw';
+rawfileSuffix  = '.modraw';
 
 % dz = scan length in meters (for processing microstructure from profiles)
 % dt = scan length in seconds (for processing microstructure from timeseries)
