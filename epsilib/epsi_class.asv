@@ -140,10 +140,13 @@ classdef epsi_class < handle
                                 Meta_Data_process_file = fullfile(obj.Meta_Data.paths.process_library,...
                                     'Meta_Data_Process',[fname,fsuffix]);
                             end
-
                         else
-                            Meta_Data_process_file = Meta_Data_process_file;
+                            Meta_Data_process_file = fullfile(obj.Meta_Data.paths.process_library,'Meta_Data_Process','Meta_Data_Process.txt');
                         end
+
+                    else
+                        Meta_Data_process_file = Meta_Data_process_file;
+                    end
 
 
                     obj.f_read_MetaProcess(Meta_Data_process_file);
