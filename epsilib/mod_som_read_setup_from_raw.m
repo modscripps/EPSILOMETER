@@ -16,6 +16,9 @@ conv32d=@(x) (x(4).*256^3+x(3).*256^2+x(2).*256+x(1));
 %%
 size_offset=1;
 size_length=4-1;
+%ALB  I am getting the size now so wecan handle previous Firmware  parse config
+setup.size=conv32d(double(uint8(str(size_offset+(0:size_length)))));
+
 header_offset=size_offset+size_length+1;
 header_length=8-1;
 mission_name_offset=header_offset+header_length+1;
@@ -24,18 +27,24 @@ vehicle_name_offset=mission_name_offset+mission_name_length+1;
 vehicle_name_length=24-1;
 firmware_offset=vehicle_name_offset+vehicle_name_length+1;
 firmware_length=40-1;
+
+switch setup.size
+    case 864
+        gitid_offset=firmware_offset+firmware_length+1;
+        gitid_length=24-1;
+    otherwise
+        gitid_offset=firmware_offset;
+        gitid_length=0;
+end
+rev_offset=gitid_offset+gitid_length+1;
+rev_length=8-1;
+sn_offset=rev_offset+rev_length+1;
+sn_length=8-1;
+
 %ALB I am commenting these lines because
 %mod_som_epsi_epsifish2_telemetry-Feb 15 rev3 
 % does not have git ID
 % TODO change the MODSOM firmware so it has the git ID
-% gitid_offset=firmware_offset+firmware_length+1;
-% gitid_length=24-1;
-% rev_offset=gitid_offset+gitid_length+1;
-% rev_length=8-1;
-% rev_offset=firmware_offset+firmware_length+1;
-% rev_length=8-1;
-% sn_offset=rev_offset+rev_length+1;
-% sn_length=8-1;
 
 
 
@@ -54,18 +63,14 @@ setup.vehicle_name=setup.vehicle_name(uint8(setup.vehicle_name)>0);
 setup.firmware=str(firmware_offset+(0:firmware_length)).';
 setup.firmware=setup.firmware(uint8(setup.firmware)>0);
 
-if strfind(setup.firmware,'mod_som3mez_fctd_blt_app') %for fctd
-    setup.gitid=str(firmware_offset+(0:firmware_length)).';
-    gitid_offset=firmware_offset+firmware_length+1;
-    gitid_length=24-1;
-    rev_offset=gitid_offset+gitid_length+1;
-    rev_length=8-1;
-else %for epsi
-    rev_offset=firmware_offset+firmware_length+1;
-    rev_length=8-1;
+switch setup.size
+    case 864
+        setup.gitid=str(firmware_offset+(0:firmware_length)).';
+    otherwise
+        setup.gitid=[];
 end
-sn_offset=rev_offset+rev_length+1;
-sn_length=8-1;
+
+
 initialize_flag_offset=sn_offset+sn_length+1;
 initialize_flag_length=4-1;
 

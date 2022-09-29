@@ -40,16 +40,21 @@ noise=n0+n1.*logf+n2.*logf.^2+n3.*logf.^3;
 %medspec=medfilt1(spec,5); % 5th order median filter
 %ALB
 medspec=smoothdata(spec,'movmean',15);
-% ALB really want to adjust the noise level to the high freqeuncy part (freq> 110Hz) of
+% ALB really want to adjust the noise level to the high freqeuncy part (freq> 110Hz id FS is 320Hz) of
 % the in-situ spectrum. The 110 Hz limit is arbitrary and means that 
-% I am overlapping the noise and data spectrum between 110 and 160 Hz. 
-indsup110=find(f>110);
-adjust_spec=nanmedian(medspec(indsup110)./10.^(noise(indsup110)));
+% I am overlapping the noise and data spectrum between 110 and 160 Hz (if Nyquist is 160Hz).
+% ALB 09/21/2022: changing to 0.7.*f(end) becasue APEX-EPSI is sampling at
+% 160 Hz and thus nyquist is 80 Hz. 0.7 is arbitrary. 
+indhighfreq=find(f>0.7.*f(end));
+% adjust_spec=nanmedian(medspec(indhighfreq)./10.^(noise(indhighfreq)));
+% adjust_spec=nanmedian(medspec(indhighfreq)./10.^(noise(indhighfreq)));
+adjust_spec=nanmean(medspec(end-9:end)./10.^(noise(end-9:end)));
 % adjust_spec=1;
+
 if adjust_spec>10
     %warning('temp noise way higher than bench')
 end
-SN_min=2;
+SN_min=3;
 %ALB I am *not* comparing the first 2 Fourier coef.
 noisy=find(medspec(3:end)./adjust_spec<SN_min.*10.^(noise(3:end)));
 if isempty(noisy)

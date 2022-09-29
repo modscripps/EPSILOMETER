@@ -107,11 +107,11 @@ classdef epsi_class < handle
                     repeat = 0;
 
                     % Define data path
-                    obj.Meta_Data.paths.data=data_path;
+                    obj.Meta_Data.paths.data     = data_path;
                     obj.Meta_Data.paths.raw_data = fullfile(data_path,'raw');
                     obj.Meta_Data.paths.mat_data = fullfile(data_path,'mat');
                     obj.Meta_Data.paths.profiles = fullfile(data_path,'profles');
-                    obj.Meta_Data.paths.figures = fullfile(data_path,'figs');
+                    obj.Meta_Data.paths.figures  = fullfile(data_path,'figs');
 
                     % Find the epsi library and add it as process path
                     spltpath=strsplit(path,':');
@@ -128,17 +128,27 @@ classdef epsi_class < handle
 
                     % Read PROCESS Meta_Data from text file -
                     % if one is not specified, use the default
-                    if isempty(Meta_Data_process_file)  && ~isclassfield(obj.Meta_Data.PROCESS,'filename')
-                        Meta_Data_process_file = fullfile(obj.Meta_Data.paths.process_library,'Meta_Data_Process','Meta_Data_Process.txt');
-                    elseif isclassfield(obj.Meta_Data,'PROCESS') && isclassfield(obj.Meta_Data.PROCESS,'filename')
-                        % Use the .txt file save in Meta_Data, but find it
-                        % in the current user's path
-                        [~,fname,fsuffix] = fileparts(obj.Meta_Data.PROCESS.filename);
-                        Meta_Data_process_file = fullfile(obj.Meta_Data.paths.process_library,...
-                            'Meta_Data_Process',[fname,fsuffix]);
-                    elseif ~isempty(Meta_Data_process_file)
+                    if isempty(Meta_Data_process_file)
+                        if isclassfield(obj.Meta_Data,'PROCESS')
+
+                            if ~isclassfield(obj.Meta_Data.PROCESS,'filename')
+                                Meta_Data_process_file = fullfile(obj.Meta_Data.paths.process_library,'Meta_Data_Process','Meta_Data_Process.txt');
+                            else
+                                % Use the .txt file save in Meta_Data, but find it
+                                % in the current user's path
+                                [~,fname,fsuffix] = fileparts(obj.Meta_Data.PROCESS.filename);
+                                Meta_Data_process_file = fullfile(obj.Meta_Data.paths.process_library,...
+                                    'Meta_Data_Process',[fname,fsuffix]);
+                            end
+                        else
+                            Meta_Data_process_file = fullfile(obj.Meta_Data.paths.process_library,'Meta_Data_Process','Meta_Data_Process.txt');
+                        end
+
+                    else
                         Meta_Data_process_file = Meta_Data_process_file;
                     end
+
+
                     obj.f_read_MetaProcess(Meta_Data_process_file);
 
                     obj.Meta_Data = epsiSetup_set_epsi_paths(obj.Meta_Data);

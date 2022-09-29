@@ -39,6 +39,7 @@ function [data] = mod_som_read_epsi_files_v4(filename,Meta_Data)
 c3515 = 42.914;
 
 %% Open file and save contents as 'str'
+fprintf("Open %s \r\n",filename)
 fid = fopen(filename);
 fseek(fid,0,1);
 frewind(fid);
@@ -917,7 +918,7 @@ else
     avgspec.data.n_blocks           = numel(ind_avgspec_start); %Number of data blocks beginning with $EFE
     
     avgspec.data.n_channels        = 3;
-    avgspec.data.sample_freq       = 320;
+    avgspec.data.sample_freq       = 160;
     avgspec.data.sample_per_spec   = 2048/2; %NFFT/2
     avgspec.data.spec_per_block    = 1;
     avgspec.data.timestamp_length  = 8;
@@ -1284,7 +1285,7 @@ else
         
         
         % Does length(efe_block_data)=efe.hexlengthblock.value?
-        
+        fprintf("apf block length %i\r\n",length(apf_block_data))
         if (length(apf_block_data)~=apf.data.hexlengthblock.value)
             fprintf("apf block %i has incorrect length\r\n",iB)
         else
@@ -1350,7 +1351,7 @@ else
                         local_apf_block_counter=local_apf_block_counter(end)+(1:apf.data.foco_length);
                         tempo_foco = double(uint8(apf_block_data(local_apf_block_counter)))*mult(1:2);
                         apf.data.avg_accel_k{iB}{d}(ii)=convert_foco(tempo_foco);
-                        fprintf("d:%i; ii:%i\r\n",d,ii);
+%                         fprintf("d:%i; ii:%i\r\n",d,ii);
                     end
                 end
                 
@@ -1465,9 +1466,9 @@ else
     %            mod_som_apf_ptr->producer_ptr->decim_coef.dissrate_per_bit+
     %            mod_som_apf_ptr->producer_ptr->decim_coef.dissrate_counts_at_origin);
     
-    convert_dissrate = @(x) ((x-apf.data.dissrate_count0)/apf.data.dissrate_per_bit);
-    convert_foco    = @(x) (x-apf.data.foco_count0)/apf.data.foco_per_bit;
-    convert_fom     = @(x) (x-apf.data.fom_count0)/apf.data.fom_per_bit;
+%     convert_dissrate = @(x) ((x-apf.data.dissrate_count0)/apf.data.dissrate_per_bit);
+%     convert_foco    = @(x) (x-apf.data.foco_count0)/apf.data.foco_per_bit;
+%     convert_fom     = @(x) (x-apf.data.fom_count0)/apf.data.fom_per_bit;
     
     
     % The first 8 bytes are the timestamp. Timestamp in milliseconds since
@@ -1534,7 +1535,8 @@ else
         apf.data.freq{iB}=fe(2:end);
         
         % Does length(efe_block_data)=efe.hexlengthblock.value?
-        if (length(apf_block_data)~=apf.data.hexlengthblock.value)
+        if (length(apf_block_data)~=apf.data.hexlengthblock.value && ...
+            apf_block_str(apf.data.hexlengthblock.value+33)~='*')
             fprintf("apf block %i has incorrect length\r\n",iB)
         else
             local_apf_block_counter=0;
@@ -1604,12 +1606,12 @@ else
         wh_channel=apf.channels{cha};
         switch wh_channel
             case "dnum"
-                dnum=datenum(datetime(apf.data.timestamp, 'ConvertFrom', 'posixtime'));
+                dnum=datenum(datetime(apf.data.timestamp./1000, 'ConvertFrom', 'posixtime'));
                 apf.(wh_channel)=dnum;
             case {'pressure','dpdt','temperature','salinity','fom_epsi','fom_chi'}
                 apf.(wh_channel)=apf.data.(wh_channel);
             case {'epsilon','chi'}
-                apf.(wh_channel)=10.^apf.data.(wh_channel);
+                apf.(wh_channel)=apf.data.(wh_channel);
             case {'avg_tg_k','avg_shear_k','avg_accel_k'}
                 apf.(wh_channel)=cell2mat(apf.data.(wh_channel).');
         end
