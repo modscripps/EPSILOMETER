@@ -144,7 +144,7 @@ if isfinite(scan.(shear_channel))
         % Compute epsilon using eps1_mmp.m with kmax
         try
             [epsilon_co,kc(2)]=eps1_mmp(k,Ps_shear_co_k,scan.kvis,kmax);
-            [epsilon_mv,kc(2)]=eps1_mmp(k,Ps_shear_mv_k,scan.kvis,kmax);
+            [epsilon_mv,~]=eps1_mmp(k,Ps_shear_mv_k,scan.kvis,kmax);
             fc(2)=kc(2).*w;
         catch
             epsilon_co=nan;
