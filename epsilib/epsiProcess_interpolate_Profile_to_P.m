@@ -61,7 +61,7 @@ if ~isempty(Profile.w)
         if length(Profile.alt.dnum)>=20 %Only calculate bottom depth for profiles with at least 20 points
             [~,iU] = unique(Profile.ctd.time_s);
             ctdZ = interp1(Profile.ctd.time_s(iU),Profile.ctd.z(iU),Profile.alt.time_s);
-            hab = Profile.alt.dst;
+            hab = Profile.alt.hab;
             hab(hab>35) = nan;
             bottom_depth = hab+ctdZ;
             % Take the average of the deepest 20 measurements (20 seconds). This step

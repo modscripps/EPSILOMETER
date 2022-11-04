@@ -502,6 +502,13 @@ else
         dst_microsec = str2double(alti.hexlengthblock.value);
         alt.dst(iB) = dst_microsec*alti.ten_microsec2sec*alti.sound_speed;
         
+        % Calculate actual height above bottom (hab) from altimeter
+        % distance reading. The altimeter is angled at 10 degrees and is positioned 5 ft above the
+        % crashguard. The probes sit 2.02 inches behind the crash guard.
+        % (See Epsi Processing Manual - Altimeter correction for diagram).
+        
+        
+
     end %end loop through alt blocks
     
     % If timestamp has values like 1.6e12, it is in milliseconds since Jan
@@ -1719,19 +1726,17 @@ else
 %                     ctd = sbe49_ascii_get_conductivity(ctd,sbe);
 %                     ctd.S    = sw_salt(ctd.C*10./c3515,ctd.T,ctd.P);
 %             end
-            
-        end %end if sbe data block is the correct size
-    end %end loop through sbe blocks
-    
-    
-end %end loop if there is ctd data
+            end 
+        end %end if ecop data block is the correct size
+    end %end loop through ecop blocks
+end %end loop if there is ecop data
 
 
 fprintf(['processed data for: ' repmat('%s ',1,length(processed_data_types)), '\n'], processed_data_types{:})
 fprintf(['no data for:        ' repmat('%s ',1,length(no_data_types)), '\n'], no_data_types{:})
 
 % Combine all data
-make data epsi ctd alt act vnav gps seg spec avgspec dissrate apf
+make data epsi ctd alt act vnav gps seg spec avgspec dissrate apf ecop
 
 
 
@@ -1740,7 +1745,7 @@ fprintf(['processed data for: ' repmat('%s ',1,length(processed_data_types)), '\
 fprintf(['no data for:        ' repmat('%s ',1,length(no_data_types)), '\n'], no_data_types{:})
 
 % Combine all data
-make data epsi ctd alt act vnav gps seg spec avgspec dissrate apf
+make data epsi ctd alt act vnav gps seg spec avgspec dissrate apf ecop
 
 
 end

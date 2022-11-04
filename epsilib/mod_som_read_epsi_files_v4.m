@@ -502,6 +502,25 @@ else
         dst_microsec = str2double(alti.hexlengthblock.value);
         alt.dst(iB) = dst_microsec*alti.ten_microsec2sec*alti.sound_speed;
         
+        % Calculate actual height above bottom (hab) from altimeter
+        % distance reading. The altimeter is angled at 10 degrees and is positioned 5 ft above the
+        % crashguard. The probes sit 2.02 inches behind the crash guard.
+        % (See Epsi Processing Manual - Altimeter correction for diagram).
+        convert_dissrate = @(x) ((x-apf.data.dissrate_count0)/apf.data.dissrate_per_bit);
+        feet2meters = @(x) (x*0.3048);
+        inches2meters = @(x) (x*0.0254);
+        angle_deg = Meta_Data.PROCESS.alt_angle_deg;
+        alt_to_crashguard = Meta_Data.PROCESS.alt_dist_from_crashguard_ft;
+        probe_to_crashguard = Meta_Data.PROCESS.alt_probe_dist_from_crashguard_in;
+
+        A = alt.dst(iB);
+        theta = deg2rad(angle_deg);
+        altimeter_height_above_probes = feet2meters(alt_to_crashguard) - ...
+            inches2meters(probe_to_crashguard);
+
+        % alt.hab is the height of the probes above the bottom
+        alt.hab(iB) = A*cos(theta) - altimeter_height_above_probes;
+
     end %end loop through alt blocks
     
     % If timestamp has values like 1.6e12, it is in milliseconds since Jan
@@ -517,7 +536,7 @@ else
     end
     
     % Order alt fields
-    alt = orderfields(alt,{'dnum','time_s','dst'});
+    alt = orderfields(alt,{'dnum','time_s','dst','hab'});
     
 end %end loop if there is alt data
 
