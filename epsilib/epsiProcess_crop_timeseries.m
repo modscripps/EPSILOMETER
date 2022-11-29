@@ -67,6 +67,10 @@ if ~isempty(myFileIdx)
             altOut = alt;
             clear alt
         end
+        if exist('vnav','var')
+            vnavOut = vnav;
+            clear vnav
+        end
         % Load the rest of the files, merging as you go (there shouldn't be
         % more than 2, so this should be pretty fast)
         for iF=2:length(myFileIdx)
@@ -84,6 +88,9 @@ if ~isempty(myFileIdx)
             if exist('alt','var') && isstruct(alt)
                 altOut = epsiProcess_merge_mat_files(altOut,alt);
             end
+            if exist('vnav','var') && isstruct(vnav)
+                vnavOut = epsiProcess_merge_mat_files(vnavOut,vnav);
+            end
         end
         
         % Rename everything
@@ -96,7 +103,10 @@ if ~isempty(myFileIdx)
         if exist('alt','var')
             alt = altOut;
         end
-        clear epsiOut ctdOut altOut
+        if exist('vnav','var')
+            vnav = vnavOut;
+        end
+        clear epsiOut ctdOut altOut vnavOut
         
     end
     
