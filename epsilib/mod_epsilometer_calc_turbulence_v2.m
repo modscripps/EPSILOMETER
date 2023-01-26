@@ -105,8 +105,8 @@ end
 
 %% Cut profile to compute coherence
 % Find max and min pressure
-Prmin = Meta_Data.PROCESS.Prmin(Profile.ctd.P);
-Prmax = Meta_Data.PROCESS.Prmax(Profile.ctd.P);
+Prmin = Meta_Data.PROCESS.Prmin(rmoutliers(Profile.ctd.P));
+Prmax = Meta_Data.PROCESS.Prmax(rmoutliers(Profile.ctd.P));
 
 % Find ctdtime values within this pressure range
 inRange = Profile.ctd.P>=Prmin & Profile.ctd.P<=Prmax;
@@ -285,7 +285,7 @@ for p = 1:nbscan % p is the scan index.
 %================ Core of the processing ==========================%%    
     % Get spectral data for each scan
     try
-    scan  =  get_scan_spectra(Profile,p);
+       scan  =  get_scan_spectra(Profile,p);
     catch
         disp ('pb with scan')
     end
@@ -324,14 +324,14 @@ for p = 1:nbscan % p is the scan index.
         Profile.kvis(p,1) = scan.kvis;
         
         if isfield(scan.chi,'t1')
-            Profile.chi(p,1) = scan.chi.t1;
+            Profile.chi(p,1)   = scan.chi.t1;
             Profile.tg_fc(p,1) = scan.fc.t1;
             Profile.tg_kc(p,1) = scan.kc.t1;
             Profile.flag_tg_fc(p,1) = scan.flag_tg_fc.t1;
         end
         
         if isfield(scan.chi,'t2')
-            Profile.chi(p,2) = scan.chi.t2;
+            Profile.chi(p,2)   = scan.chi.t2;
             Profile.tg_fc(p,2) = scan.fc.t2;
             Profile.tg_kc(p,2) = scan.kc.t2;
             Profile.flag_tg_fc(p,2) = scan.flag_tg_fc.t2;
@@ -340,23 +340,27 @@ for p = 1:nbscan % p is the scan index.
         % Add spectra to profile
         Profile.k(p,:) = scan.k;
         
-        Profile.Ps_volt_f.s1(p,:)     = scan.Ps_volt_f.s1(:).';
-        Profile.Ps_volt_f.s2(p,:)     = scan.Ps_volt_f.s2(:).';
-        Profile.Ps_velocity_f.s1(p,:)     = scan.Ps_velocity_f.s1(:).';
-        Profile.Ps_velocity_f.s2(p,:)     = scan.Ps_velocity_f.s2(:).';
-        Profile.Ps_shear_k.s1(p,:)    = scan.Ps_shear_k.s1(:).';
-        Profile.Ps_shear_k.s2(p,:)    = scan.Ps_shear_k.s2(:).';
-        Profile.Ps_shear_co_k.s1(p,:) = scan.Ps_shear_co_k.s1(:).';
-        Profile.Ps_shear_co_k.s2(p,:) = scan.Ps_shear_co_k.s2(:).';
+        Fname=fieldnames(scan.Ps_volt_f);
+        for iname=1:length(Fname)
+            wh_name=Fname{iname};
+            Profile.Ps_volt_f.(wh_name)(p,:)     = scan.Ps_volt_f.(wh_name)(:).';
+            Profile.Ps_velocity_f.(wh_name)(p,:) = scan.Ps_velocity_f.(wh_name)(:).';
+            Profile.Ps_shear_k.(wh_name)(p,:)    = scan.Ps_shear_k.(wh_name)(:).';
+            Profile.Ps_shear_co_k.(wh_name)(p,:) = scan.Ps_shear_co_k.(wh_name)(:).';
+        end
         
-        Profile.Pt_volt_f.t1(p,:) = scan.Pt_volt_f.t1(:).';
-        Profile.Pt_volt_f.t2(p,:) = scan.Pt_volt_f.t2(:).';
-        Profile.Pt_Tg_k.t1(p,:)   = scan.Pt_Tg_k.t1(:).';
-        Profile.Pt_Tg_k.t2(p,:)   = scan.Pt_Tg_k.t2(:).';
+        Fname=fieldnames(scan.Pt_volt_f);
+        for iname=1:length(Fname)
+            wh_name=Fname{iname};
+            Profile.Pt_volt_f.(wh_name)(p,:) = scan.Pt_volt_f.(wh_name)(:).';
+            Profile.Pt_Tg_k.(wh_name)(p,:)   = scan.Pt_Tg_k.(wh_name)(:).';
+        end
         
-        Profile.Pa_g_f.a1(p,:) = scan.Pa_g_f.a1(:).';
-        Profile.Pa_g_f.a2(p,:) = scan.Pa_g_f.a2(:).';
-        Profile.Pa_g_f.a3(p,:) = scan.Pa_g_f.a3(:).';
+        Fname=fieldnames(scan.Pa_g_f);
+        for iname=1:length(Fname)
+            wh_name=Fname{iname};
+            Profile.Pa_g_f.(wh_name)(p,:) = scan.Pa_g_f.(wh_name)(:).';
+        end
         
         Profile.z(p)    = scan.z;
         Profile.w(p)    = scan.w;

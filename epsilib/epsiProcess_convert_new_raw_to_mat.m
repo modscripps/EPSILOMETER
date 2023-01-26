@@ -44,14 +44,14 @@ function [matData] = epsiProcess_convert_new_raw_to_mat(dirs,Meta_Data,varargin)
 % Adapted 2021-22 by Nicole Couto for Epsilometer data
 
 % NC - Make matData for output even if there is no new data
-matData.epsi = [];
-matData.ctd  = [];
-matData.alt  = [];
-matData.act  = [];
-matData.vnav = [];
-matData.gps  = [];
-matData.seg  = [];
-matData.spec = [];
+matData.epsi  = [];
+matData.ctd   = [];
+matData.alt   = [];
+matData.act   = [];
+matData.vnav  = [];
+matData.gps   = [];
+matData.seg   = [];
+matData.spec  = [];
 matData.micro = [];
 
 % NC - Only rsync files with the desired suffix
@@ -61,18 +61,18 @@ suffixSearch = ['*' suffixStr];
 %% Set default parameters
 % (If you specified them in call to this function)they will be changed in
 % the next step
-rSync = true; %copy raw files from "rawDir" to "awayDir"
-doFCTD = false; % make separate .mat files in awayDir/FCTDmat readable by FCTD processing scripts
-calc_micro = false; %calculate epsilon, chi, for timeseries (before dividing into profiles)
-version = 4; %Default version of mod_som_read_epsi_files
-display_file_data_flag = false; % By default, DON'T display file information to the screen
-cruise_specifics.blt_2021 = false; %By default, DON'T add microconductivity and fluorometer data to FCTD structure
+rSync      = true;  % Copy raw files from "rawDir" to "awayDir"
+doFCTD     = false; % Make separate .mat files in awayDir/FCTDmat readable by FCTD processing scripts
+calc_micro = false; % Calculate epsilon, chi, for timeseries (before dividing into profiles)
+version    = 4;     % Default version of mod_som_read_epsi_files
+display_file_data_flag    = false; % By default, DON'T display file information to the screen
+cruise_specifics.blt_2021 = false; % By default, DON'T add microconductivity and fluorometer data to FCTD structure
 
 
 %% Loop through the number of varargin arguments
 
 argsNameToCheck = {'noSync',...             %1
-                   'doFCTD',...          %2
+                   'doFCTD',...             %2
                    'calc_micro',...         %3
                    'fileStr',...            %4
                    'version',...            %5

@@ -318,14 +318,13 @@ for k=scanNum
             scan.Cs2a.a2 = nan(size(scan.Cs2a.a1,1),size(scan.Cs2a.a1,2));
         end
         if ~isfield(scan.chi,'t1')
-            scan.chi.t1 = nan(scan.N_epsi,1);
-            scan.Pt_Tg_k.t1 = scan.k.*nan;
+            scan.chi.t1 = nan(size(scan.chi.t1,1),size(scan.chi.t1,2));
+            scan.Pt_Tg_k.t1 = nan(size(scan.Pt_Tg_k.t1,1),size(scan.Pt_Tg_k.t1,2));
             scan.kc.t1 = nan;
         end
         if ~isfield(scan.chi,'t2')
-            scan.chi.t2 = nan(scan.N_epsi,1);
-            scan.Pt_Tg_k.t2 = scan.k.*nan;
-            scan.kc.t2 = nan;
+            scan.chi.t2 = nan(size(scan.chi.t2,1),size(scan.chi.t2,2));
+            scan.Pt_Tg_k.t2 = nan(size(scan.Pt_Tg_k.t2,1),size(scan.Pt_Tg_k.t2,2));
         end
 
         % Get FPO7 noise

@@ -133,7 +133,11 @@ for iProf=1:length(profList)
     %eval(['Profile = ' sprintf('Profile%03.0f',profNum) ';']);
 
     % Add average values of power spectral densities and coherences between 10-45 Hz
+    try
     Profile = add_avg_psd_to_profile(Profile);
+    catch
+        disp('issue with profile')
+    end
 
 
     % Add dummy iScan field so you can populate grid data later

@@ -6,13 +6,16 @@ nfft=Meta_Data.PROCESS.nfft;
 nfftc=Meta_Data.PROCESS.nfftc;
 
 % NC - adding a check if timeseries is at least nfft long
-if length(scan.t1_volt)<=nfft
+% ALB t1 is not always here (e.g.,NISKINE2018)
+Fnames=fieldnames(scan);
+wh_field=Fnames{1};
+if length(scan.(wh_field))<=nfft
     Cu1a = [];
     Cu2a = [];
     sumCu1a = [];
     sumCu2a = [];
     fe = [];
-elseif length(scan.t1_volt)>nfft
+elseif length(scan.(wh_field))>nfft
     
     try
         Fs=Meta_Data.PROCESS.Fs_epsi;

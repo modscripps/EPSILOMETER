@@ -40,7 +40,8 @@ end
 
 dof         = Meta_Data.PROCESS.dof; % ALB TODO rm tscan in metadata and put dof
 Fs_ctd      = Meta_Data.PROCESS.Fs_ctd;
-N_epsi      = (dof-1)*Meta_Data.PROCESS.nfft;
+nfft        = Meta_Data.PROCESS.nfft;
+N_epsi      = (dof-1)*nfft;
 tscan       = N_epsi/Fs_epsi;
 N_ctd       = tscan.*Fs_ctd-mod(tscan*Fs_ctd,2);
 
@@ -101,9 +102,11 @@ LCTD        = length(Profile.ctd.P);% length of profile
 % mod_som_read_epsi_files_v3.m to convert pressure to depth (z) and
 % calculate dzdt.  Now I'm using dzdt instead of dPdt to deefine scan.w.
 if isfield(Profile.ctd,'dzdt')
-    scan.w      = nanmean(Profile.ctd.dzdt(ind_ctdscan(ind_ctdscan>0 & ind_ctdscan<LCTD)));
+    dzdt        = filloutliers(Profile.ctd.dzdt,'linear','movmean',100);
+    scan.w      = mean(dzdt(ind_ctdscan(ind_ctdscan>0 & ind_ctdscan<LCTD)),'omitnan');
 else
-    scan.w      = nanmean(Profile.ctd.dPdt(ind_ctdscan(ind_ctdscan>0 & ind_ctdscan<LCTD)));
+    dPdt        = filloutliers(Profile.ctd.dPdt,'linear','movmean',100);
+    scan.w      = mean(dPdt(ind_ctdscan(ind_ctdscan>0 & ind_ctdscan<LCTD)),'omitnan');
 end
 
 % check if the scan is not too shallow or too close to the end of the
@@ -119,7 +122,7 @@ if ind_ctdscan(1)>0 && ind_ctdscan(end)<=length(Profile.ctd.time_s) ...
         && ~isinf(scan.w) && ~isnan(scan.w)
 
     % Put new variables in the structure
-    varList = {'Pr','tscan','Fs_epsi','N_epsi',...
+    varList = {'Pr','tscan','Fs_epsi','N_epsi','nfft',...
         'Fs_ctd','N_ctd','h_freq',...
         'indP','ind_ctdscan','ind_scan','FPO7noise'};
     for iVar=1:numel(varList)

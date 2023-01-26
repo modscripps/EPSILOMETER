@@ -816,7 +816,7 @@ else
             ,seg.data.sample_per_segment)./1000,segment_timestamp,'un',0);
         
         %         seg.time_s=cell2mat(seg.time_s.');
-        seg.dnum = Meta_Data.start_dnum + days(seconds(seg.time_s));
+        seg.dnum = cellfun(@(x) Meta_Data.start_dnum + days(seconds(x)),seg.time_s,'un',0);
     end
     
     % Sort epsi fields

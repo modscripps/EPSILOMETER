@@ -304,7 +304,12 @@ classdef epsi_class < handle
                 filename=fullfile(obj.Meta_Data.paths.process_library,'Meta_Data_Process',...
                     'Meta_Data_Process.txt');
             end
-            Meta_Data = epsiSetup_read_MetaProcess(obj.Meta_Data,filename);
+            try
+                Meta_Data = epsiSetup_read_MetaProcess(obj.Meta_Data,filename);
+            catch
+                Meta_Data = load(filename);
+                Meta_Data=Meta_Data.Meta_Data;
+            end
             obj.Meta_Data = Meta_Data;
         end
         function obj=f_readData(obj,varargin)
@@ -363,7 +368,7 @@ classdef epsi_class < handle
                         % Find the index of varargin that = 'version'. The following
                         % index contains the version number
                         idxFlag = find(cell2mat(cellfun(@(C) ~isempty(strfind(C,'version')),varargin,'uniformoutput',0)));
-                        version = varargin{idxFlag+1};
+                        version_number = varargin{idxFlag+1};
                         index = index+2; %+2 because the following varargin will be the version number
                         n_items = n_items-2;
                     case 3 %make_FCTD
@@ -824,7 +829,7 @@ classdef epsi_class < handle
                     pRange = PressureTimeseries.P(PressureTimeseries.endprof) -...
                         PressureTimeseries.P(PressureTimeseries.startprof);
                     % Find the longest profile
-                    [~,idxProf] = max(abs(pRange));
+                    [~,idxProf] = max(pRange);
 
                     % Get (and merge if necessary) .mat data for this profile
                     tMin = PressureTimeseries.dnum(PressureTimeseries.startprof(idxProf));

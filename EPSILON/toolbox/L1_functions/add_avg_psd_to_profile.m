@@ -5,7 +5,11 @@ function [Profile] = add_avg_psd_to_profile(Profile)
 % -------------------------------------------------------------------------
 
 % Get frequency arrays and define max and min f
-f = Profile.f;
+try
+    f = Profile.f;
+catch
+    disp('no Profile.f')
+end
 f1 = 10;
 f2 = 45;
 

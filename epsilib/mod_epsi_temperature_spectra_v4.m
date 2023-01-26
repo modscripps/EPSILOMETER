@@ -211,14 +211,17 @@ end
 
 
 % A and B are the intermediary spectra. Only for plotting.
-A1=squeeze(nanmean(P11_epsi(indt1,:,:),2));
-AA1=squeeze(nanmean(P11_epsi(indt1,:,:),2))./TFtemp.';
-B1=squeeze(nanmean(P11_epsi(indt1,:,:),2)).*dTdV(1).^2./h_freq.electFPO7.'.^2;
+if ~isempty(indt1)
+    A1=squeeze(nanmean(P11_epsi(indt1,:,:),2));
+    AA1=squeeze(nanmean(P11_epsi(indt1,:,:),2))./TFtemp.';
+    B1=squeeze(nanmean(P11_epsi(indt1,:,:),2)).*dTdV(1).^2./h_freq.electFPO7.'.^2;
+end
 
-A2=squeeze(nanmean(P11_epsi(indt2,:,:),2));
-AA2=squeeze(nanmean(P11_epsi(indt2,:,:),2))./TFtemp.';
-B2=squeeze(nanmean(P11_epsi(indt2,:,:),2)).*dTdV(2).^2./h_freq.electFPO7.'.^2;
-
+if ~isempty(indt2)
+    A2=squeeze(nanmean(P11_epsi(indt2,:,:),2));
+    AA2=squeeze(nanmean(P11_epsi(indt2,:,:),2))./TFtemp.';
+    B2=squeeze(nanmean(P11_epsi(indt2,:,:),2)).*dTdV(2).^2./h_freq.electFPO7.'.^2;
+end
 % Sensitivity of probe, nominal. Save dTdV in Meta Data it will be use in
 % the batchprocess
 if isfield(Meta_Data,'AFE')
@@ -231,7 +234,11 @@ Meta_Data.(field_name).t2.cal=dTdV(2);
 % NC 9/14/21 - Added dTdV_profile and rangeT to try to come up with a
 % better way to compute dTdV for a deployment
 Meta_Data.(field_name).t1.cal_profile=dTdV_profile(1,:);
-Meta_Data.(field_name).t2.cal_profile=dTdV_profile(2,:);
+try
+    Meta_Data.(field_name).t2.cal_profile=dTdV_profile(2,:);
+catch
+    Meta_Data.(field_name).t2.cal_profile=dTdV_profile(1,:);
+end
 Meta_Data.(field_name).t1.ctd_Tmin = nanmin(data_CTD.');
 Meta_Data.(field_name).t1.ctd_Tmax = nanmax(data_CTD.');
 Meta_Data.(field_name).t1.pr = nanmean(pr_CTD.');
@@ -268,8 +275,13 @@ if  plotData
     loglog(ctd_f,P11_ctd_mean,'r','linewidth',2,'displayname','CTD')
     %loglog(1/3:1/3:160,noise,'m','linewidth',2)
     %loglog(epsi_k,10.^(mmp_noise).*dTdV(1).^2,'m--','linewidth',2)
+    try
     loglog(epsi_f,A1,'Color',.8* [1 1 1],'linewidth',2,'displayname','raw(Volt^2/Hz)')
     loglog(epsi_f,AA1,'Color',.6* [1 1 1],'linewidth',2,'displayname','corrected (Volt^2/Hz)')
+    catch
+    loglog(epsi_f,A2,'Color',.8* [1 1 1],'linewidth',2,'displayname','raw(Volt^2/Hz)')
+    loglog(epsi_f,AA2,'Color',.6* [1 1 1],'linewidth',2,'displayname','corrected (Volt^2/Hz)')
+    end
     %loglog(epsi_k,B,'Color',.4* [1 1 1],'linewidth',2)
     if ~isempty(indt1)
         %    loglog(epsi_k,P11_T(indt1,:),'c','linewidth',2)

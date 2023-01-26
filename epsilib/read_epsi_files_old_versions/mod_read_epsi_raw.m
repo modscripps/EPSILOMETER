@@ -172,10 +172,20 @@ madre.header_offset  = madre.map_chksum_offset+madre.map_chksum_length+2;
 
 % define offset if aux1 is present
 if is_aux1
-    aux1.name_length  = 5;
-    aux1.stamp_length = 8; % length of epsi sample number linked to SBE sample.
-    aux1.sbe_length   = 22;  % length of SBE sample.
-    aux1.nbsample     = 9;
+    if strcmp(Meta_Data.mission,"PILOT2018") && ...
+       (strcmp(Meta_Data.deployment,"d2")    || ...
+       strcmp(Meta_Data.deployment,"d3")    || ...
+       strcmp(Meta_Data.deployment,"d4"))
+            aux1.name_length  = 5+2; % +2 becasue there is \r\n for inside the drop files
+            aux1.stamp_length = 8; % length of epsi sample number linked to SBE sample.
+            aux1.sbe_length   = 22;  % length of SBE sample.
+            aux1.nbsample     = 9;
+    else
+            aux1.name_length  = 5;
+            aux1.stamp_length = 8; % length of epsi sample number linked to SBE sample.
+            aux1.sbe_length   = 22;  % length of SBE sample.
+            aux1.nbsample     = 9;
+    end
     aux1_sample_length= aux1.stamp_length + 1 + aux1.sbe_length + 2;
     % e.g 00000F2E,052C2409E6F3080D7A4DAF
     aux1.stamp_offset  = madre.header_offset + (0:aux1.nbsample-1)*aux1_sample_length+aux1.name_length;
@@ -189,13 +199,31 @@ else
 end
 
 
+
 epsi.name_length = 5; % length of epsi block header ($EPSI).
 epsi.nbsamples = 160;   % number of sample in 1 epsi block.
 epsi.nchannels = Meta_Data.PROCESS.nb_channels; % number of channels defined by user.
 epsi.sample_freq = 320; % hardcoded sampling rate can do better when we will use usecond resolution for the timer. 
 epsi.sample_period = 1/epsi.sample_freq;
+epsi.bytes_per_adc=3; % data in hex
+epsi.bytes_per_channel=epsi.bytes_per_adc; % data in hex
 epsi.bytes_per_channel = 3; % length of an ADC sample = length of one channel sample. In bytes MSBF (TO DO check MSBF) 
-epsi.total_length = epsi.nbsamples*epsi.nchannels*epsi.bytes_per_channel; % length of an EPSI block
+
+hexepsi=0;
+nb_bytes_end_sample=0;
+if strcmp(Meta_Data.mission,"PILOT2018") && ...
+   (strcmp(Meta_Data.deployment,"d2")    || ...
+   strcmp(Meta_Data.deployment,"d3")    || ...
+   strcmp(Meta_Data.deployment,"d4"))
+    epsi.offset=epsi.offset+2;
+    hexepsi=1;
+    epsi.bytes_per_channel=epsi.bytes_per_adc*2; % data in hex
+    nb_bytes_end_sample=2;
+end
+epsi.total_length = epsi.nbsamples*(epsi.nchannels*epsi.bytes_per_channel+nb_bytes_end_sample); % length of an EPSI block
+
+
+
 
 % find the non corrupted (right length)
 %!!!!!!!! VERY IMPORTANT to remember !!!!! 
@@ -268,7 +296,10 @@ if is_aux1
     aux1.stamp = char(zeros(nb_block*aux1.nbsample,aux1.stamp_length));
     aux1.sbe = char(zeros(nb_block*aux1.nbsample,aux1.sbe_length));
 end
-epsi.raw = int32(zeros(nb_block,epsi.total_length));
+
+
+datalength=epsi.nbsamples*epsi.nchannels*epsi.bytes_per_adc; % length of an EPSI block with 3 bytes. For some reason the epsi data are in hex and mess up the byte count
+epsi.raw = int32(zeros(nb_block,datalength));
 
 
 % now lets begin  reading and splitting!!!!
@@ -300,15 +331,45 @@ for i=1:numel(indblock)
         end
     end
     % get the EPSI block
-    epsi.raw(i,:) = int32(str(indblock(i)+epsi.offset(end)+epsi.name_length+(1:epsi.total_length)));
+    if hexepsi==0
+        fprintf("block #%i over %i blocks \r\n",i,numel(indblock))
+        epsi.raw(i,:) = int32(str(indblock(i)+epsi.offset(end)+epsi.name_length+(1:epsi.total_length)));
+        try
+            EPSI.aux1.T_raw(i) = hex2dec(aux1.sbe(i,1:6));
+        catch
+            disp('issue with hex')
+            idxstamp=aux1.sbe(i,1:6)<0; % make a 0 arrays
+            hexidx=regexp(aux1.sbe(i,1:6),'([0-9A-Fa-f])');
+            idxstamp(hexidx)=1;
+            aux1.sbe(i,idxstamp==0)= ...
+                aux1.sbe(i-1,idxstamp==0);
+            EPSI.aux1.T_raw(i) = hex2dec(aux1.sbe(i,1:6));
+            
+        end
+    else
+        fprintf("block #%i over %i blocks \r\n",i,numel(indblock))
+        tempo_str=str(indblock(i)+epsi.offset(end)+epsi.name_length+(1:epsi.total_length));
+        tempo1=strsplit(tempo_str,'\r\n');
+        test=[tempo1{1:end-1}];
+        count=0;
+        for j=1:2:length(test)
+            count=count+1;
+            epsi.raw(i,count) = hex2dec(test(j:j+1));
+        end
+    end
+
 end
 % done with split file
 %toc
 
 %convert 3 bytes ADC samples into 24 bits counts. 
-epsi.raw1 = epsi.raw(:,1:epsi.bytes_per_channel:end)*256^2+ ...
-            epsi.raw(:,2:epsi.bytes_per_channel:end)*256+ ...
-            epsi.raw(:,3:epsi.bytes_per_channel:end);
+
+
+
+epsi.raw1 = epsi.raw(:,1:epsi.bytes_per_adc:end)*256^2+ ...
+            epsi.raw(:,2:epsi.bytes_per_adc:end)*256+ ...
+            epsi.raw(:,3:epsi.bytes_per_adc:end);
+
 
 if(isfield(EPSI,'header'))
     switch Meta_Data.PROCESS.recording_mode
@@ -335,16 +396,43 @@ try
             EPSI.madre.muTimeStamp = hex2dec(madre.epsi_mutime);
     end
 catch
+    disp('issue with madre time')
+    mask=madre.epsi_stamp==' ';madre.epsi_stamp(mask)='0';
+    for ii=1:length(indblock)
+        try
+            EPSI.madre.EpsiStamp(ii)=...
+                hex2dec(madre.epsi_stamp(ii,:));
+        catch
+            disp('toto')
+            idxstamp=madre.epsi_stamp(ii,:)<0; % make a 0 arrays 
+            hexidx=regexp(madre.epsi_stamp(ii,:),'([0-9A-Fa-f])');
+            idxstamp(hexidx)=1;
+            madre.epsi_stamp(ii,idxstamp==0)=...
+                madre.epsi_stamp(ii-1,idxstamp==0);
+            EPSI.madre.EpsiStamp(ii)=...
+                hex2dec(madre.epsi_stamp(ii,:));
+        end
+        try
+            EPSI.madre.TimeStamp(ii)=...
+                hex2dec(madre.epsi_time(ii,:));
+        catch
+            disp('tata')
+            idxstamp=madre.epsi_time(ii,:)<0; % make a 0 arrays 
+            hexidx=regexp(madre.epsi_time(ii,:),'([0-9A-Fa-f])');
+            idxstamp(hexidx)=1;
+            madre.epsi_time(ii,idxstamp==0)= ...
+                madre.epsi_time(ii-1,idxstamp==0);
+            EPSI.madre.TimeStamp(ii)=...
+                hex2dec(madre.epsi_time(ii,:));
+        end
+
+    end
 %     EPSI.madre.EpsiStamp = hex2dec(madre.epsi_stamp);
 %     EPSI.madre.TimeStamp = hex2dec(madre.epsi_time);
 %     EPSI.madre.altimeter = reshape(hex2dec(madre.altimeter),2,[])';
 %     EPSI.madre.fsync_err = hex2dec(madre.fsync_err);
 %     EPSI.madre.Checksum_aux1 = hex2dec(madre.aux1_chksum);
 %     EPSI.madre.Checksum_map = hex2dec(madre.epsi_chksum);
-%     switch firmware_version
-%         case 'microsecond' % ALB: I added the musecond timestamp in third position. So the header is longer
-%             EPSI.madre.muTimeStamp = hex2dec(madre.epsi_mutime);
-%     end
 end
 % issues with the SD write and some bytes are not hex. if issues we scan
 % the whole sbe time series to find the bad bytes and then use the average 
@@ -383,8 +471,9 @@ if is_aux1
             EPSI.aux1.Aux1Stamp =hex2dec(aux1.stamp);
             
     end
+
     [EPSI.aux1.Aux1Stamp,ia0,~] =unique(EPSI.aux1.Aux1Stamp,'stable');
-    
+    EPSI.aux1.Aux1Stamp=filloutliers(EPSI.aux1.Aux1Stamp,'center','movmedian',100);
     %ALB reorder the stamps and samples because until now we kept the zeros
     % in the aux block
     [EPSI.aux1.Aux1Stamp,ia1]=sort(EPSI.aux1.Aux1Stamp);
@@ -396,6 +485,7 @@ if is_aux1
     EPSI = epsi_ascii_get_temperature(EPSI);
     EPSI = epsi_ascii_get_pressure(EPSI);
     EPSI = epsi_ascii_get_conductivity(EPSI);
+
     % remove bad records for aux1
     ind = EPSI.aux1.Aux1Stamp == 0 & EPSI.aux1.T_raw == 0 & EPSI.aux1.C_raw == 0 & EPSI.aux1.P_raw == 0;
     aux1_fields = fieldnames(EPSI.aux1);
@@ -421,6 +511,7 @@ if(isfield(EPSI,'header'))
         case 'STREAMING'
             EPSI.epsi.time = (repmat(1:epsi.nbsamples,[NBblock 1])-epsi.nbsamples-1)*epsi.sample_period/24/3600 + repmat(EPSI.madre.time,[1 epsi.nbsamples]);
         case 'SD'
+            EPSI.epsi.time = Meta_Data.starttime+EPSI.epsi.EPSInbsample/Meta_Data.PROCESS.Fs_epsi/86400;
     end
 end
 
@@ -457,9 +548,21 @@ for cha=1:Meta_Data.PROCESS.nb_channels
     end
 end
 % Remove the acceleration volts fields
-EPSI.epsi = rmfield(EPSI.epsi,'a1_volt');
+try
+    EPSI.epsi = rmfield(EPSI.epsi,'a1_volt');
+catch
+    disp("no a1_volt")
+end
+try
 EPSI.epsi = rmfield(EPSI.epsi,'a2_volt');
+catch
+    disp("no a2_volt")
+end
+try
 EPSI.epsi = rmfield(EPSI.epsi,'a3_volt');
+catch
+    disp("no a3_volt")
+end
 
 % grab all the epsi field names.
 epsi_fields = fieldnames(EPSI.epsi);
@@ -652,6 +755,7 @@ mv = (EPSI.aux1.T_raw-524288)/1.6e7;
 r = (mv*2.295e10 + 9.216e8)./(6.144e4-mv*5.3e5);
 EPSI.aux1.T = a0+a1*log(r)+a2*log(r).^2+a3*log(r).^3;
 EPSI.aux1.T = 1./EPSI.aux1.T - 273.15;
+EPSI.aux1.T=real(EPSI.aux1.T);
 return;
 end
 
@@ -676,7 +780,7 @@ end
 f = EPSI.aux1.C_raw/256/1000;
 
 EPSI.aux1.C = (g+h*f.^2+i*f.^3+j*f.^4)./(1+tcor*EPSI.aux1.T+pcor*EPSI.aux1.P);
-
+EPSI.aux1.C=real(EPSI.aux1.C);
 return;
 end
 
