@@ -2,12 +2,12 @@ ccc
 while 1
 %% Define some things
 % -------------------------------------------
-experiment_name     = 'BLT';
-station_number      = 8;
-deployment_number   = 17;
-depl_dir            = '0812_sta08_d17_ef1_pc2';
-depth_range         = 800:1550;
-minutes_between_processing = 13;
+experiment_name     = 'TLC';
+station_number      = 1;
+deployment_number   = 1;
+depl_dir            = '02_10_day4_epsi_d2';
+depth_range         = 0:150;
+minutes_between_processing = 3;
 % -------------------------------------------
 
 % Directories
@@ -16,8 +16,8 @@ processing_dir = fullfile('/Users/Shared/EPSI_PROCESSING/Processing',depl_dir);
 %fctd_ctd_dir = '/Users/Shared/EPSI_PROCESSING/FCTD_mat';
 
 % Meta_Data Process file
-md = ['/Volumes/FCTD Softwares used in BLT 2022/EPSILOMETER_FCTD/'...
-    'Meta_Data_Process/Meta_Data_Process_blt_2022.txt'];
+md = ['/Volumes/FCTD Softwares used in TLC 2023/EPSILOMETER_FCTD/'...
+    'Meta_Data_Process/Meta_Data_Process_tlc_2023.txt'];
 % % Rsync from Deployment raw directory to EPSI_PROCESSING raw directory
 % lab_dir_raw = fullfile(lab_dir,'raw');
 % processing_dir_raw = fullfile(processing_dir,'raw');
@@ -57,46 +57,43 @@ close all
 figure('units','inches','position',[0         0   15.3194   13.1111])
 
 dnummask=~isnan(data.GRID.dnum);
-ax(1) = subtightplot(3,1,1);
+ax(1) =subtightplot(3,1,1);
 
-pcolor(data.GRID.dnum(dnummask),data.GRID.z,data.GRID.t(:,dnummask));
+pcolorjw(data.GRID.dnum(dnummask),data.GRID.z,data.GRID.t(:,dnummask));
 hold on
-n_fill_bathy(data.GRID.dnum(dnummask),data.GRID.bottom_depth(dnummask))
-[c,ch]=contour(data.GRID.dnum(dnummask),data.GRID.z,data.GRID.sgth(:,dnummask),20,'k');
-caxis([3 7.5])
-shading flat
+%n_fill_bathy(data.GRID.dnum(dnummask),data.GRID.bottom_depth(dnummask))
+%[c,ch]=contour(data.GRID.dnum(dnummask),data.GRID.z,data.GRID.sgth(:,dnummask),20,'k');
+caxis([9 15])
 cax1=colorbar;
 grid(ax(1),'on');
-n_fill_bathy(data.GRID.dnum(dnummask),data.GRID.bottom_depth(dnummask))
+%n_fill_bathy(data.GRID.dnum(dnummask),data.GRID.bottom_depth(dnummask))
 title('Temperature','fontname','Times New Roman','fontsize',20)
 ylabel('Depth','fontname','Times New Roman','fontsize',20)
 ylabel(cax1,'Celsius','fontname','Times New Roman','fontsize',20)
 
 ax(2) = subtightplot(3,1,2);
-pcolor(data.GRID.dnum(dnummask),data.GRID.z,log10(data.GRID.epsilon_final(:,dnummask)));
-shading flat
+pcolorjw(data.GRID.dnum(dnummask),data.GRID.z,log10(data.GRID.epsilon_final(:,dnummask)));
 cax2=colorbar;
 title('Epsilon')
 ylabel('Depth','fontname','Times New Roman','fontsize',20);
 hold on
-[c,ch]=contour(data.GRID.dnum(dnummask),data.GRID.z,data.GRID.sgth(:,dnummask),20,'k');
+[c,ch]=contour(data.GRID.dnum(dnummask),data.GRID.z,data.GRID.sgth(:,dnummask),'k','levellist',-10:0.5:-6);
 caxis([-10 -6])
 grid(ax(2),'on');
 
-n_fill_bathy(data.GRID.dnum(dnummask),data.GRID.bottom_depth(dnummask))
+%n_fill_bathy(data.GRID.dnum(dnummask),data.GRID.bottom_depth(dnummask))
 ylabel(cax2,'W kg^{-1}','fontname','Times New Roman','fontsize',20)
 
 ax(3) = subtightplot(3,1,3);
-pcolor(data.GRID.dnum(dnummask),data.GRID.z,log10(data.GRID.chi1(:,dnummask)));
-shading flat
+pcolorjw(data.GRID.dnum(dnummask),data.GRID.z,log10(data.GRID.chi1(:,dnummask)));
 hold on
-[c,ch]=contour(data.GRID.dnum(dnummask),data.GRID.z,data.GRID.sgth(:,dnummask),20,'k');
-n_fill_bathy(data.GRID.dnum(dnummask),data.GRID.bottom_depth(:,dnummask))
+[c,ch]=contour(data.GRID.dnum(dnummask),data.GRID.z,data.GRID.sgth(:,dnummask),'k','levellist',-10:0.5:-5);
+%n_fill_bathy(data.GRID.dnum(dnummask),data.GRID.bottom_depth(:,dnummask))
 title('Chi 1')
 cax3=colorbar;
 grid(ax(3),'on');
 
-caxis([-10 -6])
+caxis([-10 -5])
 ylabel('Depth','fontname','Times New Roman','fontsize',20)
 xlabel(datestr(data.GRID.dnum(1),"dd-mm"),'fontname','Times New Roman','fontsize',20)
 [ax(:).YDir] = deal('reverse');
