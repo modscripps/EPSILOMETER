@@ -27,9 +27,15 @@ elseif isclassfield(Profile_or_profNum,'epsi') && isclassfield(Profile_or_profNu
 else
     error('Need epsi, ctd, and Meta_Data to calculate turbulence parameters!');
 end
+
+% Add latitude and longitude - take the mean of the first 10 seconds of the profile
+gps_sec_int = mode(seconds(days(diff(Profile_or_profNum.gps.dnum))));
+n_sec = 10;
+idx = round(gps_sec_int*n_sec);
 if isfield(Profile_or_profNum,'gps') && ~isempty(Profile_or_profNum.gps)
-    Profile.latitude = nanmean(Profile_or_profNum.gps.latitude);
-    Profile.longitude = nanmean(Profile_or_profNum.gps.longitude);
+    nGPS = length(Profile_or_profNum.gps.latitude);
+    Profile.latitude = nanmean(Profile_or_profNum.gps.latitude(1:min([idx,nGPS])));
+    Profile.longitude = nanmean(Profile_or_profNum.gps.longitude(1:min([idx,nGPS])));
 end
 
 %% Get epsi sampling frequency
