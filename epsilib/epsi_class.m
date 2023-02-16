@@ -954,5 +954,11 @@ classdef epsi_class < handle
             delete(fullfile(obj.Meta_Data.paths.profiles,'*.mat'))
             delete(fullfile(obj.Meta_Data.paths.data,'Meta_Data.mat'));
         end
+        function f_check_spectra(obj,id_profile)
+            if nargin<2
+                warning('f_check_spectra(id_profile)');
+            end
+            check_spectra(id_profile);
+        end
     end %end methods
 end %end classdef
