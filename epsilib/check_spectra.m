@@ -1,6 +1,7 @@
 function check_spectra(id_profile)
 
 filename=sprintf('Profile%03i.mat',id_profile);
+rootpath=strsplit(pwd,'/');
 filepath= ...
     fullfile('profiles',filename);
 if isfile(filepath)
@@ -17,7 +18,7 @@ close all
 strfontsize=15;
 % function plot_epsi_spectra(Profile)
 T=filloutliers(Profile.ctd.T,'linear','movmean',floor(length(Profile.ctd.T)/10));
-S=filloutliers(Profile.ctd.S,'linear','movmean',floor(length(Profile.ctd.T)/10));
+S=filloutliers(real(Profile.ctd.S),'linear','movmean',floor(length(Profile.ctd.T)/10));
 % T=Profile.ctd.T;
 % S=Profile.ctd.S;
 
@@ -36,15 +37,19 @@ figure
 set(gcf,'position',[0,0,1500,1000])
 a=1
 ax(a)=subplot('Position',[.04 .08 .08 .8]);
-semilogx(ax(a),Profile.epsilon,Profile.pr);
+semilogx(ax(a),Profile.epsilon_co,Profile.pr);
+hold(ax(a),'on')
+semilogx(ax(a),Profile.epsilon_final,Profile.pr,'k','linewidth',2);
+hold(ax(a),'off')
+
 leg(a)=legend(ax(a),'s1','s2','location','northoutside');
 leg(a).Position=[.07 .95 .03 .02];
 ax(a).FontSize=strfontsize;
 ax(a).FontName='Time New Roman';
 grid(ax(a),'on')
 axis(ax(a),'ij')
-ax(a).XLim=[min(Profile.epsilon(:)) max(Profile.epsilon(:))];
-ax(a).YLim=[min(Profile.pr) max(Profile.pr)];
+ax(a).XLim=[min(Profile.epsilon_co(:)) max(Profile.epsilon_co(:))];
+ax(a).YLim=[max(min(Profile.pr),0) max(Profile.pr)];
 xlabel(ax(a),'\epsilon','fontsize',strfontsize,'fontname','time new roman')
 ylabel(ax(a),'Depth [m]','fontsize',strfontsize,'fontname','time new roman')
 
@@ -59,7 +64,7 @@ ax(a).FontName='Time New Roman';
 grid(ax(a),'on')
 axis(ax(a),'ij')
 ax(a).XLim=[min(Profile.chi(:)) max(Profile.chi(:))];
-ax(a).YLim=[min(Profile.pr) max(Profile.pr)];
+ax(a).YLim=[max(min(Profile.pr),0) max(Profile.pr)];
 ax(a).YTickLabel='';
 xlabel(ax(a),'\chi','fontsize',strfontsize,'fontname','time new roman')
 
@@ -76,8 +81,8 @@ axis(ax(a),'ij')
 axis(ax1,'ij')
 ax(a).XLim=[min(T) max(T)];
 ax1(2).XLim=[min(S) max(S)];
-ax(a).YLim=[min(Profile.pr) max(Profile.pr)];
-ax1(2).YLim=[min(Profile.pr) max(Profile.pr)];
+ax(a).YLim=[max(min(Profile.pr),0) max(Profile.pr)];
+ax1(2).YLim=[max(min(Profile.pr),0) max(Profile.pr)];
 ax(a).YTickLabel='';
 ax1(2).YTickLabel='';
 xlabel(ax(a),'T','fontsize',strfontsize,'fontname','time new roman')
@@ -94,12 +99,13 @@ ax(a).FontName='Time New Roman';
 grid(ax(a),'on')
 axis(ax(a),'ij')
 ax(a).XLim=[min(Profile.w) max(Profile.w)];
-ax(a).YLim=[min(Profile.pr) max(Profile.pr)];
+ax(a).YLim=[max(min(Profile.pr),0) max(Profile.pr)];
 ax(a).YTickLabel='';
 xlabel(ax(a),'w [m/s]','fontsize',strfontsize,'fontname','time new roman')
 
 a=a+1;
 ax(a)=subplot('Position',[.28 .08 .05 .8]);
+if isfield(Profile,'vnav')
 plot(ax(a),Profile.vnav.pitch,Profile.vnav.pr);
 axis(ax(a),'ij')
 ax(a).FontSize=strfontsize;
@@ -107,23 +113,35 @@ ax(a).FontName='Time New Roman';
 grid(ax(a),'on')
 axis(ax(a),'ij')
 ax(a).XLim=[min(Profile.vnav.pitch) max(Profile.vnav.pitch)];
-ax(a).YLim=[min(Profile.pr) max(Profile.pr)];
+ax(a).YLim=[max(min(Profile.pr),0) max(Profile.pr)];
 ax(a).YTickLabel='';
 xlabel(ax(a),'pitch','fontsize',strfontsize,'fontname','time new roman')
+end
 
 a=a+1;
 ax(a)=subplot('Position',[.34 .08 .05 .8]);
+if isfield(Profile,'vnav')
 plot(ax(a),unwrap(Profile.vnav.roll)+pi,Profile.vnav.pr);
 axis(ax(a),'ij')
 ax(a).FontSize=strfontsize;
 ax(a).FontName='Time New Roman';
+str_title=sprintf('%s %s Profile %i ',            ...
+                  Profile.Meta_Data.mission,      ...
+                  Profile.Meta_Data.vehicle_name, ...
+                  Profile.profNum);
+
+text(ax(a),-pi/2,Profile.vnav.pr(1)-15,{rootpath{end},...
+                                        str_title},...
+     'fontsize',strfontsize,...
+     'fontname','time new roman',...
+     'Interpreter','none')
 grid(ax(a),'on')
 axis(ax(a),'ij')
 ax(a).XLim=[min(unwrap(Profile.vnav.roll)+pi) max(unwrap(Profile.vnav.roll)+pi)];
-ax(a).YLim=[min(Profile.pr) max(Profile.pr)];
+ax(a).YLim=[max(min(Profile.pr),0) max(Profile.pr)];
 ax(a).YTickLabel='';
 xlabel(ax(a),'roll','fontsize',strfontsize,'fontname','time new roman')
-
+end
 
 
 
@@ -180,7 +198,7 @@ title(ax(a),'FPO7')
 ylabel(ax(a),' Volt','fontsize',strfontsize,'fontname','time new roman')
 ax(a).FontSize=strfontsize;
 ax(a).XTickLabel='';
-ax(a).YLim=5e-3.*[-1 1];
+ax(a).YLim=5e-4.*[-1 1];
 ax(a).FontName='Time New Roman';
 
 a=a+1;
@@ -189,7 +207,7 @@ title(ax(a),'shear')
 ylabel(ax(a),' Volt','fontsize',strfontsize,'fontname','time new roman')
 ax(a).FontSize=strfontsize;
 ax(a).XTickLabel='';
-ax(a).YLim=.05.*[-1 1];
+ax(a).YLim=.005.*[-1 1];
 ax(a).FontName='Time New Roman';
 
 plot_flag=1;
@@ -205,20 +223,21 @@ while plot_flag
     idx_ctd=find(Profile.ctd.P>idx(2),1,'first');
     idx_vnav=find(Profile.vnav.pr>idx(2),1,'first');
     
-    [kpan1,Ppan1]=panchev(Profile.epsilon(idx1,1),Profile.kvis(idx1));
-    [kpan2,Ppan2]=panchev(Profile.epsilon(idx1,2),Profile.kvis(idx1));
-    [kbatch1,Pbatch1]=batchelor(Profile.epsilon(idx1,1), ...
+    [kpan1,Ppan1]=panchev(Profile.epsilon_co(idx1,1),Profile.kvis(idx1));
+    [kpan2,Ppan2]=panchev(Profile.epsilon_co(idx1,2),Profile.kvis(idx1));
+    [kbatch1,Pbatch1]=batchelor(Profile.epsilon_co(idx1,1), ...
                               Profile.chi(idx1), ...
                               Profile.kvis(idx1), ...
                               .1.*Profile.kvis(idx1));
-    [kbatch2,Pbatch2]=batchelor(Profile.epsilon(idx1,2), ...
+    [kbatch2,Pbatch2]=batchelor(Profile.epsilon_co(idx1,2), ...
                             Profile.chi(idx1,2), ...
                             Profile.kvis(idx1), ...
                             .1.*Profile.kvis(idx1));
     a=1
     hold(ax(a),'on')
-    sca(1)=scatter(ax(a),Profile.epsilon(idx1,1),Profile.pr(idx1),200,'pk','filled');
-    sca(2)=scatter(ax(a),Profile.epsilon(idx1,2),Profile.pr(idx1),200,'dk','filled');
+    sca(1)=scatter(ax(a),Profile.epsilon_co(idx1,1),Profile.pr(idx1),200,'pk','filled');
+    sca(2)=scatter(ax(a),Profile.epsilon_co(idx1,2),Profile.pr(idx1),200,'dk','filled');
+    
     sca(1).DisplayName=sprintf('s1:%1.2e',Profile.epsilon(idx1,1));
     sca(2).DisplayName=sprintf('s2:%1.2e',Profile.epsilon(idx1,2));
     hold(ax(a),'off')
@@ -261,17 +280,28 @@ while plot_flag
 
 
     a=a+1;
+    idx_fc1=find(Profile.f>=Profile.sh_fc(idx1,1),1,'first');
+    idx_fc2=find(Profile.f>=Profile.sh_fc(idx1,2),1,'first');
     hold(ax(a),'on')
-    loglog(ax(a),Profile.f,Profile.Ps_shear_k.s1(idx1,:),'linewidth',2);
-    loglog(ax(a),Profile.f,Profile.Ps_shear_k.s2(idx1,:),'linewidth',2);
+    loglog(ax(a),Profile.f,Profile.Ps_shear_k.s1(idx1,:),'b--','linewidth',.5);
+    loglog(ax(a),Profile.f,Profile.Ps_shear_k.s2(idx1,:),'r--','linewidth',.5);
+    
+    loglog(ax(a),Profile.f,Profile.Ps_shear_co_k.s1(idx1,:),'b','linewidth',2);
+    scatter(ax(a),Profile.f(idx_fc1),Profile.Ps_shear_co_k.s1(idx1,idx_fc1),100,"dy",'filled')
+    loglog(ax(a),Profile.f,Profile.Ps_shear_co_k.s2(idx1,:),'r','linewidth',2);
+    scatter(ax(a),Profile.f(idx_fc2),Profile.Ps_shear_co_k.s2(idx1,idx_fc2),100,"pk",'filled')
+
     loglog(ax(a),kpan1.*Profile.w(idx1),Ppan1,'k--');
     loglog(ax(a),kpan2.*Profile.w(idx1),Ppan2,'k--');
     grid(ax(a),'on')
     hold(ax(a),'off')
     ax(a).XScale='log';    
     ax(a).YScale='log';    
-    ax(a).YLim  =[.5.*min(Profile.Ps_shear_k.s1(idx1,:)) ...
-                  max(Profile.Ps_shear_k.s1(idx1,:))];    
+    try % 
+        ax(a).YLim  =[.5.*min(Profile.Ps_shear_k.s1(:),[],'omitnan') max(Profile.Ps_shear_k.s1(:),[],'omitnan')];    
+    catch % if s1 is only nans
+        ax(a).YLim  =[.5.*min(Profile.Ps_shear_k.s2(:),[],'omitnan') max(Profile.Ps_shear_k.s2(:),[],'omitnan')];    
+    end
     ax(a).XLim  =[Profile.f(2) Profile.f(end)];    
 %     title(ax(a),'Shear')
 %     ylabel(ax(a),'s^{-2}/cpm','fontsize',20,'fontname','time new roman')
@@ -280,8 +310,12 @@ while plot_flag
 
     a=a+1;
     hold(ax(a),'on')
+    idx_fc1=find(Profile.f>=Profile.tg_fc(idx1,1),1,'first');
+    idx_fc2=find(Profile.f>=Profile.tg_fc(idx1,2),1,'first');
     loglog(ax(a),Profile.f,Profile.Pt_Tg_k.t1(idx1,:),'linewidth',2);
+    scatter(ax(a),Profile.f(idx_fc1),Profile.Pt_Tg_k.t1(idx1,idx_fc1),100,"dy",'filled')
     loglog(ax(a),Profile.f,Profile.Pt_Tg_k.t2(idx1,:),'linewidth',2);
+    scatter(ax(a),Profile.f(idx_fc2),Profile.Pt_Tg_k.t2(idx1,idx_fc2),100,"pr",'filled')
     loglog(ax(a),kbatch1.*Profile.w(idx1),Pbatch1,'k--');
     loglog(ax(a),kbatch2.*Profile.w(idx1),Pbatch2,'k--');
     grid(ax(a),'on')
@@ -289,8 +323,13 @@ while plot_flag
     ax(a).XScale='log';    
     ax(a).YScale='log';    
     ax(a).XLim  =[Profile.f(2) Profile.f(end)];    
-    ax(a).YLim  =[.5.*min(Profile.Pt_Tg_k.t1(idx1,:)) ...
-                  max(Profile.Pt_Tg_k.t1(idx1,:))];    
+    try
+        ax(a).YLim  =[.5.*min(Profile.Pt_Tg_k.t1(idx1,:)) ...
+            max(Profile.Pt_Tg_k.t1(idx1,:))];
+    catch
+        ax(a).YLim  =[.5.*min(Profile.Pt_Tg_k.t2(idx1,:)) ...
+            max(Profile.Pt_Tg_k.t2(idx1,:))];
+    end
 
     
     a=a+1;
@@ -306,8 +345,8 @@ while plot_flag
 
     a=a+1;
     hold(ax(a),'on')
-    semilogx(ax(a),Profile.f,Profile.Cs1a3_full,'linewidth',2);
-    semilogx(ax(a),Profile.f,Profile.Cs2a3_full,'linewidth',2);
+    semilogx(ax(a),Profile.f,Profile.Cs1a3(idx1,:),'linewidth',2);
+    semilogx(ax(a),Profile.f,Profile.Cs2a3(idx1,:),'linewidth',2);
     grid(ax(a),'on')
     hold(ax(a),'off')
     ax(a).XScale='log';    
@@ -322,24 +361,46 @@ while plot_flag
     time_axis=86400.*(Profile.epsi.dnum(epsi_idx)-Profile.epsi.dnum(epsi_idx(1)));
 
     a=a+1;
+    strleg=[];
     hold(ax(a),'on')
-    plot(ax(a),time_axis,...
-        detrend(Profile.epsi.a1_g(epsi_idx),'constant'),'linewidth',2)
+    if isfield(Profile.epsi,'a1_g')
+        plot(ax(a),time_axis,...
+            detrend(Profile.epsi.a1_g(epsi_idx),'constant'),'linewidth',2)
+        strleg=[strleg sprintf('%1.2fV',mean(Profile.epsi.a1_g(epsi_idx)))];
+    end
+    if isfield(Profile.epsi,'a2_g')
     plot(ax(a),time_axis,...
         detrend(Profile.epsi.a2_g(epsi_idx),'constant'),'linewidth',2)
+
+        strleg=[strleg sprintf('%1.2fV',mean(Profile.epsi.a2_g(epsi_idx)))];
+    end
+    if isfield(Profile.epsi,'a3_g')
     plot(ax(a),time_axis,...
         detrend(Profile.epsi.a3_g(epsi_idx),'constant'),'linewidth',2)
+
+        strleg=[strleg sprintf('%1.2fV',mean(Profile.epsi.a3_g(epsi_idx)))];
+    end
     hold(ax(a),'off')
     grid(ax(a),'on')
-    leg=legend(ax(a),{sprintf('%1.2fV',mean(Profile.epsi.a1_g(epsi_idx))),...
-                  sprintf('%1.2fV',mean(Profile.epsi.a2_g(epsi_idx))),...
-                  sprintf('%1.2fV',mean(Profile.epsi.a3_g(epsi_idx)))});
+    leg=legend(ax(a),strleg);
     a=a+1;
     hold(ax(a),'on')
-    plot(ax(a),time_axis,...
-        detrend(Profile.epsi.t1_volt(epsi_idx),'constant'),'linewidth',2)
+    try
+        plot(ax(a),time_axis,...
+            detrend(Profile.epsi.t1_volt(epsi_idx),'constant'),'linewidth',2)
+    catch
+        Profile.epsi.t1_volt=Profile.epsi.dnum.*nan;
+        plot(ax(a),time_axis,...
+            detrend(Profile.epsi.t1_volt(epsi_idx).*nan,'constant'),'linewidth',2)
+    end
+    try
     plot(ax(a),time_axis,...
         detrend(Profile.epsi.t2_volt(epsi_idx),'constant'),'linewidth',2)
+    catch
+    Profile.epsi.t2_volt=Profile.epsi.dnum.*nan;
+    plot(ax(a),time_axis,...
+        detrend(Profile.epsi.t2_volt(epsi_idx),'constant'),'linewidth',2)
+    end
     hold(ax(a),'off')
     grid(ax(a),'on')
     legend(ax(a),{sprintf('%1.2fV',mean(Profile.epsi.t1_volt(epsi_idx))),...
@@ -360,8 +421,8 @@ while plot_flag
     idx=ginput(1);
     if (idx(2)<Profile.pr(end) &&  ...
         idx(2)>Profile.pr(1) &&    ...
-        idx(1)<max(Profile.epsilon(:)) &&    ...
-        idx(1)>min(Profile.epsilon(:)))
+        idx(1)<max(Profile.epsilon_co(:)) &&    ...
+        idx(1)>min(Profile.epsilon_co(:)))
         
         a=1;
         cla(ax(a+6));

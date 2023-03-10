@@ -960,5 +960,8 @@ classdef epsi_class < handle
             end
             check_spectra(id_profile);
         end
+        function f_check_grid_spectra(obj)
+            check_grid_spectra();
+        end
     end %end methods
 end %end classdef

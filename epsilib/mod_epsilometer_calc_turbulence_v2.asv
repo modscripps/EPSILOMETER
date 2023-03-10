@@ -58,22 +58,22 @@ if ~isempty(Profile.epsi)
         wh_channel=Meta_Data.PROCESS.timeseries{c};
         switch wh_channel
             case 'a1_g'
-                Az=Profile.epsi.(wh_channel);
-            case 'a2_g'
                 Ax=Profile.epsi.(wh_channel);
+            case 'a2_g'
+                Az=Profile.epsi.(wh_channel);
             case'a3_g'
                 Ay=Profile.epsi.(wh_channel);
         end
     end
 end
 rms_accel=rms([Ax(:);Ay(:);Az(:);]);
-if sum(abs(Ax))>0 && sum(abs(Ay))>0 && sum(abs(Az))>0
+if sum(Ax)>0 && sum(Ay)>0 && sum(Az)>0
     Profile.epsi.pitch = atan2 ( Ax, sqrt(Ay.^2 + Az.^2));
 else
     Profile.epsi.pitch= Ax.*0;
 end
 
-if sum(abs(Ay))>0 && sum(abs(Az))>0
+if sum(Ay)>0 && sum(Az)>0
     Profile.epsi.roll  = atan2 ( -Ay , Az);
 else
     Profile.epsi.roll= Ax.*0;
@@ -176,7 +176,7 @@ else
 %% define a Pressure axis to an which I will compute epsilon and chi.
 %  The spectra will be nfft long centered around P(z) +/- tscan/2.
 %
-Pr = ceil(Prmin):dz:floor(Prmax);
+Pr = ceil(Prmin):dz:floor(max(Profile.ctd.P));
 nbscan = length(Pr);
 
 %% compute coherence with a3 over the full profile.
@@ -244,15 +244,6 @@ Profile.sumPa.a3       = nan(nbscan,1);
 Profile.pitch          = nan(nbscan,1);
 Profile.roll           = nan(nbscan,1);
 Profile.epsi_qc        = nan(nbscan,1);
-Profile.qc.ratio       = nan(nbscan,2);
-Profile.qc.fom         = nan(nbscan,2);
-Profile.qc.a1          = nan(nbscan,1);
-Profile.qc.a2          = nan(nbscan,1);
-
-Profile.qc.a3          = nan(nbscan,1);
-Profile.qc.speed       = nan(nbscan,1);
-Profile.qc.pitch       = nan(nbscan,1);
-Profile.qc.roll        = nan(nbscan,1);
 
 
 Profile.ind_range_ctd   = nan(nbscan,2);
@@ -416,16 +407,16 @@ stda2=std(log10(Profile.sumPa.a2),'omitnan');
 rmsa3=rms(log10(Profile.sumPa.a3),'omitnan');
 stda3=std(log10(Profile.sumPa.a3),'omitnan');
 
-qc.a1=log10(Profile.sumPa.a1)>(-rmsa1+2.*stda1);
-qc.a2=log10(Profile.sumPa.a2)>(-rmsa2+2.*stda2);
-qc.a3=log10(Profile.sumPa.a3)>(-rmsa3+2.*stda3);
+qc.a1=log10(Profile.sumPa.a1)>(-rmsa1+stda1);
+qc.a2=log10(Profile.sumPa.a2)>(-rmsa2+stda2);
+qc.a3=log10(Profile.sumPa.a3)>(-rmsa1+stda3);
 
 % figure of merit
-qc.fom=Profile.fom>2;
+qc.fom=Profile.fom>1.5;
 
 %pitch
-qc.pitch = (Profile.pitch-mean(Profile.pitch,'omitnan'))>5;
-qc.roll  = (Profile.roll-mean(Profile.roll,'omitnan'))>5;
+qc.pitch = Profile.pitch>5;
+qc.roll  = Profile.roll>5;
 
 % speed
 try
@@ -440,12 +431,12 @@ end
 qc.ratio(:,1) = (Profile.epsilon_co(:,1)./Profile.epsilon_co(:,2))>3;
 qc.ratio(:,2) = (Profile.epsilon_co(:,2)./Profile.epsilon_co(:,1))>3;
 
-final_epsi=Profile.epsilon_co;
-final_epsi(qc.fom)=nan;
+fom_epsi=Profile.epsilon_co;
+fom_epsi(qc.fom)=nan;
 
-Profile.epsilon_final=mean(final_epsi,2,'omitnan');
-Profile.epsilon_final(qc.ratio(:,1))=final_epsi(qc.ratio(:,1),2);
-Profile.epsilon_final(qc.ratio(:,2))=final_epsi(qc.ratio(:,2),1);
+Profile.epsilon_final=mean(fom_epsi,2,'omitnan');
+Profile.epsilon_final(qc.ratio(:,1))=fom_epsi(qc.ratio(:,1),2);
+Profile.epsilon_final(qc.ratio(:,2))=fom_epsi(qc.ratio(:,2),1);
 
 
 
@@ -458,7 +449,7 @@ Profile.epsilon_final(qc_bit>0) =nan;
 qc_array = [qc.ratio qc.fom qc.a3 qc.a2 qc.a1 qc.roll qc.pitch qc.speed];
 qc_bit   =  bin2dec(num2str(qc_array));
 Profile.epsi_qc = qc_bit;
-Profile.qc      = qc;
+
 
 
 
