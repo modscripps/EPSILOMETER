@@ -112,7 +112,11 @@ ax(a).FontSize=strfontsize;
 ax(a).FontName='Time New Roman';
 grid(ax(a),'on')
 axis(ax(a),'ij')
-ax(a).XLim=[min(Profile.vnav.pitch) max(Profile.vnav.pitch)];
+try
+    ax(a).XLim=[min(Profile.vnav.pitch) max(Profile.vnav.pitch)];
+catch
+    ax(a).XLim=[0 1];
+end
 ax(a).YLim=[max(min(Profile.pr),0) max(Profile.pr)];
 ax(a).YTickLabel='';
 xlabel(ax(a),'pitch','fontsize',strfontsize,'fontname','time new roman')
@@ -137,7 +141,11 @@ text(ax(a),-pi/2,Profile.vnav.pr(1)-15,{rootpath{end},...
      'Interpreter','none')
 grid(ax(a),'on')
 axis(ax(a),'ij')
+try
 ax(a).XLim=[min(unwrap(Profile.vnav.roll)+pi) max(unwrap(Profile.vnav.roll)+pi)];
+catch
+    ax(a).XLim=[0 1];
+end
 ax(a).YLim=[max(min(Profile.pr),0) max(Profile.pr)];
 ax(a).YTickLabel='';
 xlabel(ax(a),'roll','fontsize',strfontsize,'fontname','time new roman')
