@@ -70,11 +70,12 @@ classdef epsi_class < handle
             repeat = 1; %Initialize repeat flag to use if Meta_Data path names were not made on this machine
             while repeat==1
 
+
+
                 if ~isempty(checkMD) %Meta_Data already exists
 
                     fprintf('Initializing epsi_class with previously created Meta_Data \n')
                     load(fullfile(data_path,'Meta_Data'))
-                    obj.Meta_Data = Meta_Data;
 
                     % Meta_Data includes the path to the epsi processing
                     % library, but if the data was processed on another
@@ -87,6 +88,7 @@ classdef epsi_class < handle
                         'UniformOutput',false))};
                     obj.Meta_Data.paths.process_library=fileparts(epsilib_path);
                     obj.Meta_Data.paths.calibration = fullfile(obj.Meta_Data.paths.process_library,'CALIBRATION','ELECTRONICS');
+                    obj.Meta_Data = Meta_Data;
 
                     % Always redefine the data path as the current
                     % directory or the directory you input
