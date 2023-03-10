@@ -75,6 +75,18 @@ classdef epsi_class < handle
                     load(fullfile(data_path,'Meta_Data'))
                     obj.Meta_Data = Meta_Data;
 
+                    % Meta_Data includes the path to the epsi processing
+                    % library, but if the data was processed on another
+                    % machine, you won't have access to it.
+                    % Find the epsi library on your machine and add it as process path
+                    spltpath=strsplit(path,':');
+                    epsilib_path=spltpath{~cellfun(@isempty, ...
+                        cellfun(@(x) ...
+                        strfind(x,'epsilib'),spltpath, ...
+                        'UniformOutput',false))};
+                    obj.Meta_Data.paths.process_library=fileparts(epsilib_path);
+                    obj.Meta_Data.paths.calibration = fullfile(obj.Meta_Data.paths.process_library,'CALIBRATION','ELECTRONICS');
+
                     % Always redefine the data path as the current
                     % directory or the directory you input
                     obj.Meta_Data.paths.data=data_path;
@@ -94,7 +106,7 @@ classdef epsi_class < handle
                             isclassfield(obj.Meta_Data.PROCESS,'nb_channels') && ...
                             isclassfield(obj.Meta_Data.PROCESS,'nfft')
                         Meta_Data = obj.Meta_Data;
-                        save(fullfile(obj.Meta_Data.paths.data,'Meta_Data'),'Meta_Data');
+%                         save(fullfile(obj.Meta_Data.paths.data,'Meta_Data'),'Meta_Data');
 
                         repeat = 0; %Stop repeating. Keep this Meta_Data.
                     else
