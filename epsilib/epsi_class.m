@@ -69,6 +69,16 @@ classdef epsi_class < handle
 
             repeat = 1; %Initialize repeat flag to use if Meta_Data path names were not made on this machine
             while repeat==1
+
+                % Find the epsi library and add it as process path
+                spltpath=strsplit(path,':');
+                epsilib_path=spltpath{~cellfun(@isempty, ...
+                    cellfun(@(x) ...
+                    strfind(x,'epsilib'),spltpath, ...
+                    'UniformOutput',false))};
+                obj.Meta_Data.paths.process_library=fileparts(epsilib_path);
+                obj.Meta_Data.paths.calibration = fullfile(obj.Meta_Data.paths.process_library,'CALIBRATION','ELECTRONICS');
+                
                 if ~isempty(checkMD) %Meta_Data already exists
 
                     fprintf('Initializing epsi_class with previously created Meta_Data \n')
