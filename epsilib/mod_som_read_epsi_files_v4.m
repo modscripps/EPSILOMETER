@@ -910,6 +910,10 @@ else
         idnull=cellfun(@isempty,spec.(wh_channel));
         spec.(wh_channel)=spec.(wh_channel)(~idnull);
     end
+    [~,fe]=pwelch(1.*(1:Meta_Data.PROCESS.nfft),Meta_Data.PROCESS.nfft,[], ...
+        Meta_Data.PROCESS.nfft,Meta_Data.AFE.FS);
+    spec.freq=fe(2:end);
+
     
     if nanmedian(spec_timestamp)>1e9
         % time_s - seconds since 1970
@@ -922,7 +926,7 @@ else
     end
     
     % Sort epsi fields
-    spec = orderfields(spec,{'dnum','time_s','t1_volt','s1_volt','a3_g','data','channels','checksum'});
+    spec = orderfields(spec,{'dnum','freq','time_s','t1_volt','s1_volt','a3_g','data','channels','checksum'});
     
 end %end spec
 
@@ -1193,20 +1197,20 @@ else
     %                                        apf.data.float_length;
     %read the metadata
     %         uint32_t daq_timestamp;                 4//
-    %         uint8_t  profile_id;                    1
+    %         uint16_t  profile_id;                   2
     %         uint16_t modsom_sn;                     2
     %         uint16_t efe_sn;                        2
     %         uint32_t firmware_rev;                  4
     %         uint16_t nfft;                          2
     %         uint16_t nfftdiag;                      2
-    %         mod_som_apf_probe_t  probe1;            6
-    %         mod_som_apf_probe_t  probe2;            6
+    %         mod_som_apf_probe_t  probe1;            5
+    %         mod_som_apf_probe_t  probe2;            5
     %         uint8_t  comm_telemetry_packet_format;  1
     %         uint8_t  sd_format;                     1
     %         uint16_t sample_cnt;                    2
     %         uint32_t voltage;                       4
     %         uint16_t end_metadata; //always 0xFFFF; 2
-    apf.metadata.size=4+1+2+2+4+2+2+6+6+1+1+2+4+2;
+    apf.metadata.size=4+2+2+2+4+2+2+5+5+1+1+2+4+2;
     
     % anonymous function to convert dissrate, foco, fom
     %            mod_epsilon  = (uint32_t) ceil(local_epsilon*
@@ -1259,37 +1263,38 @@ else
         %         uint16_t end_metadata; //always 0xFFFF; 2
         
         apf.metadata.raw_bytes{iB}     = uint8(apf_block_data(1:apf.metadata.size));
-        apf.metadata.daq_timestamp{iB} = double(uint32(apf_block_data(1:4)))*mult(1:4);
-        apf.metadata.profile_id{iB}    = double(uint32(apf_block_data(5)));
-        apf.metadata.modsom_sn{iB}     = double(uint32(apf_block_data(6:7)))*mult(1:2);
-        apf.metadata.efe_sn{iB}        = double(uint32(apf_block_data(8:9)))*mult(1:2);
-        apf.metadata.firmware_rev{iB}  = dec2hex(double(uint32(apf_block_data(13:16)))*mult(1:4));
-        apf.metadata.nfft{iB}          = double(uint32(apf_block_data(17:18)))*mult(1:2);
-        apf.metadata.nfftdiag{iB}      = double(uint32(apf_block_data(19:20)))*mult(1:2);
-        apf.metadata.probe1{iB}.type   = double(uint32(apf_block_data(21:22)))*mult(1:2);
-        apf.metadata.probe1{iB}.sn     = double(uint32(apf_block_data(23:24)))*mult(1:2);
-        apf.metadata.probe1{iB}.cal    = double(uint32(apf_block_data(25:26)))*mult(1:2);
-        apf.metadata.probe2{iB}.type   = double(uint32(apf_block_data(27:28)))*mult(1:2);
-        apf.metadata.probe2{iB}.sn     = double(uint32(apf_block_data(29:30)))*mult(1:2);
-        apf.metadata.probe2{iB}.cal    = double(uint32(apf_block_data(31:32)))*mult(1:2);
-        apf.metadata.packet_format{iB} = double(uint32(apf_block_data(33)));
-        apf.metadata.sd_format{iB}     = double(uint32(apf_block_data(34)));
-        apf.metadata.sample_cnt{iB}    = double(uint32(apf_block_data(35:36)))*mult(1:2);
-        apf.metadata.voltage{iB}       = double(uint32(apf_block_data(37:40)))*mult(1:4);
-        apf.metadata.endbytes{iB}      = dec2hex(double(uint32(apf_block_data(41:42)))*mult(1:2));
+        apf.metadata.daq_timestamp{iB} = double(uint32(apf_block_data(1:4)))*mult(1:4);% 4bytes
+        apf.metadata.profile_id{iB}    = double(uint32(apf_block_data(5:6)));% 2 byte
+        apf.metadata.modsom_sn{iB}     = double(uint32(apf_block_data(7:8)))*mult(1:2);% 2 bytes
+        apf.metadata.efe_sn{iB}        = double(uint32(apf_block_data(9:10)))*mult(1:2);% 2 bytes
+        apf.metadata.firmware_rev{iB}  = dec2hex(double(uint32(apf_block_data(11:14)))*mult(1:4));% 4 bytes
+        apf.metadata.nfft{iB}          = double(uint32(apf_block_data(15:16)))*mult(1:2);% 2 bytes
+        apf.metadata.nfftdiag{iB}      = double(uint32(apf_block_data(17:18)))*mult(1:2);% 2 bytes
+        apf.metadata.probe1{iB}.type   = double(uint32(apf_block_data(19)));% 1 bytes
+        apf.metadata.probe1{iB}.sn     = double(uint32(apf_block_data(20:21)))*mult(1:2);% 2 bytes
+        apf.metadata.probe1{iB}.cal    = double(uint32(apf_block_data(22:23)))*mult(1:2);% 2 bytes
+        apf.metadata.probe2{iB}.type   = double(uint32(apf_block_data(24)));% 1 bytes
+        apf.metadata.probe2{iB}.sn     = double(uint32(apf_block_data(25:26)))*mult(1:2);% 2 bytes
+        apf.metadata.probe2{iB}.cal    = double(uint32(apf_block_data(27:28)))*mult(1:2);% 2 bytes
+        apf.metadata.packet_format{iB} = double(uint32(apf_block_data(29)));% 1 byte
+        apf.metadata.sd_format{iB}     = double(uint32(apf_block_data(30)));% 1 byte
+        apf.metadata.sample_cnt{iB}    = double(uint32(apf_block_data(31:32)))*mult(1:2);% 2 bytes
+        apf.metadata.voltage{iB}       = double(uint32(apf_block_data(33:36)))*mult(1:4);% 4 bytes
+        apf.metadata.endbytes{iB}      = dec2hex(double(uint32(apf_block_data(37:38)))*mult(1:2));% 2 bytes
         
         
         [~,fe]=pwelch(1.*(1:apf.metadata.nfft{iB}),apf.metadata.nfft{iB},[], ...
             apf.metadata.nfft{iB},sampling_freq);
         apf.data.freq{iB}=fe(2:end);
-        apf.data.freq_diag{iB}=fe(1: apf.metadata.nfftdiag{iB} );
+        apf.data.freq_diag{iB}=fe(1:2:end);
+        apf.data.freq_diag{iB}=apf.data.freq_diag{iB}(1:apf.metadata.nfftdiag{iB} );
         
         switch apf.metadata.packet_format{iB}
             case 1
                 %time, pressure, dpdt, epsilon, chi, epsi_fom, chi_fom.
                 
                 apf.channels         = {'dnum', ...
-                    'pressure','dpdt', ...
+                    'pressure', ...
                     'epsilon','chi','epsi_fom','chi_fom'};
             case 2
                 %time, pressure, dpdt, epsilon, chi, avg_t, avg_s, avg_a
@@ -1310,7 +1315,9 @@ else
         if (length(apf_block_data)~=apf.data.hexlengthblock.value)
             fprintf("apf block %i has incorrect length\r\n",iB)
         else
-            local_apf_block_counter=apf.metadata.size+5;
+            
+%             local_apf_block_counter=apf.metadata.size+5;
+            local_apf_block_counter=apf.metadata.size;
             for d=1:apf.metadata.sample_cnt{iB}
                 % get timestamp
                 local_apf_block_counter=local_apf_block_counter(end)+ind_time;
@@ -1374,6 +1381,10 @@ else
                         apf.data.avg_accel_k{iB}{d}(ii)=convert_foco(tempo_foco);
 %                         fprintf("d:%i; ii:%i\r\n",d,ii);
                     end
+                else
+                    % TODO change in APF Firmware the SD write so I do not
+                    % have this +1 byte offset
+                     local_apf_block_counter=local_apf_block_counter+1;
                 end
                 
             end %end if efe data block is the correct size
@@ -1407,9 +1418,16 @@ else
         end
     end
     % Sort epsi fields
-    apf = orderfields(apf,{'channels','metadata','data','checksum','dnum', ...
-        'pressure','dpdt','epsilon','chi', ...
-        'avg_tg_k','avg_shear_k','avg_accel_k'});
+    switch apf.metadata.packet_format{1}
+        case 1
+            apf = orderfields(apf,{'channels','metadata','data','checksum','dnum', ...
+                'pressure','epsilon','chi'});
+        case 2
+            apf = orderfields(apf,{'channels','metadata','data','checksum','dnum', ...
+                'pressure','dpdt','epsilon','chi', ...
+                'avg_tg_k','avg_shear_k','avg_accel_k'});
+    end
+
 end %end apf
 
 %% Process APF data
