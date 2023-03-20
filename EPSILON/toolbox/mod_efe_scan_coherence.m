@@ -3,12 +3,11 @@ function [Cu1a,Cu2a,sumCu1a,sumCu2a,fe]=mod_efe_scan_coherence(scan,acceleration
 % over the 1./tsan:Fs frequency frequency axis with nfft samples.
 
 nfft=Meta_Data.PROCESS.nfft;
-nfftc=Meta_Data.PROCESS.nfftc;
 
 % NC - adding a check if timeseries is at least nfft long
 % ALB t1 is not always here (e.g.,NISKINE2018)
-Fnames=fieldnames(scan);
-wh_field=Fnames{1};
+% Fnames=fieldnames(scan);
+wh_field='ind_scan';
 if length(scan.(wh_field))<=nfft
     Cu1a = [];
     Cu2a = [];
@@ -26,7 +25,7 @@ elseif length(scan.(wh_field))>nfft
     fc2=Meta_Data.PROCESS.fc2;
     
     if isfinite(scan.s1_volt)
-        [Cu1a,fe] = mscohere(detrend(scan.s1_volt),detrend(scan.(acceleration_channel)),nfftc,[],nfft,Fs);
+        [Cu1a,fe] = mscohere(detrend(scan.s1_volt),detrend(scan.(acceleration_channel)),nfft,[],nfft,Fs);
         sumCu1a=sum(Cu1a(fe>fc1 & fe<fc2))*nanmean(diff(fe));
     else
         fe = nan(nfft/2 + 1,1);
@@ -35,7 +34,7 @@ elseif length(scan.(wh_field))>nfft
     end
     
     if isfinite(scan.s2_volt)
-        [Cu2a,~] = mscohere(detrend(scan.s2_volt),detrend(scan.(acceleration_channel)),nfftc,[],nfft,Fs);
+        [Cu2a,~] = mscohere(detrend(scan.s2_volt),detrend(scan.(acceleration_channel)),nfft,[],nfft,Fs);
         sumCu2a=sum(Cu2a(fe>fc1 & fe<fc2))*nanmean(diff(fe));
     else
         Cu2a = nan(nfft/2 + 1,1);

@@ -5,8 +5,8 @@ function Profile = mod_epsilometer_calc_turbulence_v2(Meta_Data,Profile_or_profN
 %  Horizontal  velocity spectra in m^2/s^-2 Hz^-1
 %  Acceleration/speed spectra in s^-1 Hz^-1
 %
-%  Created by Arnaud Le Boyer on 7/28/18.
 %  Edited summer 2020 - Nicole Couto
+%  Created by Arnaud Le Boyer on 7/28/18.
 
 if nargin<3
     saveData = 1;
@@ -29,10 +29,12 @@ else
 end
 
 % Add latitude and longitude - take the mean of the first 10 seconds of the profile
-gps_sec_int = mode(seconds(days(diff(Profile_or_profNum.gps.dnum))));
-n_sec = 10;
-idx = round(gps_sec_int*n_sec);
+% gps_sec_int = mode(seconds(days(diff(Profile_or_profNum.gps.dnum))));
+%ALB I had an issue here I think this should be Profile instead of Profile_or_profNum
 if isfield(Profile_or_profNum,'gps') && ~isempty(Profile_or_profNum.gps)
+    gps_sec_int = mode(seconds(days(diff(Profile.gps.dnum))));
+    n_sec = 10;
+    idx = round(gps_sec_int*n_sec);
     nGPS = length(Profile_or_profNum.gps.latitude);
     Profile.latitude = nanmean(Profile_or_profNum.gps.latitude(1:min([idx,nGPS])));
     Profile.longitude = nanmean(Profile_or_profNum.gps.longitude(1:min([idx,nGPS])));
@@ -45,6 +47,43 @@ catch
     Fs_epsi = Meta_Data.PROCESS.Fs_epsi;
 end
 
+%% get pitch roll rms accel
+
+Ax=Profile.epsi.(Meta_Data.PROCESS.timeseries{1}).*0; %a1
+Ay=Ax; %a3
+Az=Ax; %a2
+
+if ~isempty(Profile.epsi)
+    for c=1:Meta_Data.PROCESS.nb_channels
+        wh_channel=Meta_Data.PROCESS.timeseries{c};
+        switch wh_channel
+            case 'a1_g'
+                Az=Profile.epsi.(wh_channel);
+            case 'a2_g'
+                Ax=Profile.epsi.(wh_channel);
+            case'a3_g'
+                Ay=Profile.epsi.(wh_channel);
+        end
+    end
+end
+rms_accel=rms([Ax(:);Ay(:);Az(:);]);
+if sum(abs(Ax))>0 && sum(abs(Ay))>0 && sum(abs(Az))>0
+    Profile.epsi.pitch = atan2 ( Ax, sqrt(Ay.^2 + Az.^2));
+else
+    Profile.epsi.pitch= Ax.*0;
+end
+
+if sum(abs(Ay))>0 && sum(abs(Az))>0
+    Profile.epsi.roll  = atan2 ( -Ay , Az);
+else
+    Profile.epsi.roll= Ax.*0;
+end
+
+Profile.epsi.accell_mask=(abs(Ax)>3*rms_accel) | (abs(Ay)>3*rms_accel) |...
+            (abs(Az)>3*rms_accel);
+
+
+
 %% despiking shear and temp
 
 %fprintf('despiking Profile\r\n')
@@ -55,22 +94,21 @@ end
 %windows that is 10 * 16 samples. Arbitrarily using 10.
 % I am saving the percentage of outliers in the Profile structure
 movmean_window_width = Meta_Data.PROCESS.movmean_window_time*Fs_epsi;
-%movmean_window_width=10*16;
+
+
 if ~isempty(Profile.epsi)
     for c=1:Meta_Data.PROCESS.nb_channels
         wh_channel=Meta_Data.PROCESS.timeseries{c};
-        if ~strcmp(wh_channel,'c_count')
-            Profile.epsi.([wh_channel '_raw'])=Profile.epsi.(wh_channel);
-            Profile.epsi.(wh_channel)=  ...
-                filloutliers(Profile.epsi.([wh_channel '_raw']), ...
-                'linear','movmean',movmean_window_width);
-            Profile.qc.outliers.(wh_channel)= ...
-                sum(Profile.epsi.(wh_channel)~= ...
-                Profile.epsi.([wh_channel '_raw']))/...
-                numel(Profile.epsi.(wh_channel))*100;
-        end
+
+        Profile.epsi.([wh_channel '_raw'])=Profile.epsi.(wh_channel);
+        Profile.epsi.(wh_channel)=filloutliers(Profile.epsi.(wh_channel),'linear','movmedian',movmean_window_width);
+
+        Profile.qc.outliers.(wh_channel)= ...
+            sum(Profile.epsi.(wh_channel)~= ...
+            Profile.epsi.([wh_channel '_raw']))/...
+            numel(Profile.epsi.(wh_channel))*100;
     end
-    
+
 end
 
 %% get channels
@@ -126,34 +164,19 @@ if sum(inRange)==0
 else
 % Remove epsi values outside the time period defined by ctdtime
 % ALB why did I add the suffix _coh here?
-keepEpsi = Profile.epsi.time_s>=nanmin(ctdtime) & Profile.epsi.time_s<=nanmax(ctdtime);
-for iChan=1:numel(channels)
-    wh_channel = channels{iChan};
-    if ~strcmp(wh_channel,'c_count')
-        Profile_coh.(wh_channel) = Profile.epsi.(wh_channel)(keepEpsi);
-    end
-end
+% keepEpsi = Profile.epsi.time_s>=nanmin(ctdtime) & Profile.epsi.time_s<=nanmax(ctdtime);
+% for iChan=1:numel(channels)
+%     wh_channel = channels{iChan};
+%     if ~strcmp(wh_channel,'c_count')
+%         Profile_coh.(wh_channel) = Profile.epsi.(wh_channel)(keepEpsi);
+%     end
+% end
 
-if isfield(Meta_Data.PROCESS, "multivariate")
-    if (Meta_Data.PROCESS.multivariate)
-        for iChan=1:numel(channels)
-            wh_channel = channels{iChan};
-            if ~strcmp(wh_channel,'c_count')
-                Profile_coh.(wh_channel) = Profile.epsi.(wh_channel);
-            end
-        end
-        %ALB add ctd.P and ctd.time_s so I can compute multivariate coherence on
-        %the same grid as the futur scans
-        Profile_coh.time_s=Profile.epsi.time_s;
-        Profile_coh.ctd.P=Profile.ctd.P;
-        Profile_coh.ctd.time_s=Profile.ctd.time_s;
-    end
-end
 
 %% define a Pressure axis to an which I will compute epsilon and chi.
 %  The spectra will be nfft long centered around P(z) +/- tscan/2.
 %
-Pr = ceil(min(Profile.ctd.P)):dz:floor(max(Profile.ctd.P));
+Pr = ceil(Prmin):dz:floor(Prmax);
 nbscan = length(Pr);
 
 %% compute coherence with a3 over the full profile.
@@ -165,24 +188,6 @@ else
     channel = 'a3_g';
 end
 
-if isfield(Meta_Data.PROCESS, "multivariate")
-    % if the user asked to compute the multivariate and if it is not
-    % already done
-    if (Meta_Data.PROCESS.multivariate) && ~isfield(Profile,"Cs1a_mv") 
-        
-        [Profile.Cs1a_mv,Profile.Cs2a_mv] = ...
-            mod_efe_profile_multivariate_coherence(Profile_coh,Pr,Meta_Data);
-        % save profile cause it takes for eve to compute mv.
-        save_var_name = 'Profile';
-        save_file_name = sprintf('Profile%03i',Profile.profNum);
-        save_file = fullfile(Meta_Data.paths.profiles, ...
-            [save_file_name '.mat']);
-        eval(['save(''' save_file ''', ''' save_var_name ''');']);
-    end
-end
-
-[Profile.Cs1a3_full,Profile.Cs2a3_full,...
-    ~,~,~] = mod_efe_scan_coherence(Profile_coh,channel,Meta_Data);
 
 %%
 
@@ -233,7 +238,22 @@ Profile.th             = nan(nbscan,1);
 Profile.sgth           = nan(nbscan,1);
 Profile.epsilon_final  = nan(nbscan,1);
 Profile.kvis           = nan(nbscan,1);
-Profile.epsi_qc_final  = nan(nbscan,1);
+Profile.sumPa.a1       = nan(nbscan,1);
+Profile.sumPa.a2       = nan(nbscan,1);
+Profile.sumPa.a3       = nan(nbscan,1);
+Profile.pitch          = nan(nbscan,1);
+Profile.roll           = nan(nbscan,1);
+Profile.epsi_qc        = nan(nbscan,1);
+Profile.qc.ratio       = nan(nbscan,2);
+Profile.qc.fom         = nan(nbscan,2);
+Profile.qc.a1          = nan(nbscan,1);
+Profile.qc.a2          = nan(nbscan,1);
+
+Profile.qc.a3          = nan(nbscan,1);
+Profile.qc.speed       = nan(nbscan,1);
+Profile.qc.pitch       = nan(nbscan,1);
+Profile.qc.roll        = nan(nbscan,1);
+
 
 Profile.ind_range_ctd   = nan(nbscan,2);
 Profile.ind_range_epsi  = nan(nbscan,2);
@@ -242,14 +262,13 @@ Profile.calib_volt      = nan(nbscan,2);
 Profile.calib_vel       = nan(nbscan,2);
 Profile.epsilon         = nan(nbscan,2);
 Profile.epsilon_co      = nan(nbscan,2);
-Profile.epsilon_mv      = nan(nbscan,2);
+Profile.epsilon_method  = nan(nbscan,2);
 Profile.sh_fc           = nan(nbscan,2);
 Profile.sh_kc           = nan(nbscan,2);
 Profile.chi             = nan(nbscan,2);
 Profile.tg_fc           = nan(nbscan,2);
 Profile.tg_kc           = nan(nbscan,2);
 Profile.flag_tg_fc      = nan(nbscan,2);
-Profile.epsi_qc         = nan(nbscan,2);
 
 Profile.k                = nan(nbscan,length(f));
 Profile.Pt_volt_f.t1     = nan(nbscan,length(f));
@@ -265,8 +284,8 @@ Profile.Ps_shear_k.s1    = nan(nbscan,length(f));
 Profile.Ps_shear_k.s2    = nan(nbscan,length(f));
 Profile.Ps_shear_co_k.s1 = nan(nbscan,length(f));                          %wnb shear spectrum with coherence correction
 Profile.Ps_shear_co_k.s2 = nan(nbscan,length(f));                          %wnb shear spectrum with coherence correction
-Profile.Ps_shear_mv_k.s1 = nan(nbscan,length(f));                          %wnb shear spectrum with multivariate correction
-Profile.Ps_shear_mv_k.s2 = nan(nbscan,length(f));                          %wnb shear spectrum with multivariate correction
+Profile.Cs1a3            = nan(nbscan,length(f));                          %wnb shear spectrum with coherence correction
+Profile.Cs2a3            = nan(nbscan,length(f));                          %wnb shear spectrum with coherence correction
 
 Profile.Meta_Data = Meta_Data;
 
@@ -274,7 +293,7 @@ Profile.Meta_Data = Meta_Data;
 % Loop through scans
 fprintf(['Processing ' num2str(nbscan) ' scans \n'])
 for p = 1:nbscan % p is the scan index.
-    
+
     if mod(p,20)==0 && mod(p,100)~=0
         %fprintf([num2str(p) ' of ' num2str(nbscan) '\n'])
         fprintf(num2str(p))
@@ -317,16 +336,12 @@ for p = 1:nbscan % p is the scan index.
         Profile.epsilon(p,2) = scan.epsilon.s2;
         Profile.epsilon_co(p,1) = scan.epsilon_co.s1;
         Profile.epsilon_co(p,2) = scan.epsilon_co.s2;
-        Profile.epsilon_mv(p,1) = scan.epsilon_mv.s1;
-        Profile.epsilon_mv(p,2) = scan.epsilon_mv.s2;
-        Profile.epsilon_final(p) = scan.epsilon_final;
-        Profile.epsi_qc(p,1) = scan.epsi_qc(1);
-        Profile.epsi_qc(p,2) = scan.epsi_qc(2);
-        Profile.epsi_qc_final(p) = scan.epsi_qc_final;
-        Profile.sh_fc(p,1) = scan.fc.s1(1); %only saving the shear_co limit NC-changed to 1st index instead of 2nd. Arnaud must have changed how cutoff number is stored
-        Profile.sh_fc(p,2) = scan.fc.s2(1); %only saving the shear_co limit
-        Profile.sh_kc(p,1) = scan.kc.s1(1); 
-        Profile.sh_kc(p,2) = scan.kc.s2(1); 
+        Profile.epsilon_method(p,1) = scan.method.s1(2);
+        Profile.epsilon_method(p,2) = scan.method.s2(2);
+        Profile.sh_fc(p,1) = scan.fc.s1(2); %only saving the shear_co limit NC-changed to 1st index instead of 2nd. Arnaud must have changed how cutoff number is stored
+        Profile.sh_fc(p,2) = scan.fc.s2(2); %only saving the shear_co limit ALB 03/06/2023 the 2nd idx is the shear_co
+        Profile.sh_kc(p,1) = scan.kc.s1(2); 
+        Profile.sh_kc(p,2) = scan.kc.s2(2); 
         Profile.kvis(p,1) = scan.kvis;
         
         if isfield(scan.chi,'t1')
@@ -366,14 +381,21 @@ for p = 1:nbscan % p is the scan index.
         for iname=1:length(Fname)
             wh_name=Fname{iname};
             Profile.Pa_g_f.(wh_name)(p,:) = scan.Pa_g_f.(wh_name)(:).';
+            Profile.sumPa.(wh_name)(p) = scan.sumPa_g.(wh_name);
         end
+
+        Profile.Cs1a3(p,:)=scan.Cs1a.a3(:).';
+        Profile.Cs2a3(p,:)=scan.Cs2a.a3(:).';
         
-        Profile.z(p)    = scan.z;
-        Profile.w(p)    = scan.w;
-        Profile.t(p)    = scan.t;
-        Profile.s(p)    = scan.s;
-        Profile.th(p)   = scan.th;
-        Profile.sgth(p) = scan.sgth;
+        Profile.z(p)     = scan.z;
+        Profile.w(p)     = scan.w;
+        Profile.t(p)     = scan.t;
+        Profile.s(p)     = scan.s;
+        Profile.th(p)    = scan.th;
+        Profile.sgth(p)  = scan.sgth;
+        Profile.pitch(p) = scan.pitch;
+        Profile.roll(p)  = scan.roll;
+
         
         if isfield(scan,'dnum')
             Profile.dnum(p) = scan.dnum;
@@ -383,8 +405,62 @@ for p = 1:nbscan % p is the scan index.
     
 end
 
-Profile.Cs1a3_full = Profile.Cs1a3_full(:).';
-Profile.Cs2a3_full = Profile.Cs2a3_full(:).';
+%% add qc flag
+% check on fom, sumPa, calib_vel ...
+
+% sumPa
+rmsa1=rms(log10(Profile.sumPa.a1),'omitnan');
+stda1=std(log10(Profile.sumPa.a1),'omitnan');
+rmsa2=rms(log10(Profile.sumPa.a2),'omitnan');
+stda2=std(log10(Profile.sumPa.a2),'omitnan');
+rmsa3=rms(log10(Profile.sumPa.a3),'omitnan');
+stda3=std(log10(Profile.sumPa.a3),'omitnan');
+
+qc.a1=log10(Profile.sumPa.a1)>(-rmsa1+2.*stda1);
+qc.a2=log10(Profile.sumPa.a2)>(-rmsa2+2.*stda2);
+qc.a3=log10(Profile.sumPa.a3)>(-rmsa3+2.*stda3);
+
+% figure of merit
+qc.fom=Profile.fom>2;
+
+%pitch
+qc.pitch = (Profile.pitch-mean(Profile.pitch,'omitnan'))>5;
+qc.roll  = (Profile.roll-mean(Profile.roll,'omitnan'))>5;
+
+% speed
+try
+    qc.speed = Profile.w>Meta_Data.PROCESS.speed_limit;
+catch
+    disp('No speed limit in Meta_Data.PROCESS')
+    Meta_Data.PROCESS.speed_limit=.2;
+    qc.speed = Profile.w<Meta_Data.PROCESS.speed_limit;
+end
+
+%epsi1/epsi2 ratio
+qc.ratio(:,1) = (Profile.epsilon_co(:,1)./Profile.epsilon_co(:,2))>3;
+qc.ratio(:,2) = (Profile.epsilon_co(:,2)./Profile.epsilon_co(:,1))>3;
+
+final_epsi=Profile.epsilon_co;
+final_epsi(qc.fom)=nan;
+
+Profile.epsilon_final=mean(final_epsi,2,'omitnan');
+Profile.epsilon_final(qc.ratio(:,1))=final_epsi(qc.ratio(:,1),2);
+Profile.epsilon_final(qc.ratio(:,2))=final_epsi(qc.ratio(:,2),1);
+
+
+
+qc_array = [qc.a3 qc.a2 qc.a1 qc.roll qc.pitch qc.speed];
+qc_bit   =  bin2dec(num2str(qc_array));
+Profile.epsi_qc = qc_bit;
+
+Profile.epsilon_final(qc_bit>0) =nan;
+
+qc_array = [qc.ratio qc.fom qc.a3 qc.a2 qc.a1 qc.roll qc.pitch qc.speed];
+qc_bit   =  bin2dec(num2str(qc_array));
+Profile.epsi_qc = qc_bit;
+Profile.qc      = qc;
+
+
 
 %% Define varInfo and sort Profile fields
 Profile = add_varInfo(Profile);

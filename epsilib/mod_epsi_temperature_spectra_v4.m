@@ -94,9 +94,10 @@ nbscan=2*nbscan-1;
 epsi_indscan = arrayfun(@(x) (1+floor(epsi_Lscan/2)*(x-1):1+floor(epsi_Lscan/2)*(x-1)+epsi_Lscan-1),1:nbscan,'un',0);
 ctd_indscan = arrayfun(@(x) (1+floor(ctd_Lscan/2)*(x-1):1+floor(ctd_Lscan/2)*(x-1)+ctd_Lscan-1),1:nbscan,'un',0);
 clear data_CTD
+T=filloutliers(Profile.ctd.T,'linear','movmean',100);
 
 % split ctd data in segments.
-data_CTD = cell2mat(cellfun(@(x) Profile.ctd.T(x),ctd_indscan,'un',0)).';
+data_CTD = cell2mat(cellfun(@(x) T(x),ctd_indscan,'un',0)).';
 time_CTD = cell2mat(cellfun(@(x) Profile.ctd.time_s(x),ctd_indscan,'un',0)).';
 pr_CTD = cell2mat(cellfun(@(x) Profile.ctd.P(x),ctd_indscan,'un',0)).';
 

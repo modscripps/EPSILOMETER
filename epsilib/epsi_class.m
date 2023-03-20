@@ -107,7 +107,7 @@ classdef epsi_class < handle
                             isclassfield(obj.Meta_Data.PROCESS,'nb_channels') && ...
                             isclassfield(obj.Meta_Data.PROCESS,'nfft')
                         Meta_Data = obj.Meta_Data;
-                        save(fullfile(obj.Meta_Data.paths.data,'Meta_Data'),'Meta_Data');
+%                         save(fullfile(obj.Meta_Data.paths.data,'Meta_Data'),'Meta_Data');
 
                         repeat = 0; %Stop repeating. Keep this Meta_Data.
                     else
@@ -972,6 +972,9 @@ classdef epsi_class < handle
                 warning('f_check_spectra(id_profile)');
             end
             check_spectra(id_profile);
+        end
+        function f_check_grid_spectra(obj)
+            check_grid_spectra();
         end
     end %end methods
 end %end classdef

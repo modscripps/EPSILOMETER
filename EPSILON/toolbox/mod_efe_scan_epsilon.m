@@ -1,5 +1,5 @@
-function [Ps_volt_f,Ps_velocity_f,Ps_shear_k,Ps_shear_co_k,Ps_shear_mv_k,...
-          epsilon,epsilon_co,epsilon_mv,f,k,fc,kc, ...
+function [Ps_volt_f,Ps_velocity_f,Ps_shear_k,Ps_shear_co_k,...
+          epsilon,epsilon_co,method,f,k,fc,kc, ...
           Ppan,Ppan_co,fom,calib_volt,calib_vel]= ...
           mod_efe_scan_epsilon(scan,shear_channel,Meta_Data)
 % get epsilon and the cutoff frequency
@@ -18,8 +18,8 @@ function [Ps_volt_f,Ps_velocity_f,Ps_shear_k,Ps_shear_co_k,Ps_shear_mv_k,...
 
 nfft=Meta_Data.PROCESS.nfft;
 % Meta_Data.PROCESS.dof_coh=10;
-dof_coh=Meta_Data.PROCESS.dof_coh;
-nb_vibration_channel=3;% hard coded nb of acceleration channel used to mv correction
+% dof_coh=Meta_Data.PROCESS.dof_coh;
+% nb_vibration_channel=3;% hard coded nb of acceleration channel used to mv correction
 
 
 %ALB little warning about dof and statistical significance
@@ -44,9 +44,9 @@ if isfinite(scan.(shear_channel))
     % NC - Changed w to absolute value so this also works for upcasts
     w = abs(scan.w);
 
-    if isfield(Meta_Data,'AFE')
+    try
         Fs=Meta_Data.AFE.FS;
-    else
+    catch
         Fs=Meta_Data.PROCESS.Fs_epsi;
     end
     fpump=Meta_Data.PROCESS.ctd_fc;
@@ -57,17 +57,13 @@ if isfinite(scan.(shear_channel))
 
     % Get the coherence between the shear channel and acceleration channel (should
     % be a3)
-    if isfield(scan,'Cs1a3_full')
-        switch shear_channel
-            case 's1_volt'
-                Csa    = scan.Cs1a3_full;
-                Csa_mv = scan.Cs1a_mv;
-            case 's2_volt'
-                Csa    = scan.Cs2a3_full;
-                Csa_mv = scan.Cs2a_mv;
-        end
+    switch shear_channel
+        case 's1_volt'
+            Csa    = scan.Cs1a.a3;
+        case 's2_volt'
+            Csa    = scan.Cs2a.a3;
     end
-
+    
     % ---------------------------------------------------------------------
     % Calculate spectra and epsilon
 
@@ -91,122 +87,111 @@ if isfinite(scan.(shear_channel))
     calib_volt=max(Ps_volt_f(idx))./max(scan.Pa_g_f.a3(idx));
     calib_vel=max(Ps_velocity_f(idx))./max(scan.Pa_g_f.a3(idx));
 
-    if abs(calib_vel-0.4)>0.4
-        Ps_velocity_f=Ps_velocity_f .* 0.5/calib_vel;
-    end
+%     if abs(calib_vel-0.4)>0.4
+%         Ps_velocity_f=Ps_velocity_f .* 0.5/calib_vel;
+%     end
 
     % Convert the frequency velocity spectrum to shear wavenumber spectrum
     Ps_shear_k = ((2*pi*k).^2).*(Ps_velocity_f.*w);
 
     % Compute epsilon using eps1_mmp.m with kmax
     try
-        [epsilon,kc(1)]=eps1_mmp(k,Ps_shear_k,scan.kvis,kmax);
+        [epsilon,kmin(1),kc(1),method(1)]=eps1_mmp(k,Ps_shear_k,scan.kvis,kmax);
         fc(1)=kc(1).*w;
+        if isinf(epsilon)
+            epsilon=nan;
+        end
+
     catch
         epsilon=nan;
         kc(1)=nan;
         fc(1)=nan;
+        kmin(1)=nan;
+        method(1)=nan;
     end
 
     % Remove the coherent part of the frequency spectrum
-    if isfield(scan,'Cs1a3_full')
+    if isfield(scan,'Cs1a')
         Ps_velocity_co_f = Ps_velocity_f.*(1-Csa);
-    end
-
-    if isfield(Meta_Data.PROCESS, "multivariate")
-        if (Meta_Data.PROCESS.multivariate)
-            % ---------------------------------------------------------------------
-            % Now, do the same calculations with the multivariate coherence correction
-            % in this mv context
-            bias=1-1.02*nb_vibration_channel./dof_coh;
-            Ps_volt_mv_f=(Ps_volt_f(:)-Csa_mv(:))*bias;
-            Ps_volt_mv_f(Ps_volt_mv_f<=0)=nan;
-            Ps_volt_mv_f=fillmissing(Ps_volt_mv_f,'linear');
-            Ps_velocity_mv_f = ((2*G/(Sv*w))^2).*Ps_volt_mv_f./filter_TF;
-        else
-            bias=nan;
-            Ps_volt_mv_f=nan;
-            Ps_volt_mv_f=nan;
-            Ps_volt_mv_f=nan;
-            Ps_velocity_mv_f =nan;
-        end
     end
 
 
     % Convert the frequency velocity spectrum to shear wavenumber spectrum
     %Ps_shear_co_k = ((2*pi*k).^2).*(Ps_shear_co_f./w);
 
-    if isfield(scan,'Cs1a3_full')
+    if isfield(scan,'Cs1a')
         Ps_shear_co_k = ((2*pi*k).^2).*(Ps_velocity_co_f.*w);
-        Ps_shear_mv_k = ((2*pi*k).^2).*(Ps_velocity_mv_f.*w);
 
 
         % Compute epsilon using eps1_mmp.m with kmax
         try
-            [epsilon_co,kc(2)]=eps1_mmp(k,Ps_shear_co_k,scan.kvis,kmax);
-            [epsilon_mv,~]=eps1_mmp(k,Ps_shear_mv_k,scan.kvis,kmax);
+            [epsilon_co,kmin(2),kc(2),method(2)]=eps1_mmp(k,Ps_shear_co_k,scan.kvis,kmax);
+            if isinf(epsilon_co)
+                epsilon_co=nan;
+            end
             fc(2)=kc(2).*w;
         catch
             epsilon_co=nan;
-            epsilon_mv=nan;
             kc(2)=nan;
             fc(2)=nan;
+            kmin(2)=nan;
+            method(2)=nan;
         end
 
     else
         Ps_shear_co_k = nan;
-        Ps_shear_mv_k = nan;
         epsilon_co = nan;
-        epsilon_mv = nan;
         kc(2) = nan;
         fc(2) = nan;
+        kmin(2)=nan;
+        method(2)=nan;
     end
 
     % Get Panchev spectrum
     if ~isempty(epsilon) && ~isnan(epsilon)
 
-        sig_lnS=5/4*dof^(-7/9);
         [kpan,Ppan] = panchev(epsilon,scan.kvis);
-        if isfield(scan,'Cs1a3_full')
-            [~,Ppan_co] = panchev(epsilon_co,scan.kvis);
-            Ppan_co=interp1(kpan(~isnan(Ppan_co)),Ppan_co(~isnan(Ppan_co)),k);
-        else
-            Ppan_co = nan;
-        end
         Ppan=interp1(kpan(~isnan(Ppan)),Ppan(~isnan(Ppan)),k);
 
-        if isfield(scan,'Cs1a3_full')
-            fom=log(Ps_shear_co_k./Ppan_co);
-        fom=nanvar(fom(k>2 & k<kc(2)))./sig_lnS;
-        else 
-            fom = nan;
-        end
-        %             close all
-        %             loglog(k,Ps_shear_co_k,'b',k,Ppan,'r')
-        %             pause
+        Pxx=Ps_shear_co_k(k>=kmin(2) & k<=kc(2));
+        kin=k(k>=kmin(2) & k<=kc(2));
+
+        sig_lnS=sqrt(5/4*(dof-1)^(-7/9));
+        Ns=2*length(k);
+        Tm=0.8+sqrt(1.56/Ns);
+        [kpan,Ppan_co] = panchev(epsilon_co,scan.kvis);
+        interp_Ppan=interp1(kpan(~isnan(Ppan_co)),Ppan_co(~isnan(Ppan_co)),kin);
+        Ppan_co=interp1(kpan(~isnan(Ppan_co)),Ppan_co(~isnan(Ppan_co)),k);
+        
+        fom=log(Pxx(:)./interp_Ppan(:));
+        mad_spec=mad(fom);
+        fom=mad_spec./sig_lnS./Tm;
+
     else
         fom=NaN;
-            Ppan_co=NaN;
+        Ppan_co=NaN;
         Ppan=NaN;
     end
 
 else
 
     Ps_volt_f = nan(nfft/2 + 1,1);
+    Ps_velocity_f = nan(nfft/2 + 1,1);
     Ps_shear_k = nan(nfft/2 + 1,1);
     Ps_shear_co_k = nan(nfft/2 + 1,1);
-    Ps_shear_mv_k = nan(nfft/2 + 1,1);
 
     epsilon = nan;
     epsilon_co = nan;
-    epsilon_mv = nan;
+    method = nan;
     f = nan(nfft/2 + 1,1);
     k = nan;
     fc = nan(nfft/2 + 1,1);
     kc = nan;
+    kmin = nan;
     fom=NaN;
     Ppan_co=NaN;
     Ppan=NaN;
-    calib=nan;
+    calib_volt=nan;
+    calib_vel=nan;
 
 end

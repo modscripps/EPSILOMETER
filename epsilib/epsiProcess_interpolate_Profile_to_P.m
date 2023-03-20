@@ -7,8 +7,10 @@ GRID.vehicle_name = Profile.Meta_Data.vehicle_name;
 GRID.deployment = Profile.Meta_Data.deployment;
 
 varList0 = {'profNum','dnum','latitude','longitude'};
-varList1 = {'w','t','s','th','sgth','epsilon_final'}; %epsilon_final becomes epsilon
-varList2 = {'chi','fom'}; 
+varList1 = {'w','t','s','th','sgth','epsilon_final','epsi_qc'}; %epsilon_final becomes epsilon
+varList2 = {'epsilon_co','chi','fom','calib_volt','calib_vel'}; 
+varList3 = {'a1','a2','a3'}; 
+varListqc = {'a1','a2','a3','pitch','roll'}; 
 
 % Add varList0
 for iVar=1:length(varList0)
@@ -32,6 +34,12 @@ if ~isempty(Profile.w)
     for iVar=1:length(varList1)
         if isfield(Profile,varList1{iVar})
             GRID.(varList1{iVar}) = interp1(Profile.pr(notNan),Profile.(varList1{iVar})(notNan),GRID.pr);
+        end
+    end
+
+    for iVar=1:length(varList3)
+        if isfield(Profile.sumPa,varList3{iVar})
+            GRID.(varList3{iVar}) = interp1(Profile.pr(notNan),Profile.sumPa.(varList3{iVar})(notNan),GRID.pr);
         end
     end
 
