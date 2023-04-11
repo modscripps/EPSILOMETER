@@ -1,3 +1,4 @@
+profile_dir  = 'up';
 latitude     = 33;
 tscan        = 6;
 nfft         = 4096;

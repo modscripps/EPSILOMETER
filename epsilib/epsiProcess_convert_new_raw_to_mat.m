@@ -296,8 +296,10 @@ for i=1:length(myASCIIfiles)
         end
 
         % Save data in .mat file
+        tic
         save(fullfile(MatDir,base),'-struct','matData')
         fprintf(1,'%s: Wrote  %s/%s.mat\n',datestr(now,'YY.mm.dd HH:MM:SS'),MatDir,base);
+        toc
 
         %Empty contents of matData structure
         use matData
@@ -320,10 +322,10 @@ for i=1:length(myASCIIfiles)
             epsiProcess_update_PressureTimeseries(Meta_Data,MatDir,ctd,Meta_Data.PROCESS.profile_dir)
         end
 
-        % Save files for FCTD Format %%%%%% (Bethan 20 June 2021)
-        if doFCTD && ~isempty(ctd) && isfield(ctd,'time_s')
-            make_FCTD_mat(matData,FCTDdir,base,cruise_specifics);
-        end %end if doFCTD
+%         % Save files for FCTD Format %%%%%% (Bethan 20 June 2021)
+%         if doFCTD && ~isempty(ctd) && isfield(ctd,'time_s')
+%             make_FCTD_mat(matData,FCTDdir,base,cruise_specifics);
+%         end %end if doFCTD
 
     end %end if the data should be converted
 end %end loop through files

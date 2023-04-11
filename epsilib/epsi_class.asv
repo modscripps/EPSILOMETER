@@ -70,12 +70,11 @@ classdef epsi_class < handle
             repeat = 1; %Initialize repeat flag to use if Meta_Data path names were not made on this machine
             while repeat==1
 
-
-
                 if ~isempty(checkMD) %Meta_Data already exists
 
                     fprintf('Initializing epsi_class with previously created Meta_Data \n')
                     load(fullfile(data_path,'Meta_Data'))
+                    obj.Meta_Data = Meta_Data;
 
                     % Meta_Data includes the path to the epsi processing
                     % library, but if the data was processed on another
@@ -88,7 +87,6 @@ classdef epsi_class < handle
                         'UniformOutput',false))};
                     obj.Meta_Data.paths.process_library=fileparts(epsilib_path);
                     obj.Meta_Data.paths.calibration = fullfile(obj.Meta_Data.paths.process_library,'CALIBRATION','ELECTRONICS');
-                    obj.Meta_Data = Meta_Data;
 
                     % Always redefine the data path as the current
                     % directory or the directory you input
@@ -109,7 +107,7 @@ classdef epsi_class < handle
                             isclassfield(obj.Meta_Data.PROCESS,'nb_channels') && ...
                             isclassfield(obj.Meta_Data.PROCESS,'nfft')
                         Meta_Data = obj.Meta_Data;
-                        save(fullfile(obj.Meta_Data.paths.data,'Meta_Data'),'Meta_Data');
+%                         save(fullfile(obj.Meta_Data.paths.data,'Meta_Data'),'Meta_Data');
 
                         repeat = 0; %Stop repeating. Keep this Meta_Data.
                     else
@@ -279,6 +277,9 @@ classdef epsi_class < handle
             fprintf('raw data path: %s \n',obj.Meta_Data.paths.raw_data);
             fprintf('mat data path: %s \n',obj.Meta_Data.paths.mat_data);
             fprintf('profiles path: %s \n',obj.Meta_Data.paths.profiles);
+            fprintf('... \n')
+            fprintf('Meta_Data.PROCESS information comes from %s \n',obj.Meta_Data.PROCESS.filename)
+            fprintf('Profiles are going %s \n',upper(obj.Meta_Data.PROCESS.profile_dir))
 
             % NC - check for s1 and s2 cal values. For newer deployments that have Meta_Data.AFE structure, if they're
             % 0, manually input all probe numbers.
@@ -803,12 +804,12 @@ classdef epsi_class < handle
             %                 error('You need to create profiles before calibrating temperature for this deployment')
             %             end
             %
-            switch obj.Meta_Data.vehicle_name
-                case 'FISH'
+            switch lower(obj.Meta_Data.vehicle_name)
+                case 'fish'
                     obj.Meta_Data.PROCESS.profile_dir = 'down';
                     datachoice = 'datadown';
                     idxchoice = 'down';
-                case {'WW','SEACYCLER'}
+                case {'ww','seacycler','apex'}
                     obj.Meta_Data.PROCESS.profile_dir = 'up';
                     datachoice = 'dataup';
                     idxchoice = 'up';
@@ -974,6 +975,9 @@ classdef epsi_class < handle
                 warning('f_check_spectra(id_profile)');
             end
             check_spectra(id_profile);
+        end
+        function f_check_grid_spectra(obj)
+            check_grid_spectra();
         end
     end %end methods
 end %end classdef

@@ -56,9 +56,12 @@ Meta_Data.start_dnum = now;
 % ind_*_end    = ending indices of all matches
 
 [ind_efe_start, ind_efe_stop]            = regexp(str,'\$EFE([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
+% Find either SB49 or SB41 data
 [ind_sbe_start, ind_sbe_stop]            = regexp(str,'\$SB49([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
+sbe_type = 'SB49';
 if isempty(ind_sbe_start)
     [ind_sbe_start, ind_sbe_stop]        = regexp(str,'\$SB41([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
+    sbe_type = 'SB41';
 end
 [ind_alt_start      , ind_alt_stop]      = regexp(str,'\$ALT([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
 [ind_act_start      , ind_act_stop]      = regexp(str,'\$ACTU([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
@@ -301,14 +304,14 @@ else
     % SBE-specific quantities
     % ---------------------------------
     
-    switch Meta_Data.CTD.name
-        case{"SBE49","SBE","S49","SB49"}
+    switch sbe_type
+        case 'SB49'
             sbe.data.format      = 'eng';
             %sbe.data.length      = 22;
             sbe.data.length      = 24; %It's 24 for BLT data
             sbe.data.sample_freq = 16;
             sbe.cal              = Meta_Data.CTD.cal;
-        case{"SBE41","S41","SB41"}
+        case 'SB41'
             sbe.data.format      = 'PTS';
             sbe.data.length      = 28;
             sbe.data.sample_freq = 1;

@@ -277,6 +277,10 @@ classdef epsi_class < handle
             fprintf('raw data path: %s \n',obj.Meta_Data.paths.raw_data);
             fprintf('mat data path: %s \n',obj.Meta_Data.paths.mat_data);
             fprintf('profiles path: %s \n',obj.Meta_Data.paths.profiles);
+            fprintf('... \n')
+            fprintf('Meta_Data.PROCESS information comes from %s \n',obj.Meta_Data.PROCESS.filename)
+            fprintf('Profiles are going %s \n',upper(obj.Meta_Data.PROCESS.profile_dir))
+            fprintf('... \n')
 
             % NC - check for s1 and s2 cal values. For newer deployments that have Meta_Data.AFE structure, if they're
             % 0, manually input all probe numbers.
@@ -801,12 +805,12 @@ classdef epsi_class < handle
             %                 error('You need to create profiles before calibrating temperature for this deployment')
             %             end
             %
-            switch obj.Meta_Data.vehicle_name
-                case 'FISH'
+            switch lower(obj.Meta_Data.vehicle_name)
+                case 'fish'
                     obj.Meta_Data.PROCESS.profile_dir = 'down';
                     datachoice = 'datadown';
                     idxchoice = 'down';
-                case {'WW','SEACYCLER'}
+                case {'ww','seacycler','apex'}
                     obj.Meta_Data.PROCESS.profile_dir = 'up';
                     datachoice = 'dataup';
                     idxchoice = 'up';
