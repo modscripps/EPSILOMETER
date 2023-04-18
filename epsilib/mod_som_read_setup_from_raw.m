@@ -30,7 +30,7 @@ firmware_length=40-1;
 
 gitid_offset=firmware_offset+firmware_length+1;
 switch setup.size
-    case 864    
+    case {864,896}
         gitid_length=24-1;
     otherwise
         gitid_length=0-1;

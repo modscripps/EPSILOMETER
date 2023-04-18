@@ -175,12 +175,12 @@ if ind_ctdscan(1)>0 && ...
 
 
                 Fs=320;
-                Fc=50/Fs/2; % cutoff freq at 20 Hz
+                Fc=50/Fs/2; % cutoff freq at 50 Hz
                 [B,A]=cheby2(3,20,Fc,'low');
                 data2=filtfilt(B,A,data1);
 
                 scan2=abs(data1./data2);
-                rms_scan2=rms(scan2);
+%                 rms_scan2=rms(scan2);
                 idx_outlier=find(scan2>5);
                 %                 idx_outlier=find(scan2>rms_scan2);
                 scan3=scan2;

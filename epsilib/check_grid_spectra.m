@@ -152,7 +152,6 @@ while plot_flag
 
     if isfield(Profile,'vnav')
         Profile.vnav.pr=interp1(Profile.ctd.dnum,Profile.ctd.P,Profile.vnav.dnum);
-        idx_vnav=find(Profile.vnav.pr>select_depth,1,'first');
         Profile.vnav=vnav_pitch_roll_heading(Profile.vnav);
     else
         Profile.vnav.pitch   = Profile.pr.* nan;
@@ -161,6 +160,7 @@ while plot_flag
         Profile.vnav.dnum    = Profile.dnum;
         Profile.vnav.pr      = Profile.pr;
     end
+    idx_vnav=find(Profile.vnav.pr>select_depth,1,'first');
 
     a=1
     ax(a)=subplot('Position',[.04 .08 .08 .8]);
@@ -231,13 +231,18 @@ while plot_flag
     a=a+1;
     ax(a)=subplot('Position',[.28 .08 .05 .8]);
     if isfield(Profile,'vnav')
+
         plot(ax(a),Profile.vnav.pitch,Profile.vnav.pr);
         axis(ax(a),'ij')
         ax(a).FontSize=strfontsize;
         ax(a).FontName='Time New Roman';
         grid(ax(a),'on')
         axis(ax(a),'ij')
-        ax(a).XLim=[min(Profile.vnav.pitch) max(Profile.vnav.pitch)];
+        try
+            ax(a).XLim=[min(Profile.vnav.pitch) max(Profile.vnav.pitch)];
+        catch
+            ax(a).XLim=[0 1];
+        end
         ax(a).YLim=[max(min(Profile.pr),0) max(Profile.pr)];
         ax(a).YTickLabel='';
         xlabel(ax(a),'pitch','fontsize',strfontsize,'fontname','time new roman')
@@ -253,7 +258,7 @@ while plot_flag
         Profile.Meta_Data.mission,      ...
         Profile.Meta_Data.vehicle_name, ...
         Profile.profNum);
-    if isfield('vnav',Profile)
+    if isfield(Profile,'vnav')
         plot(ax(a),unwrap(Profile.vnav.roll)+pi,Profile.vnav.pr);
         text(ax(a),-pi/2,Profile.pr(1)-15,{rootpath{end},...
             str_title},...
@@ -263,7 +268,12 @@ while plot_flag
 
         grid(ax(a),'on')
         axis(ax(a),'ij')
-        ax(a).XLim=[min(unwrap(Profile.vnav.roll)+pi) max(unwrap(Profile.vnav.roll)+pi)];
+        try
+            ax(a).XLim=[min(unwrap(Profile.vnav.roll)+pi) max(unwrap(Profile.vnav.roll)+pi)];
+        catch
+            ax(a).XLim=[0 1];
+        end
+
         ax(a).YLim=[max(min(Profile.pr),0) max(Profile.pr)];
         ax(a).YTickLabel='';
         xlabel(ax(a),'roll','fontsize',strfontsize,'fontname','time new roman')
