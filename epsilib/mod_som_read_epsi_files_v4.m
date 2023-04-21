@@ -522,7 +522,7 @@ else
             inches2meters(probe_to_crashguard);
 
         % alt.hab is the height of the probes above the bottom
-        alt.hab(iB,1) = A*cos(theta) - altimeter_height_above_probes;
+        alt.hab(iB) = A*cos(theta) - altimeter_height_above_probes;
 
     end %end loop through alt blocks
     
