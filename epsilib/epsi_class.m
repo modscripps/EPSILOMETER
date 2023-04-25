@@ -98,6 +98,14 @@ classdef epsi_class < handle
 
                     obj.Meta_Data = epsiSetup_get_raw_suffix(obj.Meta_Data);
 
+                    % NC 4/23/23
+                    % If Meta_Data_Process file is specified, add it to
+                    % Meta_Data paths and read it
+                    if exist('Meta_Data_process_file','var')
+                        obj.Meta_Data.paths.process_library = Meta_Data_process_file;
+                        obj.f_read_MetaProcess(Meta_Data_process_file);
+                    end
+
                     % Check that Meta_Data has everything you need. If it's
                     % missing something, set repeat=0 and checkMD=[]
                     if  isdir(obj.Meta_Data.paths.process_library) && ...
@@ -226,8 +234,6 @@ classdef epsi_class < handle
                         % first file to look for $SOM3
 
                         try
-                            
-                            %% NC 4/21/23 Setupfile is the first file that match str_to_match, not just '*'
                             setupfile=dir(fullfile(obj.Meta_Data.paths.raw_data,...
                                 ['*' obj.Meta_Data.rawfileSuffix]));
                             setup=mod_som_read_setup_from_raw(fullfile(setupfile(1).folder,setupfile(1).name));

@@ -496,14 +496,14 @@ else
         
         % For the altimeter, all the data is actually in the header
         alti.hextimestamp.value   = hex2dec(alt_block_str(tag.hextimestamp.inds));
-        alt_timestamp(iB) = alti.hextimestamp.value;
+        alt_timestamp(iB,1) = alti.hextimestamp.value;
         
         % The altimeter block does not have a hexlengthblock (hexadecimal
         % length of data block). It has the altimeter reading in that
         % position
         alti.hexlengthblock.value = alt_block_str(tag.hexlengthblock.inds);
         dst_microsec = str2double(alti.hexlengthblock.value);
-        alt.dst(iB) = dst_microsec*alti.ten_microsec2sec*alti.sound_speed;
+        alt.dst(iB,1) = dst_microsec*alti.ten_microsec2sec*alti.sound_speed;
         
         % Calculate actual height above bottom (hab) from altimeter
         % distance reading. The altimeter is angled at 10 degrees and is positioned 5 ft above the
@@ -516,13 +516,13 @@ else
         alt_to_crashguard = Meta_Data.PROCESS.alt_dist_from_crashguard_ft;
         probe_to_crashguard = Meta_Data.PROCESS.alt_probe_dist_from_crashguard_in;
 
-        A = alt.dst(iB);
+        A = alt.dst(iB,1);
         theta = deg2rad(angle_deg);
         altimeter_height_above_probes = feet2meters(alt_to_crashguard) - ...
             inches2meters(probe_to_crashguard);
 
         % alt.hab is the height of the probes above the bottom
-        alt.hab(iB) = A*cos(theta) - altimeter_height_above_probes;
+        alt.hab(iB,1) = A*cos(theta) - altimeter_height_above_probes;
 
     end %end loop through alt blocks
     

@@ -86,7 +86,11 @@ end
 
 % Copy the first file from raw_incoming into raw_copy - you need to have
 % one file there for epsi_class to read the configuration information
-file_list = dir(fullfile(dirs.raw_incoming,'EPSI*'));
+if isfield(input_struct,'str_to_match')
+    file_list = dir(fullfile(dirs.raw_incoming,[input_struct.str_to_match '*']));
+else
+    file_list = dir(fullfile(dirs.raw_incoming,'EPSI*'));
+end
 eval(['!cp ' fullfile(file_list(1).folder,file_list(1).name) ' ' dirs.raw_copy]);
 
 % Initialize epsi_class in away_dir and create blank structures to fill
