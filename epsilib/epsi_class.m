@@ -101,9 +101,11 @@ classdef epsi_class < handle
                     % NC 4/23/23
                     % If Meta_Data_Process file is specified, add it to
                     % Meta_Data paths and read it
-                    if exist('Meta_Data_process_file','var')
+                    if exist('Meta_Data_process_file','var') 
+                        if ~isempty(Meta_Data_process_file)
                         obj.Meta_Data.paths.process_library = Meta_Data_process_file;
                         obj.f_read_MetaProcess(Meta_Data_process_file);
+                        end
                     end
 
                     % Check that Meta_Data has everything you need. If it's
