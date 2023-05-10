@@ -141,8 +141,13 @@ if ind_ctdscan(1)>0 && ...
 
     %ALB add pitch and roll 03/06/2023
     %scan pitch and roll
-    scan.pitch = mean(Profile.epsi.pitch(ind_scan),'omitnan');
-    scan.roll  = mean(Profile.epsi.roll(ind_scan),'omitnan');
+    % NC - since pitch and roll are new additions to
+    % mod_epsilometer_calc_turbulence_v2.m, first make sure they are in the
+    % Profile structure (so  script still works for old  datasets)
+    if isfield(Profile.epsi,'pitch')
+        scan.pitch = mean(Profile.epsi.pitch(ind_scan),'omitnan');
+        scan.roll  = mean(Profile.epsi.roll(ind_scan),'omitnan');
+    end
 
     % NC 17 July 2021 - the functions nu and kt want pressure in MPa, not
     % db. Convert to MPa before calculating kinematic viscosity and thermal

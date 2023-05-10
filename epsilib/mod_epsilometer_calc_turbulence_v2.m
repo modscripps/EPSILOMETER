@@ -79,7 +79,7 @@ else
     Profile.epsi.roll= Ax.*0;
 end
 
-Profile.epsi.accell_mask=(abs(Ax)>3*rms_accel) | (abs(Ay)>3*rms_accel) |...
+Profile.epsi.accel_mask=(abs(Ax)>3*rms_accel) | (abs(Ay)>3*rms_accel) |...
             (abs(Az)>3*rms_accel);
 
 

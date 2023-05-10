@@ -63,6 +63,7 @@ end
 % Define the directories
 dirs.raw_incoming = raw_dir;
 dirs.raw_copy  = fullfile(away_dir,'raw');
+dirs.processing = input_struct.processing_dir;
 dirs.mat       = fullfile(away_dir,'mat');
 % dirs.fctd_mat  = fullfile(away_dir,'FCTDmat');
 % dirs.fctd_rot  = fullfile(away_dir,'FCTDrot');
