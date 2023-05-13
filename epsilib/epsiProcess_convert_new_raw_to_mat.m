@@ -1,5 +1,6 @@
 function [matData] = epsiProcess_convert_new_raw_to_mat(dirs,Meta_Data,varargin)
 % epsiProcess_convert_new_raw_to_mat
+%   Converts new raw files from dirs.raw_incoming to mat files and saves them in dir.raw_copy
 %
 % Nicole Couto adapted from FCTD_MakeMatFromRaw.m
 % May-July 2021
@@ -7,9 +8,8 @@ function [matData] = epsiProcess_convert_new_raw_to_mat(dirs,Meta_Data,varargin)
 % --------------------------------------------------------
 % INPUTS:
 %   dirs.raw_incoming  - where raw data is streaming in
-%       .raw_copy      - where raw data should be copied for timeseries
-%                        viewing
-%       .processing    - where raw data should be copied for processing
+%       .raw_copy      - where raw data should be copied for the current
+%                        deployment
 %       .mat           - directory for .mat files converted from raw files
 %       .fctd_mat      - directory for .mat files formatted for FCTD
 %                        processing
@@ -41,7 +41,7 @@ function [matData] = epsiProcess_convert_new_raw_to_mat(dirs,Meta_Data,varargin)
 % Written by Jody Klymak
 % Updated 2011 06 21 by San Nguyen
 % Updated 2012 09 29 by San Nguyen for EquatorMix2012
-% Adapted 2021-22 by Nicole Couto for Epsilometer data
+% Adapted 2021-23 by Nicole Couto for Epsilometer data
 
 % NC - Make matData for output even if there is no new data
 matData.epsi  = [];
@@ -61,8 +61,8 @@ suffixSearch = ['*' suffixStr];
 %% Set default parameters
 % (If you specified them in call to this function)they will be changed in
 % the next step
-rSync      = true;  % Copy raw files from "rawDir" to "awayDir"
-doFCTD     = false; % Make separate .mat files in awayDir/FCTDmat readable by FCTD processing scripts
+rSync      = true;  % Copy raw files from dirs.raw_incoming to dirs.raw_copy
+doFCTD     = false; % Make separate .mat files in dirs.fctd_mat readable by FCTD processing scripts
 calc_micro = false; % Calculate epsilon, chi, for timeseries (before dividing into profiles)
 version    = 4;     % Default version of mod_som_read_epsi_files
 display_file_data_flag    = false; % By default, DON'T display file information to the screen
@@ -137,14 +137,8 @@ while (n_items > 0)
 end
 
 %% Define directories and check that they exist
-% Incoming raw files - make sure RawDir includes a trailing '/' or '\' because it will be used in rsync to copy all the contents of the directory to another one
-if strfind(computer,'MAC')
-  div = '/';
-else
-  div = '\';
-end
-RawDir = strrep([dirs.raw_incoming,div],[div div],div);
-if ~exist(RawDir,'dir')
+% Incoming raw files
+if ~exist(dirs.raw_incoming,'dir')
     error('Cannot find raw directory (dirs.raw_incoming): %s',RawDirDuplicate);
 end
 % Mat files, converted from raw
@@ -154,15 +148,13 @@ if ~exist(MatDir,'dir')
 end
 % Copy of raw files
 if rSync
-    RawDirDuplicate = dirs.raw_copy;
-    if ~exist(RawDirDuplicate,'dir')
+    if ~exist(dirs.raw_copy,'dir')
         error('Cannot find duplicate raw directory (dirs.raw_copy): %s',RawDir);
     end
 end
 % Mat files, formatted for FCTD processing
 if doFCTD
-    FCTDdir = dirs.fctd_mat; % Bethan 20 June 2021: Added FCTD directory
-    if ~exist(FCTDdir,'dir')
+    if ~exist(dirs.fctd_mat,'dir') % Bethan 20 June 2021: Added FCTD directory
         error('Cannot find local FCTDdir: %s',FCTDdir);
     end
 end
@@ -175,7 +167,7 @@ if rSync
     if fileStr
         % List all the files in RawDir and find the first one that matches
         % suffixSearch
-        raw_list = dir(fullfile(RawDir,suffixSearch));
+        raw_list = dir(fullfile(dirs.raw_incoming,suffixSearch));
 
         % Identify the file you want
         names = {raw_list.name};
@@ -189,52 +181,44 @@ if rSync
         % this isn't always the case, use 'times' to sort the matches by
         % date created and find the earliest
         ind = find(match,1,'first');
-        first_file = fullfile(RawDir,names{ind});
-
+        first_file = fullfile(dirs.raw_incoming,names{ind});
     %end
 
-
-
     % Workaround because rsync won't repeat copying a file
-
-
     %com = sprintf('/usr/bin/rsync -av  --include ''%s'' --exclude ''*'' %s %s',suffixSearch,RawDir,RawDirDuplicate);  %The exclude was useful before... but now it actually excludes everything. Leaving this commented in case I need it again
     %com = sprintf('/usr/bin/rsync -av  --include ''%s'' %s %s',suffixSearch,RawDir,RawDirDuplicate);  %NC - rsync only the files with the str_to_search and suffix
 
-    % Rsync the files to a directory for later profile processing
-    if ~exist(fullfile(dirs.processing,'raw'),'dir')
-        mkdir(fullfile(dirs.processing,'raw'));
+%     % Rsync the files to a directory for later profile processing
+%     if ~exist(fullfile(dirs.processing,'raw'),'dir')
+%         mkdir(fullfile(dirs.processing,'raw'));
+%     end
+%     com = sprintf('/usr/bin/rsync -au --progress --files-from=<(find %s -newer %s -type f -exec basename {} %s) %s %s',RawDir,first_file,'\;',RawDir,fullfile(dirs.processing,'raw'));
+%     fprintf(1,'Running: %s\n',com);
+%     unix(com);
+%     fprintf(1,'Done\n');
+
+    % Rsync the files to a directory specific to the deployment
+    if ~exist(dirs.raw_copy,'dir')
+        mkdir(dirs.raw_copy,'raw');
     end
-    com = sprintf('/usr/bin/rsync -au --progress --files-from=<(find %s -newer %s -type f -exec basename {} %s) %s %s',RawDir,first_file,'\;',RawDir,fullfile(dirs.processing,'raw'));
+    com = sprintf('/usr/bin/rsync -auq --progress --files-from=<(find %s -newer %s -type f -exec basename {} %s) %s %s',dirs.raw_incoming,first_file,'\;',dirs.raw_incoming,dirs.raw_copy);
     fprintf(1,'Running: %s\n',com);
     unix(com);
     fprintf(1,'Done\n');
-
-    % Rsync the files to a directory for realtime timeseries plotting
-    if ~exist(RawDirDuplicate,'dir')
-        mkdir(RawDirDuplicate,'raw');
-    end
-    com = sprintf('/usr/bin/rsync -auq --progress --files-from=<(find %s -newer %s -type f -exec basename {} %s) %s %s',RawDir,first_file,'\;',RawDir,RawDirDuplicate);
-    fprintf(1,'Running: %s\n',com);
-    unix(com);
-    fprintf(1,'Done\n');
-    RawDir = RawDirDuplicate;
-
-
 
     end
 end
 
 
-%% Loop through files in RawDir and convert to mat and fctd_mat
-myASCIIfiles = dir(fullfile(RawDir, suffixSearch));
+%% Loop through files in the deployment raw directory and convert to mat and fctd_mat
+myASCIIfiles = dir(fullfile(dirs.raw_copy, suffixSearch));
 
 if ~isempty(myASCIIfiles)
 for i=1:length(myASCIIfiles)
     indSuffix = strfind(myASCIIfiles(i).name,suffixStr);
 
     base = myASCIIfiles(i).name(1:indSuffix-1);
-    myMATfile = dir(fullfile(MatDir, [base '.mat']));
+    myMATfile = dir(fullfile(dirs.mat, [base '.mat']));
 
     % If the mat file exists, load it to get the file size of the raw file
     % that created it.
@@ -253,6 +237,7 @@ for i=1:length(myASCIIfiles)
         % of the raw data has already been converted
         % (DO NOTHING.)
 
+        % % For debugging
         % debug.base_name{i} = base;
         % debug.rawraw_date(i) = myRAWRAWfile.datenum;
         % debug.rawraw_bytes(i) = myRAWRAWfile.bytes;
@@ -261,6 +246,7 @@ for i=1:length(myASCIIfiles)
         % debug.mat_date(i) = myMATfile.datenum;
         % debug.mat_bytes(i) = myMATfile.bytes;
         % debug.conversion_happens(i) = 0;
+        % % End of debugging
 
 
     elseif (~isempty(myMATfile) && myASCIIfiles(i).bytes>raw_file_info.bytes) || isempty(myMATfile)
@@ -281,10 +267,10 @@ for i=1:length(myASCIIfiles)
         % debug.conversion_happens(i) = 1;
         % % End for debugging
 
-        fprintf(1,'Converting %s%s\n',MatDir,myMATfile.name);
+        fprintf(1,'Converting %s%s\n',dirs.mat,myMATfile.name);
 
         % Read file and save data in matData structure
-        filename = fullfile(RawDir,myASCIIfiles(i).name);
+        filename = fullfile(dirs.raw_copy,myASCIIfiles(i).name);
         matData = read_data_file(filename,Meta_Data,version);
 
         % Add raw_file_info to matData - NC added 8 Aug. 2022
@@ -322,10 +308,10 @@ for i=1:length(myASCIIfiles)
             epsiProcess_update_PressureTimeseries(Meta_Data,MatDir,ctd,Meta_Data.PROCESS.profile_dir)
         end
 
-%         % Save files for FCTD Format %%%%%% (Bethan 20 June 2021)
-%         if doFCTD && ~isempty(ctd) && isfield(ctd,'time_s')
-%             make_FCTD_mat(matData,FCTDdir,base,cruise_specifics);
-%         end %end if doFCTD
+        % Save files for FCTD Format %%%%%% (Bethan 20 June 2021)
+        if doFCTD && ~isempty(ctd) && isfield(ctd,'time_s')
+            make_FCTD_mat(matData,dirs.fctd,base,cruise_specifics);
+        end %end if doFCTD
 
     end %end if the data should be converted
 end %end loop through files
