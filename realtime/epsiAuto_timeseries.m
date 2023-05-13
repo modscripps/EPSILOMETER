@@ -50,8 +50,9 @@ if ~any(contains(field_list,'raw_dir')) || ~any(contains(field_list,'Meta_Data_p
   error('You must define ''raw_dir'' and ''Meta_Data_process_file'' as fields in the input structure')
 else
   raw_dir = input_struct.raw_dir;
+  raw_dir_raw = fullfile(input_struct.raw_dir,'raw');
   Meta_Data_process_file = input_struct.Meta_Data_process_file;
-else
+end
 
 % Check for optional inputs and define them
 if ~contains(field_list,'refresh_time_sec')
@@ -82,41 +83,12 @@ end
 
 %% Initialize epsi_class in away_dir and create blank structures to fill with data
 obj = epsi_class(raw_dir,Meta_Data_process_file);
-obj = epsiSetup_make_empty_structure(obj);
+obj = epsiSetup_make_empty_structure(obj,sec_to_store);
 
 field_list = {'epsi','ctd','alt','vnav','gps'};
 for iField=1:length(field_list)
     tMax.(field_list{iField}) = starting_dnum;
 end
-% Create an axes that will be the input for the first call to
-% epsiPlot_epsi_ctd_alt_timeseries. All subsequent calls will reuse the set
-% of axes created by that function.
-ax = axes;
-ax = epsiPlot_timeseries(obj,0,ax);
-% ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-
-
-%end
-
-% Initialize obj with structures big enough to load at least one Epsi .mat
-% file into (epsi, ctd, and alt strucutres)
-obj.epsi = [];
-obj = epsiSetup_make_empty_structure(obj,sec_to_store);
-obj.plot_properties = epsiSetup_set_plot_properties;
-% Create Meta_Data
-obj.Meta_Data = epsiSetup_fill_meta_data(obj.Meta_Data,setup);
-obj.Meta_Data = epsiSetup_read_MetaProcess(obj.Meta_Data,...
-    fullfile(obj.Meta_Data.paths.process_library,'Meta_Data_Process','Meta_Data_Process_blt_2022.txt'));
-
-% Apply TMAX to structure tMax. Since the instruments sample at different
-% rates, these will become slightly different from each other in the loop
-% as new data come in.
-field_list = {'epsi','ctd','alt','vnav','gps'};
-for iField=1:length(field_list)
-    tMax.(field_list{iField}) = TMAX;
-end
-
 % Create an axes that will be the input for the first call to
 % epsiPlot_epsi_ctd_alt_timeseries. All subsequent calls will reuse the set
 % of axes created by that function.
@@ -135,10 +107,10 @@ EpsiAuto_timer.TimerFcn = [...
     'else, '...
     'disp([datestr(now) '': Converting most recent raw file to mat...'']); '...
     'try, '...
-    'matData = epsiProcess_convert_lastN_raw_to_mat(raw_dir,obj.Meta_Data); '...
+    'matData = epsiProcess_convert_lastN_raw_to_mat(raw_dir_raw,obj.Meta_Data); '...
     'if range(matData.epsi.time_s)<sec_to_plot && exist(''matDataOld''), '...
     'disp([datestr(now) '': Converting TWO most recent raw files to mat...'']); '...
-    'matData = epsiProcess_convert_lastN_raw_to_mat(raw_dir,obj.Meta_Data,2); '...
+    'matData = epsiProcess_convert_lastN_raw_to_mat(raw_dir_raw,obj.Meta_Data,2); '...
     'end, '...
     '[obj,tMax] = epsiAuto_get_updated_data(obj,matData,tMax); '...
     'matDataOld = matData; '...

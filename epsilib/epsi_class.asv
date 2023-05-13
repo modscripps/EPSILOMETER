@@ -98,16 +98,6 @@ classdef epsi_class < handle
 
                     obj.Meta_Data = epsiSetup_get_raw_suffix(obj.Meta_Data);
 
-                    % NC 4/23/23
-                    % If Meta_Data_Process file is specified, add it to
-                    % Meta_Data paths and read it
-                    if exist('Meta_Data_process_file','var') 
-                        if ~isempty(Meta_Data_process_file)
-                        obj.Meta_Data.paths.process_library = Meta_Data_process_file;
-                        obj.f_read_MetaProcess(Meta_Data_process_file);
-                        end
-                    end
-
                     % Check that Meta_Data has everything you need. If it's
                     % missing something, set repeat=0 and checkMD=[]
                     if  isdir(obj.Meta_Data.paths.process_library) && ...
@@ -290,7 +280,6 @@ classdef epsi_class < handle
             fprintf('... \n')
             fprintf('Meta_Data.PROCESS information comes from %s \n',obj.Meta_Data.PROCESS.filename)
             fprintf('Profiles are going %s \n',upper(obj.Meta_Data.PROCESS.profile_dir))
-            fprintf('... \n')
 
             % NC - check for s1 and s2 cal values. For newer deployments that have Meta_Data.AFE structure, if they're
             % 0, manually input all probe numbers.
@@ -362,7 +351,7 @@ classdef epsi_class < handle
             version_number = 4;
             calc_micro = 0;
             make_FCTD = 0;
-            fctd_mat_dir = fullfile(obj.Meta_Data.paths.data,'FCTDmat');
+            fctd_mat_dir = '';
 
             argsNameToCheck = {'calc_micro',...     %1
                 'version',...        %2
@@ -373,7 +362,7 @@ classdef epsi_class < handle
             % the number of extra parameters that go with the arguments. For example,
             % 'version' expects another parameter that follows it: 'version', 3.
             % Similarly, 'fileStr' expects a string after it: 'fileStr',
-            % 'EPSI_22_04_12*,'make_FCTD' expects a 1 or a 0 after it.
+            % 'EPSI_22_04_12*'
             n_items = nargin-2;
 
             while (n_items > 0)
@@ -403,8 +392,8 @@ classdef epsi_class < handle
                         % set make_FCTD to 1
                         idxFlag = find(cell2mat(cellfun(@(C) ~isempty(strfind(C,'make_FCTD')),varargin,'uniformoutput',0)));
                         make_FCTD = 1;
-                        index = index+2;
-                        n_items = n_items-2;
+                        index = index+1;
+                        n_items = n_items-1;
                 end
             end
 
@@ -434,7 +423,7 @@ classdef epsi_class < handle
                         'noSync',...
                         'version',version_number,...
                         'calc_micro',calc_micro,...
-                        'doFCTD',fctd_mat_dir);
+                        'make_FCTD',fctd_mat_dir);
                 elseif ~make_FCTD
                     epsiProcess_convert_new_raw_to_mat(dirs,obj.Meta_Data,...
                         'noSync',...

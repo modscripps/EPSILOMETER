@@ -22,8 +22,8 @@
 % -------------------------------------------------------------------------
 
 % Change these for each deployment
-input_struct.process_dir = '/Users/Shared/EPSI_PROCESSING/Processed/0513_test';
-input_struct.str_to_match = '*';
+input_struct.process_dir = '/Users/Shared/EPSI_PROCESSING/Processed/0513_test2';
+input_struct.str_to_match = 'EPSI23_05_13_205806';
 
 % These will probably be the same for the whole cruise
 input_struct.raw_dir = '/Users/Shared/EPSI_PROCESSING/Processed/RAW_full_cruise';

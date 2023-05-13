@@ -13,9 +13,9 @@
 % Optional:
 %  .refresh_time_sec = refresh period in seconds (default 5)
 %  .sec_to_store  = number of seconds of data that will be stored in memory
-%                  (default 120)
+%                  (default 120 seconds)
 %  .sec_to_plot   = number of seconds of data that will be plotted in
-%                   timeseries (default 30)
+%                   timeseries (default 60)
 %  .version       = version of mod_som_read_epsi_files.m to use (default 4)
 %  .starting_dnum = earliest datenum to plot (default 2 weeks before today)
 % -------------------------------------------------------------------------

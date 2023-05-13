@@ -1,8 +1,8 @@
 function obj = epsiSetup_make_empty_structure(obj,varargin)
 
 if nargin<2
-    nSec=60*5; %5 minutes
-elseif nargin==1
+    nSec=60*2; %2 minutes
+elseif nargin==2
     nSec = varargin{1};
 end
 
