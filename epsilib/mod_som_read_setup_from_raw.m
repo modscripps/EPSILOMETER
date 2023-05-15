@@ -87,18 +87,20 @@ setup.start_dnum = 0;
 %%
 nb_module=1;
 unpack=true;
-module{nb_module}.index=initialize_flag_offset+4
+module{nb_module}.index=initialize_flag_offset+4;
 while unpack
     module{nb_module}.size=conv32d(double(uint8(str(module{nb_module}.index+(0:3)))));
     module{nb_module}.str=str(module{nb_module}.index+(0:module{nb_module}.size-1));
-    if (length(str)-(module{nb_module}.index+module{nb_module}.size)<6)%TDO make it so I am sure length(str) == the end of the modules.
+%     if (length(str)-(module{nb_module}.index+module{nb_module}.size)<6)%TDO make it so I am sure length(str) == the end of the modules.
+%         unpack=false;
+    if module{end}.size==0%TDO make it so I am sure length(str) == the end of the modules.
         unpack=false;
     else
         nb_module=nb_module+1;
         module{nb_module}.index=module{nb_module-1}.index+module{nb_module-1}.size+mod(module{nb_module-1}.size,4);
     end
 end
-
+nb_module=nb_module-1;
 %% parse modules
 modules_headers=["CALENDAR","CAL", ...
                  "EFE","EFE3","EFE4", ...

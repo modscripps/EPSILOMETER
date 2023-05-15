@@ -23,5 +23,7 @@
 % These probably will be the same for the whole cruise
 input_struct.raw_dir = '/Users/Shared/EPSI_PROCESSING/Realtime_RAW';
 input_struct.Meta_Data_process_file = 'Volumes/Software_TFO2023/EPSILOMETER/Meta_Data_Process/MDP_tfo_2023.txt';
+input_struct.refresh_time_sec = 2;
 
-epsiAuto_timeseries
+%epsiAuto_timeseries
+fctdAuto_timeseries

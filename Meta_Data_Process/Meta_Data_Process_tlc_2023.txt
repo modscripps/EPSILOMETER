@@ -1,4 +1,4 @@
-latitude     = 33;
+latitude     = 38;
 dof          = 3;
 dof_coh      = 10;
 nfft         = 1024;
@@ -10,8 +10,8 @@ dt           = 3;
 fc1          = 5;
 fc2          = 35;
 profs_nPoints 	= 32;
-profs_downLim 	= 0.02;
-profs_minLength = 5;
+profs_downLim 	= 0.025;
+profs_minLength = 10;
 Prmin = @(x) nanmin(x) + 0.2*range(x);
 Prmax = @(x) nanmin(x) + 0.8*range(x);
 userConfirmsProfiles = 1;

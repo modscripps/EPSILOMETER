@@ -214,8 +214,13 @@ end
 
 
 %% Loop through files in the deployment raw directory and convert to mat and fctd_mat
-myASCIIfiles = dir(fullfile(dirs.raw_copy, suffixSearch));
-
+try
+    myASCIIfiles = dir(fullfile(dirs.raw_copy, suffixSearch));
+    raw_dir = dirs.raw_copy;
+catch
+    myASCIIfiles = dir(fullfile(dirs.raw_incoming, suffixSearch));
+    raw_dir = dirs.raw_incoming;
+end
 if ~isempty(myASCIIfiles)
     for i=1:length(myASCIIfiles)
         indSuffix = strfind(myASCIIfiles(i).name,suffixStr);
@@ -273,7 +278,7 @@ if ~isempty(myASCIIfiles)
             fprintf(1,'Converting %s%s\n',dirs.mat,myMATfile.name);
             
             % Read file and save data in matData structure
-            filename = fullfile(dirs.raw_copy,myASCIIfiles(i).name);
+            filename = fullfile(raw_dir,myASCIIfiles(i).name);
             matData = read_data_file(filename,Meta_Data,version);
             
             % Add raw_file_info to matData - NC added 8 Aug. 2022

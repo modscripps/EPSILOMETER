@@ -9,14 +9,24 @@ function [PT] = epsiProcess_get_profiles_from_PressureTimeseries(PressureTimeser
 % OPTIONAL INPUTS
 % 'downLim','threshold','up','down','both'
 
-plotFig = 0;
+plotFig = 1;
 PT = PressureTimeseries;
 
 % use nPoints median filter to smooth out the pressure field
 nPoints = Meta_Data.PROCESS.profs_nPoints;
 p = medfilt1(PT.P,nPoints);
 % try to smooth out the data a bit
-dp = conv2(diff(conv2(p,ones(nPoints,1)/nPoints,'same'),1,1)',ones(1,nPoints)/nPoints,'same');
+% dp = conv2(diff(conv2(p,ones(nPoints,1)/nPoints,'same'),1,1)',ones(1,nPoints)/nPoints,'same');
+%
+% NC - instead of first-differencing every point, first-difference over 2
+% seconds. This way you can be more sure that the a profile is starting or
+% ending
+n_5sec = round(5/seconds(days(mode(diff(PT.dnum)))));
+p_smoothed = conv2(p,ones(nPoints,1)/nPoints,'same');
+for ii = 1:size(p_smoothed,1)-n_5sec
+    dp_mid(ii) = p_smoothed(ii+n_5sec) - p_smoothed(ii);
+end
+dp = interp1(linspace(0,1,length(dp_mid)),dp_mid,linspace(0,1,length(p_smoothed)));
 
 % Set defaults (these will change in the next step if you specified in call
 % to this function)
@@ -99,12 +109,14 @@ if plotFig
     datetick('x','HH:MM','keeplimits')
 
     % Plot dp
-    mid_dnum = nanmean([PressureTimeseries.dnum(1:end-1),...
-    PressureTimeseries.dnum(2:end)],2);
+    dnum = PressureTimeseries.dnum;
     ax(2) = subplot(2,1,2);
-    plot(mid_dnum,dp,'b')
+    plot(dnum,dp,'b')
     title(sprintf('dp, p smoothed over %3.0f points',nPoints))
-    dl = yline(downLim,'m');
+    xx = get(gca,'xlim');
+    dl = plot([xx(1),xx(2)],[downLim downLim],'m');
+    % NC - 'yline' is newer than Matlab 2018a
+    %dl = yline(downLim,'m');
     legend(dl,sprintf('downLim = %3.3f', downLim),'location','best')
     datetick('x','HH:MM','keeplimits')
 end
@@ -125,7 +137,9 @@ ax(1).NextPlot = 'add';
 plot(ax(1),PressureTimeseries.dnum(startdown),PressureTimeseries.P(startdown),'go')
 
 ax(2).NextPlot = 'add';
-plot(ax(2),mid_dnum(startdown),dp(startdown),'go')
+plot(ax(2),dnum(startdown),dp(startdown),'go')
+
+linkprop([ax(:)],'xlim')
 end
 
 if isempty(startdown)
@@ -166,6 +180,7 @@ profLength = PT.P(PT.endprof)-PT.P(PT.startprof);
 longEnough = abs(profLength)>=minLength;
 PT.startprof = PT.startprof(longEnough);
 PT.endprof = PT.endprof(longEnough);
+
 
 
 

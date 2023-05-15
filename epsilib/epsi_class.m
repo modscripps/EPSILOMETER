@@ -982,12 +982,15 @@ classdef epsi_class < handle
             delete(fullfile(obj.Meta_Data.paths.data,'Meta_Data.mat'));
         end
         function f_check_spectra(obj,id_profile)
+            % Plots a profile that you can click on to get a spectra
             if nargin<2
                 warning('f_check_spectra(id_profile)');
             end
             check_spectra(id_profile);
         end
         function f_check_grid_spectra(obj)
+            % Plots a grid that you can click on to get a profile and the
+            % spectra where you clicked
             check_grid_spectra();
         end
     end %end methods

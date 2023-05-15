@@ -149,8 +149,11 @@ end
 
 %% Cut profile to compute coherence
 % Find max and min pressure
-Prmin = Meta_Data.PROCESS.Prmin(rmoutliers(Profile.ctd.P));
-Prmax = Meta_Data.PROCESS.Prmax(rmoutliers(Profile.ctd.P));
+% NC rmoutliers only works for Matlab2018b and newer. DEV3 has Matlab 2018a
+% Prmin = Meta_Data.PROCESS.Prmin(rmoutliers(Profile.ctd.P));
+% Prmax = Meta_Data.PROCESS.Prmax(rmoutliers(Profile.ctd.P));
+Prmin = Meta_Data.PROCESS.Prmin(Profile.ctd.P);
+Prmax = Meta_Data.PROCESS.Prmax(Profile.ctd.P);
 
 % Find ctdtime values within this pressure range
 inRange = Profile.ctd.P>=Prmin & Profile.ctd.P<=Prmax;
