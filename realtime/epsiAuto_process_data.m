@@ -29,6 +29,8 @@
 %                setting this field to '*EPSI_B_PC2_22_02_16*'; 
 %  .refresh_time_sec = (default 5*60), refresh period in seconds 
 %  .version       = (default 4), version of mod_som_read_epsi_files.m to use 
+%  .depth_array   = (default 0:1000), the array of depths to interpolate
+%                   gridded data too
 % -------------------------------------------------------------------------
 % Check inputs and apply defaults
 field_list = fields(input_struct);
@@ -61,13 +63,19 @@ if ~contains(field_list,'starting_dnum')
 else
     starting_dnum = input_struct.starting_dnum;
 end
+if ~contains(field_list,'depth_array')
+    depth_array = 0:1000;
+else
+    depth_array = input_struct.depth_array;
+end
 
 % Define the directories for epsiProcess_convert_new_raw_to_mat
 dirs.raw_incoming = raw_dir;
 dirs.raw_copy  = fullfile(process_dir,'raw');
 dirs.mat       = fullfile(process_dir,'mat');
-dirs.fctd_mat  = fullfile(process_dir,'FCTDmat');
-dirs.fctd_rot  = fullfile(process_dir,'FCTDrot');
+experiment_dir = fileparts(process_dir);
+dirs.fctd_mat  = fullfile(experiment_dir,'FCTDmat');
+dirs.fctd_rot  = fullfile(experiment_dir,'FCTDrot');
 
 % Create directories if they don't exist
 if ~exist(process_dir,'dir')
@@ -132,9 +140,13 @@ EpsiConvert_timer.TimerFcn = [...
     'end; '...
     'try, '...
     'ec.f_processNewProfiles; '...
-    'ec.f_gridProfiles(depth_range); '...
+    'ec.f_gridProfiles(depth_array); '...
     'catch err, '...
     'disp("no new profiles processed"); '...
+    'end; '...
+    'try, '...
+    'plot_epsi_sections, '...
+    'catch err, '...
     'end; '...
     'end;'];
 EpsiConvert_timer.Period = refresh_time_sec;

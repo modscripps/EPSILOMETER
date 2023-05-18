@@ -22,14 +22,21 @@
 % -------------------------------------------------------------------------
 
 % Change these for each deployment
-input_struct.process_dir = '/Users/Shared/EPSI_PROCESSING/Processed/0515_fctd_test';
-input_struct.str_to_match = 'EPSI23_05_15';
+instrument = 'fctd';
+% instrument = 'epsi';
+input_struct.process_dir = '/Users/Shared/EPSI_PROCESSING/Processed/0516_fctd_d2';
+input_struct.str_to_match = 'EPSI23_05_16_232807';
+input_struct.depth_array = 0:2400;
 
 % These will probably be the same for the whole cruise
 input_struct.raw_dir = '/Users/Shared/EPSI_PROCESSING/Processed/RAW_full_cruise';
 input_struct.Meta_Data_process_file = 'Volumes/Software_TFO2023/EPSILOMETER/Meta_Data_Process/MDP_tfo_2023.txt';
 input_struct.refresh_time_sec =  5*60;
 
-%epsiAuto_process_data
-fctdAuto_process_data
+switch instrument
+    case 'epsi'
+        epsiAuto_process_data
+    case 'fctd'
+        fctdAuto_process_data
+end
 

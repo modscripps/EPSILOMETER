@@ -406,10 +406,18 @@ else
                             bad_SB41sample_flag=1;
                         end
                     case 'eng'
+                        try
                         ctd.T_raw(n_rec)  = hex2dec(rec_ctd(:,1:6));
+                        
                         ctd.C_raw(n_rec)  = hex2dec(rec_ctd(:,(1:6)+6));
                         ctd.P_raw(n_rec)  = hex2dec(rec_ctd(:,(1:6)+12));
                         ctd.PT_raw(n_rec) = hex2dec(rec_ctd(:,(1:4)+18));
+                        catch
+                            disp('something wrong with the CTD bytes')
+                            ctd.C_raw(n_rec)=nan;
+                            ctd.P_raw(n_rec)=nan;
+                            ctd.PT_raw(n_rec)=nan;
+                        end
                 end %end switch sbe.data.format
             end %end loop through recs_per_block
             
@@ -495,7 +503,12 @@ else
         alt_block_str = str(ind_alt_start(iB):ind_alt_stop(iB));
         
         % For the altimeter, all the data is actually in the header
-        alti.hextimestamp.value   = hex2dec(alt_block_str(tag.hextimestamp.inds));
+        % NC - added check for alphanumeric, otherwise hex2dec errors
+        if isstrprop(alt_block_str(tag.hextimestamp.inds),'alphanum')
+            alti.hextimestamp.value   = hex2dec(alt_block_str(tag.hextimestamp.inds));
+        else
+            alti.hextimestamp.value   = nan;
+        end
         alt_timestamp(iB,1) = alti.hextimestamp.value;
         
         % The altimeter block does not have a hexlengthblock (hexadecimal
