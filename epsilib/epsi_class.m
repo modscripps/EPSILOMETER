@@ -316,7 +316,8 @@ classdef epsi_class < handle
             if isempty(Meta_Data_process_file)  && ~isclassfield(Meta_Data.PROCESS,'filename')
                 Meta_Data_process_file = fullfile(obj.Meta_Data.paths.process_library,'Meta_Data_Process','Meta_Data_Process.txt');
             elseif isclassfield(Meta_Data.PROCESS,'filename')
-                Meta_Data_process_file = obj.Meta_Data.PROCESS.filename;
+                [fdir,fname,fsuffix] = fileparts(obj.Meta_Data.PROCESS.filename);
+                Meta_Data_process_file = fullfile(obj.Meta_Data.paths.process_library,'Meta_Data_Process',[fname,fsuffix]);
             end
             obj.f_read_MetaProcess(Meta_Data_process_file);
 
