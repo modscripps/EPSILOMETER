@@ -31,6 +31,7 @@ myASCIIfiles = dir(fullfile(RawDir, suffixSearch));
 
 % Loop through the last N files
 for i=length(myASCIIfiles)-(N-1):length(myASCIIfiles)
+    
     % Convert raw data to mat
     newData = mod_som_read_epsi_files_v4(fullfile(RawDir,myASCIIfiles(i).name),Meta_Data);
     use newData

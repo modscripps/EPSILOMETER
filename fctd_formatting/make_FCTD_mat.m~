@@ -109,8 +109,8 @@ if strcmp(cruise_specifics,'tfo_2023')
     % Interpolate data that is not nan, not inf, and where time
     % is increasing
     diff_not_neg = [0;diff(epsi.dnum)]>0;
-    [~,isunique] = unique(epsi.dnum);
-    keep = ~isnan(epsi.dnum) & ~isinf(epsi.dnum) & diff_not_neg & isunique;
+    unique_dnum = 
+    keep = ~isnan(epsi.dnum) & ~isinf(epsi.dnum) & diff_not_neg;
 
     if ~isempty(epsi) && isfield(epsi,'s2_count') && ~isempty(ctd)
         FCTD.uConductivity=reshape(interp1(epsi.dnum(keep),double(epsi.s2_count(keep)),time_fast),20,[])';

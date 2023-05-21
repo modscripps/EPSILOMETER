@@ -21,6 +21,7 @@
 % -------------------------------------------------------------------------
 
 instrument = 'fctd';
+%instrument = 'epsi';
 
 % These probably will be the same for the whole cruise
 input_struct.raw_dir = '/Users/Shared/EPSI_PROCESSING/Realtime_RAW';

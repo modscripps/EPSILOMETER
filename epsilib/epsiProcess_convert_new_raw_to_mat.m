@@ -34,7 +34,7 @@ function [matData] = epsiProcess_convert_new_raw_to_mat(dirs,Meta_Data,varargin)
 %       - specify the version number (1,2,3,4) of mod_som_read_epsi_files.m
 %    'display_file_data'
 %       - display size of file, time, pressure, and altimeter
-%    'blt_2021'
+%    'cruise_specifics'
 %       - on BLT 2021 cruise, we output microconductivity and fluorometer
 %       data from epsi channels to the FCTD .mat structure
 %
@@ -66,7 +66,7 @@ doFCTD     = false; % Make separate .mat files in dirs.fctd_mat readable by FCTD
 calc_micro = false; % Calculate epsilon, chi, for timeseries (before dividing into profiles)
 version    = 4;     % Default version of mod_som_read_epsi_files
 display_file_data_flag    = false; % By default, DON'T display file information to the screen
-cruise_specifics.blt_2021 = false; % By default, DON'T add microconductivity and fluorometer data to FCTD structure
+cruise_specifics = 'standard'; % By default, DON'T add microconductivity and fluorometer data to FCTD structure
 
 
 %% Loop through the number of varargin arguments
@@ -77,7 +77,7 @@ argsNameToCheck = {'noSync',...             %1
     'fileStr',...            %4
     'version',...            %5
     'display_file_data',...  %6
-    'blt_2021'};             %7
+    'cruise_specifics'};     %7
 
 index = 1; %Initialize index of argsNameToCheck
 % Number of items remaining (this is the number of argsNameToCheck minus
@@ -131,10 +131,11 @@ while (n_items > 0)
             display_file_data_flag = true;
             index = index+1;
             n_items = n_items-1;
-        case 7 %blt_2021
-            cruise_specifics.blt_2021 = true;
-            index = index+1;
-            n_items = n_items-1;
+        case 7 %cruise_specifics
+            idxFlag = find(cell2mat(cellfun(@(C) ~isempty(strfind(C,'cruise_specifics')),varargin,'uniformoutput',0)));
+            cruise_specifics = varargin{idxFlag+1};
+            index = index+2; %+2 because the following varargin will be the version number
+            n_items = n_items-2;
     end
 end
 
