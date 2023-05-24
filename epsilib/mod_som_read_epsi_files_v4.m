@@ -29,7 +29,8 @@ function [data] = mod_som_read_epsi_files_v4(filename,Meta_Data)
 %   gps   (intermediate processing in 'gpsmeta' structure
 %   seg   (intermediate processing in 'seg' structure)
 %   spec  (intermediate processing in 'spec' structure)
-%   eco  (intermediate processing in 'spec' structure)
+%   eco  (intermediate processing in 'eco' structure)
+%   ttv  (intermediate processing in 'ttv' structure)
 %
 % 11/28/21 aleboyer@ucsd.edu  updated from v3
 % Nicole Couto adapted from Arnaud LeBoyer's mod_som_read_epsi_raw.m
@@ -56,12 +57,9 @@ Meta_Data.start_dnum = now;
 % ind_*_end    = ending indices of all matches
 
 [ind_efe_start, ind_efe_stop]            = regexp(str,'\$EFE([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
-% Find either SB49 or SB41 data
 [ind_sbe_start, ind_sbe_stop]            = regexp(str,'\$SB49([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
-sbe_type = 'SB49';
 if isempty(ind_sbe_start)
     [ind_sbe_start, ind_sbe_stop]        = regexp(str,'\$SB41([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
-    sbe_type = 'SB41';
 end
 [ind_alt_start      , ind_alt_stop]      = regexp(str,'\$ALT([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
 [ind_act_start      , ind_act_stop]      = regexp(str,'\$ACTU([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
@@ -75,6 +73,7 @@ end
 [ind_apf1_start     , ind_apf1_stop]     = regexp(str,'\$APF1([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
 [ind_apf2_start     , ind_apf2_stop]     = regexp(str,'\$APF2([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
 [ind_ecop_start     , ind_ecop_stop]     = regexp(str,'\$ECOP([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
+[ind_ttv_start     , ind_ttv_stop]     = regexp(str,'\$TTVP([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
 
 %$ECOP0000000000045cf00000001c*6B0000000000045ceXXXXYYYYZZZZ*57
 %% Define the header tag format
@@ -304,14 +303,14 @@ else
     % SBE-specific quantities
     % ---------------------------------
     
-    switch sbe_type
-        case 'SB49'
+    switch Meta_Data.CTD.name
+        case{"SBE49","SBE","S49","SB49"}
             sbe.data.format      = 'eng';
             %sbe.data.length      = 22;
             sbe.data.length      = 24; %It's 24 for BLT data
             sbe.data.sample_freq = 16;
             sbe.cal              = Meta_Data.CTD.cal;
-        case 'SB41'
+        case{"SBE41","S41","SB41"}
             sbe.data.format      = 'PTS';
             sbe.data.length      = 28;
             sbe.data.sample_freq = 1;
@@ -406,18 +405,10 @@ else
                             bad_SB41sample_flag=1;
                         end
                     case 'eng'
-                        try
                         ctd.T_raw(n_rec)  = hex2dec(rec_ctd(:,1:6));
-                        
                         ctd.C_raw(n_rec)  = hex2dec(rec_ctd(:,(1:6)+6));
                         ctd.P_raw(n_rec)  = hex2dec(rec_ctd(:,(1:6)+12));
                         ctd.PT_raw(n_rec) = hex2dec(rec_ctd(:,(1:4)+18));
-                        catch
-                            disp('something wrong with the CTD bytes')
-                            ctd.C_raw(n_rec)=nan;
-                            ctd.P_raw(n_rec)=nan;
-                            ctd.PT_raw(n_rec)=nan;
-                        end
                 end %end switch sbe.data.format
             end %end loop through recs_per_block
             
@@ -465,6 +456,10 @@ else
                     'C_raw','PT_raw','P','z','T','S','C','th','sgth','dPdt','dzdt'});
             end
         end %end if sbe data block is the correct size
+%         % Tracking blocks
+%         if mod(n_rec,1000)==0
+%             sprintf("block %i \r\n",n_rec)
+%         end
     end %end loop through sbe blocks
     
     
@@ -503,20 +498,15 @@ else
         alt_block_str = str(ind_alt_start(iB):ind_alt_stop(iB));
         
         % For the altimeter, all the data is actually in the header
-        % NC - added check for alphanumeric, otherwise hex2dec errors
-        if isstrprop(alt_block_str(tag.hextimestamp.inds),'alphanum')
-            alti.hextimestamp.value   = hex2dec(alt_block_str(tag.hextimestamp.inds));
-        else
-            alti.hextimestamp.value   = nan;
-        end
-        alt_timestamp(iB,1) = alti.hextimestamp.value;
+        alti.hextimestamp.value   = hex2dec(alt_block_str(tag.hextimestamp.inds));
+        alt_timestamp(iB) = alti.hextimestamp.value;
         
         % The altimeter block does not have a hexlengthblock (hexadecimal
         % length of data block). It has the altimeter reading in that
         % position
         alti.hexlengthblock.value = alt_block_str(tag.hexlengthblock.inds);
         dst_microsec = str2double(alti.hexlengthblock.value);
-        alt.dst(iB,1) = dst_microsec*alti.ten_microsec2sec*alti.sound_speed;
+        alt.dst(iB) = dst_microsec*alti.ten_microsec2sec*alti.sound_speed;
         
         % Calculate actual height above bottom (hab) from altimeter
         % distance reading. The altimeter is angled at 10 degrees and is positioned 5 ft above the
@@ -529,7 +519,7 @@ else
         alt_to_crashguard = Meta_Data.PROCESS.alt_dist_from_crashguard_ft;
         probe_to_crashguard = Meta_Data.PROCESS.alt_probe_dist_from_crashguard_in;
 
-        A = alt.dst(iB,1);
+        A = alt.dst(iB);
         theta = deg2rad(angle_deg);
         altimeter_height_above_probes = feet2meters(alt_to_crashguard) - ...
             inches2meters(probe_to_crashguard);
@@ -1686,9 +1676,18 @@ if isempty(ind_ecop_start)
     no_data_types = [no_data_types,'ecop'];
     ecop=[];
 else
+    
+    ecop.data.sample_freq      = 16;
+    ecop.data.sample_period    = 1/ecop.data.sample_freq;
+    ecop.data.n_blocks         = numel(ind_ecop_start);
+    ecop.data.recs_per_block   = 1;
+    ecop.data.n_recs           = ecop.data.n_blocks*ecop.data.recs_per_block;
+    ecop.data.timestamp_length = 16;
+    ecop.data.length           = 12;   
+
     processed_data_types = [processed_data_types,'ecop'];
 
-    ecop.data.sample_period    = 1/sbe.data.sample_freq;
+    ecop.data.sample_period    = 1/ecop.data.sample_freq;
     ecop.data.n_blocks         = numel(ind_ecop_start);
     %ALB hard coded number of element per record
     ecop.data.recs_per_block   = 1;
@@ -1700,7 +1699,7 @@ else
     % --------------------------------
     
     % Pre-allocate space for data
-    ecop_timestamp   = nan(sbe.data.n_recs,1);
+    ecop_timestamp   = nan(ecop.data.n_recs,1);
     %ctd.ctdtime and ctd.ctddnum will be created from ctd_timestamp once
     %all its records are filled
     ecop.channel1   = nan(ecop.data.n_recs,1);
@@ -1721,7 +1720,7 @@ else
         ecop.hexlengthblock.value = hex2dec(ecop_block_str(tag.hexlengthblock.inds));
         
         % Get the data after the header.
-        ecop_block_data = sbe_block_str(tag.data_offset:end-tag.chksum.length);
+        ecop_block_data = ecop_block_str(tag.data_offset:end-tag.chksum.length);
         
         if (length(ecop_block_data)~=ecop.hexlengthblock.value)
             fprintf("ECOP block %i has incorrect length\r\n",iB)
@@ -1737,7 +1736,7 @@ else
                 
                 % The ctd data is everything but the last two elements of the
                 % block
-                element_ecop=ecop_block_data(iR,1:end-2);
+                element_ecop=ecop_block_data(iR,1:end);
                 
                 % The hexadecimal timestamp is the first 16 characters of the
                 % data
@@ -1752,7 +1751,7 @@ else
             
             % If timestamp has values like 1.6e12, it is in milliseconds since Jan
             % 1, 1970. Otherwise it's in milliseconds since the start of the record
-            if nanmedian(ctd_timestamp)>1e9
+            if nanmedian(ecop_timestamp)>1e9
                 % time_s - seconds since 1970
                 % dnum - matlab datenum
                 [ecop.time_s,ecop.dnum] = convert_timestamp(ecop_timestamp);
@@ -1778,11 +1777,137 @@ else
 end %end loop if there is ecop data
 
 
+%% Process ttv data
+% $TTVP00000188449d43f100000046*2C00000188449d43f100:28:07 447 ms-000000050 ps,+650 mV,+651 mV,078, 078 *12"
+% hh:mm:ss 00:28:07
+% aaa        447 ms
+% tof       -000000050 ps
+% amp_up    +650 mV
+% amp_dn    +651 mV
+% ratio_up   078
+% ratio_down 078
+
+%ALB this is engineering data format.
+%ALB will work on other format when they exist
+if isempty(ind_ttv_start)
+    no_data_types = [no_data_types,'ttv'];
+    ttv=[];
+else
+    
+    ttv.data.sample_freq      = 16;
+    ttv.data.sample_period    = 1/ttv.data.sample_freq;
+    ttv.data.n_blocks         = numel(ind_ttv_start);
+    ttv.data.recs_per_block   = 1;
+    ttv.data.n_recs           = ttv.data.n_blocks*ttv.data.recs_per_block;
+    ttv.data.timestamp_length = 16;
+    % ALB I have to change this
+    ttv.data.length           = 70;   
+
+    processed_data_types = [processed_data_types,'ttv'];
+
+    ttv.data.sample_period    = 1/ttv.data.sample_freq;
+    ttv.data.n_blocks         = numel(ind_ttv_start);
+    %ALB hard coded number of element per record
+    ttv.data.recs_per_block   = 1;
+    ttv.data.n_recs           = ttv.data.n_blocks*ttv.data.recs_per_block;
+    ttv.data.timestamp_length = 16;
+    
+    
+    % Process ttv data
+    % --------------------------------
+    
+    % Pre-allocate space for data
+    ttv_timestamp   = nan(ttv.data.n_recs,1);
+    %ctd.ctdtime and ctd.ctddnum will be created from ctd_timestamp once
+    %all its records are filled
+    ttv.hh   = nan(ttv.data.n_recs,1);
+    ttv.mm   = nan(ttv.data.n_recs,1);
+    ttv.ss   = nan(ttv.data.n_recs,1);
+    ttv.aaa  = nan(ttv.data.n_recs,1);
+    ttv.tof  = nan(ttv.data.n_recs,1);
+    ttv.rup  = nan(ttv.data.n_recs,1);
+    ttv.rdwn = nan(ttv.data.n_recs,1);
+    
+    % Initialize datarecord counter
+    n_rec = 0;
+    
+    % Loop through data blocks and parse strings
+    for iB = 1:ttv.data.n_blocks
+
+        % Grab the block of data starting with the header
+        ttv_block_str = str(ind_ttv_start(iB):ind_ttv_stop(iB));
+
+        % Get the header timestamp and length of data block
+        ttv.hextimestamp.value   = hex2dec(ttv_block_str(tag.hextimestamp.inds));
+        ttv.hexlengthblock.value = hex2dec(ttv_block_str(tag.hexlengthblock.inds));
+        %ALB by assing hard coded length
+        ttv.data.length           = ttv.hexlengthblock.value-16;%?maybe that works
+
+        % Get the data after the header.
+        ttv_block_data = ttv_block_str(tag.data_offset:end-tag.chksum.length);
+
+        if (length(ttv_block_data)~=ttv.hexlengthblock.value)
+            fprintf("TTVP block %i has incorrect length\r\n",iB)
+        else
+            %
+            % Where do 16 and 24 come from?
+            ttv_block_data=reshape(ttv_block_data,16+ttv.data.length,ttv.data.recs_per_block).';
+
+            %00000188449d433600:28:07 262 ms-000000043 ps,+650 mV,+649 mV,079, 078 *4B
+            parse_ttv_block_data=sscanf(ttv_block_data,'%016x%02f:%02f:%02f %03f ms%010f ps,%04f mV,%04f mV,%03f, %03f');
+            if length(parse_ttv_block_data)==10
+
+                for iR=1:ttv.data.recs_per_block
+
+                    % Count up the record number
+                    n_rec=n_rec+1;
+
+                    % The ctd data is everything but the last two elements of the
+                    % block
+                    element_ttv=ttv_block_data(iR,1:end);
+
+                    % The hexadecimal timestamp is the first 16 characters of the
+                    % data
+                    ttv_timestamp(n_rec) = hex2dec(element_ttv(1:16));
+
+                    % Everything after that is the data
+                    rec_ttv=element_ttv(ttv.data.timestamp_length+1:end);
+
+                    ttv.hh(n_rec)   = parse_ttv_block_data(2);
+                    ttv.mm(n_rec)   = parse_ttv_block_data(3);
+                    ttv.ss(n_rec)   = parse_ttv_block_data(4);
+                    ttv.aaa(n_rec)  = parse_ttv_block_data(5);
+                    ttv.tof(n_rec)  = parse_ttv_block_data(6);
+                    ttv.ampup(n_rec)  = parse_ttv_block_data(7);
+                    ttv.ampdwn(n_rec) = parse_ttv_block_data(8);
+                    ttv.rup(n_rec)  = parse_ttv_block_data(9);
+                    ttv.rdwn(n_rec) = parse_ttv_block_data(10);
+
+                    % If timestamp has values like 1.6e12, it is in milliseconds since Jan
+                    % 1, 1970. Otherwise it's in milliseconds since the start of the record
+                    if nanmedian(ttv_timestamp)>1e9
+                        % time_s - seconds since 1970
+                        % dnum - matlab datenum
+                        [ttv.time_s,ttv.dnum] = convert_timestamp(ttv_timestamp);
+                    else
+                        % time_s - seconds since power on
+                        ttv.time_s = ttv_timestamp./1000;
+                        ttv.dnum   = Meta_Data.start_dnum + days(seconds(ttv.time_s));
+                    end
+                end
+
+            end
+        end %end if ttv data block is the correct size
+    end %end loop through ttv blocks
+end %end loop if there is ttv data
+
+
+
 fprintf(['processed data for: ' repmat('%s ',1,length(processed_data_types)), '\n'], processed_data_types{:})
 fprintf(['no data for:        ' repmat('%s ',1,length(no_data_types)), '\n'], no_data_types{:})
 
 % Combine all data
-make data epsi ctd alt act vnav gps seg spec avgspec dissrate apf ecop
+make data epsi ctd alt act vnav gps seg spec avgspec dissrate apf ecop ttv
 
 
 
@@ -1791,7 +1916,7 @@ fprintf(['processed data for: ' repmat('%s ',1,length(processed_data_types)), '\
 fprintf(['no data for:        ' repmat('%s ',1,length(no_data_types)), '\n'], no_data_types{:})
 
 % Combine all data
-make data epsi ctd alt act vnav gps seg spec avgspec dissrate apf ecop
+make data epsi ctd alt act vnav gps seg spec avgspec dissrate apf ecop ttv
 
 
 end

@@ -11,8 +11,10 @@ function [matData] = epsiProcess_convert_new_raw_to_mat(dirs,Meta_Data,varargin)
 %       .raw_copy      - where raw data should be copied for the current
 %                        deployment
 %       .mat           - directory for .mat files converted from raw files
-%       .fctd_mat      - directory for .mat files formatted for FCTD
-%                        processing
+%       .fctd_cruise   - directory for .mat files formatted for FCTD
+%                        processing, all files saved for whole cruise
+%       .fctd_deployment - directory for .mat files formatted for FCTD
+%                        processing, files just for current deployment
 %   Meta_Data          - epsi Meta_Data structure
 %
 % OPTIONAL INPUTS:
@@ -34,7 +36,7 @@ function [matData] = epsiProcess_convert_new_raw_to_mat(dirs,Meta_Data,varargin)
 %       - specify the version number (1,2,3,4) of mod_som_read_epsi_files.m
 %    'display_file_data'
 %       - display size of file, time, pressure, and altimeter
-%    'blt_2021'
+%    'cruise_specifics'
 %       - on BLT 2021 cruise, we output microconductivity and fluorometer
 %       data from epsi channels to the FCTD .mat structure
 %
@@ -62,11 +64,11 @@ suffixSearch = ['*' suffixStr];
 % (If you specified them in call to this function)they will be changed in
 % the next step
 rSync      = true;  % Copy raw files from dirs.raw_incoming to dirs.raw_copy
-doFCTD     = false; % Make separate .mat files in dirs.fctd_mat readable by FCTD processing scripts
+doFCTD     = false; % Make separate .mat files in dirs.fctd* readable by FCTD processing scripts
 calc_micro = false; % Calculate epsilon, chi, for timeseries (before dividing into profiles)
 version    = 4;     % Default version of mod_som_read_epsi_files
 display_file_data_flag    = false; % By default, DON'T display file information to the screen
-cruise_specifics.blt_2021 = false; % By default, DON'T add microconductivity and fluorometer data to FCTD structure
+cruise_specifics = 'standard'; % By default, DON'T add microconductivity and fluorometer data to FCTD structure
 
 
 %% Loop through the number of varargin arguments
@@ -77,7 +79,7 @@ argsNameToCheck = {'noSync',...             %1
     'fileStr',...            %4
     'version',...            %5
     'display_file_data',...  %6
-    'blt_2021'};             %7
+    'cruise_specifics'};     %7
 
 index = 1; %Initialize index of argsNameToCheck
 % Number of items remaining (this is the number of argsNameToCheck minus
@@ -102,9 +104,8 @@ while (n_items > 0)
         case 2 %doFCTD
             idxFlag = find(cell2mat(cellfun(@(C) ~isempty(strfind(C,'doFCTD')),varargin,'uniformoutput',0)));
             doFCTD = true;
-            dirs.fctd_mat = varargin{idxFlag+1};
-            index = index+2;
-            n_items = n_items-2;
+            index = index+1;
+            n_items = n_items-1;
         case 3 %calc_micro
             % Find the index of varargin that = 'calc_micro'. The following
             % index contains the version number
@@ -131,10 +132,11 @@ while (n_items > 0)
             display_file_data_flag = true;
             index = index+1;
             n_items = n_items-1;
-        case 7 %blt_2021
-            cruise_specifics.blt_2021 = true;
-            index = index+1;
-            n_items = n_items-1;
+        case 7 %cruise_specifics
+            idxFlag = find(cell2mat(cellfun(@(C) ~isempty(strfind(C,'cruise_specifics')),varargin,'uniformoutput',0)));
+            cruise_specifics = varargin{idxFlag+1};
+            index = index+2; %+2 because the following varargin will be the version number
+            n_items = n_items-2;
     end
 end
 
@@ -156,7 +158,10 @@ if rSync
 end
 % Mat files, formatted for FCTD processing
 if doFCTD
-    if ~exist(dirs.fctd_mat,'dir') % Bethan 20 June 2021: Added FCTD directory
+    if ~exist(dirs.fctd_cruise,'dir') % Bethan 20 June 2021: Added FCTD directory
+        error('Cannot find local FCTDdir: %s',FCTDdir);
+    end
+    if ~exist(dirs.fctd_deployment,'dir') % Bethan 20 June 2021: Added FCTD directory
         error('Cannot find local FCTDdir: %s',FCTDdir);
     end
 end
@@ -234,9 +239,6 @@ if ~isempty(myASCIIfiles)
             load(fullfile(myMATfile.folder,myMATfile.name),'raw_file_info')
         end
         
-        if doFCTD
-        end
-        
         % Convert new data to .mat if:
         %   (1) there is no .mat file to match the current raw file, or
         %   (2) the current raw file size is larger than what is saved in mat data 'raw_file_size'
@@ -290,10 +292,8 @@ if ~isempty(myASCIIfiles)
             end
             
             % Save data in .mat file
-            tic
             save(fullfile(MatDir,base),'-struct','matData')
             fprintf(1,'%s: Wrote  %s/%s.mat\n',datestr(now,'YY.mm.dd HH:MM:SS'),MatDir,base);
-            toc
             
             %Empty contents of matData structure
             use matData
@@ -316,9 +316,14 @@ if ~isempty(myASCIIfiles)
                 epsiProcess_update_PressureTimeseries(Meta_Data,MatDir,ctd,Meta_Data.PROCESS.profile_dir)
             end
             
-            % Save files for FCTD Format %%%%%% (Bethan 20 June 2021)
+            % Save file for FCTD Format %%%%%% (Bethan 20 June 2021)
             if doFCTD && ~isempty(ctd) && isfield(ctd,'time_s')
-                make_FCTD_mat(matData,dirs.fctd_mat,base,cruise_specifics);
+                % Make FCTD .mat data and save it in cruise-long fctd
+                % directory
+                FCTD = make_FCTD_mat(matData,dirs.fctd_cruise,base,cruise_specifics);
+                
+                % Also save it in deployment fctd directory
+                save(fullfile(dirs.fctd_deployment,base),'FCTD');
             end %end if doFCTD
             
         end %end if the data should be converted

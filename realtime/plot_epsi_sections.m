@@ -12,7 +12,7 @@ pcolorjw(data.GRID.dnum(dnummask),data.GRID.z,data.GRID.t(:,dnummask));
 hold on
 %n_fill_bathy(data.GRID.dnum(dnummask),data.GRID.bottom_depth(dnummask))
 %[c,ch]=contour(data.GRID.dnum(dnummask),data.GRID.z,data.GRID.sgth(:,dnummask),20,'k');
-caxis([9 15])
+caxis([9 20])
 cax1=colorbar;
 grid(ax(1),'on');
 %n_fill_bathy(data.GRID.dnum(dnummask),data.GRID.bottom_depth(dnummask))

@@ -61,14 +61,20 @@ if ~contains(field_list,'starting_dnum')
 else
     starting_dnum = input_struct.starting_dnum;
 end
+if ~contains(field_list,'cruise_specifics')
+    cruise_specifics = 'standard';
+else
+    cruise_specifics = input_struct.cruise_specifics;
+end
 
 % Define the directories for epsiProcess_convert_new_raw_to_mat
-dirs.raw_incoming = raw_dir;
-dirs.raw_copy  = fullfile(process_dir,'raw');
-dirs.mat       = fullfile(process_dir,'mat');
-experiment_dir = fileparts(process_dir);
-dirs.fctd_mat  = fullfile(experiment_dir,'FCTDmat');
-dirs.fctd_rot  = fullfile(experiment_dir,'FCTDrot');
+dirs.raw_incoming   = raw_dir;
+dirs.raw_copy       = fullfile(process_dir,'raw');
+dirs.mat            = fullfile(process_dir,'mat');
+experiment_dir      = fileparts(process_dir);
+dirs.fctd_cruise    = fullfile(experiment_dir,'FCTDmat');
+dirs.fctd_deployment = fullfile(process_dir,'fctd_mat');
+dirs.fctd_rot       = fullfile(experiment_dir,'FCTDrot');
 
 % Create directories if they don't exist
 if ~exist(process_dir,'dir')
@@ -80,12 +86,18 @@ end
 if ~exist(dirs.mat,'dir')
     eval([ '!mkdir ' strrep(dirs.mat,' ','\ ')]);
 end
-if ~exist(dirs.fctd_mat,'dir')
-    eval([ '!mkdir ' strrep(dirs.fctd_mat,' ','\ ')]);
+if ~exist(dirs.fctd_cruise,'dir')
+    eval([ '!mkdir ' strrep(dirs.fctd_cruise,' ','\ ')]);
+end
+if ~exist(dirs.fctd_deployment,'dir')
+    eval([ '!mkdir ' strrep(dirs.fctd_deployment,' ','\ ')]);
 end
 if ~exist(dirs.fctd_rot,'dir')
     eval([ '!mkdir ' strrep(dirs.fctd_rot,' ','\ ')]);
 end
+
+% Copy a bench_config into process_dir
+eval(['!cp /Users/Shared/EPSI_PROCESSING/Processed/0522_fctd_d5/bench_config ' process_dir]);
 
 % Copy the first file that matches str_to_match from raw_incoming into
 % raw_copy - you need to have one file there for epsi_class to read the
@@ -126,11 +138,17 @@ EpsiConvert_timer.TimerFcn = [...
     'else, '...
     'disp([datestr(now) '': Converting new raw files to mat...'']); '...
     'try, '...
-    'epsiProcess_convert_new_raw_to_mat(dirs,ec.Meta_Data,"doFCTD",dirs.fctd_mat,"fileStr",str_to_match);' ...
+    'epsiProcess_convert_new_raw_to_mat(dirs,ec.Meta_Data,"doFCTD","fileStr",str_to_match,"cruise_specifics",cruise_specifics);' ...
     'catch err, '...
     'display_error_stack(err); '...
     's=1; '...
-    'end; '...
+    'end;'...
+    'try, '...
+    'disp([datestr(now) '': Plotting gridded profiles...'']); '...
+    'plot_fctd_sections;' ...
+    'catch err, '...
+    'display_error_stack(err); '...
+    'end;'...
     'end;'];
 EpsiConvert_timer.Period = refresh_time_sec;
 EpsiConvert_timer.BusyMode = 'drop';
