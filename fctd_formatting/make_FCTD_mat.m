@@ -52,12 +52,12 @@ else
 end
 
 % Add GPS data
-if ~isempty(gps) && isfield(gps,'gpstime')
-    FCTD.GPS.longitude=interp1(gps.gpstime,gps.longitude,ctd.dnum);
-    FCTD.GPS.latitude=interp1(gps.gpstime,gps.latitude,ctd.dnum);
+if ~isempty(gps) && isfield(gps,'dnum')
+    FCTD.longitude=interp1(gps.dnum,gps.longitude,ctd.dnum);
+    FCTD.latitude=interp1(gps.dnum,gps.latitude,ctd.dnum);
 else
-    FCTD.GPS.longitude=nan(length(ctd.dnum),1);
-    FCTD.GPS.latitude=nan(length(ctd.dnum),1);
+    FCTD.longitude=nan(length(ctd.dnum),1);
+    FCTD.latitude=nan(length(ctd.dnum),1);
 end
 
 % Extra outputs for specific cruise setups
@@ -73,7 +73,7 @@ if strcmp(cruise_specifics,'blt_2021');
     % uConductivity/fluorometer data points for every 1 SBE data point. We
     % also save time_fast as an N x 20 array.
     time_fast = linspace(ctd.dnum(1),ctd.dnum(end),length(ctd.dnum)*20);
-    FCTD.time_fast = time_fast(:);
+    FCTD.time_fast = reshape(time_fast,20,[])';
 
     % Interpolate data that is not nan, not inf, and where time
     % is increasing
@@ -104,7 +104,7 @@ if strcmp(cruise_specifics,'tfo_2023')
     % uConductivity/fluorometer data points for every 1 SBE data point. We
     % also save time_fast as an N x 20 array.
     time_fast = linspace(ctd.dnum(1),ctd.dnum(end),length(ctd.dnum)*20);
-    FCTD.time_fast = time_fast(:);
+    FCTD.time_fast = reshape(time_fast,20,[])';
 
     % Interpolate data that is not nan, not inf, and where time
     % is increasing

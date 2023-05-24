@@ -179,7 +179,7 @@ else
 %% define a Pressure axis to an which I will compute epsilon and chi.
 %  The spectra will be nfft long centered around P(z) +/- tscan/2.
 %
-Pr = ceil(Prmin):dz:floor(Prmax);
+Pr = ceil(min(Profile.ctd.P)):dz:floor(max(Profile.ctd.P));
 nbscan = length(Pr);
 
 %% compute coherence with a3 over the full profile.

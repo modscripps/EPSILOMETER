@@ -394,5 +394,7 @@ if ind_ctdscan(1)>0 && ...
     scan.varInfo.chi = {'temperature gradient dissipation rate','°C^2 s^{-1}'};
     scan.varInfo.flag_tg_fc = {'temperature gradient cut off frequency is very high','0/1'};
 
-
+else 
+    p = []; %For debugging
+    
 end %endif scan is not too shallow or too close to the end of the profile
