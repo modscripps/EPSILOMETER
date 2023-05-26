@@ -104,11 +104,7 @@ for i = 1:length(fNames)
     % if it is an scalar or an matrix of number
     elseif isnumeric(MAT1.(fNames{i}))
         if length(MAT1.(fNames{i})) > 1
-            try
-                MAT.(fNames{i}) = [MAT1.(fNames{i}); MAT2.(fNames{i})];
-            catch
-                MAT.(fNames{i}) = [MAT1.(fNames{i}); MAT2.(fNames{i})];
-            end
+            MAT.(fNames{i}) = [MAT1.(fNames{i}); MAT2.(fNames{i})];
         elseif ~isempty(MAT2.(fNames{i}))
                 MAT.(fNames{i}) = [MAT1.(fNames{i}); MAT2.(fNames{i})];
         end

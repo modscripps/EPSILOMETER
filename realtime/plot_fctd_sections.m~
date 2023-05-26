@@ -5,14 +5,13 @@ fctd_mat_dir = fullfile(ec.Meta_Data.paths.data,'fctd_mat');
 [FCTDall,FCTDgrid] = concatenate_and_grid_fctd(fctd_mat_dir);
 
 %% Plot some stuff
-clf
+close all
 
-fig(1) = figure;
-fig(1).Position = [0 0 960 984];
+figure('position',[0 0 960 984])
 zlim = [0 1800];
-clim_temp = [3 20];
-clim_sal = [34.5 37];
-clim_chi = [-10 -8.5];
+clim_temp = [3 25];
+clim_sal = [34 37];
+clim_chi = [-10 -6];
 levels_dens = [1025 1026:0.1:1027.7 1027.71:0.01:1027.8];
 
 % Temperature

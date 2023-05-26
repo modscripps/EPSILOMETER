@@ -23,8 +23,8 @@
 
 % Change these for each deployment
 instrument = 'fctd';
-input_struct.process_dir = '/Users/Shared/EPSI_PROCESSING/Processed/0524_fctd_d7';
-input_struct.str_to_match = 'EPSI23_05_24_001409';
+input_struct.process_dir = '/Users/Shared/EPSI_PROCESSING/Processed/0526_fctd_d8_b';
+input_struct.str_to_match = 'EPSI23_05_26_102157';
 input_struct.depth_array = 0:2400;
 
 % -------------------------------------------------------------------------

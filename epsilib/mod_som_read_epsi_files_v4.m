@@ -1745,9 +1745,13 @@ else
                 % Everything after that is the data
                 rec_ecop=element_ecop(ecop.data.timestamp_length+1:end);
                 
-                ecop.channel1(n_rec)  = hex2dec(rec_ecop(:,1:4));
-                ecop.channel2(n_rec)  = hex2dec(rec_ecop(:,(1:4)+4));
-                ecop.channel3(n_rec)  = hex2dec(rec_ecop(:,(1:4)+8));
+                try
+                    ecop.channel1(n_rec)  = hex2dec(rec_ecop(:,1:4));
+                    ecop.channel2(n_rec)  = hex2dec(rec_ecop(:,(1:4)+4));
+                    ecop.channel3(n_rec)  = hex2dec(rec_ecop(:,(1:4)+8));
+                catch
+                    disp('cacaprout')
+                end
             
             % If timestamp has values like 1.6e12, it is in milliseconds since Jan
             % 1, 1970. Otherwise it's in milliseconds since the start of the record
@@ -1820,13 +1824,15 @@ else
     ttv_timestamp   = nan(ttv.data.n_recs,1);
     %ctd.ctdtime and ctd.ctddnum will be created from ctd_timestamp once
     %all its records are filled
-    ttv.hh   = nan(ttv.data.n_recs,1);
-    ttv.mm   = nan(ttv.data.n_recs,1);
-    ttv.ss   = nan(ttv.data.n_recs,1);
-    ttv.aaa  = nan(ttv.data.n_recs,1);
-    ttv.tof  = nan(ttv.data.n_recs,1);
-    ttv.rup  = nan(ttv.data.n_recs,1);
-    ttv.rdwn = nan(ttv.data.n_recs,1);
+    ttv.hh     = nan(ttv.data.n_recs,1);
+    ttv.mm     = nan(ttv.data.n_recs,1);
+    ttv.ss     = nan(ttv.data.n_recs,1);
+    ttv.aaa    = nan(ttv.data.n_recs,1);
+    ttv.tof    = nan(ttv.data.n_recs,1);
+    ttv.rup    = nan(ttv.data.n_recs,1);
+    ttv.rdwn   = nan(ttv.data.n_recs,1);
+    ttv.ampup  = nan(ttv.data.n_recs,1);
+    ttv.ampdwn = nan(ttv.data.n_recs,1);
     
     % Initialize datarecord counter
     n_rec = 0;

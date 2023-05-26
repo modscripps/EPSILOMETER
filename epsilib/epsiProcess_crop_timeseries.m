@@ -71,6 +71,10 @@ if ~isempty(myFileIdx)
             vnavOut = vnav;
             clear vnav
         end
+        if exist('ttv','var')
+            ttvOut = ttv;
+            clear ttv
+        end
         % Load the rest of the files, merging as you go (there shouldn't be
         % more than 2, so this should be pretty fast)
         for iF=2:length(myFileIdx)
@@ -91,6 +95,9 @@ if ~isempty(myFileIdx)
             if exist('vnav','var') && isstruct(vnav)
                 vnavOut = epsiProcess_merge_mat_files(vnavOut,vnav);
             end
+            if exist('ttv','var') && isstruct(ttv)
+                ttvOut = epsiProcess_merge_mat_files(ttvOut,ttv);
+            end
         end
         
         % Rename everything
@@ -106,7 +113,10 @@ if ~isempty(myFileIdx)
         if exist('vnav','var')
             vnav = vnavOut;
         end
-        clear epsiOut ctdOut altOut vnavOut
+        if exist('vnav','var')
+            ttv = ttvOut;
+        end
+        clear epsiOut ctdOut altOut vnavOut ttvOut
         
     end
     
@@ -202,6 +212,24 @@ if ~isempty(myFileIdx)
             end
         end
     end
+    %% Add ttv to Timeseries
+    if exist('ttv','var')
+        if isfield(ttv,'dnum') || isfield(ttv,'time_s')
+            switch tRangeChoice
+                case 'dnum'
+                    inRange = ttv.dnum>=tRange(1) & ttv.dnum<=tRange(end);
+                case 'time_s'
+                    inRange = ttv.time_s>=tRange(1) & ttv.time_s<=tRange(end);
+            end
+            ttvFields = fields(ttv);
+            for iField=1:numel(ttvFields)
+                if ~isstruct(ttv.(ttvFields{iField}))
+                    Timeseries.ttv.(ttvFields{iField}) = ttv.(ttvFields{iField})(inRange,:);
+                end
+            end
+        end
+    end
+
     
     %% Add Meta_Data
     Timeseries.Meta_Data = Meta_Data;

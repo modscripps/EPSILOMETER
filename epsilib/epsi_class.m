@@ -26,6 +26,7 @@ classdef epsi_class < handle
         alt
         vnav
         gps
+        ttv
     end
     methods
         function obj=epsi_class(varargin)
