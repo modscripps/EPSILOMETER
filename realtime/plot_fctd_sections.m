@@ -7,8 +7,8 @@ fctd_mat_dir = fullfile(ec.Meta_Data.paths.data,'fctd_mat');
 %% Plot some stuff
 clf
 
-fig(1) = figure;
-fig(1).Position = [0 0 960 984];
+fig = figure(1);
+fig.Position = [0 0 960 984];
 zlim = [0 1800];
 clim_temp = [3 20];
 clim_sal = [34.5 37];
@@ -41,8 +41,10 @@ cb(3).Label.String = 'Chi';
 % Add density contours and datetick
 for iAx=1:3
    axes(ax(iAx))
-   hold on
+   hold(ax(iAx),'on')
    [c,ch] = contour(FCTDgrid.time,FCTDgrid.depth,FCTDgrid.density,'k','levellist',levels_dens);
+   contour(FCTDgrid.time,FCTDgrid.depth,FCTDgrid.temperature,'m','levellist',13);
+   contour(FCTDgrid.time,FCTDgrid.depth,FCTDgrid.temperature,'c','levellist',15);
    clabel(c,ch);
    
    datetick(ax(iAx),'x','HH:MM','keeplimits')
@@ -52,7 +54,8 @@ end
 [ax(:).YLim] = deal([zlim(1) zlim(2)]);
 [ax(:).YDir] = deal('reverse');
 
-
+%MHA hack
+[ax(1:2).YLim] = deal([zlim(1) 500]);
 
 
 

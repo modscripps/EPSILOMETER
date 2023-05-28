@@ -53,8 +53,10 @@ end
 
 % Add GPS data
 if ~isempty(gps) && isfield(gps,'dnum')
-    FCTD.longitude=interp1(gps.dnum,gps.longitude,ctd.dnum);
-    FCTD.latitude=interp1(gps.dnum,gps.latitude,ctd.dnum);
+    % Sometimes there's a weirdness here with non-unique gps.dnum
+    [~,iU] = unique(gps.dnum);
+    FCTD.longitude=interp1(gps.dnum(iU),gps.longitude(iU),ctd.dnum);
+    FCTD.latitude=interp1(gps.dnum(iU),gps.latitude(iU),ctd.dnum);
 else
     FCTD.longitude=nan(length(ctd.dnum),1);
     FCTD.latitude=nan(length(ctd.dnum),1);
@@ -108,15 +110,17 @@ if strcmp(cruise_specifics,'tfo_2023')
 
     % Interpolate data that is not nan, not inf, and where time
     % is increasing
-    diff_not_neg = [0;diff(epsi.dnum)]>0;
-    [~,isunique] = unique(epsi.dnum);
-    keep = ~isnan(epsi.dnum) & ~isinf(epsi.dnum) & diff_not_neg & isunique;
-
-    if ~isempty(epsi) && isfield(epsi,'s2_count') && ~isempty(ctd)
-        FCTD.uConductivity=reshape(interp1(epsi.dnum(keep),double(epsi.s2_count(keep)),time_fast),20,[])';
-    else
-        FCTD.uConductivity=nan(length(ctd.dnum),20);
-        disp(['No uConductivity data ' myASCIIfiles(i).name]);
+    if ~isempty(epsi)
+        diff_not_neg = [0;diff(epsi.dnum)]>0;
+        [~,isunique] = unique(epsi.dnum);
+        keep = ~isnan(epsi.dnum) & ~isinf(epsi.dnum) & diff_not_neg & isunique;
+        
+        if ~isempty(epsi) && isfield(epsi,'s2_count') && ~isempty(ctd)
+            FCTD.uConductivity=reshape(interp1(epsi.dnum(keep),double(epsi.s2_count(keep)),time_fast),20,[])';
+        else
+            FCTD.uConductivity=nan(length(ctd.dnum),20);
+            disp(['No uConductivity data ' myASCIIfiles(i).name]);
+        end
     end
     
 end

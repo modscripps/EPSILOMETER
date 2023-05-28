@@ -69,7 +69,7 @@ calc_micro = false; % Calculate epsilon, chi, for timeseries (before dividing in
 version    = 4;     % Default version of mod_som_read_epsi_files
 display_file_data_flag    = false; % By default, DON'T display file information to the screen
 cruise_specifics = 'standard'; % By default, DON'T add microconductivity and fluorometer data to FCTD structure
-
+fileStr    = false;
 
 %% Loop through the number of varargin arguments
 
@@ -165,7 +165,6 @@ if doFCTD
         error('Cannot find local FCTDdir: %s',FCTDdir);
     end
 end
-
 
 %% rsync remote and local directories 
 % OR use this option to copy files from one big directory into individual 

@@ -1750,7 +1750,9 @@ else
                     ecop.channel2(n_rec)  = hex2dec(rec_ecop(:,(1:4)+4));
                     ecop.channel3(n_rec)  = hex2dec(rec_ecop(:,(1:4)+8));
                 catch
-                    disp('cacaprout')
+                    ecop.channel1(n_rec)  = nan;
+                    ecop.channel2(n_rec)  = nan;
+                    ecop.channel3(n_rec)  = nan;
                 end
             
             % If timestamp has values like 1.6e12, it is in milliseconds since Jan

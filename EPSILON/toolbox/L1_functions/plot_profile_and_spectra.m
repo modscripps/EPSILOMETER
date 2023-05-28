@@ -405,11 +405,7 @@ for k=scanNum
         grid(ax(6),'on')
         p6(2) = semilogx(ax(6),Profile.f,Co12,'color',cols.a2);
         p6(3) = semilogx(ax(6),Profile.f,Co13,'color',cols.a3);
-        try
         p6(4) = semilogx(ax(6),Profile.f,Profile.Cs1a3_full,'color',cols.s1);
-        catch
-        p6(4) = semilogx(ax(6),Profile.f,scan.Cs1a.a3,'color',cols.s1);
-        end
         try
             legend(ax(6),'s1a1','s1a2','s1a3','s1a3 full profile','location','northwest','numcolumns',2)
         catch
@@ -426,11 +422,7 @@ for k=scanNum
         grid(ax(a),'on')
         p8(2) = semilogx(ax(a),Profile.f,Co22,'color',cols.a2);
         p8(3) = semilogx(ax(a),Profile.f,Co23,'color',cols.a3);
-        try
-            p8(4) = semilogx(ax(a),Profile.f,Profile.Cs1a3_full,'color',cols.s2);
-        catch
-            p8(4) = semilogx(ax(a),Profile.f,scan.Cs1a.a3,'color',cols.s2);
-        end
+        p8(4) = semilogx(ax(a),Profile.f,Profile.Cs1a3_full,'color',cols.s2);
         try
             warning off
             legend(ax(a),'s2a1','s2a2','s2a3','s2a3 full profile','location','northwest','numcolumns',2)
@@ -470,10 +462,10 @@ for k=scanNum
 
         try
             warning off
-            legend(ax(9),'t1','t1smooth','t2','t2smooth','Batchs1t1','Batchs1t2','Batchs2t1','Batchs2t2','noise','t1_{cutoff}','t2_{cutoff}','location','northwest','numcolumns',2);
+            legend(ax(9),'t1','t1smooth','t2','t2smooth','Batchs1t1','Batchs1t2','Batchs2t1','Batchs2t2','noise','t1_{cutoff}','t2_{cutoff}','location','southeast','numcolumns',2);
             warning on
         catch
-            legend(ax(9),'t1','t1smooth','t2','t2smooth','Batchs1t1','Batchs1t2','Batchs2t1','Batchs2t2','noise','t1_{cutoff}','t2_{cutoff}','location','northwest');
+            legend(ax(9),'t1','t1smooth','t2','t2smooth','Batchs1t1','Batchs1t2','Batchs2t1','Batchs2t2','noise','t1_{cutoff}','t2_{cutoff}','location','southeast');
         end
         xlim(ax(9),[6e-1 max(scan.k)])
         minTG=sort([scan.Pt_Tg_k.t1(:);scan.Pt_Tg_k.t2(:)]);
@@ -505,10 +497,10 @@ for k=scanNum
         grid(ax(10),'on')
         try
             warning off
-            legend(ax(10),'s1','s1smooth','s2','s2smooth','noise','s1_{cutoff}','s2_{cutoff}','Panchev1','Panchev2','location','northwest','numcolumns',2);
+            legend(ax(10),'s1','s1smooth','s2','s2smooth','noise','s1_{cutoff}','s2_{cutoff}','Panchev1','Panchev2','location','southeast','numcolumns',2);
             warning on
         catch
-            legend(ax(10),'s1','s1smooth','s2','s2smooth','noise','s1_{cutoff}','s2_{cutoff}','Panchev1','Panchev2','location','northwest');
+            legend(ax(10),'s1','s1smooth','s2','s2smooth','noise','s1_{cutoff}','s2_{cutoff}','Panchev1','Panchev2','location','southeast');
         end
         end
         xlim(ax(10),[6e-1 max(scan.k)])
