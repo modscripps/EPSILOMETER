@@ -26,6 +26,7 @@ classdef epsi_class < handle
         alt
         vnav
         gps
+        ttv
     end
     methods
         function obj=epsi_class(varargin)
@@ -97,6 +98,16 @@ classdef epsi_class < handle
                     obj.Meta_Data.paths.figures = fullfile(data_path,'figs');
 
                     obj.Meta_Data = epsiSetup_get_raw_suffix(obj.Meta_Data);
+
+                    % NC 4/23/23
+                    % If Meta_Data_Process file is specified, add it to
+                    % Meta_Data paths and read it
+                    if exist('Meta_Data_process_file','var') 
+                        if ~isempty(Meta_Data_process_file)
+                        obj.Meta_Data.paths.process_library = Meta_Data_process_file;
+                        obj.f_read_MetaProcess(Meta_Data_process_file);
+                        end
+                    end
 
                     % Check that Meta_Data has everything you need. If it's
                     % missing something, set repeat=0 and checkMD=[]
@@ -280,6 +291,7 @@ classdef epsi_class < handle
             fprintf('... \n')
             fprintf('Meta_Data.PROCESS information comes from %s \n',obj.Meta_Data.PROCESS.filename)
             fprintf('Profiles are going %s \n',upper(obj.Meta_Data.PROCESS.profile_dir))
+            fprintf('... \n')
 
             % NC - check for s1 and s2 cal values. For newer deployments that have Meta_Data.AFE structure, if they're
             % 0, manually input all probe numbers.
@@ -305,7 +317,7 @@ classdef epsi_class < handle
             if isempty(Meta_Data_process_file)  && ~isclassfield(Meta_Data.PROCESS,'filename')
                 Meta_Data_process_file = fullfile(obj.Meta_Data.paths.process_library,'Meta_Data_Process','Meta_Data_Process.txt');
             elseif isclassfield(Meta_Data.PROCESS,'filename')
-                Meta_Data_process_file = obj.Meta_Data.PROCESS.filename;
+                Meta_Data_process_file = fullfile(obj.Meta_Data.paths.process_library,'Meta_Data_Process',obj.Meta_Data.PROCESS.filename);
             end
             obj.f_read_MetaProcess(Meta_Data_process_file);
 
@@ -351,7 +363,7 @@ classdef epsi_class < handle
             version_number = 4;
             calc_micro = 0;
             make_FCTD = 0;
-            fctd_mat_dir = '';
+            fctd_mat_dir = fullfile(obj.Meta_Data.paths.data,'FCTDmat');
 
             argsNameToCheck = {'calc_micro',...     %1
                 'version',...        %2
@@ -362,7 +374,7 @@ classdef epsi_class < handle
             % the number of extra parameters that go with the arguments. For example,
             % 'version' expects another parameter that follows it: 'version', 3.
             % Similarly, 'fileStr' expects a string after it: 'fileStr',
-            % 'EPSI_22_04_12*'
+            % 'EPSI_22_04_12*,'make_FCTD' expects a 1 or a 0 after it.
             n_items = nargin-2;
 
             while (n_items > 0)
@@ -392,8 +404,8 @@ classdef epsi_class < handle
                         % set make_FCTD to 1
                         idxFlag = find(cell2mat(cellfun(@(C) ~isempty(strfind(C,'make_FCTD')),varargin,'uniformoutput',0)));
                         make_FCTD = 1;
-                        index = index+1;
-                        n_items = n_items-1;
+                        index = index+2;
+                        n_items = n_items-2;
                 end
             end
 
@@ -423,7 +435,7 @@ classdef epsi_class < handle
                         'noSync',...
                         'version',version_number,...
                         'calc_micro',calc_micro,...
-                        'make_FCTD',fctd_mat_dir);
+                        'doFCTD',fctd_mat_dir);
                 elseif ~make_FCTD
                     epsiProcess_convert_new_raw_to_mat(dirs,obj.Meta_Data,...
                         'noSync',...
@@ -971,12 +983,15 @@ classdef epsi_class < handle
             delete(fullfile(obj.Meta_Data.paths.data,'Meta_Data.mat'));
         end
         function f_check_spectra(obj,id_profile)
+            % Plots a profile that you can click on to get a spectra
             if nargin<2
                 warning('f_check_spectra(id_profile)');
             end
             check_spectra(id_profile);
         end
         function f_check_grid_spectra(obj)
+            % Plots a grid that you can click on to get a profile and the
+            % spectra where you clicked
             check_grid_spectra();
         end
     end %end methods
