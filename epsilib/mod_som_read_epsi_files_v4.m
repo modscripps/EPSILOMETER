@@ -498,8 +498,16 @@ else
         alt_block_str = str(ind_alt_start(iB):ind_alt_stop(iB));
         
         % For the altimeter, all the data is actually in the header
-        alti.hextimestamp.value   = hex2dec(alt_block_str(tag.hextimestamp.inds));
-        alt_timestamp(iB) = alti.hextimestamp.value;
+        try
+            alti.hextimestamp.value   = hex2dec(alt_block_str(tag.hextimestamp.inds));
+        catch
+            alti.hextimestamp.value = nan;
+        end
+        try
+            alt_timestamp(iB) = alti.hextimestamp.value;
+        catch
+            alt_timestamp(iB) = nan;
+        end
         
         % The altimeter block does not have a hexlengthblock (hexadecimal
         % length of data block). It has the altimeter reading in that

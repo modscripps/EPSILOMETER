@@ -80,9 +80,9 @@ if isclassfield(obj,'epsi') && ~isempty(obj.epsi)
 %    
     
     % s1 and s2
-    plot(ax(2),time_array.epsi,obj.epsi.s1_volt,'.','Color',cols.s1,'LineWidth',obj.plot_properties.LineWidth,'displayname','s1')
+    plot(ax(2),time_array.epsi,obj.epsi.s1_volt,'.','Color',cols.s1,'LineWidth',obj.plot_properties.LineWidth,'displayname',sprintf('s1 -rms %1.1f',rms(obj.epsi.s1_volt)))
     hold(ax(2),'on')
-    plot(ax(2),time_array.epsi,obj.epsi.s2_volt,'.','Color',cols.s2,'LineWidth',obj.plot_properties.LineWidth,'displayname','s2')
+    plot(ax(2),time_array.epsi,obj.epsi.s2_volt,'.','Color',cols.s2,'LineWidth',obj.plot_properties.LineWidth,'displayname',sprintf('s2 - rms%1.1f',rms(obj.epsi.s2_volt)))
 
     % a1
     plot(ax(3),time_array.epsi,obj.epsi.a1_g,'.','Color',cols.a1,'LineWidth',obj.plot_properties.LineWidth,'displayname','a1')
@@ -90,7 +90,7 @@ if isclassfield(obj,'epsi') && ~isempty(obj.epsi)
     % a2 and a3
     plot(ax(4),time_array.epsi,obj.epsi.a2_g,'.','Color',cols.a2,'LineWidth',obj.plot_properties.LineWidth,'displayname','a2')
     hold(ax(4),'on')
-    plot(ax(4),time_array.epsi,obj.epsi.a3_g,'.','Color',cols.a3,'LineWidth',obj.plot_properties.LineWidth,'displayname','a3')
+    %plot(ax(4),time_array.epsi,obj.epsi.a3_g,'.','Color',cols.a3,'LineWidth',obj.plot_properties.LineWidth,'displayname','a3')
 
     % Add legends
     legend(ax(1),'location','northwest')

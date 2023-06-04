@@ -9,10 +9,10 @@ clf
 
 fig = figure(1);
 fig.Position = [0 0 960 984];
-zlim = [0 1800];
-clim_temp = [3 20];
+zlim = [0 1000];
+clim_temp = [8 26];
 clim_sal = [34.5 37];
-clim_chi = [-10 -8.5];
+clim_chi = [-10 -8];
 levels_dens = [1025 1026:0.1:1027.7 1027.71:0.01:1027.8];
 
 % Temperature
@@ -25,7 +25,7 @@ cb(1).Label.String = 'Temperature';
 
 % Salinity
 ax(2) = subtightplot(3,1,2);
-pcolorjw(FCTDgrid.time,FCTDgrid.depth,FCTDgrid.salinity);
+pcolorjw(FCTDgrid.time,FCTDgrid.depth,real(FCTDgrid.salinity));
 ax(2).CLim = [clim_sal(1) clim_sal(2)];
 cb(2) = colorbar;
 colormap(ax(2),cmocean('haline'))
@@ -42,7 +42,7 @@ cb(3).Label.String = 'Chi';
 for iAx=1:3
    axes(ax(iAx))
    hold(ax(iAx),'on')
-   [c,ch] = contour(FCTDgrid.time,FCTDgrid.depth,FCTDgrid.density,'k','levellist',levels_dens);
+   [c,ch] = contour(FCTDgrid.time,FCTDgrid.depth,real(FCTDgrid.density),'k','levellist',levels_dens);
    contour(FCTDgrid.time,FCTDgrid.depth,FCTDgrid.temperature,'m','levellist',13);
    contour(FCTDgrid.time,FCTDgrid.depth,FCTDgrid.temperature,'c','levellist',15);
    clabel(c,ch);
@@ -55,7 +55,7 @@ end
 [ax(:).YDir] = deal('reverse');
 
 %MHA hack
-[ax(1:2).YLim] = deal([zlim(1) 500]);
+%[ax(1:2).YLim] = deal([zlim(1) 500]);
 
 
 
