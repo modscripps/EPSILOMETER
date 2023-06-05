@@ -30,7 +30,7 @@ firmware_length=40-1;
 
 gitid_offset=firmware_offset+firmware_length+1;
 switch setup.size
-    case {864,896}
+    case {864,920}
         gitid_length=24-1;
     otherwise
         gitid_length=0-1;
@@ -63,7 +63,7 @@ setup.firmware=str(firmware_offset+(0:firmware_length)).';
 setup.firmware=setup.firmware(uint8(setup.firmware)>0);
 
 switch setup.size
-    case 864
+    case {864,920}
         setup.gitid=str(firmware_offset+(0:firmware_length)).';
     otherwise
         setup.gitid=[];
@@ -87,17 +87,23 @@ setup.start_dnum = 0;
 %%
 nb_module=1;
 unpack=true;
-module{nb_module}.index=initialize_flag_offset+4
+module{nb_module}.index=initialize_flag_offset+4;
 while unpack
-    module{nb_module}.size=conv32d(double(uint8(str(module{nb_module}.index+(0:3)))));
+    try
+        module{nb_module}.size=conv32d(double(uint8(str(module{nb_module}.index+(0:3)))));
+    catch
+        break
+    end
     module{nb_module}.str=str(module{nb_module}.index+(0:module{nb_module}.size-1));
-    if (length(str)-(module{nb_module}.index+module{nb_module}.size)<6)%TDO make it so I am sure length(str) == the end of the modules.
+    if module{nb_module}.size==0
         unpack=false;
     else
         nb_module=nb_module+1;
         module{nb_module}.index=module{nb_module-1}.index+module{nb_module-1}.size+mod(module{nb_module-1}.size,4);
     end
 end
+nb_module=nb_module-1;
+module=module(1:nb_module);
 
 %% parse modules
 modules_headers=["CALENDAR","CAL", ...
@@ -111,7 +117,7 @@ for i=1:nb_module
     id_module=cellfun(@(x)(strfind(module{i}.str.',x)),modules_headers,'un',0);
     id_module=~cellfun(@isempty,id_module);
     try
-        wh_module=modules_headers{id_module};
+        wh_module=modules_headers{id_module}
         setup.(wh_module).str=module{i}.str;
         switch wh_module
             case {"CALENDAR","CAL","$CAL"}

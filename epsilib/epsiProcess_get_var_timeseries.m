@@ -23,7 +23,8 @@ file_data = load(fullfile(obj.Meta_Data.paths.mat_data,TimeIndex.filenames{1}));
 
 % Find the requested variable
 field_list = fields(file_data);
-
+data = [];
+dnum = [];
 for iF=1:length(field_list)
 if ~isempty(file_data.(field_list{iF}))
     sub_list = fields(file_data.(field_list{iF}));
@@ -37,15 +38,10 @@ end
 end
 
 % Now concatenate data from the rest of the files
-if ~isempty(data)
-    for d=2:length(TimeIndex.filenames)
+for d=2:length(TimeIndex.filenames)
         file_data = load(fullfile(obj.Meta_Data.paths.mat_data,TimeIndex.filenames{d}));
         data = [data; file_data.(field_list{iF}).(sub_list{iS})];
         dnum = [dnum; file_data.(field_list{iF}).dnum];
-    end
-else
-    data = [];
-    dnum = [];
 end
 
 var_timeseries.dnum = dnum;

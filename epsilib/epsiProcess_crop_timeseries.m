@@ -71,6 +71,11 @@ if ~isempty(myFileIdx)
             vnavOut = vnav;
             clear vnav
         end
+        if exist('fluor','var')
+            fluorOut = fluor;
+            clear fluor
+        end
+
         % Load the rest of the files, merging as you go (there shouldn't be
         % more than 2, so this should be pretty fast)
         for iF=2:length(myFileIdx)
@@ -91,6 +96,12 @@ if ~isempty(myFileIdx)
             if exist('vnav','var') && isstruct(vnav)
                 vnavOut = epsiProcess_merge_mat_files(vnavOut,vnav);
             end
+            if exist('fluor','var') && isstruct(vnav)
+                fluorOut = epsiProcess_merge_mat_files(fluorOut,fluor);
+            end
+            if exist('ttv','var') && isstruct(ttv)
+                ttvOut = epsiProcess_merge_mat_files(ttvOut,ttv);
+            end
         end
         
         % Rename everything
@@ -106,7 +117,13 @@ if ~isempty(myFileIdx)
         if exist('vnav','var')
             vnav = vnavOut;
         end
-        clear epsiOut ctdOut altOut vnavOut
+        if exist('fluor','var')
+            fluor = fluorOut;
+        end
+        if exist('ttv','var')
+            ttv = ttvOut;
+        end
+        clear epsiOut ctdOut altOut vnavOut fluorOut ttvOut
         
     end
     
@@ -202,6 +219,41 @@ if ~isempty(myFileIdx)
             end
         end
     end
+
+        %% Add fluor to Timeseries
+    if exist('fluor','var')
+        
+        if isfield(fluor,'dnum') || isfield(fluor,'time_s')
+            switch tRangeChoice
+                case 'dnum'
+                    inRange = fluor.dnum>=tRange(1) & fluor.dnum<=tRange(end);
+                case 'time_s'
+                    inRange = fluor.time_s>=tRange(1) & fluor.time_s<=tRange(end);
+            end
+            fluorFields = fields(fluor);
+            for iField=1:numel(fluorFields)
+                Timeseries.fluor.(fluorFields{iField}) = fluor.(fluorFields{iField})(inRange,:);
+            end
+        end
+    end
+
+        %% Add ttv to Timeseries
+    if exist('ttv','var')
+        
+        if isfield(ttv,'dnum') || isfield(ttv,'time_s')
+            switch tRangeChoice
+                case 'dnum'
+                    inRange = ttv.dnum>=tRange(1) & ttv.dnum<=tRange(end);
+                case 'time_s'
+                    inRange = ttv.time_s>=tRange(1) & ttv.time_s<=tRange(end);
+            end
+            ttvFields = fields(ttv);
+            for iField=1:numel(ttvFields)
+                Timeseries.ttv.(ttvFields{iField}) = ttv.(ttvFields{iField})(inRange,:);
+            end
+        end
+    end
+
     
     %% Add Meta_Data
     Timeseries.Meta_Data = Meta_Data;

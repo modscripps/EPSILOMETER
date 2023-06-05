@@ -72,6 +72,7 @@ end
 [ind_apf1_start     , ind_apf1_stop]     = regexp(str,'\$APF1([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
 [ind_apf2_start     , ind_apf2_stop]     = regexp(str,'\$APF2([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
 [ind_ecop_start     , ind_ecop_stop]     = regexp(str,'\$ECOP([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
+[ind_ttv_start     , ind_ttv_stop]     = regexp(str,'\$TTVP([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
 
 %$ECOP0000000000045cf00000001c*6B0000000000045ceXXXXYYYYZZZZ*57
 %% Define the header tag format
@@ -454,6 +455,9 @@ else
                     'C_raw','PT_raw','P','z','T','S','C','th','sgth','dPdt','dzdt'});
             end
         end %end if sbe data block is the correct size
+        if mod(n_rec,1000)==0
+            sprintf("block %i \r\n",n_rec)
+        end
     end %end loop through sbe blocks
     
     
@@ -1433,7 +1437,6 @@ end %end apf
 %% Process APF data
 if (isempty(ind_apf2_start))
     no_data_types = [no_data_types,'apf2'];
-    disp('no apf2')
 else
     processed_data_types = [processed_data_types,'apf2'];
     %time, pressure, dpdt, epsilon, chi, avg_t, avg_s, avg_a
@@ -1667,12 +1670,21 @@ end %end apf
 % YYYY 4 char bytes to convert to uint_16; 
 % ZZZZ 4 char bytes to convert to uint_16; 
 if isempty(ind_ecop_start)
-    no_data_types = [no_data_types,'ecop'];
-    ecop=[];
+    no_data_types = [no_data_types,'fluor'];
+    fluor=[];
 else
+    
+    ecop.data.sample_freq      = 16;
+    ecop.data.sample_period    = 1/ecop.data.sample_freq;
+    ecop.data.n_blocks         = numel(ind_ecop_start);
+    ecop.data.recs_per_block   = 1;
+    ecop.data.n_recs           = ecop.data.n_blocks*ecop.data.recs_per_block;
+    ecop.data.timestamp_length = 16;
+    ecop.data.length           = 12;   
+
     processed_data_types = [processed_data_types,'ecop'];
 
-    ecop.data.sample_period    = 1/sbe.data.sample_freq;
+    ecop.data.sample_period    = 1/ecop.data.sample_freq;
     ecop.data.n_blocks         = numel(ind_ecop_start);
     %ALB hard coded number of element per record
     ecop.data.recs_per_block   = 1;
@@ -1684,12 +1696,12 @@ else
     % --------------------------------
     
     % Pre-allocate space for data
-    ecop_timestamp   = nan(sbe.data.n_recs,1);
+    ecop_timestamp   = nan(ecop.data.n_recs,1);
     %ctd.ctdtime and ctd.ctddnum will be created from ctd_timestamp once
     %all its records are filled
-    ecop.channel1   = nan(ecop.data.n_recs,1);
-    ecop.channel2   = nan(ecop.data.n_recs,1);
-    ecop.channel3   = nan(ecop.data.n_recs,1);
+    fluor.channel1   = nan(ecop.data.n_recs,1);
+    fluor.channel2   = nan(ecop.data.n_recs,1);
+    fluor.channel3   = nan(ecop.data.n_recs,1);
     
     % Initialize datarecord counter
     n_rec = 0;
@@ -1705,7 +1717,7 @@ else
         ecop.hexlengthblock.value = hex2dec(ecop_block_str(tag.hexlengthblock.inds));
         
         % Get the data after the header.
-        ecop_block_data = sbe_block_str(tag.data_offset:end-tag.chksum.length);
+        ecop_block_data = ecop_block_str(tag.data_offset:end-tag.chksum.length);
         
         if (length(ecop_block_data)~=ecop.hexlengthblock.value)
             fprintf("ECOP block %i has incorrect length\r\n",iB)
@@ -1721,7 +1733,7 @@ else
                 
                 % The ctd data is everything but the last two elements of the
                 % block
-                element_ecop=ecop_block_data(iR,1:end-2);
+                element_ecop=ecop_block_data(iR,1:end);
                 
                 % The hexadecimal timestamp is the first 16 characters of the
                 % data
@@ -1729,21 +1741,26 @@ else
                 
                 % Everything after that is the data
                 rec_ecop=element_ecop(ecop.data.timestamp_length+1:end);
-                
-                ecop.channel1(n_rec)  = hex2dec(rec_ecop(:,1:4));
-                ecop.channel2(n_rec)  = hex2dec(rec_ecop(:,(1:4)+4));
-                ecop.channel3(n_rec)  = hex2dec(rec_ecop(:,(1:4)+8));
+                try
+                    fluor.channel1(n_rec)  = hex2dec(rec_ecop(:,1:4));
+                    fluor.channel2(n_rec)  = hex2dec(rec_ecop(:,(1:4)+4));
+                    fluor.channel3(n_rec)  = hex2dec(rec_ecop(:,(1:4)+8));
+                catch
+                    fluor.channel1(n_rec)  = nan;
+                    fluor.channel2(n_rec)  = nan;
+                    fluor.channel3(n_rec)  = nan;
+                end
             
             % If timestamp has values like 1.6e12, it is in milliseconds since Jan
             % 1, 1970. Otherwise it's in milliseconds since the start of the record
-            if nanmedian(ctd_timestamp)>1e9
+            if nanmedian(ecop_timestamp)>1e9
                 % time_s - seconds since 1970
                 % dnum - matlab datenum
-                [ecop.time_s,ecop.dnum] = convert_timestamp(ecop_timestamp);
+                [fluor.time_s,fluor.dnum] = convert_timestamp(ecop_timestamp);
             else
                 % time_s - seconds since power on
-                ecop.time_s = ecop_timestamp./1000;
-                ecop.dnum = Meta_Data.start_dnum + days(seconds(ecop.time_s));
+                fluor.time_s = ecop_timestamp./1000;
+                fluor.dnum = Meta_Data.start_dnum + days(seconds(fluor.time_s));
             end
 
 % ALB Fill up if you want to add function PROCESS the ECOPPUCK data            
@@ -1762,11 +1779,137 @@ else
 end %end loop if there is ecop data
 
 
+%% Process ttv data
+% $TTVP00000188449d43f100000046*2C00000188449d43f100:28:07 447 ms-000000050 ps,+650 mV,+651 mV,078, 078 *12"
+% hh:mm:ss 00:28:07
+% aaa        447 ms
+% tof       -000000050 ps
+% amp_up    +650 mV
+% amp_dn    +651 mV
+% ratio_up   078
+% ratio_down 078
+
+%ALB this is engineering data format.
+%ALB will work on other format when they exist
+if isempty(ind_ttv_start)
+    no_data_types = [no_data_types,'ttv'];
+    ttv=[];
+else
+    
+    ttv.data.sample_freq      = 16;
+    ttv.data.sample_period    = 1/ttv.data.sample_freq;
+    ttv.data.n_blocks         = numel(ind_ttv_start);
+    ttv.data.recs_per_block   = 1;
+    ttv.data.n_recs           = ttv.data.n_blocks*ttv.data.recs_per_block;
+    ttv.data.timestamp_length = 16;
+    % ALB I have to change this
+    ttv.data.length           = 70;   
+
+    processed_data_types = [processed_data_types,'ttv'];
+
+    ttv.data.sample_period    = 1/ttv.data.sample_freq;
+    ttv.data.n_blocks         = numel(ind_ttv_start);
+    %ALB hard coded number of element per record
+    ttv.data.recs_per_block   = 1;
+    ttv.data.n_recs           = ttv.data.n_blocks*ttv.data.recs_per_block;
+    ttv.data.timestamp_length = 16;
+    
+    
+    % Process ttv data
+    % --------------------------------
+    
+    % Pre-allocate space for data
+    ttv_timestamp   = nan(ttv.data.n_recs,1);
+    %ctd.ctdtime and ctd.ctddnum will be created from ctd_timestamp once
+    %all its records are filled
+    ttv.hh   = nan(ttv.data.n_recs,1);
+    ttv.mm   = nan(ttv.data.n_recs,1);
+    ttv.ss   = nan(ttv.data.n_recs,1);
+    ttv.aaa  = nan(ttv.data.n_recs,1);
+    ttv.tof  = nan(ttv.data.n_recs,1);
+    ttv.rup  = nan(ttv.data.n_recs,1);
+    ttv.rdwn = nan(ttv.data.n_recs,1);
+    
+    % Initialize datarecord counter
+    n_rec = 0;
+    
+    % Loop through data blocks and parse strings
+    for iB = 1:ttv.data.n_blocks
+
+        % Grab the block of data starting with the header
+        ttv_block_str = str(ind_ttv_start(iB):ind_ttv_stop(iB));
+
+        % Get the header timestamp and length of data block
+        ttv.hextimestamp.value   = hex2dec(ttv_block_str(tag.hextimestamp.inds));
+        ttv.hexlengthblock.value = hex2dec(ttv_block_str(tag.hexlengthblock.inds));
+        %ALB by assing hard coded length
+        ttv.data.length           = ttv.hexlengthblock.value-16;%?maybe that works
+
+        % Get the data after the header.
+        ttv_block_data = ttv_block_str(tag.data_offset:end-tag.chksum.length);
+
+        if (length(ttv_block_data)~=ttv.hexlengthblock.value)
+            fprintf("TTVP block %i has incorrect length\r\n",iB)
+        else
+            %
+            % Where do 16 and 24 come from?
+            ttv_block_data=reshape(ttv_block_data,16+ttv.data.length,ttv.data.recs_per_block).';
+
+            %00000188449d433600:28:07 262 ms-000000043 ps,+650 mV,+649 mV,079, 078 *4B
+            parse_ttv_block_data=sscanf(ttv_block_data,'%016x%02f:%02f:%02f %03f ms%010f ps,%04f mV,%04f mV,%03f, %03f');
+            if length(parse_ttv_block_data)==10
+
+                for iR=1:ttv.data.recs_per_block
+
+                    % Count up the record number
+                    n_rec=n_rec+1;
+
+                    % The ctd data is everything but the last two elements of the
+                    % block
+                    element_ttv=ttv_block_data(iR,1:end);
+
+                    % The hexadecimal timestamp is the first 16 characters of the
+                    % data
+                    ttv_timestamp(n_rec) = hex2dec(element_ttv(1:16));
+
+                    % Everything after that is the data
+                    rec_ttv=element_ttv(ttv.data.timestamp_length+1:end);
+
+                    ttv.hh(n_rec)   = parse_ttv_block_data(2);
+                    ttv.mm(n_rec)   = parse_ttv_block_data(3);
+                    ttv.ss(n_rec)   = parse_ttv_block_data(4);
+                    ttv.aaa(n_rec)  = parse_ttv_block_data(5);
+                    ttv.tof(n_rec)  = parse_ttv_block_data(6);
+                    ttv.ampup(n_rec)  = parse_ttv_block_data(7);
+                    ttv.ampdwn(n_rec) = parse_ttv_block_data(8);
+                    ttv.rup(n_rec)  = parse_ttv_block_data(9);
+                    ttv.rdwn(n_rec) = parse_ttv_block_data(10);
+
+                    % If timestamp has values like 1.6e12, it is in milliseconds since Jan
+                    % 1, 1970. Otherwise it's in milliseconds since the start of the record
+                    if nanmedian(ttv_timestamp)>1e9
+                        % time_s - seconds since 1970
+                        % dnum - matlab datenum
+                        [ttv.time_s,ttv.dnum] = convert_timestamp(ttv_timestamp);
+                    else
+                        % time_s - seconds since power on
+                        ttv.time_s = ttv_timestamp./1000;
+                        ttv.dnum   = Meta_Data.start_dnum + days(seconds(ttv.time_s));
+                    end
+                end
+
+            end
+        end %end if ttv data block is the correct size
+    end %end loop through ttv blocks
+end %end loop if there is ttv data
+
+
+
 fprintf(['processed data for: ' repmat('%s ',1,length(processed_data_types)), '\n'], processed_data_types{:})
 fprintf(['no data for:        ' repmat('%s ',1,length(no_data_types)), '\n'], no_data_types{:})
 
 % Combine all data
-make data epsi ctd alt act vnav gps seg spec avgspec dissrate apf ecop
+make data epsi ctd alt act vnav gps seg spec avgspec dissrate apf fluor ttv
 
 
 
@@ -1775,7 +1918,7 @@ fprintf(['processed data for: ' repmat('%s ',1,length(processed_data_types)), '\
 fprintf(['no data for:        ' repmat('%s ',1,length(no_data_types)), '\n'], no_data_types{:})
 
 % Combine all data
-make data epsi ctd alt act vnav gps seg spec avgspec dissrate apf ecop
+make data epsi ctd alt act vnav gps seg spec avgspec dissrate apf fluor ttv
 
 
 end
