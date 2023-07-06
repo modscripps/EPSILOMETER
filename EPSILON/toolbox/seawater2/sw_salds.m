@@ -3,7 +3,7 @@ function dS = sw_salds(Rtx,delT)
 
 % SW_SALDS   Differiential dS/d(sqrt(Rt)) at constant T.
 %=========================================================================
-% SW_SALDS   $Revision: 1.3 $  $Date: 1994/10/10 05:46:08 $
+% SW_SALDS   $Id: sw_salds.m,v 1.1 2003/12/12 04:23:22 pen078 Exp $
 %            Copyright (C) CSIRO, Phil Morgan 1993.
 %
 % USAGE:  dS = sw_salds(Rtx,delT)
@@ -18,16 +18,16 @@ function dS = sw_salds(Rtx,delT)
 %
 % OUTPUT:
 %   dS = S differential dS/d(sqrt(Rt)) at constant T.
-% 
-% AUTHOR:  Phil Morgan 93-04-21  (morgan@ml.csiro.au)
+%
+% AUTHOR:  Phil Morgan 93-04-21, Lindsay Pender (Lindsay.Pender@csiro.au)
 %
 % DISCLAIMER:
-%   This software is provided "as is" without warranty of any kind.  
+%   This software is provided "as is" without warranty of any kind.
 %   See the file sw_copy.m for conditions of use and licence.
 %
 % REFERENCES:
 %    Fofonoff, P. and Millard, R.C. Jr
-%    Unesco 1983. Algorithms for computation of fundamental properties of 
+%    Unesco 1983. Algorithms for computation of fundamental properties of
 %    seawater, 1983. _Unesco Tech. Pap. in Mar. Sci._, No. 44, 53 pp.
 %=========================================================================
 
@@ -50,6 +50,7 @@ end %if
 %-------
 % BEGIN
 %-------
+
 a0 =  0.0080;
 a1 = -0.1692;
 a2 = 25.3851;
@@ -70,5 +71,3 @@ dS =  a1 + (2*a2 + (3*a3 + (4*a4 + 5*a5.*Rtx).*Rtx).*Rtx).*Rtx + ...
      (delT./(1+k*delT))* ...
      (b1 + (2*b2 + (3*b3 + (4*b4 + 5*b5.*Rtx).*Rtx).*Rtx).*Rtx);
 
-return
-%-----------------------------------------------------------------------

@@ -72,8 +72,10 @@ for iFile=1:length(fileList)
         GRID.vehicle_name = GRID.vehicle_name(:).';
         GRID.deployment = GRID.deployment(:).';
 
-    end %End loop through profiles
 
     saveName = fullfile(obj.Meta_Data.paths.profiles,'griddedProfiles.mat');
     save(saveName,'GRID');
-end
+
+    end %End if there is Profile.pr field
+
+end %End loop through profiles

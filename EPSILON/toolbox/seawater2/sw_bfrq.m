@@ -1,12 +1,12 @@
 
-function n2 = sw_bfrq(S,T,DPTH,LAT)
+function [n2,q,p_ave] = sw_bfrq(S,T,P,LAT)
 
 % SW_BFRQ    Brunt-Vaisala Frequency Squared (N^2)
 %===========================================================================
-% SW_BFRQ  $Revision: 1.9 $   $Date: 1994/10/11 00:09:09 $
-%          Copyright (C) CSIRO, Phil Morgan  1993. 
+% SW_BFRQ  $Id: sw_bfrq.m,v 1.1 2003/12/12 04:23:22 pen078 Exp $
+%          Copyright (C) CSIRO, Phil Morgan  1993.
 %
-% USAGE:  bfrq = sw_bfrq(S,T,DPTH,{LAT}) 
+% USAGE:  [bfrq,vort,p_ave] = sw_bfrq(S,T,P,{LAT})
 %
 % DESCRIPTION:
 %    Calculates Brunt-Vaisala Frequency squared (N^2) at the mid depths
@@ -16,23 +16,28 @@ function n2 = sw_bfrq(S,T,DPTH,LAT)
 %         N2 =  ----- x --------
 %               pdens     d(z)
 %
+%    Also returns Potential Vorticity from q = f*N2/g.
+%
 % INPUT:  (all must have same dimensions MxN)
-%   S     = salinity    [psu      (PSS-78) ]
-%   T     = temperature [degree C (IPTS-68)]
-%   DPTH  = depth       [meters]   
+%   S   = salinity    [psu      (PSS-78) ]
+%   T   = temperature [degree C (ITS-90)]
+%   P   = pressure    [db]
 %
 %   OPTIONAL:
-%      LAT     = Latitude in decimal degress north [-90..+90]
-%                May have dimensions 1x1 or 1xn where S(mxn).
+%      LAT     = Latitude in decimal degrees north [-90..+90]
+%                May have dimensions 1x1 or 1xN where S(MxN).
 %                (Will use sw_g instead of the default g=9.8 m^2/s)
-%
+%                (Will also calc d(z) instead of d(p) in numerator)
 % OUTPUT:
-%   bfrq = Brunt-Vaisala Frequency squared (M-1xN)  [s^-2]
+%   bfrq  = Brunt-Vaisala Frequency squared (M-1xN)  [s^-2]
+%   vort  = Planetary Potential Vorticity   (M-1xN)  [(ms)^-1]
+%           (if isempty(LAT) vort=NaN )
+%   p_ave = Mid pressure between P grid     (M-1xN)  [db]
 %
-% AUTHOR:  Phil Morgan 93-06-24  (morgan@ml.csiro.au)
+% AUTHOR:  Phil Morgan 93-06-24, Lindsay Pender (Lindsay.Pender@csiro.au)
 %
 % DISCLAIMER:
-%   This software is provided "as is" without warranty of any kind.  
+%   This software is provided "as is" without warranty of any kind.
 %   See the file sw_copy.m for conditions of use and licence.
 %
 % REFERENCES:
@@ -43,88 +48,110 @@ function n2 = sw_bfrq(S,T,DPTH,LAT)
 %   Jackett, D.R. and McDougall, T.J. 1994.
 %   Minimal adjustment of hydrographic properties to achieve static
 %   stability.  submitted J.Atmos.Ocean.Tech.
+%
+%   Greg Johnson (gjohnson@pmel.noaa.gov)
+%                added potential vorticity calcuation
 %=========================================================================
+
+% Modifications
+% 03-12-12. Lindsay Pender, Converted to ITS-90.
+% 06-04-19. Lindsay Pender, Corrected sign of PV.
 
 % CALLER:  general purpose
 % CALLEE:  sw_dens.m sw_pden.m
 
-%$Id: sw_bfrq.M,v 1.9 1994/10/11 00:09:09 morgan Exp $
+%$Id: sw_bfrq.m,v 1.1 2003/12/12 04:23:22 pen078 Exp $
 
 %-------------
-% CHECK INPUTS
+% Check Inputs
 %-------------
-if ~(nargin==3 | nargin==4) 
-   error('sw_bfrq.m: Must pass 3 or 4 parameters ')
-end %if
 
-% CHECK MANDATORY INPUT DIMENSIONS
-Z       = DPTH; % use Z as alias for DPTH in code.
+error(nargchk(3, 4, nargin));
+
+if nargin == 3
+    LAT = [];
+end
+
+% Get S,T,P dimensions and check consistency
+
 [ms,ns] = size(S);
 [mt,nt] = size(T);
-[mz,nz] = size(Z);
+[mp,np] = size(P);
 
-% CHECK THAT S & T HAVE SAME SHAPE
-if (ms~=mt) | (ns~=nt)
-   error('sw_bfrq.m: S & T must have same dimensions')
-end %if
+% Check S, T P and have the same shape
 
-% CHECK THAT S & Z HAVE SAME SHAPE
-if (ms~=mz) | (ns~=nz)
-  error('sw_bfrq.m: S & Z has wrong dimensions')
-end %if
+if (ms~=mt) | (ns~=nt) | (np~=np)
+    error('S, T & P must have same dimensions')
+end
 
-% IF LAT PASSED THEN VERIFY DIMENSIONS
-if ~isempty(LAT)
-   [mL,nL] = size(LAT);
-   if mL==1 & nL==1
-      LAT = LAT*ones(size(S));
-   end %if  
+% Check S and T have length at least of 2
 
-   if (ms~=mL) | (ns~=nL)              % S & LAT are not the same shape
-       if (ns==nL) & (mL==1)           % copy LATS down each column
-          LAT = LAT( ones(1,ms), : );  % s.t. dim(P)==dim(LAT)    
-       else
-          error('sw_bfrq.m:  Inputs arguments have wrong dimensions')
-       end %if
-   end %if
-end %if
+if (ms * ns == 1)
+    error('Length of T, S and P must be at least 2')
+end
 
-% IF ALL ROW VECTORS ARE PASSED THEN LET US PRESERVE SHAPE ON RETURN.
-Transpose = 0;
-if mz == 1  % row vector
-   Z        =  Z(:);
-   T        =  T(:);
-   S        =  S(:);
-   LAT      =  LAT(:);
-   Transpose = 1;
-end %if
-   
+% If S, T and P are row vectors - transpose
 
-%------
-% BEGIN
-%------
-if ~isempty(LAT)
-   % note that sw_g expects height as argument
-   g = sw_g(LAT,-Z);
+if ms == 1
+    S = S';
+    T = T';
+    P = P';
+    transpose = 1;
 else
-   g = 9.8*ones(size(Z));
+    transpose = 0;
+end
+
+% If lat passed then verify dimensions
+
+if ~isempty(LAT)
+    [mL,nL] = size(LAT);
+    if mL==1 & nL==1
+        LAT = LAT*ones(size(S));
+    else
+        if (ms~=mL) | (ns~=nL)              % S & LAT are not the same shape
+            if (ns==nL) & (mL==1)           % copy LATS down each column
+                LAT = LAT( ones(1,ms), : );  % s.t. dim(S)==dim(LAT)
+            else
+                error('Inputs arguments have wrong dimensions')
+            end
+        end
+    end
+end
+
+%------
+% Begin
+%------
+
+if ~isempty(LAT)
+    % note that sw_g expects height as argument
+    Z = sw_dpth(P,LAT);
+    g = sw_g(LAT,-Z);
+    f = sw_f(LAT);
+else
+    Z = P;
+    g = 9.8*ones(size(P));
+    f = NaN*ones(size(P));
 end %if
 
-[m,n] = size(Z);
+[m,n] = size(P);
 iup   = 1:m-1;
 ilo   = 2:m;
-p_ave = (Z(iup,:)+Z(ilo,:) )/2;
-pden_up = sw_pden(S(iup,:),T(iup,:),Z(iup,:),p_ave);
-pden_lo = sw_pden(S(ilo,:),T(ilo,:),Z(ilo,:),p_ave);
- 
-mid_pden = sort((pden_up + pden_lo )/2);
+p_ave = (P(iup,:)+P(ilo,:) )/2;
+pden_up = sw_pden(S(iup,:),T(iup,:),P(iup,:),p_ave);
+pden_lo = sw_pden(S(ilo,:),T(ilo,:),P(ilo,:),p_ave);
+
+mid_pden = (pden_up + pden_lo )/2;
 dif_pden = pden_up - pden_lo;
 mid_g    = (g(iup,:)+g(ilo,:))/2;
 dif_z    = diff(Z);
 n2       = -mid_g .* dif_pden ./ (dif_z .* mid_pden);
 
-if Transpose
-  n2 = n2';
-end %if
-return
-%-------------------------------------------------------------------
+mid_f    = f(iup,:);
+q        = -mid_f .* dif_pden ./  (dif_z .* mid_pden);
+
+if transpose
+    n2    = n2';
+    q     = q';
+    p_ave = p_ave';
+end
+
