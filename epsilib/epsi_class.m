@@ -204,7 +204,8 @@ classdef epsi_class < handle
                             for j = 1:length(err.stack)
                                 disp([num2str(j) ' ' err.stack(j).name ' ' num2str(err.stack(j).line)]);
                             end
-                            error('Failed to find config data (1)')
+                            warning('Failed to find config data (1)')
+                            return
                         end
 
                     elseif ~isempty(dir_has_config) %if there is a config file...
@@ -229,7 +230,8 @@ classdef epsi_class < handle
                             for j = 1:length(err.stack)
                                 disp([num2str(j) ' ' err.stack(j).name ' ' num2str(err.stack(j).line)]);
                             end
-                            error('fill_meta_data failed (2)')
+                            warning('fill_meta_data failed (2)')
+                            return
                         end
 
                     else %if there is no log file or config file, look for config data inside the raw files
@@ -244,10 +246,11 @@ classdef epsi_class < handle
                             for j = 1:length(err.stack)
                                 disp([num2str(j) ' ' err.stack(j).name ' ' num2str(err.stack(j).line)]);
                             end
-                            error(['Failed to read config data (3) - '...
+                            warning(['Failed to read config data (3) - '...
                                 'this is often because mod_som_read_setup_from raw does not '...
                                 'have the correct offsets and lengths. When changes are made on '...
                                 'the hardware side, they have to be made here too.'])
+                            return
                         end
                         % Fill Meta Data from setup data
                         try
@@ -259,7 +262,8 @@ classdef epsi_class < handle
                             for j = 1:length(err.stack)
                                 disp([num2str(j) ' ' err.stack(j).name ' ' num2str(err.stack(j).line)]);
                             end
-                            error('fill_meta_data failed (3)')
+                            warning('fill_meta_data failed (3)')
+                            return
                         end
 
                     end
@@ -289,8 +293,12 @@ classdef epsi_class < handle
             fprintf('mat data path: %s \n',obj.Meta_Data.paths.mat_data);
             fprintf('profiles path: %s \n',obj.Meta_Data.paths.profiles);
             fprintf('... \n')
+            if isfield(Meta_Data.PROCESS,'filename')
             fprintf('Meta_Data.PROCESS information comes from %s \n',obj.Meta_Data.PROCESS.filename)
+            end
+            if isfield(Meta_Data.PROCESS,'profile_dir')
             fprintf('Profiles are going %s \n',upper(obj.Meta_Data.PROCESS.profile_dir))
+            end
             fprintf('... \n')
 
             % NC - check for s1 and s2 cal values. For newer deployments that have Meta_Data.AFE structure, if they're
