@@ -62,6 +62,21 @@ else
     FCTD.latitude=nan(length(ctd.dnum),1);
 end
 
+if ~isempty(fluor) && isfield(fluor,'time_s')
+    diff_not_neg = [0;diff(fluor.dnum)]>0;
+    keep = ~isnan(fluor.dnum) & ~isinf(fluor.dnum) & diff_not_neg;
+    for ix=1:3
+        FCTD.fluor(:,ix)=interp1(fluor.dnum(keep),fluor.compass(keep,ix),ctd.dnum);
+        FCTD.fluor(:,ix)=interp1(fluor.dnum(keep),fluor.gyro(keep,ix),ctd.dnum);
+        FCTD.fluor(:,ix)=interp1(fluor.dnum(keep),fluor.acceleration(keep,ix),ctd.dnum)./9.81;
+    end
+else
+    FCTD.gyro=nan(length(ctd.dnum),3);
+    FCTD.acceleration=nan(length(ctd.dnum),3);
+    FCTD.compass=nan(length(ctd.dnum),3);
+end
+
+
 % Extra outputs for specific cruise setups
 if strcmp(cruise_specifics,'blt_2021');
     % Microconductivity and Fluorometer
@@ -96,6 +111,7 @@ if strcmp(cruise_specifics,'blt_2021');
         disp(['No fluorometer data ' myASCIIfiles(i).name]);
     end
 end
+
 if strcmp(cruise_specifics,'tfo_2023')
     % On TFO Seamounts in 2023, we had microconductivity on shear channel 2
     % and a tridente fluorometer on ???

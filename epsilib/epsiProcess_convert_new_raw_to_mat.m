@@ -2,6 +2,7 @@ function [matData] = epsiProcess_convert_new_raw_to_mat(dirs,Meta_Data,varargin)
 % epsiProcess_convert_new_raw_to_mat
 %   Converts new raw files from dirs.raw_incoming to mat files and saves them in dir.raw_copy
 %
+% aleboyer@ucsd.edu adding ttv and fluor
 % Nicole Couto adapted from FCTD_MakeMatFromRaw.m
 % May-July 2021
 % April 2022
@@ -55,6 +56,8 @@ matData.gps   = [];
 matData.seg   = [];
 matData.spec  = [];
 matData.micro = [];
+matData.ttv   = [];
+matData.fluor = [];
 
 % NC - Only rsync files with the desired suffix
 suffixStr = Meta_Data.rawfileSuffix; %ex. .raw, .ascii, etc
