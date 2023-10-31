@@ -19,36 +19,36 @@ end
 if exist(fullfile(fctd_mat_dir,'FCTDall.mat'),'file')==2 %If FCTDall already exists
     % Load FCTDall
     load(fullfile(fctd_mat_dir,'FCTDall'))
-    
+
     % What's the last datenum?
     last_dnum = FCTDall.time(end);
-    
+
     % Keep any file newer than 10 minutes before last_dnum
     idx = file_dnums > last_dnum - days(minutes(10));
     file_list = file_list(idx);
-    
+
 else % If FCTDall doesn't already exist
     % Load the first file and add microconductivity data
     load(fullfile(fctd_mat_dir,file_list{1}));
     FCTD = add_microconductivity(FCTD);
-    
+
     % Save data with chi
     save(fullfile(fctd_mat_dir,file_list{1}),'FCTD');
-    
+
     FCTDall = FCTD;
 end
 
 % Load the rest of the files and merge into FCTD all
 for iF=2:length(file_list)
     fprintf(sprintf('Adding file %3.0f of %3.0f to FCTDall \n',iF,length(file_list)));
-    
+
     % Load file and add microconductivity data
     load(fullfile(fctd_mat_dir,file_list{iF}));
     FCTD = add_microconductivity(FCTD);
-    
+
     % Save data with chi
     save(fullfile(fctd_mat_dir,file_list{iF}),'FCTD');
-    
+
     % Concatenate new file into FCTDall
     FCTDall = FastCTD_MergeFCTD(FCTDall,FCTD);
 end
@@ -66,7 +66,7 @@ end
 % Save concatenated file
 save(fullfile(fctd_mat_dir,'FCTDall'),'FCTDall')
 
-%% Grid data and save
+%% Grid data
 % NC May 2023 - grid both up and downcast data
 % Get downcasts and upcasts
 FCTDdown = FastCTD_GridData(FCTDall,'downcast');
@@ -76,9 +76,9 @@ FCTDup = FastCTD_GridData(FCTDall,'upcast');
 field_list = fields(FCTDdown);
 for iF=1:length(field_list)
     % skip tGrid but do all the others
-    if ~strcmp(field_list{iF},'tGrid') 
+    if ~strcmp(field_list{iF},'tGrid')
         FCTDboth.(field_list{iF}) = [FCTDdown.(field_list{iF}),...
-                                     FCTDup.(field_list{iF})];
+            FCTDup.(field_list{iF})];
     end
 end
 
@@ -90,12 +90,14 @@ for iF=1:length(field_list)
     if strcmp(field_list{iF},'depth')
         FCTDgrid.(field_list{iF}) = FCTDboth.(field_list{iF})(:,1);
     else
-    FCTDgrid.(field_list{iF}) = FCTDboth.(field_list{iF})(:,iSort);
+        FCTDgrid.(field_list{iF}) = FCTDboth.(field_list{iF})(:,iSort);
     end
 end
 
 
-% Save grid
+
+
+%% Save grid
 save(fullfile(fctd_mat_dir,'FCTDgrid'),'FCTDgrid','FCTDup','FCTDdown')
 
 end %end concatenate_fctd_data
@@ -105,20 +107,20 @@ function [FCTD] = add_microconductivity(FCTD)
 
 % Check for chi data
 if isfield(FCTD,'uConductivity') && ~isfield(FCTD,'chi')
-    
+
     % Load chi_param
     chi_param=FCTD_DefaultChiParam;
     chi_param.fs=320;
-    
+
     % Reshape the data into a long vector
     FCTD.ucon=reshape(FCTD.uConductivity',20*length(FCTD.time),1)/2^24;
-    
+
     % Make the higher resolution time vector for microconductivity
     FCTD.microtime=linspace(FCTD.time(1),FCTD.time(end),chi_param.fs./chi_param.fslow*length(FCTD.time))';
-    
+
     % Convert microconductivity to chi
     FCTD = add_chi_microMHA_v2(FCTD,chi_param);
-    
+
 end
 
 % Remove descriptive fields

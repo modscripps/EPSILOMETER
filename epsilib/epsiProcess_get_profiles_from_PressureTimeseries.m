@@ -114,6 +114,8 @@ if plotFig
     plot(dnum,dp,'b')
     title(sprintf('dp, p smoothed over %3.0f points',nPoints))
     xx = get(gca,'xlim');
+
+    hold on
     dl = plot([xx(1),xx(2)],[downLim downLim],'m');
     % NC - 'yline' is newer than Matlab 2018a
     %dl = yline(downLim,'m');
@@ -171,6 +173,14 @@ for i=1:(length(startdown)-1)
     enddown(i) = in(end);
 end
 enddown(i+1)=dn(end);
+
+if plotFig
+ax(1).NextPlot = 'add';
+plot(ax(1),PressureTimeseries.dnum(enddown),PressureTimeseries.P(enddown),'ro')
+
+linkprop([ax(:)],'xlim')
+end
+
 
 
 % NC - Make sure profiles are at least a certain length

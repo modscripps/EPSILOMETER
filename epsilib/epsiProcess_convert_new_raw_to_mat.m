@@ -81,93 +81,119 @@ argsNameToCheck = {'noSync',...             %1
     'display_file_data',...  %6
     'cruise_specifics'};     %7
 
-index = 1; %Initialize index of argsNameToCheck
-% Number of items remaining (this is the number of argsNameToCheck minus
-% the number of extra parameters that go with the arguments. For example,
-% 'version' expects another parameter that follows it: 'version', 3.
-% Similarly, 'fileStr' expects a string after it: 'fileStr',
-% 'EPSI_22_04_12*'
-n_items = nargin-2;
-
-while (n_items > 0)
-    argsMatch = strcmpi(varargin{index},argsNameToCheck);
-    i = find(argsMatch,1);
-    if isempty(i)
-        error('MATLAB:epsiProcess_convert_new_raw_to_mat:wrongOption','Incorrect option specified: %s', varargin{index});
-    end
-    
-    switch i
-        case 1 % noSync
-            rSync = false;
-            index = index +1;
-            n_items = n_items-1;
-        case 2 %doFCTD
-            idxFlag = find(cell2mat(cellfun(@(C) ~isempty(strfind(C,'doFCTD')),varargin,'uniformoutput',0)));
-            doFCTD = true;
-            index = index+1;
-            n_items = n_items-1;
-        case 3 %calc_micro
-            % Find the index of varargin that = 'calc_micro'. The following
-            % index contains the version number
-            idxFlag = find(cell2mat(cellfun(@(C) ~isempty(strfind(C,'calc_micro')),varargin,'uniformoutput',0)));
-            calc_micro = varargin{idxFlag+1};
-            index = index+2;
-            n_items = n_items-2;
-        case 4 %fileStr % NC - added optional fileStr input
-            fileStr = true;
-            % Find the index of varargin that = 'fileStr'. The following
-            % index contains 'str_to_match'
-            idxFlag = find(cell2mat(cellfun(@(C) ~isempty(strfind(C,'fileStr')),varargin,'uniformoutput',0)));
-            str_to_match = varargin{idxFlag+1};
-            index = index+2; %+2 because the following varargin will str_to_match
-            n_items = n_items-2;
-        case 5 %version % NC 10/11/21 - added optional version input
-            % Find the index of varargin that = 'version'. The following
-            % index contains the version number
-            idxFlag = find(cell2mat(cellfun(@(C) ~isempty(strfind(C,'version')),varargin,'uniformoutput',0)));
-            version = varargin{idxFlag+1};
-            index = index+2; %+2 because the following varargin will be the version number
-            n_items = n_items-2;
-        case 6 %display_file_data
-            display_file_data_flag = true;
-            index = index+1;
-            n_items = n_items-1;
-        case 7 %cruise_specifics
-            idxFlag = find(cell2mat(cellfun(@(C) ~isempty(strfind(C,'cruise_specifics')),varargin,'uniformoutput',0)));
-            cruise_specifics = varargin{idxFlag+1};
-            index = index+2; %+2 because the following varargin will be the version number
-            n_items = n_items-2;
-    end
+% If varargin is only one character string, turn it into a single cell
+if ischar(varargin)
+    cellargin{1} = varargin;
+    clear varargin
+    varargin = cellargin;
+    clear cellargin
 end
+
+% How many argsNameToCheck are in varargin?
+if isempty(varargin)
+    % skip to processing
+elseif ~isempty(varargin)
+    
+    % Count the number of arguments you have in the argsNameToCheck list
+        for a=1:length(varargin)
+            isArg(a) = contains(varargin{a},argsNameToCheck);  % This has to be (a) if length(varargin)=1, but maybe {a} for longer?
+        end
+    arg_idx = find(isArg);
+    n_args = sum(isArg);
+
+
+    %  index = 1; %Initialize index of argsNameToCheck
+    % Number of items remaining (this is the number of argsNameToCheck minus
+    % the number of extra parameters that go with the arguments. For example,
+    % 'version' expects another parameter that follows it: 'version', 3.
+    % Similarly, 'fileStr' expects a string after it: 'fileStr',
+    % 'EPSI_22_04_12*'
+    %  n_items = nargin-2;
+
+    %while (n_items > 0)
+
+    for n=1:n_args
+
+        argsMatch = strcmpi(varargin{arg_idx(n)},argsNameToCheck);
+        i = find(argsMatch,1);
+        if isempty(i)
+            error('MATLAB:epsiProcess_convert_new_raw_to_mat:wrongOption','Incorrect option specified: %s', varargin{index});
+        end
+
+        switch i
+            case 1 % noSync
+                rSync = false;
+                %index = index +1;
+                %n_items = n_items-1;
+            case 2 %doFCTD
+                idxFlag = find(cell2mat(cellfun(@(C) ~isempty(strfind(C,'doFCTD')),varargin,'uniformoutput',0)));
+                doFCTD = true;
+                %index = index+1;
+                %n_items = n_items-1;
+            case 3 %calc_micro
+                % Find the index of varargin that = 'calc_micro'. The following
+                % index contains the version number
+                idxFlag = find(cell2mat(cellfun(@(C) ~isempty(strfind(C,'calc_micro')),varargin,'uniformoutput',0)));
+                calc_micro = varargin{idxFlag+1};
+                %index = index+2;
+                %n_items = n_items-2;
+            case 4 %fileStr % NC - added optional fileStr input
+                fileStr = true;
+                % Find the index of varargin that = 'fileStr'. The following
+                % index contains 'str_to_match'
+                idxFlag = find(cell2mat(cellfun(@(C) ~isempty(strfind(C,'fileStr')),varargin,'uniformoutput',0)));
+                str_to_match = varargin{idxFlag+1};
+                %index = index+2; %+2 because the following varargin will str_to_match
+                %n_items = n_items-2;
+            case 5 %version % NC 10/11/21 - added optional version input
+                % Find the index of varargin that = 'version'. The following
+                % index contains the version number
+                idxFlag = find(cell2mat(cellfun(@(C) ~isempty(strfind(C,'version')),varargin,'uniformoutput',0)));
+                version = varargin{idxFlag+1};
+                %index = index+2; %+2 because the following varargin will be the version number
+                %n_items = n_items-2;
+            case 6 %display_file_data
+                display_file_data_flag = true;
+                %index = index+1;
+                %n_items = n_items-1;
+            case 7 %cruise_specifics
+                idxFlag = find(cell2mat(cellfun(@(C) ~isempty(strfind(C,'cruise_specifics')),varargin,'uniformoutput',0)));
+                cruise_specifics = varargin{idxFlag+1};
+                %index = index+2; %+2 because the following varargin will be the version number
+                %n_items = n_items-2;
+        end
+    end
+
+end %end if ~isempty(varargin)
 
 %% Define directories and check that they exist
 % Incoming raw files
 if ~exist(dirs.raw_incoming,'dir')
-    error('Cannot find raw directory (dirs.raw_incoming): %s',RawDirDuplicate);
+    error(sprintf('Cannot find raw directory (dirs.raw_incoming): %s',RawDirDuplicate));
 end
 % Mat files, converted from raw
 MatDir = dirs.mat;
 if ~exist(MatDir,'dir')
-    error('Cannot find .mat directory (dirs.mat): %s',MatDir);
+    error(sprintf('Cannot find .mat directory (dirs.mat): %s',MatDir));
 end
 % Copy of raw files
 if rSync
     if ~exist(dirs.raw_copy,'dir')
-        error('Cannot find duplicate raw directory (dirs.raw_copy): %s',RawDir);
+        error(sprintf('Cannot find duplicate raw directory (dirs.raw_copy): %s',RawDir));
     end
 end
 % Mat files, formatted for FCTD processing
 if doFCTD
     if ~exist(dirs.fctd_cruise,'dir') % Bethan 20 June 2021: Added FCTD directory
-        error('Cannot find local FCTDdir: %s',FCTDdir);
+        mkdir(dirs.fctd_cruise,'dir') 
     end
     if ~exist(dirs.fctd_deployment,'dir') % Bethan 20 June 2021: Added FCTD directory
-        error('Cannot find local FCTDdir: %s',FCTDdir);
+        mkdir(dirs.fctd_deployment,'dir')
     end
 end
 
-%% rsync remote and local directories 
-% OR use this option to copy files from one big directory into individual 
+%% rsync remote and local directories
+% OR use this option to copy files from one big directory into individual
 % deployment directories
 if rSync
     % NC - added optional fileStr - find first file to start rsync
@@ -175,7 +201,7 @@ if rSync
         % List all the files in RawDir and find the first one that matches
         % suffixSearch
         raw_list = dir(fullfile(dirs.raw_incoming,suffixSearch));
-        
+
         % Identify the file you want
         names = {raw_list.name};
         times = datenum({raw_list.date});
@@ -190,11 +216,11 @@ if rSync
         ind = find(match,1,'first');
         first_file = fullfile(dirs.raw_incoming,names{ind});
         %end
-        
+
         % Workaround because rsync won't repeat copying a file
         %com = sprintf('/usr/bin/rsync -av  --include ''%s'' --exclude ''*'' %s %s',suffixSearch,RawDir,RawDirDuplicate);  %The exclude was useful before... but now it actually excludes everything. Leaving this commented in case I need it again
         %com = sprintf('/usr/bin/rsync -av  --include ''%s'' %s %s',suffixSearch,RawDir,RawDirDuplicate);  %NC - rsync only the files with the str_to_search and suffix
-        
+
         %     % Rsync the files to a directory for later profile processing
         %     if ~exist(fullfile(dirs.processing,'raw'),'dir')
         %         mkdir(fullfile(dirs.processing,'raw'));
@@ -203,7 +229,7 @@ if rSync
         %     fprintf(1,'Running: %s\n',com);
         %     unix(com);
         %     fprintf(1,'Done\n');
-        
+
         % Rsync the files to a directory specific to the deployment
         if ~exist(dirs.raw_copy,'dir')
             mkdir(dirs.raw_copy,'raw');
@@ -212,7 +238,7 @@ if rSync
         fprintf(1,'Running: %s\n',com);
         unix(com);
         fprintf(1,'Done\n');
-        
+
     end
 end
 
@@ -228,16 +254,16 @@ end
 if ~isempty(myASCIIfiles)
     for i=1:length(myASCIIfiles)
         indSuffix = strfind(myASCIIfiles(i).name,suffixStr);
-        
+
         base = myASCIIfiles(i).name(1:indSuffix-1);
         myMATfile = dir(fullfile(dirs.mat, [base '.mat']));
-        
+
         % If the mat file exists, load it to get the file size of the raw file
         % that created it.
         if ~isempty(myMATfile)
             load(fullfile(myMATfile.folder,myMATfile.name),'raw_file_info')
         end
-        
+
         % Convert new data to .mat if:
         %   (1) there is no .mat file to match the current raw file, or
         %   (2) the current raw file size is larger than what is saved in mat data 'raw_file_size'
@@ -245,7 +271,7 @@ if ~isempty(myASCIIfiles)
             % If the MAT file exists and its saved raw file is equal to the ascii file, skip recoverting. All
             % of the raw data has already been converted
             % (DO NOTHING.)
-            
+
             % % For debugging
             % debug.base_name{i} = base;
             % debug.rawraw_date(i) = myRAWRAWfile.datenum;
@@ -256,13 +282,13 @@ if ~isempty(myASCIIfiles)
             % debug.mat_bytes(i) = myMATfile.bytes;
             % debug.conversion_happens(i) = 0;
             % % End of debugging
-            
-            
+
+
         elseif (~isempty(myMATfile) && myASCIIfiles(i).bytes>raw_file_info.bytes) || isempty(myMATfile)
             % If the MAT file exists already but is older than the raw data
             % file, it will be reconverted. OR, if the MAT file does not exist
             % yet, it will be converted.
-            
+
             % % For debugging
             % debug.base_name{i} = base;
             % debug.rawraw_date(i) = myRAWRAWfile.datenum;
@@ -275,59 +301,59 @@ if ~isempty(myASCIIfiles)
             % end
             % debug.conversion_happens(i) = 1;
             % % End for debugging
-            
+
             fprintf(1,'Converting %s%s\n',dirs.mat,myMATfile.name);
-            
+
             % Read file and save data in matData structure
             filename = fullfile(raw_dir,myASCIIfiles(i).name);
             matData = read_data_file(filename,Meta_Data,version);
-            
+
             % Add raw_file_info to matData - NC added 8 Aug. 2022
             matData.raw_file_info.bytes = myASCIIfiles(i).bytes;
-            
+
             % Option to display file data
             if display_file_data_flag
                 display_file_data(myASCIIfiles,i,matData)
             end
-            
+
             % Save data in .mat file
             save(fullfile(MatDir,base),'-struct','matData')
             fprintf(1,'%s: Wrote  %s/%s.mat\n',datestr(now,'YY.mm.dd HH:MM:SS'),MatDir,base);
-            
+
             %Empty contents of matData structure
             use matData
-            
+
             % Calculate microstructure data - NC added 16 May 2022
             if calc_micro
                 matData.micro = epsiProcess_calc_turbulence(Meta_Data,matData,0);
                 save(fullfile(MatDir,base),'-struct','matData')
             end
-            
+
             % Update the .mat file time index
             if ~isempty(epsi) && isfield(epsi,'time_s')
                 epsiProcess_update_TimeIndex(MatDir,base,epsi);
             elseif isempty(epsi) &&  ~isempty(ctd) && isfield(ctd,'time_s') %For the case where the is no epsi data, but there is ctd data
                 epsiProcess_update_TimeIndex(MatDir,base,ctd);
             end
-            
+
             % Update pressure timeseries
             if ~isempty(ctd) && isfield(ctd,'dnum')
                 epsiProcess_update_PressureTimeseries(Meta_Data,MatDir,ctd,Meta_Data.PROCESS.profile_dir)
             end
-            
+
             % Save file for FCTD Format %%%%%% (Bethan 20 June 2021)
             if doFCTD && ~isempty(ctd) && isfield(ctd,'time_s')
                 % Make FCTD .mat data and save it in cruise-long fctd
                 % directory
                 FCTD = make_FCTD_mat(matData,dirs.fctd_cruise,base,cruise_specifics);
-                
+
                 % Also save it in deployment fctd directory
                 save(fullfile(dirs.fctd_deployment,base),'FCTD');
             end %end if doFCTD
-            
+
         end %end if the data should be converted
     end %end loop through files
-    
+
     %eval(['save ' fullfile('~/Desktop',strrep(strrep(datestr(now),':','_'),' ','_')) ' debug'])
 end %end if there are files
 
@@ -378,11 +404,11 @@ switch version
         alt = [];
         vnav = [];
         gps = [];
-        
+
         t0 = Meta_Data.starttime;
         epsi.time_s=epsi.EPSInbsample/Meta_Data.PROCESS.Fs_epsi;
         ctd.time_s=ctd.Aux1Stamp/Meta_Data.PROCESS.Fs_epsi;
-        
+
         if (t0==0)
             epsi.dnum = epsi.time;
             ctd.dnum = ctd.time;
@@ -390,7 +416,7 @@ switch version
             ctd.dnum = ctd.time_s/86400 +t0;
             epsi.dnum = epsi.time_s/86400 +t0;
         end
-        
+
         % Add extra ctd variables
         % Define a constant for salinity calculation
         c3515 = 42.914;
@@ -398,7 +424,7 @@ switch version
         ctd.th   = sw_ptmp(ctd.S,ctd.T,ctd.P,0);
         ctd.sgth  = sw_pden(ctd.S,ctd.T,ctd.P,0);
         ctd.dPdt = [0; diff(ctd.P)./diff(ctd.time_s)];
-        
+
         % NC 17 July 2021 - added ctd.z and ctd.dzdt.
         % get_scan_spectra.m will use dzdt to define fall speed w.
         if ~isfield(Meta_Data.PROCESS,'latitude')
@@ -409,7 +435,7 @@ switch version
             ctd.z    = sw_dpth(ctd.P,Meta_Data.PROCESS.latitude);
             ctd.dzdt = [0; diff(ctd.z)./diff(ctd.time_s)];
         end
-        
+
         matData.epsi = epsi;
         matData.ctd = ctd;
 end

@@ -82,18 +82,18 @@ if strcmp(cruise_specifics,'blt_2021');
     diff_not_neg = [0;diff(epsi.dnum)]>0;
     keep = ~isnan(epsi.dnum) & ~isinf(epsi.dnum) & diff_not_neg;
 
-    if ~isempty(epsi) && isfield(epsi,'s2_count') && ~isempty(ctd)
+    if ~isempty(epsi) && isfield(epsi,'s2_count') && ~isempty(ctd) && ~any(diff(epsi.dnum(keep))<0) %Make sure there is data and epsi.dnum(keep) is all ascending
         FCTD.uConductivity=reshape(interp1(epsi.dnum(keep),double(epsi.s2_count(keep)),time_fast),20,[])';
     else
         FCTD.uConductivity=nan(length(ctd.dnum),20);
-        disp(['No uConductivity data ' myASCIIfiles(i).name]);
+        disp(['No uConductivity data ' base]);
     end
 
-    if ~isempty(epsi) && isfield(epsi,'s1_volt')  && ~isempty(ctd)
+    if ~isempty(epsi) && isfield(epsi,'s1_volt')  && ~isempty(ctd) && ~any(diff(epsi.dnum(keep))<0) %Make sure there is data and epsi.dnum(keep) is all ascending
         FCTD.fluorometer=reshape(interp1(epsi.dnum(keep),epsi.s1_volt(keep),time_fast),20,[])';
     else
         FCTD.fluorometer=nan(length(ctd.dnum),20);
-        disp(['No fluorometer data ' myASCIIfiles(i).name]);
+        disp(['No fluorometer data ' base]);
     end
 end
 if strcmp(cruise_specifics,'tfo_2023')
@@ -112,7 +112,9 @@ if strcmp(cruise_specifics,'tfo_2023')
     % is increasing
     if ~isempty(epsi)
         diff_not_neg = [0;diff(epsi.dnum)]>0;
-        [~,isunique] = unique(epsi.dnum);
+        [~,iU] = unique(epsi.dnum);
+        isunique = false(size(epsi.dnum,1),size(epsi.dnum,2));
+        isunique(iU) = true;
         keep = ~isnan(epsi.dnum) & ~isinf(epsi.dnum) & diff_not_neg & isunique;
         
         if ~isempty(epsi) && isfield(epsi,'s2_count') && ~isempty(ctd)

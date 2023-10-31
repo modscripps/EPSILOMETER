@@ -102,10 +102,10 @@ classdef epsi_class < handle
                     % NC 4/23/23
                     % If Meta_Data_Process file is specified, add it to
                     % Meta_Data paths and read it
-                    if exist('Meta_Data_process_file','var') 
+                    if exist('Meta_Data_process_file','var')
                         if ~isempty(Meta_Data_process_file)
-                        obj.Meta_Data.paths.process_library = Meta_Data_process_file;
-                        obj.f_read_MetaProcess(Meta_Data_process_file);
+                            obj.Meta_Data.paths.process_library = Meta_Data_process_file;
+                            obj.f_read_MetaProcess(Meta_Data_process_file);
                         end
                     end
 
@@ -118,7 +118,7 @@ classdef epsi_class < handle
                             isclassfield(obj.Meta_Data.PROCESS,'nb_channels') && ...
                             isclassfield(obj.Meta_Data.PROCESS,'nfft')
                         Meta_Data = obj.Meta_Data;
-%                         save(fullfile(obj.Meta_Data.paths.data,'Meta_Data'),'Meta_Data');
+                        %                         save(fullfile(obj.Meta_Data.paths.data,'Meta_Data'),'Meta_Data');
 
                         repeat = 0; %Stop repeating. Keep this Meta_Data.
                     else
@@ -240,6 +240,7 @@ classdef epsi_class < handle
                             setupfile=dir(fullfile(obj.Meta_Data.paths.raw_data,...
                                 ['*' obj.Meta_Data.rawfileSuffix]));
                             setup=mod_som_read_setup_from_raw(fullfile(setupfile(1).folder,setupfile(1).name));
+
                         catch err
                             for j = 1:length(err.stack)
                                 disp([num2str(j) ' ' err.stack(j).name ' ' num2str(err.stack(j).line)]);
@@ -289,8 +290,17 @@ classdef epsi_class < handle
             fprintf('mat data path: %s \n',obj.Meta_Data.paths.mat_data);
             fprintf('profiles path: %s \n',obj.Meta_Data.paths.profiles);
             fprintf('... \n')
+<<<<<<< Updated upstream
             fprintf('Meta_Data.PROCESS information comes from %s \n',obj.Meta_Data.PROCESS.filename)
             fprintf('Profiles are going %s \n',upper(obj.Meta_Data.PROCESS.profile_dir))
+=======
+            if isfield(Meta_Data.PROCESS,'filename')
+                fprintf('Meta_Data.PROCESS information comes from %s \n',obj.Meta_Data.PROCESS.filename)
+            end
+            if isfield(Meta_Data.PROCESS,'profile_dir')
+                fprintf('Profiles are going %s \n',upper(obj.Meta_Data.PROCESS.profile_dir))
+            end
+>>>>>>> Stashed changes
             fprintf('... \n')
 
             % NC - check for s1 and s2 cal values. For newer deployments that have Meta_Data.AFE structure, if they're
@@ -342,108 +352,119 @@ classdef epsi_class < handle
             obj.Meta_Data = Meta_Data;
         end
         function obj=f_readData(obj,varargin)
-            % optional arguments:
-            %   'version'
-            %       ex) MISOBOB - f_readData('version',0)
-            %       ex) BLT2021 - f_readData('version',3)
-            %       ex) BLT2022 - f_readData('version',4)
+            %   'noSync'
+            %       - don't rsync files from RawDir to RawDir Away
+            %   'doFCTD'
+            %       - make FCTD files compatible with MOD FCTD processing library
             %   'calc_micro'
-            %       ex) f_readData('calc_micro') will calculate microstructure
-            %       ex) f_readData will not calculate microstructrure
-            %   'make_FCTD'
-            %       ex) f_readData('make_FCTD','path/to/fctd_mat_files')
-            %                       will make FCTD-style .mat files in the
-            %                       path specified in the second argument
-            %       ex) f_readData('make_FCTD') will make FCTD-style .mat
-            %                       files in a directory called FCTDmat at
-            %                       the same level as .mat and .raw directories
-            %       ex) f_readData will not not make FCTD-style .mat files
+            %       - true/false to calculate microstructure data
+            %   'fileStr', 'string_to_match'
+            %       - use this flag along with a search string
+            %       if you want to limit rsyncing files to only those that match a certain
+            %       pattern. This is useful if you're storing all the raw data from a
+            %       cruise in RawDir, but you want to separate deployments into different
+            %       RawDirAway. You could specify only files from July 17th as
+            %       'fileStr','*07_17*'
+            %    'version, version_number
+            %       - specify the version number (1,2,3,4) of mod_som_read_epsi_files.m
+            %           ex) MISOBOB - f_readData('version',0)
+            %           ex) BLT2021 - f_readData('version',3)
+            %           ex) BLT2022 - f_readData('version',4)
+            %    'display_file_data'
+            %       - display size of file, time, pressure, and altimeter
+            %    'cruise_specifics'
+            %       - on BLT 2021 cruise, we output microconductivity and fluorometer
+            %       data from epsi channels to the FCTD .mat structure
+
+            dirs.raw_incoming = obj.Meta_Data.paths.raw_data;
+            dirs.mat = obj.Meta_Data.paths.mat_data;
+            epsiProcess_convert_new_raw_to_mat(dirs,obj.Meta_Data,varargin)
 
 
-            % Set defaults
-            version_number = 4;
-            calc_micro = 0;
-            make_FCTD = 0;
-            fctd_mat_dir = fullfile(obj.Meta_Data.paths.data,'FCTDmat');
-
-            argsNameToCheck = {'calc_micro',...     %1
-                'version',...        %2
-                'make_FCTD'};        %3
-
-            index = 1; %Initialize index of argsNameToCheck
-            % Number of items remaining (this is the number of argsNameToCheck minus
-            % the number of extra parameters that go with the arguments. For example,
-            % 'version' expects another parameter that follows it: 'version', 3.
-            % Similarly, 'fileStr' expects a string after it: 'fileStr',
-            % 'EPSI_22_04_12*,'make_FCTD' expects a 1 or a 0 after it.
-            n_items = nargin-2;
-
-            while (n_items > 0)
-                argsMatch = strcmpi(varargin{index},argsNameToCheck);
-                i = find(argsMatch,1);
-                if isempty(i)
-                    error('MATLAB:epsiProcess_convert_new_raw_to_mat:wrongOption','Incorrect option specified: %s', varargin{index});
-                end
-
-                switch i
-                    case 1 %calc_micro
-                        % Find the index of varargin that = 'calc_micro'
-                        % and set calc_micro to 1
-                        idxFlag = find(cell2mat(cellfun(@(C) ~isempty(strfind(C,'calc_micro')),varargin,'uniformoutput',0)));
-                        calc_micro = 1;
-                        index = index+1;
-                        n_items = n_items-1;
-                    case 2 %version
-                        % Find the index of varargin that = 'version'. The following
-                        % index contains the version number
-                        idxFlag = find(cell2mat(cellfun(@(C) ~isempty(strfind(C,'version')),varargin,'uniformoutput',0)));
-                        version_number = varargin{idxFlag+1};
-                        index = index+2; %+2 because the following varargin will be the version number
-                        n_items = n_items-2;
-                    case 3 %make_FCTD
-                        % Find the index of varargin that = 'make_FCTD' and
-                        % set make_FCTD to 1
-                        idxFlag = find(cell2mat(cellfun(@(C) ~isempty(strfind(C,'make_FCTD')),varargin,'uniformoutput',0)));
-                        make_FCTD = 1;
-                        index = index+2;
-                        n_items = n_items-2;
-                end
-            end
-
-            % Copy raw files from datapath to RAWpath
-            %list_rawfile = dir(fullfile(obj.Meta_Data.paths.data,['*' obj.Meta_Data.rawfileSuffix]));
-            list_rawfile = dir(fullfile(obj.Meta_Data.paths.raw_data,['*' obj.Meta_Data.rawfileSuffix]));
-
-            % Some files are called '*data*' and if you look for them, you
-            % might  also grab Meta_Data. Get rid of it.
-            matchCell = strfind({list_rawfile.name}, 'Meta_Data');
-            matchArray = cellfun(@(C) ~isempty(C),matchCell);
-            list_rawfile = list_rawfile(~matchArray);
-
-            if isempty(list_rawfile)
-                warning(['There are no *' obj.Meta_Data.rawfileSuffix ' * raw files in ' obj.Meta_Data.paths.raw_data])
-            else
-                %                 for f=1:length(list_rawfile)
-                %                     copyfile(fullfile(list_rawfile(f).folder, ...
-                %                         list_rawfile(f).name),  ...
-                %                         obj.Meta_Data.paths.raw_data,'f'); %NC set mode to 'f' to copy file
-                %                 end
-                % Convert raw to mat
-                dirs.raw_incoming = obj.Meta_Data.paths.raw_data;
-                dirs.mat = obj.Meta_Data.paths.mat_data;
-                if make_FCTD
-                    epsiProcess_convert_new_raw_to_mat(dirs,obj.Meta_Data,...
-                        'noSync',...
-                        'version',version_number,...
-                        'calc_micro',calc_micro,...
-                        'doFCTD',fctd_mat_dir);
-                elseif ~make_FCTD
-                    epsiProcess_convert_new_raw_to_mat(dirs,obj.Meta_Data,...
-                        'noSync',...
-                        'version',version_number,...
-                        'calc_micro',calc_micro);
-                end
-            end
+            % % Set defaults
+            % version_number = 4;
+            % calc_micro = 0;
+            % make_FCTD = 0;
+            % fctd_mat_dir = fullfile(obj.Meta_Data.paths.data,'FCTDmat');
+            %
+            % argsNameToCheck = {'calc_micro',...     %1
+            %     'version',...        %2
+            %     'make_FCTD'};        %3
+            %
+            % index = 1; %Initialize index of argsNameToCheck
+            % % Number of items remaining (this is the number of argsNameToCheck minus
+            % % the number of extra parameters that go with the arguments. For example,
+            % % 'version' expects another parameter that follows it: 'version', 3.
+            % % Similarly, 'fileStr' expects a string after it: 'fileStr',
+            % % 'EPSI_22_04_12*,'make_FCTD' expects a 1 or a 0 after it.
+            % n_items = nargin-2;
+            %
+            % while (n_items > 0)
+            %     argsMatch = strcmpi(varargin{index},argsNameToCheck);
+            %     i = find(argsMatch,1);
+            %     if isempty(i)
+            %         error('MATLAB:epsiProcess_convert_new_raw_to_mat:wrongOption','Incorrect option specified: %s', varargin{index});
+            %     end
+            %
+            %     switch i
+            %         case 1 %calc_micro
+            %             % Find the index of varargin that = 'calc_micro'
+            %             % and set calc_micro to 1
+            %             idxFlag = find(cell2mat(cellfun(@(C) ~isempty(strfind(C,'calc_micro')),varargin,'uniformoutput',0)));
+            %             calc_micro = 1;
+            %             index = index+1;
+            %             n_items = n_items-1;
+            %         case 2 %version
+            %             % Find the index of varargin that = 'version'. The following
+            %             % index contains the version number
+            %             idxFlag = find(cell2mat(cellfun(@(C) ~isempty(strfind(C,'version')),varargin,'uniformoutput',0)));
+            %             version_number = varargin{idxFlag+1};
+            %             index = index+2; %+2 because the following varargin will be the version number
+            %             n_items = n_items-2;
+            %         case 3 %make_FCTD
+            %             % Find the index of varargin that = 'make_FCTD' and
+            %             % set make_FCTD to 1
+            %             idxFlag = find(cell2mat(cellfun(@(C) ~isempty(strfind(C,'make_FCTD')),varargin,'uniformoutput',0)));
+            %             make_FCTD = 1;
+            %             index = index+2;
+            %             n_items = n_items-2;
+            %     end
+            % end
+            %
+            % % Copy raw files from datapath to RAWpath
+            % %list_rawfile = dir(fullfile(obj.Meta_Data.paths.data,['*' obj.Meta_Data.rawfileSuffix]));
+            % list_rawfile = dir(fullfile(obj.Meta_Data.paths.raw_data,['*' obj.Meta_Data.rawfileSuffix]));
+            %
+            % % Some files are called '*data*' and if you look for them, you
+            % % might  also grab Meta_Data. Get rid of it.
+            % matchCell = strfind({list_rawfile.name}, 'Meta_Data');
+            % matchArray = cellfun(@(C) ~isempty(C),matchCell);
+            % list_rawfile = list_rawfile(~matchArray);
+            %
+            % if isempty(list_rawfile)
+            %     warning(['There are no *' obj.Meta_Data.rawfileSuffix ' * raw files in ' obj.Meta_Data.paths.raw_data])
+            % else
+            %     %                 for f=1:length(list_rawfile)
+            %     %                     copyfile(fullfile(list_rawfile(f).folder, ...
+            %     %                         list_rawfile(f).name),  ...
+            %     %                         obj.Meta_Data.paths.raw_data,'f'); %NC set mode to 'f' to copy file
+            %     %                 end
+            %     % Convert raw to mat
+            %     dirs.raw_incoming = obj.Meta_Data.paths.raw_data;
+            %     dirs.mat = obj.Meta_Data.paths.mat_data;
+            %     if make_FCTD
+            %         epsiProcess_convert_new_raw_to_mat(dirs,obj.Meta_Data,...
+            %             'noSync',...
+            %             'version',version_number,...
+            %             'calc_micro',calc_micro,...
+            %             'doFCTD',fctd_mat_dir);
+            %     elseif ~make_FCTD
+            %         epsiProcess_convert_new_raw_to_mat(dirs,obj.Meta_Data,...
+            %             'noSync',...
+            %             'version',version_number,...
+            %             'calc_micro',calc_micro);
+            %     end
+            % end
 
         end
         function obj=f_getLastData(obj)
