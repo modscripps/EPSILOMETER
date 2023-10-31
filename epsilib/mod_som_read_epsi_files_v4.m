@@ -63,7 +63,8 @@ if isempty(ind_sbe_start)
 end
 [ind_alt_start      , ind_alt_stop]      = regexp(str,'\$ALT([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
 [ind_act_start      , ind_act_stop]      = regexp(str,'\$ACTU([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
-[ind_vnav_start     , ind_vnav_stop]     = regexp(str,'\$VNMAR([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
+%[ind_vnav_start     , ind_vnav_stop]     = regexp(str,'\$VNMAR([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
+[ind_vnav_start     , ind_vnav_stop]     = regexp(str,'\$VNYMR([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
 [ind_gps_start      , ind_gps_stop]      = regexp(str,'\$GPGGA([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
 [ind_seg_start      , ind_seg_stop]      = regexp(str,'\$SEGM([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
 [ind_spec_start     , ind_spec_stop]     = regexp(str,'\$SPEC([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
@@ -72,10 +73,10 @@ end
 [ind_apf0_start     , ind_apf0_stop]     = regexp(str,'\$APF0([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
 [ind_apf1_start     , ind_apf1_stop]     = regexp(str,'\$APF1([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
 [ind_apf2_start     , ind_apf2_stop]     = regexp(str,'\$APF2([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
-[ind_ecop_start     , ind_ecop_stop]     = regexp(str,'\$ECOP([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
-[ind_ttv_start     , ind_ttv_stop]     = regexp(str,'\$TTVP([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
+[ind_fluor_start    , ind_fluor_stop]    = regexp(str,'\$ECOP([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
+[ind_ttv_start      , ind_ttv_stop]      = regexp(str,'\$TTVP([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
 
-%$ECOP0000000000045cf00000001c*6B0000000000045ceXXXXYYYYZZZZ*57
+%$fluor0000000000045cf00000001c*6B0000000000045ceXXXXYYYYZZZZ*57
 %% Define the header tag format
 % In the versions of the SOM acquisition software since 23 May 2021 (and
 % maybe before that?), these data types all have the same header tag
@@ -267,7 +268,7 @@ else
         
         % If timestamp has values like 1.6e12, it is in milliseconds since Jan
         % 1, 1970. Otherwise it's in milliseconds since the start of the record
-        if nanmedian(epsi_timestamp)>1e9
+        if median(epsi_timestamp,'omitmissing')>1e9
             % time_s - seconds since 1970
             % dnum - matlab datenum
             [epsi.time_s,epsi.dnum] = convert_timestamp(epsi_timestamp);
@@ -414,7 +415,7 @@ else
             
             % If timestamp has values like 1.6e12, it is in milliseconds since Jan
             % 1, 1970. Otherwise it's in milliseconds since the start of the record
-            if nanmedian(ctd_timestamp)>1e9
+            if median(ctd_timestamp,'omitmissing')>1e9
                 % time_s - seconds since 1970
                 % dnum - matlab datenum
                 [ctd.time_s,ctd.dnum] = convert_timestamp(ctd_timestamp);
@@ -498,8 +499,16 @@ else
         alt_block_str = str(ind_alt_start(iB):ind_alt_stop(iB));
         
         % For the altimeter, all the data is actually in the header
-        alti.hextimestamp.value   = hex2dec(alt_block_str(tag.hextimestamp.inds));
-        alt_timestamp(iB) = alti.hextimestamp.value;
+        try
+            alti.hextimestamp.value   = hex2dec(alt_block_str(tag.hextimestamp.inds));
+        catch
+            alti.hextimestamp.value = nan;
+        end
+        try
+            alt_timestamp(iB) = alti.hextimestamp.value;
+        catch
+            alt_timestamp(iB) = nan;
+        end
         
         % The altimeter block does not have a hexlengthblock (hexadecimal
         % length of data block). It has the altimeter reading in that
@@ -531,7 +540,7 @@ else
     
     % If timestamp has values like 1.6e12, it is in milliseconds since Jan
     % 1, 1970. Otherwise it's in milliseconds since the start of the record
-    if nanmedian(alt_timestamp)>1e9
+    if median(alt_timestamp,'omitmissing')>1e9
         % time_s - seconds since 1970
         % dnum - matlab datenum
         [alt.time_s,alt.dnum] = convert_timestamp(alt_timestamp);
@@ -595,9 +604,10 @@ else
     vnav_timestamp   = nan(vecnav.data.n_recs,1);
     %vnav.time_s and vnav.dnum will be created from vnav_timestamp once
     %all its records are filled
-    vnav.compass = nan(vecnav.data.n_recs,1);
+    vnav.compass = nan(vecnav.data.n_recs,1); %TODO : initialize with three columns prior to filling below (l.636)
     vnav.acceleration = nan(vecnav.data.n_recs,1);
     vnav.gyro = nan(vecnav.data.n_recs,1);
+    vnav.ypr = nan(vecnav.data.n_recs,1);
     
     %     % Grab the block of data starting with the header
     %     vnav_block_str = str(ind_vnav_start(iB):ind_vnav_stop(iB));
@@ -610,7 +620,7 @@ else
         % Grab the block of data starting with the header
         vnav_block_str = str(ind_vnav_start(iB):ind_vnav_stop(iB)); %Moved here by Bethan June 26
         % For the vecnav, we use the hexadecimal timestamp that comes before
-        % $VNMAR
+        % $VNMAR -->  Oct. 26: $VNYMR since angles were added to outputs
         vnav_timestamp(iB) = hex2dec(str(ind_time_start(iB):ind_time_stop(iB)));
         
         % Get the data after the header
@@ -621,16 +631,17 @@ else
         
         % Compass, acceleration, and gyro each have x, y, and z components
         for iC=1:3
-            vnav.compass(iB,iC)=str2double(data_split{1,iC+1}); %Compass (x,y,z) units = gauss
-            vnav.acceleration(iB,iC)=str2double(data_split{1,iC+4}); %Acceleration (x,y,x) units = m/s^2
-            vnav.gyro(iB,iC)=str2double(data_split{1,iC+7}); %Gyro (x,y,z) units = rad/s
+            vnav.ypr(iB,iC)=str2double(data_split{1,iC+1}); %Orientation in Euler 321 sequence (yaw, pitch, roll) units = degrees
+            vnav.compass(iB,iC)=str2double(data_split{1,iC+4}); %Compass (x,y,z) units = gauss
+            vnav.acceleration(iB,iC)=str2double(data_split{1,iC+7}); %Acceleration (x,y,x) units = m/s^2
+            vnav.gyro(iB,iC)=str2double(data_split{1,iC+10}); %Gyro (x,y,z) units = rad/s
         end
         
     end
     
     % If timestamp has values like 1.6e12, it is in milliseconds since Jan
     % 1, 1970. Otherwise it's in milliseconds since the start of the record
-    if nanmedian(vnav_timestamp)>1e9
+    if median(vnav_timestamp,'omitmissing')>1e9
         % time_s - seconds since 1970
         % dnum - matlab datenum
         [vnav.time_s,vnav.dnum] = convert_timestamp(vnav_timestamp);
@@ -641,7 +652,7 @@ else
     end
     
     % Order vnav fields
-    vnav = orderfields(vnav,{'dnum','time_s','compass','acceleration','gyro'});
+    vnav = orderfields(vnav,{'dnum','time_s','ypr','compass','acceleration','gyro'});
     
 end %end loop if there is vnav data
 
@@ -812,7 +823,7 @@ else
         seg.(wh_channel)=seg.(wh_channel)(~idnull);
     end
     
-    if nanmedian(segment_timestamp(iB))>1e9
+    if median(segment_timestamp(iB),'omitmissing')>1e9
         % time_s - seconds since 1970
         % dnum - matlab datenum
         [seg.time_s,seg.dnum] = convert_timestamp(segment_timestamp);
@@ -921,7 +932,7 @@ else
     spec.freq=fe(2:end);
 
     
-    if nanmedian(spec_timestamp)>1e9
+    if median(spec_timestamp,'omitmissing')>1e9
         % time_s - seconds since 1970
         % dnum - matlab datenum
         [spec.time_s,spec.dnum] = convert_timestamp(spec_timestamp);
@@ -1028,7 +1039,7 @@ else
         avgspec.(wh_channel)=avgspec.(wh_channel)(~idnull);
     end
     
-    if nanmedian(avgspec_timestamp)>1e9
+    if median(avgspec_timestamp,'omitmissing')>1e9
         % time_s - seconds since 1970
         % dnum - matlab datenum
         [avgspec.time_s,avgspec.dnum] = convert_timestamp(avgspec_timestamp);
@@ -1128,7 +1139,7 @@ else
         dissrate.(wh_channel)=cell2mat(dissrate.(wh_channel)(~idnull));
     end
     
-    if nanmedian(dissrate_timestamp)>1e9
+    if median(dissrate_timestamp,'omitmissing')>1e9
         % time_s - seconds since 1970
         % dnum - matlab datenum
         [dissrate.time_s,dissrate.dnum] = convert_timestamp(dissrate_timestamp);
@@ -1667,120 +1678,124 @@ else
         'avg_tg_k','avg_shear_k','avg_accel_k'});
 end %end apf
 
-%% Process ecopuck data
-% $ECOP0000000000045cf00000001c*6B0000000000045ceXXXXYYYYZZZZ*57"
+%% Process fluoruck data
+% $fluor0000000000045cf00000001c*6B0000000000045ceXXXXYYYYZZZZ*57"
 % XXXX 4 char bytes to convert to uint_16; 
 % YYYY 4 char bytes to convert to uint_16; 
 % ZZZZ 4 char bytes to convert to uint_16; 
-if isempty(ind_ecop_start)
-    no_data_types = [no_data_types,'ecop'];
-    ecop=[];
+if isempty(ind_fluor_start)
+    no_data_types = [no_data_types,'fluor'];
+    fluor=[];
 else
     
-    ecop.data.sample_freq      = 16;
-    ecop.data.sample_period    = 1/ecop.data.sample_freq;
-    ecop.data.n_blocks         = numel(ind_ecop_start);
-    ecop.data.recs_per_block   = 1;
-    ecop.data.n_recs           = ecop.data.n_blocks*ecop.data.recs_per_block;
-    ecop.data.timestamp_length = 16;
-    ecop.data.length           = 12;   
+    sensor.name="tridente";
+    sensor.bb.cal0=-1.720756e-6;
+    sensor.bb.cal1= 5.871734e4;
+    sensor.chla.cal0=-158.44269e-6;
+    sensor.chla.cal1= 504.23178e3;
+    sensor.fDOM.cal0=-49.728096e-3;
+    sensor.fDOM.cal1= 30.125764e3;
 
-    processed_data_types = [processed_data_types,'ecop'];
+%     switch Meta_Data.PROCESS
+    sensor.data.sample_freq      = 16;
+    sensor.data.sample_period    = 1/sensor.data.sample_freq;
+    sensor.data.n_blocks         = numel(ind_fluor_start);
+    sensor.data.recs_per_block   = 1;
+    sensor.data.n_recs           = sensor.data.n_blocks*sensor.data.recs_per_block;
+    sensor.data.timestamp_length = 16;
+    sensor.data.length           = 12;   
 
-    ecop.data.sample_period    = 1/ecop.data.sample_freq;
-    ecop.data.n_blocks         = numel(ind_ecop_start);
+    processed_data_types = [processed_data_types,'fluor'];
+
+    fluor.data.sample_period    = 1/sensor.data.sample_freq;
+    fluor.data.n_blocks         = numel(ind_fluor_start);
     %ALB hard coded number of element per record
-    ecop.data.recs_per_block   = 1;
-    ecop.data.n_recs           = ecop.data.n_blocks*ecop.data.recs_per_block;
-    ecop.data.timestamp_length = 16;
+    fluor.data.recs_per_block   = 1;
+    fluor.data.n_recs           = sensor.data.n_blocks*sensor.data.recs_per_block;
+    fluor.data.timestamp_length = 16;
     
     
-    % Process ecopuck data
+    % Process fluoruck data
     % --------------------------------
     
     % Pre-allocate space for data
-    ecop_timestamp   = nan(ecop.data.n_recs,1);
+    fluor_timestamp   = nan(sensor.data.n_recs,1);
     %ctd.ctdtime and ctd.ctddnum will be created from ctd_timestamp once
     %all its records are filled
-    ecop.channel1   = nan(ecop.data.n_recs,1);
-    ecop.channel2   = nan(ecop.data.n_recs,1);
-    ecop.channel3   = nan(ecop.data.n_recs,1);
-    
+    fluor.bb    = nan(sensor.data.n_recs,1);
+    fluor.chla  = nan(sensor.data.n_recs,1);
+    fluor.fDOM  = nan(sensor.data.n_recs,1);
+
     % Initialize datarecord counter
     n_rec = 0;
-    
+
     % Loop through data blocks and parse strings
-    for iB = 1:ecop.data.n_blocks
-        
+    for iB = 1:sensor.data.n_blocks
+
         % Grab the block of data starting with the header
-        ecop_block_str = str(ind_ecop_start(iB):ind_ecop_stop(iB));
-        
+        fluor_block_str = str(ind_fluor_start(iB):ind_fluor_stop(iB));
+
         % Get the header timestamp and length of data block
-        ecop.hextimestamp.value   = hex2dec(ecop_block_str(tag.hextimestamp.inds));
-        ecop.hexlengthblock.value = hex2dec(ecop_block_str(tag.hexlengthblock.inds));
-        
+        sensor.hextimestamp.value   = hex2dec(fluor_block_str(tag.hextimestamp.inds));
+        sensor.hexlengthblock.value = hex2dec(fluor_block_str(tag.hexlengthblock.inds));
+
         % Get the data after the header.
-        ecop_block_data = ecop_block_str(tag.data_offset:end-tag.chksum.length);
-        
-        if (length(ecop_block_data)~=ecop.hexlengthblock.value)
-            fprintf("ECOP block %i has incorrect length\r\n",iB)
+        fluor_block_data = fluor_block_str(tag.data_offset:end-tag.chksum.length);
+
+        if (length(fluor_block_data)~=sensor.hexlengthblock.value)
+            fprintf("fluor block %i has incorrect length\r\n",iB)
         else
             %
             % Where do 16 and 24 come from?
-            ecop_block_data=reshape(ecop_block_data,16+ecop.data.length,ecop.data.recs_per_block).';
-            
-            for iR=1:ecop.data.recs_per_block
-                
+            fluor_block_data=reshape(fluor_block_data,16+sensor.data.length,sensor.data.recs_per_block).';
+
+            for iR=1:sensor.data.recs_per_block
+
                 % Count up the record number
                 n_rec=n_rec+1;
-                
+
                 % The ctd data is everything but the last two elements of the
                 % block
-                element_ecop=ecop_block_data(iR,1:end);
-                
+                element_fluor=fluor_block_data(iR,1:end);
+
                 % The hexadecimal timestamp is the first 16 characters of the
                 % data
-                ecop_timestamp(n_rec) = hex2dec(element_ecop(1:16));
-                
-                % Everything after that is the data
-                rec_ecop=element_ecop(ecop.data.timestamp_length+1:end);
-                
-                try
-                    ecop.channel1(n_rec)  = hex2dec(rec_ecop(:,1:4));
-                    ecop.channel2(n_rec)  = hex2dec(rec_ecop(:,(1:4)+4));
-                    ecop.channel3(n_rec)  = hex2dec(rec_ecop(:,(1:4)+8));
-                catch
-                    ecop.channel1(n_rec)  = nan;
-                    ecop.channel2(n_rec)  = nan;
-                    ecop.channel3(n_rec)  = nan;
-                end
-            
-            % If timestamp has values like 1.6e12, it is in milliseconds since Jan
-            % 1, 1970. Otherwise it's in milliseconds since the start of the record
-            if nanmedian(ecop_timestamp)>1e9
-                % time_s - seconds since 1970
-                % dnum - matlab datenum
-                [ecop.time_s,ecop.dnum] = convert_timestamp(ecop_timestamp);
-            else
-                % time_s - seconds since power on
-                ecop.time_s = ecop_timestamp./1000;
-                ecop.dnum = Meta_Data.start_dnum + days(seconds(ecop.time_s));
-            end
+                fluor_timestamp(n_rec) = hex2dec(element_fluor(1:16));
 
-% ALB Fill up if you want to add function PROCESS the ECOPPUCK data            
-%             % If the data were in engineering units, 
-%             % convert to physical units
-%             switch ecop.data.format
-%                 case '???'
-%                     ctd = sbe49_ascii_get_temperature(ctd,sbe);
-%                     ctd = sbe49_ascii_get_pressure(ctd,sbe);
-%                     ctd = sbe49_ascii_get_conductivity(ctd,sbe);
-%                     ctd.S    = sw_salt(ctd.C*10./c3515,ctd.T,ctd.P);
-%             end
-            end 
-        end %end if ecop data block is the correct size
-    end %end loop through ecop blocks
-end %end loop if there is ecop data
+                % Everything after that is the data
+                rec_fluor=element_fluor(sensor.data.timestamp_length+1:end);
+
+                try
+                    fluor.bb(n_rec)   = hex2dec(rec_fluor(:,1:4));
+                    fluor.chla(n_rec) = hex2dec(rec_fluor(:,(1:4)+4));
+                    fluor.fDOM(n_rec) = hex2dec(rec_fluor(:,(1:4)+8));
+                catch
+                    fluor.bb(n_rec)   = nan;
+                    fluor.chla(n_rec) = nan;
+                    fluor.fDOM(n_rec) = nan;
+                end
+
+                % If timestamp has values like 1.6e12, it is in milliseconds since Jan
+                % 1, 1970. Otherwise it's in milliseconds since the start of the record
+                if median(fluor_timestamp,'omitmissing')>1e9
+                    % time_s - seconds since 1970
+                    % dnum - matlab datenum
+                    [fluor.time_s(n_rec),fluor.dnum(n_rec)] = convert_timestamp(fluor_timestamp(n_rec));
+                else
+                    % time_s - seconds since power on
+                    if ~isempty(gps)
+                        fluor.dnum(n_rec) = gps.dnum(end);
+                        fluor.time_s(n_rec) = (fluor.dnum(n_rec)-fluor.dnum(1)).*86400;
+                    else
+                        fluor.time_s = fluor_timestamp(n_rec)./1000;
+                        fluor.dnum = Meta_Data.start_dnum + days(seconds(fluor.time_s(nrec)));
+                    end
+                end
+
+            end
+        end %end if fluor data block is the correct size
+    end %end loop through fluor blocks
+end %end loop if there is fluor data
 
 
 %% Process ttv data
@@ -1803,21 +1818,19 @@ else
     ttv.data.sample_freq      = 16;
     ttv.data.sample_period    = 1/ttv.data.sample_freq;
     ttv.data.n_blocks         = numel(ind_ttv_start);
-    ttv.data.recs_per_block   = 1;
+    %ALB hard coded number of element per record
+    ttv.data.recs_per_block   = 16;
     ttv.data.n_recs           = ttv.data.n_blocks*ttv.data.recs_per_block;
     ttv.data.timestamp_length = 16;
     % ALB I have to change this
-    ttv.data.length           = 70;   
+    ttv.data.samplelength     = 72;   
+
 
     processed_data_types = [processed_data_types,'ttv'];
 
     ttv.data.sample_period    = 1/ttv.data.sample_freq;
     ttv.data.n_blocks         = numel(ind_ttv_start);
-    %ALB hard coded number of element per record
-    ttv.data.recs_per_block   = 1;
-    ttv.data.n_recs           = ttv.data.n_blocks*ttv.data.recs_per_block;
-    ttv.data.timestamp_length = 16;
-    
+
     
     % Process ttv data
     % --------------------------------
@@ -1859,13 +1872,14 @@ else
         else
             %
             % Where do 16 and 24 come from?
-            ttv_block_data=reshape(ttv_block_data,16+ttv.data.length,ttv.data.recs_per_block).';
+            % ttv_block_data=reshape(ttv_block_data,16+ttv.data.length,ttv.data.recs_per_block).';
+            ttv_block_data=reshape(ttv_block_data,ttv.data.samplelength,ttv.data.recs_per_block).';
 
             %00000188449d433600:28:07 262 ms-000000043 ps,+650 mV,+649 mV,079, 078 *4B
-            parse_ttv_block_data=sscanf(ttv_block_data,'%016x%02f:%02f:%02f %03f ms%010f ps,%04f mV,%04f mV,%03f, %03f');
-            if length(parse_ttv_block_data)==10
+            for iR=1:ttv.data.recs_per_block
+                parse_ttv_block_data=sscanf(ttv_block_data(iR,:),'%016x%02f:%02f:%02f %03f ms%010f ps,%04f mV,%04f mV,%03f, %03f\r\n');
+                if length(parse_ttv_block_data)==10
 
-                for iR=1:ttv.data.recs_per_block
 
                     % Count up the record number
                     n_rec=n_rec+1;
@@ -1893,7 +1907,7 @@ else
 
                     % If timestamp has values like 1.6e12, it is in milliseconds since Jan
                     % 1, 1970. Otherwise it's in milliseconds since the start of the record
-                    if nanmedian(ttv_timestamp)>1e9
+                    if median(ttv_timestamp,'omitmissing')>1e9
                         % time_s - seconds since 1970
                         % dnum - matlab datenum
                         [ttv.time_s,ttv.dnum] = convert_timestamp(ttv_timestamp);
@@ -1915,7 +1929,7 @@ fprintf(['processed data for: ' repmat('%s ',1,length(processed_data_types)), '\
 fprintf(['no data for:        ' repmat('%s ',1,length(no_data_types)), '\n'], no_data_types{:})
 
 % Combine all data
-make data epsi ctd alt act vnav gps seg spec avgspec dissrate apf ecop ttv
+make data epsi ctd alt act vnav gps seg spec avgspec dissrate apf fluor ttv
 
 
 
@@ -1924,7 +1938,7 @@ fprintf(['processed data for: ' repmat('%s ',1,length(processed_data_types)), '\
 fprintf(['no data for:        ' repmat('%s ',1,length(no_data_types)), '\n'], no_data_types{:})
 
 % Combine all data
-make data epsi ctd alt act vnav gps seg spec avgspec dissrate apf ecop ttv
+make data epsi ctd alt act vnav gps seg spec avgspec dissrate apf fluor ttv
 
 
 end
