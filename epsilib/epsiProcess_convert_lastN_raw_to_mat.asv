@@ -54,7 +54,6 @@ for i=length(myASCIIfiles)-(N-1):length(myASCIIfiles)
 end
 
 % Clean up matData - if a field is empty, get rid of it.
-empty = structfun(@isempty, matData);
-matData = rmfield(matData,field_names(empty));
-
+    empty = structfun(@isempty, matData);
+    matData = rmfield(matData,field_names{empty})
 end
