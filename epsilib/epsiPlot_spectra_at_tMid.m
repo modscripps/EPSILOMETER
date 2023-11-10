@@ -462,12 +462,7 @@ if makeFig
         end
         % shade the analyzed block
         % --------------------
-        if isempty(CTD.T)
-            lastAx=4;
-        elseif ~isempty(CTD.T)
-            lastAx=5;
-        end
-        for a=1:lastAx
+        for a=1:4
             hold(ax(a),'on')
             h(a)=fill(ax(a),time_dnum(indexes), ...
                 [-2 2 2 -2],[.7 .7 .7]);
@@ -481,7 +476,7 @@ if makeFig
             plot(ax(a),[time_dnum(idxScan(end)) time_dnum(idxScan(end))], ...
                 [-2 2],'k--');
         end
-        ax(5).NextPlot = 'replace';
+        
         
         legend(ax(1),{sprintf('a1 %1.2fV',ma1),sprintf('a2 %1.2fV',ma2)},'location','northwest')
         legend(ax(2),{sprintf('a3 %1.2fV',ma3)},'location','northwest')
