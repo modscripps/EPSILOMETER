@@ -67,16 +67,16 @@ CTD = obj.ctd;
 if ~(isfield(obj,'ctd') || isclassfield(obj,'ctd'))
     if isempty(obj.ctd)
         CTD.time_s = [];
-        CTD.dPdt = [];
+        CTD.T = [];
     end
 elseif isfield(obj,'ctd') || isclassfield(obj,'ctd')
     CTD = obj.ctd;
     ind0=(CTD.time_s==0);
     notNan = ~isnan(CTD.time_s);
     if sum(~ind0 & notNan)>3
-        dPdt_interp = movmean(interp1(CTD.time_s(~ind0 & notNan),CTD.dPdt(~ind0 & notNan),EPSI.time_s),100);
+        T_interp = interp1(CTD.time_s(~ind0 & notNan),CTD.T(~ind0 & notNan),EPSI.time_s);
     else
-        CTD.dPdt = [];
+        CTD.T = [];
     end
 end
 % Get rid of nans in the data. If you're plotting in realtime, there might
@@ -172,11 +172,7 @@ else
     a2=detrend(EPSI.a2_g(idxSeg));
     a3=detrend(EPSI.a3_g(idxSeg));
     
-    
-    if ~isempty(CTD.dPdt)
-        dPdt = dPdt_interp(idxSeg);
-    end
-    
+   
     maxa=max([max(a1) max(a2) max(a3)]);
     mina=min([min(a1) min(a2) min(a3)]);
     maxs=max([max(s1) max(s2)]);
@@ -434,7 +430,7 @@ if makeFig
         hold(ax(4),'off')
         
         if ~isempty(CTD.T)
-            plot(ax(5),time_dnum(idxSeg),T,'Color',cols.T)
+            plot(ax(5),time_dnum(idxSeg),T_interp(idxSeg),'Color',cols.T)
         end
         
         
@@ -442,7 +438,7 @@ if makeFig
         ax(2).YLim=[mina maxa];
         ax(3).YLim=[mint maxt];
         ax(4).YLim=[mins maxs];
-        ax(5).YLim=[-0.1 1.5];
+        %ax(5).YLim=[-0.1 1.5];
         ylabel(ax(1),'V','FontSize',14)
         ylabel(ax(2),'V','FontSize',14)
         ylabel(ax(3),'V','FontSize',14)
