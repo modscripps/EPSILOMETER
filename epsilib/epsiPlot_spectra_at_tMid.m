@@ -64,7 +64,7 @@ EPSI = obj.epsi;
 CTD = obj.ctd;
 
 % If there's no CTD data...
-if ~(isfield(obj,'ctd') || isclassfield(obj,'ctd')) 
+if ~(isfield(obj,'ctd') || isclassfield(obj,'ctd'))
     if isempty(obj.ctd)
         CTD.time_s = [];
         CTD.dPdt = [];
@@ -85,6 +85,7 @@ EPSI = structfun(@(x) x(~isnan(x)),EPSI,'un',0);
 CTD = structfun(@(x) x(~isnan(x)),CTD,'un',0);
 
 time_s = EPSI.time_s;
+time_dnum = EPSI.dnum;
 %time_s = EPSI.time_s - nanmin(EPSI.time_s);
 L=length(time_s);
 FS=Meta_Data.AFE.FS;
@@ -412,29 +413,30 @@ if makeFig
     % Plot timeseries
     % --------------------
     if ~isempty(idxSeg)
-        plot(ax(1),time_s(idxSeg),a1,'Color',cols.a1)
+        plot(ax(1),time_dnum(idxSeg),a1,'Color',cols.a1)
         hold(ax(1),'on')
-        plot(ax(1),time_s(idxSeg),a2,'Color',cols.a2)
-                plot(ax(1),time_s(idxScan),squeeze(data(5,1,:)),'Color',cols.a1,'linewidth',4)
-                plot(ax(1),time_s(idxScan),squeeze(data(6,1,:)),'Color',cols.a2,'linewidth',4)
+        plot(ax(1),time_dnum(idxSeg),a2,'Color',cols.a2)
+        plot(ax(1),time_dnum(idxScan),squeeze(data(5,1,:)),'Color',cols.a1,'linewidth',4)
+        plot(ax(1),time_dnum(idxScan),squeeze(data(6,1,:)),'Color',cols.a2,'linewidth',4)
         hold(ax(1),'off')
         
-        plot(ax(2),time_s(idxSeg),a3,'Color',cols.a3)
         
-        plot(ax(3),time_s(idxSeg),t1,'Color',cols.t1)
+        plot(ax(2),time_dnum(idxSeg),a3,'Color',cols.a3)
+        
+        plot(ax(3),time_dnum(idxSeg),t1,'Color',cols.t1)
         hold(ax(3),'on')
-        plot(ax(3),time_s(idxSeg),t2,'Color',cols.t2)
+        plot(ax(3),time_dnum(idxSeg),t2,'Color',cols.t2)
         hold(ax(3),'off')
         
-        plot(ax(4),time_s(idxSeg),s1,'Color',cols.s1)
+        plot(ax(4),time_dnum(idxSeg),s1,'Color',cols.s1)
         hold(ax(4),'on')
-        plot(ax(4),time_s(idxSeg),s2,'Color',cols.s2)
+        plot(ax(4),time_dnum(idxSeg),s2,'Color',cols.s2)
         hold(ax(4),'off')
         
-        if ~isempty(CTD.dPdt)
-            plot(ax(5),time_s(idxSeg),dPdt,'Color',cols.dPdt)
+        if ~isempty(CTD.T)
+            plot(ax(5),time_dnum(idxSeg),T,'Color',cols.T)
         end
-       
+        
         
         ax(1).YLim=[mina maxa];
         ax(2).YLim=[mina maxa];
@@ -445,35 +447,44 @@ if makeFig
         ylabel(ax(2),'V','FontSize',14)
         ylabel(ax(3),'V','FontSize',14)
         ylabel(ax(4),'V','FontSize',14)
-        ylabel(ax(5),'dPdt','FontSize',14)
+        ylabel(ax(5),'°C','FontSize',14)
         for a=1:4
             ax(a).XTickLabel='';
             ax(a).FontSize=14;
-            ax(a).XLim=[time_s(idxSeg(1)) time_s(idxSeg(end))];
+            ax(a).XLim=[time_dnum(idxSeg(1)) time_dnum(idxSeg(end))];
         end
         ax(5).FontSize=14;
-        xlabel(ax(5),['epsitime (seconds)'],'fontsize',14)
+        %xlabel(ax(5),['epsitime (seconds)'],'fontsize',14)
         
+        % Add datetick
+        for a=1:5
+            datetick(ax(a),'x','HH:MM:SS','keeplimits')
+        end
         % shade the analyzed block
         % --------------------
-        for a=1:5
+        if isempty(CTD.T)
+            lastAx=4;
+        elseif ~isempty(CTD.T)
+            lastAx=5;
+        end
+        for a=1:lastAx
             hold(ax(a),'on')
-            h(a)=fill(ax(a),time_s(indexes), ...
+            h(a)=fill(ax(a),time_dnum(indexes), ...
                 [-2 2 2 -2],[.7 .7 .7]);
-            h(a).FaceAlpha=.5;
+            h(a).FaceAlpha=.7;
             h(a).EdgeColor = 'none';
             
-            plot(ax(a),[time_s(idxMid) time_s(idxMid)], ...
+            plot(ax(a),[time_dnum(idxMid) time_dnum(idxMid)], ...
                 [-2 2],'k');
-            plot(ax(a),[time_s(idxScan(1)) time_s(idxScan(1))], ...
+            plot(ax(a),[time_dnum(idxScan(1)) time_dnum(idxScan(1))], ...
                 [-2 2],'k--');
-            plot(ax(a),[time_s(idxScan(end)) time_s(idxScan(end))], ...
+            plot(ax(a),[time_dnum(idxScan(end)) time_dnum(idxScan(end))], ...
                 [-2 2],'k--');
         end
         ax(5).NextPlot = 'replace';
         
         legend(ax(1),{sprintf('a1 %1.2fV',ma1),sprintf('a2 %1.2fV',ma2)},'location','northwest')
-        legend(ax(2),{sprintf('a3 %1.2fV',ma3)})
+        legend(ax(2),{sprintf('a3 %1.2fV',ma3)},'location','northwest')
         legend(ax(3),{sprintf('t1 %1.2eV',mt1),sprintf('t2 %1.2eV',mt2)},'location','northwest')
         legend(ax(4),{sprintf('s1 %1.2eV',ms1),sprintf('s2 %1.2eV',ms2)},'location','northwest')
         % legend(ax(5),{'diff ramp'})

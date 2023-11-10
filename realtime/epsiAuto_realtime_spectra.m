@@ -21,16 +21,17 @@
 % Nicole Couto adapted from autorunFastCTDConvert.m
 % Summer 2021
 
+% -------------------------------------------------------------------------
 % --- USER CHOICES --------------------------------------------------------
 totalSec = 120; %Number of seconds of data that will be stored in memory
 plotSec = 30; %Number of seconds of data that will be plotted in timeseries
 tscan = 4; %Length of scan in seconds
 centerScan = tscan/2; %Plotted spectra will be centered tscan/2 seconds from the end of the timeseries
 str_to_match = '*';
+CTD_SN = '0237';
 
 % Directory containing streaming raw data
-
-rawDir = '/Users/ncouto/Desktop/reprocess_blt_22_0808/DEV1_RAW';
+rawDir = '/Volumes/Epsidrive/bench_testing';
 dirs.raw_incoming = rawDir;
 
 % Choose time units
@@ -38,12 +39,14 @@ time_units = 'dnum'; %uncomment this if you set the datetime on SOM
 %time_units = 'seconds'; %uncomment this if you did not set the datetime on SOM
 
 % --- END USER CHOICES ----------------------------------------------------
+% -------------------------------------------------------------------------
+
 
 switch time_units
     case 'seconds'
         TMAX = 0;
     case 'dnum'
-        TMAX = datenum(2021,1,1); %Will plot data after this starting point
+        TMAX = datenum(2023,11,1); %Will plot data after this starting point
 end
 
 % Read configuration data:
@@ -58,12 +61,12 @@ obj.Meta_Data.paths.data = dirs.raw_incoming; %Need a place to save Meta_Data (w
 dir_has_log = dir(fullfile(dirs.raw_incoming,'Log*.csv'));
 dir_has_config = dir(fullfile(dirs.raw_incoming,'*config*'));
 
-                    spltpath=strsplit(path,':');
-                    epsilib_path=spltpath{~cellfun(@isempty, ...
-                        cellfun(@(x) ...
-                        strfind(x,'epsilib'),spltpath, ...
-                        'UniformOutput',false))};
-                    obj.Meta_Data.paths.process_library=fileparts(epsilib_path);
+spltpath=strsplit(path,':');
+epsilib_path=spltpath{~cellfun(@isempty, ...
+    cellfun(@(x) ...
+    strfind(x,'epsilib'),spltpath, ...
+    'UniformOutput',false))};
+obj.Meta_Data.paths.process_library=fileparts(epsilib_path);
 
 if ~isempty(dir_has_log) %if there is a log file...
     
@@ -91,6 +94,8 @@ elseif ~isempty(dir_has_config) %if there is a config file...
     end
     % Fill Meta Data from setup data
     try
+        obj.Meta_Data.CTD.SN = CTD_SN;
+        setup.S49.sn = CTD_SN;
         obj.Meta_Data = epsiSetup_fill_meta_data(obj.Meta_Data,setup);
         
         fprintf('Meta_Data.paths.process_library is %s \n',obj.Meta_Data.paths.process_library);
@@ -121,8 +126,10 @@ else %if there is no log file or config file, look for config data inside the ra
     end
     % Fill Meta Data from setup data
     try
+        obj.Meta_Data.CTD.SN = CTD_SN;
+        setup.S49.sn = CTD_SN;
         obj.Meta_Data = epsiSetup_fill_meta_data(obj.Meta_Data,setup);
-
+        
     catch err
         for j = 1:length(err.stack)
             disp([num2str(j) ' ' err.stack(j).name ' ' num2str(err.stack(j).line)]);
@@ -140,6 +147,8 @@ obj.epsi = [];
 obj = epsiSetup_make_empty_structure(obj);
 obj.plot_properties = epsiSetup_set_plot_properties;
 % Create Meta_Data
+obj.Meta_Data.CTD.SN = CTD_SN;
+setup.S49.sn = CTD_SN;
 obj.Meta_Data = epsiSetup_fill_meta_data(obj.Meta_Data,setup);
 obj.Meta_Data = epsiSetup_read_MetaProcess(obj.Meta_Data,...
     fullfile(obj.Meta_Data.paths.process_library,'Meta_Data_Process','Meta_Data_Process_blt_2022.txt'));
