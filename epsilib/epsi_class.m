@@ -678,8 +678,9 @@ classdef epsi_class < handle
             end
             epsiPlot_epsi_ctd_alt_timeseries(obj,saveFig)
         end
-
-
+        function [ax] = f_plot_epsi_map_and_sections(obj,varargin)
+            [ax] = plot_epsi_map_and_sections(obj,varargin);
+        end
         function  [P11,f,noise,ax]=f_plot_spectra_at_tMid(obj,tmid,tscan,nSec,makeFig,saveFig,replaceData,ax)
             % Plots 30-sec timeseries from all channels and spectra from
             % user-defined tscan
