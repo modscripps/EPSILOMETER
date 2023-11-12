@@ -412,8 +412,8 @@ if makeFig
         plot(ax(1),time_dnum(idxSeg),a1,'Color',cols.a1)
         hold(ax(1),'on')
         plot(ax(1),time_dnum(idxSeg),a2,'Color',cols.a2)
-        plot(ax(1),time_dnum(idxScan),squeeze(data(5,1,:)),'Color',cols.a1,'linewidth',4)
-        plot(ax(1),time_dnum(idxScan),squeeze(data(6,1,:)),'Color',cols.a2,'linewidth',4)
+        %plot(ax(1),time_dnum(idxScan),squeeze(data(5,1,:)),'Color',cols.a1,'linewidth',4)
+        %plot(ax(1),time_dnum(idxScan),squeeze(data(6,1,:)),'Color',cols.a2,'linewidth',4)
         hold(ax(1),'off')
         
         
@@ -456,6 +456,7 @@ if makeFig
         for a=1:5
             datetick(ax(a),'x','HH:MM:SS','keeplimits')
         end
+        [ax(1:4).XTickLabel] = deal('');
         % shade the analyzed block
         % --------------------
         for a=1:4
@@ -530,8 +531,8 @@ if makeFig
         ax(6).YLim = [0.9*def_noise(24) max([t1m(:);t2m(:);s1m(:);s2m(:);a1m(:);a2m(:);a3m(:)])]; %NC changed because y-limits were never large enough
         ax(6).YLim = [0.9*def_noise(24) 1e-3];
         
-        title(ax(1),[Meta_Data.CTL.name '-' Meta_Data.CTL.rev '-' Meta_Data.CTL.SN '-' ...
-            Meta_Data.AFE.name '-' Meta_Data.AFE.rev '-' Meta_Data.AFE.SN],'fontsize',25)
+        %title(ax(1),[Meta_Data.CTL.name '-' Meta_Data.CTL.rev '-' Meta_Data.CTL.SN '-' ...
+            %Meta_Data.AFE.name '-' Meta_Data.AFE.rev '-' Meta_Data.AFE.SN],'fontsize',25)
         
         fig4.PaperPosition = [0 0 25 25];
         
