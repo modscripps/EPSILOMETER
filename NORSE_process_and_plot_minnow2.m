@@ -2,14 +2,14 @@
 % (this is the name of the directory where you saved the raw data)
 % ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 deployment_name = '1109_lab_tests';
-% ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-%% Serial numbers
-SBE = '0237';
-s1 = 115;
-s2 = 115;
-t1 = 115;
-t2 = 115;
+% Serial numbers
+sn.SBE = '0237';
+sn.s1 = 353;
+sn.s2 = 351;
+sn.t1 = 243;
+sn.t2 = 274;
+% ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 %% Set ranges
 % Set depth range for gridding
@@ -18,8 +18,8 @@ depth_range = [0 200];
 % Set axes limits for plotting
 limits.depth = [0 200];
 limits.lon = [-10 -2];
-limits.lat = [70 72];
-limits.temp = [0 10];
+limits.lat = [69 72];
+limits.temp = [0 6];
 limits.sal = [30 34];
 limits.epsilon = [-10 -6];
 limits.chi = [-10 -6];
@@ -29,7 +29,7 @@ limits.chi = [-10 -6];
 norse_meta_data = '/Volumes/Epsidrive/EPSILOMETER/Meta_Data_Process/MDP_norse2023.txt';
 
 % Set path to save figures
-fig_dir = '/Volumes/2023007019/DATA/Epsilometer/PLOTS';
+fig_dir = '/Volumes/2023007019/DATA/MOD_profiling/epsi/PLOTS';
 
 % Set path to raw data  directory (where you uploaded data)
 raw_dir = fullfile('/Volumes/Epsidrive/raw_data/',deployment_name);

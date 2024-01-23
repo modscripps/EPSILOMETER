@@ -18,7 +18,6 @@ function Meta_Data=fill_meta_data(Meta_Data,setup)
 %
 %  written by A. Le Boyer 10/22/2020
 
-
 % get setup field name.
 % used to fill up the Meta_Data fields
 setup_fields=fieldnames(setup);

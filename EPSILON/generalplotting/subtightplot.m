@@ -2,7 +2,7 @@ function h=subtightplot(m,n,p,gap,marg_h,marg_w,varargin)
 %function h=subtightplot(m,n,p,gap,marg_h,marg_w,varargin)
 %
 % Nicole's defaults
-%       gap = [0.05 0.05] (vertical, horizontal)
+%       gap = [0.02 0.01] (vertical, horizontal)
 %       marg_v = [0.12 0.07] (bottom, top)
 %       marg_h = [0.07 0.07] (left, right)
 %
@@ -26,7 +26,7 @@ function h=subtightplot(m,n,p,gap,marg_h,marg_w,varargin)
 %
 % Usage example: h=subtightplot((2,3,1:2,[0.5,0.2])
 
-if (nargin<4) || isempty(gap),    gap=[0.05 0.05];  end
+if (nargin<4) || isempty(gap),    gap=[0.02 0.005];  end
 if (nargin<5) || isempty(marg_h),  marg_h=[0.12 0.07];  end
 if (nargin<5) || isempty(marg_w),  marg_w=[0.07 0.07];  end
 if isscalar(gap),   gap(2)=gap;  end

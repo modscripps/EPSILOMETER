@@ -22,6 +22,11 @@ rawfileSuffix  = '.modraw';
 alt_angle_deg = 10;
 alt_dist_from_crashguard_ft = 5;
 alt_probe_dist_from_crashguard_in = 2.02;
+ctd_sn	     = '0057';
+s1_sn	     = '323';
+s2_sn        = '322';
+t1_sn        = '334';
+t2_sn        = '304';
 
 % dz = scan length in meters (for processing microstructure from profiles)
 % dt = scan length in seconds (for processing microstructure from timeseries)

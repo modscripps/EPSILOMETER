@@ -1,0 +1,53 @@
+latitude     = 71;
+dof          = 3;
+dof_coh      = 10;
+nfft         = 1024;
+nfftc        = floor(1024/3);
+Fs_ctd       = 16;
+ctd_fc       = 45;
+dz           = .5;
+dt           = 3;
+fc1          = 5;
+fc2          = 35;
+profs_nPoints 	= 32;
+profs_downLim 	= 0.025;
+profs_minLength = 10;
+Prmin = @(x) nanmin(x) + 0.2*range(x);
+Prmax = @(x) nanmin(x) + 0.8*range(x);
+userConfirmsProfiles = 1;
+adjustTemp = false;
+movmean_window_time = 10*(50e-3);
+multivariate   = 0;
+rawfileSuffix  = '.modraw';
+alt_angle_deg = 10;
+alt_dist_from_crashguard_ft = 5;
+alt_probe_dist_from_crashguard_in = 2.02;
+ctd_sn	     = '0133';
+s1_sn	     = '353';
+s2_sn        = '351';
+t1_sn        = '243';
+t2_sn        = '274';
+
+% dz = scan length in meters (for processing microstructure from profiles)
+% dt = scan length in seconds (for processing microstructure from timeseries)
+%
+% Options for picking out profiles
+% 	nPoints = Fs_ctd*2  = number of points to smooth pressure
+% 	downLim = 0.7*(fall speed / Fs_ctd) = cutoff speed the defines dropping/rising
+%	minLength = minimum profile length in meters
+%
+% Prmin and Prmax for calculating full-profile coherences
+%	Prmin = 20% of profile length
+%.      Prmax = 80% of profile length
+%
+% movmean_window_width comes in during depicting shear and temp step of mod_epsilometer_calc_turbulence_v2.m
+%	ALB Following the SCOR group recommendation
+%	I am assuming any impact between probes and stuff in the ocean is about
+%	50 ms = 50e-3 sec * 320Hz = 16 samples.
+%	I am removing any outliers that are above  3 times the standard deviation of a
+%	windows that is 10 * 16 samples. Arbitrarily using 10.
+% alt_
+% 	Altimeter options for mod_som_read_epsi_files_v4: The altimeter is angled at 10 degrees and is positioned 5 %       ft above the crashguard. The probes sit 2.02 inches behind the crash guard.
+%
+% alt_
+% 	Altimeter options for mod_som_read_epsi_files_v4: The altimeter is angled at 10 degrees and is positioned 5 %       ft above the crashguard. The probes sit 2.02 inches behind the crash guard.       

@@ -11,15 +11,16 @@ from threading import Thread
 import serial
 import time
 
-#tty.usbserial-FTFC08A8
-
-port_name="tty.usbserial-D308SKZ6"
-mission_name="SVALBARD"
+# -----------------------------------------------------------------------------------
+port_name="tty.usbserial-FT5953J6"
+mission_name="NORSE23"
+hours_ahead_of_gmt=1
 vehicle_name="minnow1"
 s1_SN="323"
 s2_SN="322"
-t1_SN="256"
+t1_SN="334"
 t2_SN="304"
+# -----------------------------------------------------------------------------------
 
 #ser_read = serial.Serial('/dev/tty.usbserial-FTXOY2MY',9600)  # open serial port
 #print(ser_read.name)         # check which port was really used
@@ -29,8 +30,11 @@ print('/dev/%s' % port_name)         # check which port was really used
 ser_write = serial.Serial("/dev/%s"% port_name,230400)   # open serial port
 print(ser_write.name)         # check which port was really used
 
+# Convert computer time to UTC
 
-utc_time=time.time()
+milliseconds_ahead_of_gmt=1000*3600*hours_ahead_of_gmt
+computer_time=time.time()
+utc_time=computer_time+hours_ahead_of_gmt
 
 str_cmd  = "time.set %i\r\n" % utc_time
 

@@ -41,7 +41,7 @@ function [data] = mod_som_read_epsi_files_v4(filename,Meta_Data)
 c3515 = 42.914;
 
 %% Open file and save contents as 'str'
-fprintf("Open %s \r\n",filename)
+fprintf("   Open %s \r\n",filename)
 fid = fopen(filename);
 fseek(fid,0,1);
 frewind(fid);
@@ -1447,7 +1447,6 @@ end %end apf
 %% Process APF data
 if (isempty(ind_apf2_start))
     no_data_types = [no_data_types,'apf2'];
-    disp('no apf2')
 else
     processed_data_types = [processed_data_types,'apf2'];
     %time, pressure, dpdt, epsilon, chi, avg_t, avg_s, avg_a
@@ -1460,7 +1459,6 @@ else
     ind_apf_stop=ind_apf2_stop;
     
     sampling_freq=160;
-    
     
     % Pre-allocate space for data
     apf.data.n_blocks           = numel(ind_apf_start); %Number of data blocks beginning with $EFE
@@ -1922,18 +1920,8 @@ else
 end %end loop if there is ttv data
 
 
-
-fprintf(['processed data for: ' repmat('%s ',1,length(processed_data_types)), '\n'], processed_data_types{:})
-fprintf(['no data for:        ' repmat('%s ',1,length(no_data_types)), '\n'], no_data_types{:})
-
-% Combine all data
-make data epsi ctd alt act vnav gps seg spec avgspec dissrate apf fluor ttv
-
-
-
-
-fprintf(['processed data for: ' repmat('%s ',1,length(processed_data_types)), '\n'], processed_data_types{:})
-fprintf(['no data for:        ' repmat('%s ',1,length(no_data_types)), '\n'], no_data_types{:})
+fprintf(['   processed data for: ' repmat('%s ',1,length(processed_data_types)), '\n'], processed_data_types{:})
+fprintf(['   no data for:        ' repmat('%s ',1,length(no_data_types)), '\n'], no_data_types{:})
 
 % Combine all data
 make data epsi ctd alt act vnav gps seg spec avgspec dissrate apf fluor ttv

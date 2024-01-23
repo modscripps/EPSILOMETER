@@ -4,24 +4,47 @@ function [ax] = plot_epsi_map_and_sections(obj,varargin)
 % Nicole Couto | November 2023
 
 %% Set axes limits
-if nargin<2
-    limits.depth = obj.plot_properties.limits.depth;
-    limits.lon = obj.plot_properties.limits.lon;
-    limits.lat = obj.plot_properties.limits.lat;
-    limits.temp = obj.plot_properties.limits.temp;
-    limits.sal = obj.plot_properties.limits.sal;
-    limits.epsilon = obj.plot_properties.limits.epsilon;
-    limits.chi = obj.plot_properties.limits.chi;
-else 
-    limits = varargin{1};
+if ~isempty(varargin) && length(varargin{1})==2
+    try
+        limits = varargin{1}{1};
+    catch
+        limits = varargin{1};
+    end
+    eps_probe = varargin{1}{2}(1);
+    chi_probe = varargin{1}{2}(2);
+elseif ~isempty(varargin) && length(varargin{1})==1
+    try
+        limits = varargin{1}{1};
+    catch
+        limits = varargin{1};
+    end
+    eps_probe = 1; %Default to epsi probe 1
+    chi_probe = 1; %Default to chi probe 1
+elseif nargin==1
+    eps_probe = 1; %Default to epsi probe 1
+    chi_probe = 1; %Default to chi probe 1
+    %limits.depth = obj.plot_properties.limits.depth;
+    %limits.lon = obj.plot_properties.limits.lon;
+    %limits.lat = obj.plot_properties.limits.lat;
+    %limits.temp = obj.plot_properties.limits.temp;
+    %limits.sal = obj.plot_properties.limits.sal;
+    %limits.epsilon = obj.plot_properties.limits.epsilon;
+    %limits.chi = obj.plot_properties.limits.chi;
 end
 
-%% Load the gridded profiles
-data=load(fullfile(obj.Meta_Data.paths.profiles,'griddedProfiles'));
-G = data.GRID;
+% Input can either be an epsi_class object or a GRID. Figure out which one it is.
+if ~isstruct(obj)
+    %% Load the gridded profiles
+    data=load(fullfile(obj.Meta_Data.paths.profiles,'griddedProfiles'));
+    G = data.GRID;
+elseif isstruct(obj)
+    G = obj;
+end
 
 %% Smooth bottom_depth, if you have  it
-G.bottom_depth=filloutliers(G.bottom_depth,'linear');
+if isfield(G,'bottom_depth')
+    G.bottom_depth=filloutliers(G.bottom_depth,'linear');
+end
 
 %%  Set up figure axes
 fig =  fullscreenfigure;
@@ -48,13 +71,15 @@ hold on
 contour(bathy.lon,bathy.lat,bathy.z,'k','levellist',0,'linewidth',4);
 
 % Add the profile locations
-scatter(G.longitude,G.latitude,60,G.dnum,'filled','markeredgecolor','none');
-ax(1).CLim = [nanmin(G.dnum),nanmax(G.dnum)];
-
-n_axes_map
+if isfield(G,'longitude')
+    scatter(G.longitude,G.latitude,60,G.dnum,'filled','markeredgecolor','none');
+    ax(1).CLim = [nanmin(G.dnum),nanmax(G.dnum)];
+    
+    n_axes_map
+end
 
 % Add date to the title
-title(['Begining ' datestr(nanmin(G.dnum),'dd-mmm-yyyy')])
+title(['Beginning ' datestr(nanmin(G.dnum),'dd-mmm-yyyy')])
 
 %% Plot time dots above the section plots, labeled with profile number
 axes(ax(6))
@@ -68,10 +93,10 @@ elseif length(G.dnum)>50
     profile_numbers = 10:10:length(G.dnum);
 end
 
-scatter(G.dnum,ones(length(G.dnum),1),100,G.dnum,'filled','markeredgecolor','none');
+scatter(G.dnum,ones(length(G.dnum),1),100,G.dnum,'v','filled','markeredgecolor','none');
 hold on
 for p=profile_numbers
-    text(G.dnum(p),2.5,num2str(p),'horizontalalignment','center');
+    text(G.dnum(p),2.5,num2str(G.profNum(p)),'horizontalalignment','center');
 end
 text(G.dnum(1),2.5,'Profile #','horizontalalignment','right');
 
@@ -99,18 +124,33 @@ colormap(ax(3),cmocean('haline'));
 %% Epsilon
 axes(ax(4))
 
-pcolorjw(G.dnum,G.z,log10(G.epsilon_final));
+switch eps_probe
+    case 1
+        pcolorjw(G.dnum,G.z,log10(G.epsilon_co1));
+        cb(4) = colorbar;
+        cb(4).Label.String = '\epsilon_1 (m^2 s^{-2})';
+    case 2
+        pcolorjw(G.dnum,G.z,log10(G.epsilon_co2));
+        cb(4) = colorbar;
+        cb(4).Label.String = '\epsilon_2 (m^2 s^{-2})';
+end
 ax(4).CLim = limits.epsilon;
-cb(4) = colorbar;
-cb(4).Label.String = '\epsilon (m^2 s^{-2})';
 colormap(ax(4),parula);
 
 %% Chi
 axes(ax(5))
-pcolorjw(G.dnum,G.z,log10(G.chi1));
+
+switch chi_probe
+    case 1
+        pcolorjw(G.dnum,G.z,log10(G.chi1));
+        cb(5) = colorbar;
+        cb(5).Label.String = '\chi_1 (K^2 s^{-1})';
+    case 2
+        pcolorjw(G.dnum,G.z,log10(G.chi2));
+        cb(5) = colorbar;
+        cb(5).Label.String = '\chi_2 (K^2 s^{-1})';
+end
 ax(5).CLim = limits.chi;
-cb(5) = colorbar;
-cb(5).Label.String = '\chi_1 (K^2 s^{-1})';
 colormap(ax(5),flipud(colorbrewer('Spectral')));
 
 %% Add density contours
@@ -122,14 +162,16 @@ dens_levels = round(dens_levels_0(1):mean(diff(dens_levels_1)):dens_levels_0(end
 for iAx=2:5
     axes(ax(iAx))
     hold on
-    [c,ch] = contour(G.dnum,G.z,G.sgth,'k','levellist',dens_levels);
+    [c,ch] = contour(G.dnum,G.z,real(G.sgth),'k','levellist',dens_levels);
     clabel(c,ch)
 end
 
 %% Add bathymetry if you have data for at least have the profiles
-if sum(~isnan(G.bottom_depth))>length(G.dnum)/2
-    for iAx=2:5
-        n_fill_bathy(G.dnum,G.bottom_depth);
+if isfield(G,'bottom_depth')
+    if sum(~isnan(G.bottom_depth))>length(G.dnum)/2
+        for iAx=2:5
+            n_fill_bathy(G.dnum,G.bottom_depth);
+        end
     end
 end
 
@@ -140,6 +182,7 @@ end
 
 % X-limits and labels
 % Adjust x-axes limits depending on how long the deployment is
+if 0 %Only works for later versions of Matlab
 if range(G.dnum)<=6/24 
     % Less than 6 hours, widen range to nearest 15 minutes
     limits.dnum = [round_time_AAA(G.dnum(1),'minute',15,'floor'),...
@@ -153,13 +196,21 @@ elseif range(G.dnum)>1
     limits.dnum = [round_time_AAA(G.dnum(1),'hour',1,'floor'),...
                    round_time_AAA(G.dnum(end),'hour',1,'ceil')];
 end
-[ax(2:5).XLim] = deal(limits.dnum);
+end
+limits.dnum = [nanmin(G.dnum),nanmax(G.dnum)];
+[ax(2:6).XLim] = deal(limits.dnum);
 
-for iAx=2:5
+for iAx=2:6
     datetick(ax(iAx),'x','keeplimits');  
 end
 [ax(2:4).XTickLabel] = deal('');
 
+
+drawnow
+ax(6).Position(3) = ax(2).Position(3);
+ax(6).XLim = ax(2).XLim;
+
 % Link x-axes
 lp = linkprop([ax(2:6)],'xlim');
-
+drawnow
+ax(6).Position(3) = ax(2).Position(3);

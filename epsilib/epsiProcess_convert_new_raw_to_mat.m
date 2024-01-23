@@ -98,7 +98,7 @@ while (n_items > 0)
     if isempty(i)
         error('MATLAB:epsiProcess_convert_new_raw_to_mat:wrongOption','Incorrect option specified: %s', varargin{index});
     end
-    
+
     switch i
         case 1 % noSync
             rSync = false;
@@ -169,8 +169,8 @@ if doFCTD
     end
 end
 
-%% rsync remote and local directories 
-% OR use this option to copy files from one big directory into individual 
+%% rsync remote and local directories
+% OR use this option to copy files from one big directory into individual
 % deployment directories
 if rSync
     % NC - added optional fileStr - find first file to start rsync
@@ -178,7 +178,7 @@ if rSync
         % List all the files in RawDir and find the first one that matches
         % suffixSearch
         raw_list = dir(fullfile(dirs.raw_incoming,suffixSearch));
-        
+
         % Identify the file you want
         names = {raw_list.name};
         times = datenum({raw_list.date});
@@ -193,11 +193,11 @@ if rSync
         ind = find(match,1,'first');
         first_file = fullfile(dirs.raw_incoming,names{ind});
         %end
-        
+
         % Workaround because rsync won't repeat copying a file
         %com = sprintf('/usr/bin/rsync -av  --include ''%s'' --exclude ''*'' %s %s',suffixSearch,RawDir,RawDirDuplicate);  %The exclude was useful before... but now it actually excludes everything. Leaving this commented in case I need it again
         %com = sprintf('/usr/bin/rsync -av  --include ''%s'' %s %s',suffixSearch,RawDir,RawDirDuplicate);  %NC - rsync only the files with the str_to_search and suffix
-        
+
         %     % Rsync the files to a directory for later profile processing
         %     if ~exist(fullfile(dirs.processing,'raw'),'dir')
         %         mkdir(fullfile(dirs.processing,'raw'));
@@ -206,7 +206,7 @@ if rSync
         %     fprintf(1,'Running: %s\n',com);
         %     unix(com);
         %     fprintf(1,'Done\n');
-        
+
         % Rsync the files to a directory specific to the deployment
         if ~exist(dirs.raw_copy,'dir')
             mkdir(dirs.raw_copy,'raw');
@@ -215,7 +215,7 @@ if rSync
         fprintf(1,'Running: %s\n',com);
         unix(com);
         fprintf(1,'Done\n');
-        
+
     end
 end
 
@@ -228,109 +228,117 @@ catch
     myASCIIfiles = dir(fullfile(dirs.raw_incoming, suffixSearch));
     raw_dir = dirs.raw_incoming;
 end
+
 if ~isempty(myASCIIfiles)
     for i=1:length(myASCIIfiles)
-        indSuffix = strfind(myASCIIfiles(i).name,suffixStr);
-        
-        base = myASCIIfiles(i).name(1:indSuffix-1);
-        myMATfile = dir(fullfile(dirs.mat, [base '.mat']));
-        
-        % If the mat file exists, load it to get the file size of the raw file
-        % that created it.
-        if ~isempty(myMATfile)
-            load(fullfile(myMATfile.folder,myMATfile.name),'raw_file_info')
-        end
-        
-        % Convert new data to .mat if:
-        %   (1) there is no .mat file to match the current raw file, or
-        %   (2) the current raw file size is larger than what is saved in mat data 'raw_file_size'
-        if ~isempty(myMATfile) && myASCIIfiles(i).bytes<=raw_file_info.bytes && i~=length(myASCIIfiles)
-            % If the MAT file exists and its saved raw file is equal to the ascii file, skip recoverting. All
-            % of the raw data has already been converted
-            % (DO NOTHING.)
-            
-            % % For debugging
-            % debug.base_name{i} = base;
-            % debug.rawraw_date(i) = myRAWRAWfile.datenum;
-            % debug.rawraw_bytes(i) = myRAWRAWfile.bytes;
-            % debug.raw_date(i) = myASCIIfiles(i).datenum;
-            % debug.raw_bytes(i) = myASCIIfiles(i).bytes;
-            % debug.mat_date(i) = myMATfile.datenum;
-            % debug.mat_bytes(i) = myMATfile.bytes;
-            % debug.conversion_happens(i) = 0;
-            % % End of debugging
-            
-            
-        elseif (~isempty(myMATfile) && myASCIIfiles(i).bytes>raw_file_info.bytes) || isempty(myMATfile)
-            % If the MAT file exists already but is older than the raw data
-            % file, it will be reconverted. OR, if the MAT file does not exist
-            % yet, it will be converted.
-            
-            % % For debugging
-            % debug.base_name{i} = base;
-            % debug.rawraw_date(i) = myRAWRAWfile.datenum;
-            % debug.rawraw_bytes(i) = myRAWRAWfile.bytes;
-            % debug.raw_date(i) = myASCIIfiles(i).datenum;
-            % debug.raw_bytes(i) = myASCIIfiles(i).bytes;
-            % if ~isempty(myMATfile)
-            % debug.mat_date(i) = myMATfile.datenum;
-            % debug.mat_bytes(i) = myMATfile.bytes;
-            % end
-            % debug.conversion_happens(i) = 1;
-            % % End for debugging
-            
-            fprintf(1,'Converting %s%s\n',dirs.mat,myMATfile.name);
-            
-            % Read file and save data in matData structure
-            filename = fullfile(raw_dir,myASCIIfiles(i).name);
-            matData = read_data_file(filename,Meta_Data,version);
-            
-            % Add raw_file_info to matData - NC added 8 Aug. 2022
-            matData.raw_file_info.bytes = myASCIIfiles(i).bytes;
-            
-            % Option to display file data
-            if display_file_data_flag
-                display_file_data(myASCIIfiles,i,matData)
+        % Sometimes you end up with hidden files if you're copying/pasting files.
+        % Don't include those in myASCIIfiles
+        if strcmp(myASCIIfiles(i).name(1),'.')
+            %do nothing if filename begins with '.'
+        else
+            indSuffix = strfind(myASCIIfiles(i).name,suffixStr);
+
+            base = myASCIIfiles(i).name(1:indSuffix-1);
+            myMATfile = dir(fullfile(dirs.mat, [base '.mat']));
+
+            % If the mat file exists, load it to get the file size of the raw file
+            % that created it.
+            if ~isempty(myMATfile)
+                load(fullfile(myMATfile.folder,myMATfile.name),'raw_file_info')
             end
-            
-            % Save data in .mat file
-            save(fullfile(MatDir,base),'-struct','matData')
-            fprintf(1,'%s: Wrote  %s/%s.mat\n',datestr(now,'YY.mm.dd HH:MM:SS'),MatDir,base);
-            
-            %Empty contents of matData structure
-            use matData
-            
-            % Calculate microstructure data - NC added 16 May 2022
-            if calc_micro
-                matData.micro = epsiProcess_calc_turbulence(Meta_Data,matData,0);
+
+            % Convert new data to .mat if:
+            %   (1) there is no .mat file to match the current raw file, or
+            %   (2) the current raw file size is larger than what is saved in mat data 'raw_file_size'
+            if ~isempty(myMATfile) && myASCIIfiles(i).bytes<=raw_file_info.bytes && i~=length(myASCIIfiles)
+                % If the MAT file exists and its saved raw file is equal to the ascii file, skip recoverting. All
+                % of the raw data has already been converted
+                % (DO NOTHING.)
+
+                % % For debugging
+                % debug.base_name{i} = base;
+                % debug.rawraw_date(i) = myRAWRAWfile.datenum;
+                % debug.rawraw_bytes(i) = myRAWRAWfile.bytes;
+                % debug.raw_date(i) = myASCIIfiles(i).datenum;
+                % debug.raw_bytes(i) = myASCIIfiles(i).bytes;
+                % debug.mat_date(i) = myMATfile.datenum;
+                % debug.mat_bytes(i) = myMATfile.bytes;
+                % debug.conversion_happens(i) = 0;
+                % % End of debugging
+
+
+            elseif (~isempty(myMATfile) && myASCIIfiles(i).bytes>raw_file_info.bytes) || isempty(myMATfile)
+                % If the MAT file exists already but is older than the raw data
+                % file, it will be reconverted. OR, if the MAT file does not exist
+                % yet, it will be converted.
+
+                % % For debugging
+                % debug.base_name{i} = base;
+                % debug.rawraw_date(i) = myRAWRAWfile.datenum;
+                % debug.rawraw_bytes(i) = myRAWRAWfile.bytes;
+                % debug.raw_date(i) = myASCIIfiles(i).datenum;
+                % debug.raw_bytes(i) = myASCIIfiles(i).bytes;
+                % if ~isempty(myMATfile)
+                % debug.mat_date(i) = myMATfile.datenum;
+                % debug.mat_bytes(i) = myMATfile.bytes;
+                % end
+                % debug.conversion_happens(i) = 1;
+                % % End for debugging
+
+                %fprintf(1,'Converting %s%s\n',dirs.mat,myMATfile.name);
+                fprintf(1,'%s%s --> %s.mat\n', base,suffixStr,base')
+
+                % Read file and save data in matData structure
+                filename = fullfile(raw_dir,myASCIIfiles(i).name);
+                matData = read_data_file(filename,Meta_Data,version);
+
+                % Add raw_file_info to matData - NC added 8 Aug. 2022
+                matData.raw_file_info.bytes = myASCIIfiles(i).bytes;
+
+                % Option to display file data
+                if display_file_data_flag
+                    display_file_data(myASCIIfiles,i,matData)
+                end
+
+                % Save data in .mat file
                 save(fullfile(MatDir,base),'-struct','matData')
-            end
-            
-            % Update the .mat file time index
-            if ~isempty(epsi) && isfield(epsi,'time_s')
-                epsiProcess_update_TimeIndex(MatDir,base,epsi);
-            elseif isempty(epsi) &&  ~isempty(ctd) && isfield(ctd,'time_s') %For the case where the is no epsi data, but there is ctd data
-                epsiProcess_update_TimeIndex(MatDir,base,ctd);
-            end
-            
-            % Update pressure timeseries
-            if ~isempty(ctd) && isfield(ctd,'dnum')
-                epsiProcess_update_PressureTimeseries(Meta_Data,MatDir,ctd,Meta_Data.PROCESS.profile_dir)
-            end
-            
-            % Save file for FCTD Format %%%%%% (Bethan 20 June 2021)
-            if doFCTD && ~isempty(ctd) && isfield(ctd,'time_s')
-                % Make FCTD .mat data and save it in cruise-long fctd
-                % directory
-                FCTD = make_FCTD_mat(matData,dirs.fctd_cruise,base,cruise_specifics);
-                
-                % Also save it in deployment fctd directory
-                save(fullfile(dirs.fctd_deployment,base),'FCTD');
-            end %end if doFCTD
-            
-        end %end if the data should be converted
+                fprintf(1,'%s: Wrote  %s.mat\n',datestr(now,'YY.mm.dd HH:MM:SS'),base);
+
+                %Empty contents of matData structure
+                use matData
+
+                % Calculate microstructure data - NC added 16 May 2022
+                if calc_micro
+                    matData.micro = epsiProcess_calc_turbulence(Meta_Data,matData,0);
+                    save(fullfile(MatDir,base),'-struct','matData')
+                end
+
+                % Update the .mat file time index
+                if ~isempty(epsi) && isfield(epsi,'time_s')
+                    epsiProcess_update_TimeIndex(MatDir,base,epsi);
+                elseif isempty(epsi) &&  ~isempty(ctd) && isfield(ctd,'time_s') %For the case where the is no epsi data, but there is ctd data
+                    epsiProcess_update_TimeIndex(MatDir,base,ctd);
+                end
+
+                % Update pressure timeseries
+                if ~isempty(ctd) && isfield(ctd,'dnum')
+                    epsiProcess_update_PressureTimeseries(Meta_Data,MatDir,ctd,Meta_Data.PROCESS.profile_dir)
+                end
+
+                % Save file for FCTD Format %%%%%% (Bethan 20 June 2021)
+                if doFCTD && ~isempty(ctd) && isfield(ctd,'time_s')
+                    % Make FCTD .mat data and save it in cruise-long fctd
+                    % directory
+                    FCTD = make_FCTD_mat(matData,dirs.fctd_cruise,base,cruise_specifics);
+
+                    % Also save it in deployment fctd directory
+                    save(fullfile(dirs.fctd_deployment,base),'FCTD');
+                end %end if doFCTD
+
+            end %end if the data should be converted
+        end %end if name of file does not begin with '.'
     end %end loop through files
-    
+
     %eval(['save ' fullfile('~/Desktop',strrep(strrep(datestr(now),':','_'),' ','_')) ' debug'])
 end %end if there are files
 
@@ -381,11 +389,11 @@ switch version
         alt = [];
         vnav = [];
         gps = [];
-        
+
         t0 = Meta_Data.starttime;
         epsi.time_s=epsi.EPSInbsample/Meta_Data.PROCESS.Fs_epsi;
         ctd.time_s=ctd.Aux1Stamp/Meta_Data.PROCESS.Fs_epsi;
-        
+
         if (t0==0)
             epsi.dnum = epsi.time;
             ctd.dnum = ctd.time;
@@ -393,7 +401,7 @@ switch version
             ctd.dnum = ctd.time_s/86400 +t0;
             epsi.dnum = epsi.time_s/86400 +t0;
         end
-        
+
         % Add extra ctd variables
         % Define a constant for salinity calculation
         c3515 = 42.914;
@@ -401,7 +409,7 @@ switch version
         ctd.th   = sw_ptmp(ctd.S,ctd.T,ctd.P,0);
         ctd.sgth  = sw_pden(ctd.S,ctd.T,ctd.P,0);
         ctd.dPdt = [0; diff(ctd.P)./diff(ctd.time_s)];
-        
+
         % NC 17 July 2021 - added ctd.z and ctd.dzdt.
         % get_scan_spectra.m will use dzdt to define fall speed w.
         if ~isfield(Meta_Data.PROCESS,'latitude')
@@ -412,7 +420,7 @@ switch version
             ctd.z    = sw_dpth(ctd.P,Meta_Data.PROCESS.latitude);
             ctd.dzdt = [0; diff(ctd.z)./diff(ctd.time_s)];
         end
-        
+
         matData.epsi = epsi;
         matData.ctd = ctd;
 end

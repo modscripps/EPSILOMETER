@@ -101,9 +101,12 @@ xlabel(ax(a),'\chi','fontsize',strfontsize,'fontname','time new roman')
 % Axes 3
 a=3;
 axes(ax(3))
-[ax1,h(1),h(2)]=plotxx(T,Profile.ctd.P, ...
-                       S,Profile.ctd.P, ...
-                       {'T [˚C]','S [psu]'},{'',''});
+ax1(1) = axes('position',ax(3).Position);
+h(1) = plot(T,Profile.ctd.P);
+ax1(2) = axes('position',ax(3).Position);
+ax1(2).Color = 'none';
+h(2) = plot(S,Profile.ctd.P);
+ax1(1).XAxisLocation = 'top';
 h(1).Color = obj.plot_properties.Colors.T;
 h(2).Color = obj.plot_properties.Colors.S;
 axis(ax(a),'ij')
