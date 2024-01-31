@@ -9,7 +9,7 @@ function [PT] = epsiProcess_get_profiles_from_PressureTimeseries(PressureTimeser
 % OPTIONAL INPUTS
 % 'downLim','threshold','up','down','both'
 
-plotFig = 0;
+plotFig = 1;
 PT = PressureTimeseries;
 p = PT.P;
 % use nPoints median filter to smooth out the pressure field
@@ -23,8 +23,8 @@ p = PT.P;
 % ending. If you do that, you don't need to smooth the velocity data over
 % much time. 32 points = 2 seconds, which can be significant at the bottom
 % of the profile. Let's say nPoints = 16 for now.
-numSec = 2;
-nPoints = 16;
+        numSec = 2;
+        nPoints = 16;
 n_5sec = round(numSec/seconds(days(mode(diff(PT.dnum)))));
 p_smoothed = conv2(p,ones(nPoints,1)/nPoints,'same');
 for ii = 1:size(p_smoothed,1)-n_5sec
@@ -39,7 +39,7 @@ dp = interp1(linspace(0,1,length(dp_mid)),dp_mid,linspace(0,1,length(p_smoothed)
 %smaller than the fall rate, because you're detecting when the profile
 %starts and it will take a short time to get up to speed.
 downLim = Meta_Data.PROCESS.profs_downLim;
-downLim = 0.1;
+    downLim = 0.1;
 downCast = true;
 minLength = Meta_Data.PROCESS.profs_minLength;
 
@@ -47,7 +47,7 @@ persistent argsNameToCheck;
 if isempty(argsNameToCheck)
     argsNameToCheck = {'downLim','threshold','up','down','both'};
 end
-%
+% 
 % index = 1;
 % n_items = nargin-2;
 % while (n_items > 0)
@@ -56,14 +56,14 @@ end
 %     if isempty(i)
 %         error('MATLAB:epsiProcess_get_profiles_from_PressureTimeseries:wrongOption','Incorrect option specified: %s',varargin{index});
 %     end
-%
+% 
 %     switch i
 %         case 1 % downLim
 %             if n_items == 1
 %                 error('MATLAB:epsiProcess_get_profiles_from_PressureTimeseries:missingArgs','Missing input arguments');
 %             end
 %             downLim = varargin{index+1};
-%             if downLim == 0
+%             if downLim == 0 
 %                 error('MATLAB:epsiProcess_get_profiles_from_PressureTimeseries:downLim0Err','The threshold cannot be zero!');
 %             end
 %             index = index +2;
@@ -73,19 +73,19 @@ end
 %                 error('MATLAB:epsiProcess_get_profiles_from_PressureTimeseries:missingArgs','Missing input arguments');
 %             end
 %             downLim = varargin{index+1};
-%             if downLim == 0
+%             if downLim == 0 
 %                 error('MATLAB:epsiProcess_get_profiles_from_PressureTimeseries:downLim0Err','The threshold cannot be zero!');
 %             end
 %             index = index +2;
 %             n_items = n_items-2;
 %         case 3 % up
 %             downCast = false;
-%
+% 
 %             index = index + 1;
 %             n_items = n_items - 1;
 %         case 4 % down
 %             downCast = true;
-%
+% 
 %             index = index + 1;
 %             n_items = n_items - 1;
 %     end
@@ -94,12 +94,12 @@ end
 %defining the threshold for going up and down
 if downCast && downLim < 0
     downLim = -downLim;
-    % elseif ~downCast && downLim > 0% going up
-    %     downLim = -downLim;
+% elseif ~downCast && downLim > 0% going up
+%     downLim = -downLim;
 end
 
 if downCast
-    dn = find(dp>downLim);
+    dn = find(dp>downLim);  
 else
     dn = find(dp<downLim);
 end
@@ -140,17 +140,17 @@ end
 dn = [0, dn];
 
 % find jumps in indices to indicate a start of a profile
-startdown = dn(find(diff(dn)>1)+1);
+startdown = dn(find(diff(dn)>1)+1); 
 
 
 if plotFig
-    ax(1).NextPlot = 'add';
-    plot(ax(1),PressureTimeseries.dnum(startdown),PressureTimeseries.P(startdown),'go','displayname','start downcast')
+ax(1).NextPlot = 'add';
+plot(ax(1),PressureTimeseries.dnum(startdown),PressureTimeseries.P(startdown),'go','displayname','start downcast')
 
-    ax(2).NextPlot = 'add';
-    plot(ax(2),dnum(startdown),dp(startdown),'go','displayname','start downcast')
+ax(2).NextPlot = 'add';
+plot(ax(2),dnum(startdown),dp(startdown),'go','displayname','start downcast')
 
-    linkprop([ax(:)],'xlim')
+linkprop([ax(:)],'xlim')
 end
 
 if isempty(startdown)
@@ -177,24 +177,24 @@ startprof = startdown + n_5sec; %Adjust startdown
 % containing profile numbers.
 enddown = nan(size(startdown,1),size(startdown,2));
 for i=1:(length(startdown)-1)
-    in = intersect(startdown(i):startdown(i+1)-1,dn);
+    in = intersect(startdown(i):startdown(i+1)-1,dn);  
     % All the up profiles are 0. All the down profiles are 1.
     PT.drop(in) = 1;
-    enddown(i) = in(end);
+    enddown(i) = in(end);  
 end
-enddown(i+1)=dn(end);
+enddown(i+1)=dn(end); 
 % Adjust enddown
 endprof = enddown + round(n_5sec/2);
 
 
 if plotFig
-    ax(1).NextPlot = 'add';
-    plot(ax(1),PressureTimeseries.dnum(endprof),PressureTimeseries.P(endprof),'ro','displayname','end downcast')
+ax(1).NextPlot = 'add';
+plot(ax(1),PressureTimeseries.dnum(endprof),PressureTimeseries.P(endprof),'ro','displayname','end downcast')
 
-    ax(2).NextPlot = 'add';
-    plot(ax(2),dnum(endprof),dp(endprof),'ro','displayname','end downcast')
+ax(2).NextPlot = 'add';
+plot(ax(2),dnum(endprof),dp(endprof),'ro','displayname','end downcast')
 
-    linkprop([ax(:)],'xlim')
+linkprop([ax(:)],'xlim')
 end
 
 
@@ -208,37 +208,37 @@ PT.endprof = PT.endprof(longEnough);
 
 
 if plotFig
-    ax(1).NextPlot = 'add';
-    plot(ax(1),PressureTimeseries.dnum(startprof(~longEnough)),PressureTimeseries.P(startprof(~longEnough)),'xk','displayname','too short')
-    plot(ax(1),PressureTimeseries.dnum(endprof(~longEnough)),PressureTimeseries.P(endprof(~longEnough)),'xk','displayname','too short')
+ax(1).NextPlot = 'add';
+plot(ax(1),PressureTimeseries.dnum(startprof(~longEnough)),PressureTimeseries.P(startprof(~longEnough)),'xk','displayname','too short')
+plot(ax(1),PressureTimeseries.dnum(endprof(~longEnough)),PressureTimeseries.P(endprof(~longEnough)),'xk','displayname','too short')
 
-    ax(2).NextPlot = 'add';
-    plot(ax(2),dnum(startprof(~longEnough)),dp(startprof(~longEnough)),'xk','displayname','too short')
-    plot(ax(2),dnum(endprof(~longEnough)),dp(endprof(~longEnough)),'xk','displayname','too short')
+ax(2).NextPlot = 'add';
+plot(ax(2),dnum(startprof(~longEnough)),dp(startprof(~longEnough)),'xk','displayname','too short')
+plot(ax(2),dnum(endprof(~longEnough)),dp(endprof(~longEnough)),'xk','displayname','too short')
 
-    linkprop([ax(:)],'xlim')
+linkprop([ax(:)],'xlim')
 end
 
 
 
 if plotFig
     figure
-    ax(1) = subplot(2,1,1);
+     ax(1) = subplot(2,1,1);
     plot(PressureTimeseries.dnum,p_smoothed,'b','displayname','smoothed P');
-    ax(1).NextPlot = 'add';
+ax(1).NextPlot = 'add';
 
-    plot(ax(1),PressureTimeseries.dnum(startprof(longEnough)),PressureTimeseries.P(startprof(longEnough)),'xg','displayname','too short')
-    plot(ax(1),PressureTimeseries.dnum(endprof(longEnough)),PressureTimeseries.P(endprof(longEnough)),'xr','displayname','too short')
+plot(ax(1),PressureTimeseries.dnum(startprof(longEnough)),PressureTimeseries.P(startprof(longEnough)),'xg','displayname','too short')
+plot(ax(1),PressureTimeseries.dnum(endprof(longEnough)),PressureTimeseries.P(endprof(longEnough)),'xr','displayname','too short')
 
-    ax(2) = subplot(2,1,2);
-    plot(dnum,dp,'b')
-    ax(2).NextPlot = 'add';
+ ax(2) = subplot(2,1,1);
+     plot(dnum,dp,'b')
+ax(2).NextPlot = 'add';
 
-    plot(ax(2),dnum(startprof(longEnough)),dp(startprof(longEnough)),'xg','displayname','too short')
+plot(ax(2),dnum(startprof(longEnough)),dp(startprof(longEnough)),'xg','displayname','too short')
 
-    plot(ax(2),dnum(endprof(longEnough)),dp(endprof(longEnough)),'xr','displayname','too short')
+plot(ax(2),dnum(endprof(longEnough)),dp(endprof(longEnough)),'xr','displayname','too short')
 
-    linkprop([ax(:)],'xlim')
+linkprop([ax(:)],'xlim')
 end
 
 

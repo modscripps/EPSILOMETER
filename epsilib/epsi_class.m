@@ -230,11 +230,14 @@ classdef epsi_class < handle
 
                         % NC added on NORSE 2023 - add serial numbers
                         % defined in Meta_Data_Process file
+                        try
                         setup.S49.sn = obj.Meta_Data.PROCESS.ctd_sn;
                         setup.EFE.sensors{1}.sn = obj.Meta_Data.PROCESS.t1_sn;
                         setup.EFE.sensors{2}.sn = obj.Meta_Data.PROCESS.t2_sn;
                         setup.EFE.sensors{3}.sn = obj.Meta_Data.PROCESS.s1_sn;
                         setup.EFE.sensors{4}.sn = obj.Meta_Data.PROCESS.s2_sn;
+                        catch
+                        end
 
                         % Fill Meta Data from setup data
                         try
@@ -258,7 +261,7 @@ classdef epsi_class < handle
                         try
                             setupfile=dir(fullfile(obj.Meta_Data.paths.raw_data,...
                                 ['*' obj.Meta_Data.rawfileSuffix]));
-                            setup=mod_som_read_setup_from_raw(fullfile(setupfile(1).folder,setupfile(1).name));
+                            setup=mod_som_read_setup_from_raw(fullfile(setupfile(5).folder,setupfile(5).name));
                         catch err
                             for j = 1:length(err.stack)
                                 disp([num2str(j) ' ' err.stack(j).name ' ' num2str(err.stack(j).line)]);
@@ -272,11 +275,14 @@ classdef epsi_class < handle
 
                         % NC added on NORSE 2023 - add serial numbers
                         % defined in Meta_Data_Process file
+                        try
                         setup.S49.sn = obj.Meta_Data.PROCESS.ctd_sn;
                         setup.EFE.sensors{1}.sn = obj.Meta_Data.PROCESS.t1_sn;
                         setup.EFE.sensors{2}.sn = obj.Meta_Data.PROCESS.t2_sn;
                         setup.EFE.sensors{3}.sn = obj.Meta_Data.PROCESS.s1_sn;
                         setup.EFE.sensors{4}.sn = obj.Meta_Data.PROCESS.s2_sn;
+                        catch
+                        end
 
                         % Fill Meta Data from setup data
                         try
