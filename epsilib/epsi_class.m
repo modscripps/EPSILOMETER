@@ -214,11 +214,11 @@ classdef epsi_class < handle
 
                     elseif ~isempty(dir_has_config) %if there is a config file...
                         try
-                        % Sometimes there is a hidden file
-                        % '._bench_config'. Get rid of that if it's there.
-                        % You can just use dir_has_config(end).name and
-                        % that will always take the last file in that
-                        % directory that matches '*config*'
+                            % Sometimes there is a hidden file
+                            % '._bench_config'. Get rid of that if it's there.
+                            % You can just use dir_has_config(end).name and
+                            % that will always take the last file in that
+                            % directory that matches '*config*'
                             setup=mod_som_read_setup_from_config(dir_has_config(end).name);
                         catch err
                             for j = 1:length(err.stack)
@@ -231,11 +231,11 @@ classdef epsi_class < handle
                         % NC added on NORSE 2023 - add serial numbers
                         % defined in Meta_Data_Process file
                         try
-                        setup.S49.sn = obj.Meta_Data.PROCESS.ctd_sn;
-                        setup.EFE.sensors{1}.sn = obj.Meta_Data.PROCESS.t1_sn;
-                        setup.EFE.sensors{2}.sn = obj.Meta_Data.PROCESS.t2_sn;
-                        setup.EFE.sensors{3}.sn = obj.Meta_Data.PROCESS.s1_sn;
-                        setup.EFE.sensors{4}.sn = obj.Meta_Data.PROCESS.s2_sn;
+                            setup.S49.sn = obj.Meta_Data.PROCESS.ctd_sn;
+                            setup.EFE.sensors{1}.sn = obj.Meta_Data.PROCESS.t1_sn;
+                            setup.EFE.sensors{2}.sn = obj.Meta_Data.PROCESS.t2_sn;
+                            setup.EFE.sensors{3}.sn = obj.Meta_Data.PROCESS.s1_sn;
+                            setup.EFE.sensors{4}.sn = obj.Meta_Data.PROCESS.s2_sn;
                         catch
                         end
 
@@ -270,17 +270,27 @@ classdef epsi_class < handle
                                 'this is often because mod_som_read_setup_from raw does not '...
                                 'have the correct offsets and lengths. When changes are made on '...
                                 'the hardware side, they have to be made here too.'])
-                            return
+
+                            % Copy bench_config to data directory
+                            sourceFile = fullfile(obj.Meta_Data.paths.process_library,'config_files','bench_config');
+                            destinationDir = obj.Meta_Data.paths.data;
+                            copyfile(sourceFile, destinationDir);
+
+                            % Read setup data from bench_config
+                            dir_has_config = dir(fullfile(data_path,'*config*'));
+                            setup=mod_som_read_setup_from_config(dir_has_config.name);
+
+                            fprintf('Copied bench_config to data directory. \n')
                         end
 
                         % NC added on NORSE 2023 - add serial numbers
                         % defined in Meta_Data_Process file
                         try
-                        setup.S49.sn = obj.Meta_Data.PROCESS.ctd_sn;
-                        setup.EFE.sensors{1}.sn = obj.Meta_Data.PROCESS.t1_sn;
-                        setup.EFE.sensors{2}.sn = obj.Meta_Data.PROCESS.t2_sn;
-                        setup.EFE.sensors{3}.sn = obj.Meta_Data.PROCESS.s1_sn;
-                        setup.EFE.sensors{4}.sn = obj.Meta_Data.PROCESS.s2_sn;
+                            setup.S49.sn = obj.Meta_Data.PROCESS.ctd_sn;
+                            setup.EFE.sensors{1}.sn = obj.Meta_Data.PROCESS.t1_sn;
+                            setup.EFE.sensors{2}.sn = obj.Meta_Data.PROCESS.t2_sn;
+                            setup.EFE.sensors{3}.sn = obj.Meta_Data.PROCESS.s1_sn;
+                            setup.EFE.sensors{4}.sn = obj.Meta_Data.PROCESS.s2_sn;
                         catch
                         end
 
@@ -306,11 +316,14 @@ classdef epsi_class < handle
 
                     % NC added on NORSE 2023 - add serial numbers
                     % defined in Meta_Data_Process file
-                    setup.S49.sn = obj.Meta_Data.PROCESS.ctd_sn;
-                    setup.EFE.sensors{1}.sn = obj.Meta_Data.PROCESS.t1_sn;
-                    setup.EFE.sensors{2}.sn = obj.Meta_Data.PROCESS.t2_sn;
-                    setup.EFE.sensors{3}.sn = obj.Meta_Data.PROCESS.s1_sn;
-                    setup.EFE.sensors{4}.sn = obj.Meta_Data.PROCESS.s2_sn;
+                    try
+                        setup.S49.sn = obj.Meta_Data.PROCESS.ctd_sn;
+                        setup.EFE.sensors{1}.sn = obj.Meta_Data.PROCESS.t1_sn;
+                        setup.EFE.sensors{2}.sn = obj.Meta_Data.PROCESS.t2_sn;
+                        setup.EFE.sensors{3}.sn = obj.Meta_Data.PROCESS.s1_sn;
+                        setup.EFE.sensors{4}.sn = obj.Meta_Data.PROCESS.s2_sn;
+                    catch
+                    end
 
                     obj.Meta_Data = epsiSetup_set_epsi_paths(obj.Meta_Data);
                     obj.Meta_Data = epsiSetup_get_raw_suffix(obj.Meta_Data);
