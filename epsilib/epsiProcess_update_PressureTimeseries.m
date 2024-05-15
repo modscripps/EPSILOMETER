@@ -39,7 +39,7 @@ elseif exist(fullfile(dirname, 'PressureTimeseries.mat'),'file')
 end
 
 % Define (or redefine) the upcasts and downcasts
-[PressureTimeseries] = epsiProcess_get_profiles_from_PressureTimeseries(PressureTimeseries,Meta_Data,profile_dir);
+[PressureTimeseries] = epsiProcess_get_profiles_from_PressureTimeseries(PressureTimeseries,Meta_Data);
 save(fullfile(dirname, 'PressureTimeseries.mat'),'PressureTimeseries');
 
 end
