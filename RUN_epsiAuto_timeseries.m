@@ -24,10 +24,14 @@
 instrument = 'epsi';
 
 % These probably will be the same for the whole cruise
-input_struct.raw_dir = '/Users/Shared/EPSI_PROCESSING/Realtime_RAW';
-input_struct.Meta_Data_process_file = 'Volumes/Software_TFO2023/EPSILOMETER/Meta_Data_Process/MDP_tfo_2023.txt';
+input_struct.raw_dir = '/Users/Shared/EPSI_PROCESSING/ASTRAL2024/Realtime_RAW/';
+input_struct.Meta_Data_process_file = '/Volumes/Software_ASTRAL2024/EPSILOMETER/Meta_Data_Process/MDP_astral_2024.txt';
 input_struct.refresh_time_sec = 2;
 
+% Set command window color
+set_window_color('yellow')
+
+% Run the realtime plotting script on a timer
 switch instrument
     case 'epsi'
         epsiAuto_timeseries
