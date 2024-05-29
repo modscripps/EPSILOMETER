@@ -170,53 +170,57 @@ if ind_ctdscan(1)>0 && ...
                 scan.(currChannel)=Profile.epsi.(currChannel)(ind_scan);
             case {'s1_volt','s2_volt'}
                 scan.(currChannel)=Profile.epsi.(currChannel)(ind_scan); % time series in m.s^{-2}
-                % despike
-                Profile.Meta_Data.PROCESS.movmean_window_time=.5;
-                Fc=.1/Fs_epsi/2; % cutoff freq at .1 Hz (high pass of the charga amp)
-                [B,A]=cheby2(1,20,Fc,'high');
-                data1=diff(scan.(currChannel));
-                data1=filtfilt(B,A,data1);
-                data1=abs(data1);
 
-
-                Fs=320;
-                Fc=50/Fs/2; % cutoff freq at 20 Hz
-                [B,A]=cheby2(3,20,Fc,'low');
-                data2=filtfilt(B,A,data1);
-
-                scan2=abs(data1./data2);
-                rms_scan2=rms(scan2);
-                idx_outlier=find(scan2>5);
-                %                 idx_outlier=find(scan2>rms_scan2);
-                scan3=scan2;
-
-                N=10;%samples or 120 ms (40/Fs)
-                for i=1:length(idx_outlier)
-                    idx_win=idx_outlier(i)+(-N/2:N);
-                    idx_win=idx_win(idx_win>0);
-                    idx_win=idx_win(idx_win<length(data1));
-                    scan3(idx_win)= nan;
-                end
-
-                scan.(currChannel)(isnan(scan3))=nan;
-                scan.(currChannel)=...
-                    fillmissing(scan.(currChannel),'linear');
-
-                if 1==0
-                    close all
-                    ax(1)=subplot(311);
-                    plot(Profile.epsi.(currChannel)(ind_scan));
-                    hold on;
-                    plot(scan.(currChannel))
-                    ax(2)=subplot(312);
-                    plot(data1);
-                    hold on;
-                    plot(data2)
-                    title(currChannel)
-                    ax(3)=subplot(313);plot(scan2);hold on;plot(scan2.*0+5,'k--')
-                    linkaxes(ax,'x')
-                    pause
-                end
+                % THIS DESPIKING DOESN'T WORK - ACTUALLY MADE THINGS WORSE
+                % ON ASTRAL. COMMENTING OUT UNTIL WE FIND SOMETHING BETTER
+                %
+                % % despike
+                % Profile.Meta_Data.PROCESS.movmean_window_time=.5;
+                % Fc=.1/Fs_epsi/2; % cutoff freq at .1 Hz (high pass of the charga amp)
+                % [B,A]=cheby2(1,20,Fc,'high');
+                % data1=diff(scan.(currChannel));
+                % data1=filtfilt(B,A,data1);
+                % data1=abs(data1);
+                % 
+                % 
+                % Fs=320;
+                % Fc=50/Fs/2; % cutoff freq at 20 Hz
+                % [B,A]=cheby2(3,20,Fc,'low');
+                % data2=filtfilt(B,A,data1);
+                % 
+                % scan2=abs(data1./data2);
+                % rms_scan2=rms(scan2);
+                % idx_outlier=find(scan2>5);
+                % %                 idx_outlier=find(scan2>rms_scan2);
+                % scan3=scan2;
+                % 
+                % N=10;%samples or 120 ms (40/Fs)
+                % for i=1:length(idx_outlier)
+                %     idx_win=idx_outlier(i)+(-N/2:N);
+                %     idx_win=idx_win(idx_win>0);
+                %     idx_win=idx_win(idx_win<length(data1));
+                %     scan3(idx_win)= nan;
+                % end
+                % 
+                % scan.(currChannel)(isnan(scan3))=nan;
+                % scan.(currChannel)=...
+                %     fillmissing(scan.(currChannel),'linear');
+                % 
+                % if 1==0
+                %     close all
+                %     ax(1)=subplot(311);
+                %     plot(Profile.epsi.(currChannel)(ind_scan));
+                %     hold on;
+                %     plot(scan.(currChannel))
+                %     ax(2)=subplot(312);
+                %     plot(data1);
+                %     hold on;
+                %     plot(data2)
+                %     title(currChannel)
+                %     ax(3)=subplot(313);plot(scan2);hold on;plot(scan2.*0+5,'k--')
+                %     linkaxes(ax,'x')
+                %     pause
+                % end
         end
     end
 
