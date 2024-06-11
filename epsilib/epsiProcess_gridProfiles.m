@@ -72,7 +72,34 @@ for iFile=1:length(fileList)
         GRID.vehicle_name = GRID.vehicle_name(:).';
         GRID.deployment = GRID.deployment(:).';
         GRID.filenames{iFile} = Profile.filenames;
-        
+
+
+%{
+ %% Add Meta_Data
+GRID.Meta_Data = Meta_Data;
+
+%% Add varInfo
+GRID.varInfo.pr = {'CTD pressure','db'};
+GRID.varInfo.dnum = {'datenum','Matlab datenum'};
+GRID.varInfo.w = {'fall speed','db s^{-1}'};
+GRID.varInfo.t = {'temperature','C'};
+GRID.varInfo.s = {'salinity','psu'};
+GRID.varInfo.kvis = {'kinematic viscosity',''};
+GRID.varInfo.epsilon = {'turbulent kinetic energy dissipation rate calculated from Ps_shear_k', ''};
+GRID.varInfo.epsilon_co = {'turbulent kinetic energy dissipation rate calculated from Ps_shear_co_k', ''};
+GRID.varInfo.chi = {'temperature gradient dissipation rate','°C^2 s^{-1}'};
+GRID.varInfo.sh_fc = {'shear cutoff frequency, 1=uncorrected, 2=coherence-corrected', 'Hz'};
+GRID.varInfo.tg_fc = {'temperature gradient cutoff frequency, 1=uncorrected, 2=coherence-corrected', 'Hz'};
+GRID.varInfo.flag_tg_fc = {'temperature gradient cut off frequency is very high','0/1'};
+GRID.varInfo.Coh_10_45Hz_avg = {'average coherences between 10 and 45 Hz',''};
+GRID.varInfo.Pa_g_10_45Hz_avg = {'average acceleration power spectral densities between 10 and 45 Hz',''};
+GRID.varInfo.Ps_volt_10_45Hz_avg = {'average shear power spectral densities between 10 and 45 Hz',''};
+GRID.varInfo.Pt_volt_10_45Hz_avg = {'average temperature power spectral densities between 10 and 45 Hz',''};
+GRID.varInfo.iScan = {'scan indices',''};
+ 
+%}
+
+%% Save data   
     saveName = fullfile(obj.Meta_Data.paths.profiles,'griddedProfiles.mat');
     save(saveName,'GRID');
 
