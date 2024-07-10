@@ -843,6 +843,7 @@ if isempty(ind_spec_start)
     no_data_types = [no_data_types,'spec'];
     spec=[];
 else
+    try
     processed_data_types = [processed_data_types,'spec'];
     %disp('processing spec data')
     
@@ -941,7 +942,10 @@ else
     
     % Sort epsi fields
     spec = orderfields(spec,{'dnum','freq','time_s','t1_volt','s1_volt','a3_g','data','channels','checksum'});
-    
+    catch
+        no_data_types = [no_data_types,'spec'];
+        spec=[];
+    end
 end %end spec
 
 

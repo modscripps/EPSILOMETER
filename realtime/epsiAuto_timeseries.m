@@ -101,6 +101,7 @@ ax = epsiPlot_timeseries(obj,0,ax);
 
 EpsiAuto_timer = timer;
 s = false;
+debug_mode = false;
 
 EpsiAuto_timer.StartFcn = 'disp(''Begining data conversion for timeseries plotting!'');';
 EpsiAuto_timer.TimerFcn = [...

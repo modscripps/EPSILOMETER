@@ -9,31 +9,25 @@ function H=get_filters_SOM(Meta_Data,f)
 % Feb 2019 ALB
 
 try
-    switch Meta_Data.AFE.s1.ADCfilter
-        case 'sinc4'
-            Hs1filter=(sinc(f/(2*f(end)))).^4;
-            Hs1filter=Hs1filter(:);
-    end
-    switch Meta_Data.AFE.t1.ADCfilter
-        case 'sinc4'
-            Ht1filter=(sinc(f/(2*f(end)))).^4;
-            Ht1filter=Ht1filter(:);
-    end
-    switch Meta_Data.AFE.a1.ADCfilter
-        case 'sinc4'
-            Ha1filter=(sinc(f/(2*f(end)))).^4;
-            Ha1filter=Ha1filter(:);
-    end
+switch Meta_Data.AFE.s1.ADCfilter
+    case 'sinc4'
+        Hs1filter=(sinc(f/(2*f(end)))).^4;
+end
+switch Meta_Data.AFE.t1.ADCfilter
+    case 'sinc4'
+        Ht1filter=(sinc(f/(2*f(end)))).^4;
+end
+switch Meta_Data.AFE.a1.ADCfilter
+    case 'sinc4'
+        Ha1filter=(sinc(f/(2*f(end)))).^4;
+end
 catch
-    switch Meta_Data.Firmware.ADCfilter
-        case 'sinc4'
-            Hs1filter=(sinc(f/(2*f(end)))).^4;
-            Hs1filter=Hs1filter(:);
-            Ht1filter=(sinc(f/(2*f(end)))).^4;
-            Ht1filter=Ht1filter(:);
-            Ha1filter=(sinc(f/(2*f(end)))).^4;
-            Ha1filter=Ha1filter(:);
-    end
+switch Meta_Data.Firmware.ADCfilter
+    case 'sinc4'
+        Hs1filter=(sinc(f/(2*f(end)))).^4;
+        Ht1filter=(sinc(f/(2*f(end)))).^4;
+        Ha1filter=(sinc(f/(2*f(end)))).^4;
+end
 end
 
 % shear channels

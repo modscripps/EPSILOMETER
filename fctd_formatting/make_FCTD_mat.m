@@ -55,25 +55,28 @@ end
 if ~isempty(gps) && isfield(gps,'dnum')
     % Sometimes there's a weirdness here with non-unique gps.dnum
     [~,iU] = unique(gps.dnum);
-    FCTD.longitude=interp1(gps.dnum(iU),gps.longitude(iU),ctd.dnum);
-    FCTD.latitude=interp1(gps.dnum(iU),gps.latitude(iU),ctd.dnum);
+    if ~isempty(iU)
+        FCTD.longitude=interp1(gps.dnum(iU),gps.longitude(iU),ctd.dnum);
+        FCTD.latitude=interp1(gps.dnum(iU),gps.latitude(iU),ctd.dnum);
+    else
+        FCTD.longitude=nan(length(ctd.dnum),1);
+        FCTD.latitude=nan(length(ctd.dnum),1);
+    end
 else
     FCTD.longitude=nan(length(ctd.dnum),1);
     FCTD.latitude=nan(length(ctd.dnum),1);
 end
 
 if ~isempty(fluor) && isfield(fluor,'time_s')
-    diff_not_neg = [0;diff(fluor.dnum)]>0;
+    diff_not_neg = [0, diff(fluor.dnum)]>0;
     keep = ~isnan(fluor.dnum) & ~isinf(fluor.dnum) & diff_not_neg;
-    for ix=1:3
-        FCTD.fluor(:,ix)=interp1(fluor.dnum(keep),fluor.compass(keep,ix),ctd.dnum);
-        FCTD.fluor(:,ix)=interp1(fluor.dnum(keep),fluor.gyro(keep,ix),ctd.dnum);
-        FCTD.fluor(:,ix)=interp1(fluor.dnum(keep),fluor.acceleration(keep,ix),ctd.dnum)./9.81;
-    end
+    FCTD.bb(:,1)=interp1(fluor.dnum(keep),fluor.bb(keep,1),ctd.dnum);
+    FCTD.chla(:,1)=interp1(fluor.dnum(keep),fluor.chla(keep,1),ctd.dnum);
+    FCTD.fDOM(:,1)=interp1(fluor.dnum(keep),fluor.fDOM(keep,1),ctd.dnum);
 else
-    FCTD.gyro=nan(length(ctd.dnum),3);
-    FCTD.acceleration=nan(length(ctd.dnum),3);
-    FCTD.compass=nan(length(ctd.dnum),3);
+    FCTD.bb=nan(length(ctd.dnum),1);
+    FCTD.chla=nan(length(ctd.dnum),1);
+    FCTD.fDOM=nan(length(ctd.dnum),1);
 end
 
 

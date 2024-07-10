@@ -122,7 +122,12 @@ for downCast=[1,0]
 
     % Find jumps in indices and add 1 to indicate a start of a profile
     keep = [1, find(diff([profiling_start_criteria,numel(profiling_start_criteria)+10]) > 1) + 1];
+    % 2024 05 18 ASTRAL hacking to make it work, Need reevaluation
+    try
     profiling_start = profiling_start_criteria(keep);
+    catch
+        profiling_start = [];
+    end
 
     % Find jumps in indiced to indicate end of profile
     keep = [find(diff([profiling_end_criteria,numel(profiling_start_criteria)+10]) > 1),length(profiling_end_criteria)];
