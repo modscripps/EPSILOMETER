@@ -173,12 +173,31 @@ else
     a3=detrend(EPSI.a3_g(idxSeg));
     
    
-    maxa=max([max(a1) max(a2) max(a3)]);
-    mina=min([min(a1) min(a2) min(a3)]);
-    maxs=max([max(s1) max(s2)]);
-    mins=min([min(s1) min(s2)]);
-    maxt=max([max(t1) max(t2)]);
-    mint=min([min(t1) min(t2)]);
+
+% %{ % Make y-limits based on min and max
+%      maxa=max([max(a1) max(a2) max(a3)]);
+%     mina=min([min(a1) min(a2) min(a3)]);
+%     maxs=max([max(s1) max(s2)]);
+%     mins=min([min(s1) min(s2)]);
+%     maxt=max([max(t1) max(t2)]);
+%     mint=min([min(t1) min(t2)]); 
+% %}
+
+% Make y-limits based on median and standard deviation
+var_list = {'a1','a2','a3','s1','s2','t1','t2'};
+for v=1:length(var_list)
+    eval(sprintf('%smin = nanmedian(%s)-3*std(%s);',var_list{v},var_list{v},var_list{v}))
+    eval(sprintf('%smax = nanmedian(%s)+3*std(%s);',var_list{v},var_list{v},var_list{v}))
+end
+maxa13 = max([a1max,a3max]);
+mina13 = min([a1min,a3min]);
+maxa2 = a2max;
+mina2 = a2min;
+maxs=max([s1max, s2max]);
+mins=min([s1min, s2min]);
+maxt=max([t1max, t2max]);
+mint=min([t1min, t2min]);
+
     
     %tscan   = 5
     nb_seg=floor(time_s(end)/tscan);
@@ -434,8 +453,8 @@ if makeFig
         end
         
         
-        ax(1).YLim=[mina maxa];
-        ax(2).YLim=[mina maxa];
+        ax(1).YLim=[mina13 maxa13];
+        ax(2).YLim=[mina2 maxa2];
         ax(3).YLim=[mint maxt];
         ax(4).YLim=[mins maxs];
         %ax(5).YLim=[-0.1 1.5];
