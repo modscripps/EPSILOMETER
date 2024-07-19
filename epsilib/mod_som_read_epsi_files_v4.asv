@@ -1724,8 +1724,6 @@ else
     fluor.bb    = nan(sensor.data.n_recs,1);
     fluor.chla  = nan(sensor.data.n_recs,1);
     fluor.fDOM  = nan(sensor.data.n_recs,1);
-    fluor.time_s  = nan(sensor.data.n_recs,1);
-    fluor.dnum  = nan(sensor.data.n_recs,1);
 
     % Initialize datarecord counter
     n_rec = 0;
@@ -1789,7 +1787,9 @@ else
                         fluor.time_s(n_rec) = (fluor.dnum(n_rec)-fluor.dnum(1)).*86400;
                     else
                         fluor.time_s(n_rec) = fluor_timestamp(n_rec)./1000;
-                        fluor.dnum(n_rec) = Meta_Data.start_dnum + days(seconds(fluor.time_s(n_rec)));
+                        try %7/15/24 Tridente on the fluor channel doesn't put out time_s the same way. If this line doesn't work, just put the start time
+                            fluor.dnum(n_rec) = Meta_Data.start_dnum + days(seconds(fluor.time_s(n_rec)));
+
                     end
                 end
 

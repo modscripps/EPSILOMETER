@@ -302,7 +302,8 @@ if ~isempty(myASCIIfiles)
 
                 % Save data in .mat file
                 save(fullfile(MatDir,base),'-struct','matData')
-                fprintf(1,'%s: Wrote  %s.mat\n',datestr(now,'YY.mm.dd HH:MM:SS'),base);
+                %fprintf(1,'%s: Wrote  %s.mat\n',datestr(now,'YY.mm.dd HH:MM:SS'),base);
+                fprintf(1,'   %s\n',datestr(now,'YY.mm.dd HH:MM:SS'));
 
                 %Empty contents of matData structure
                 use matData
