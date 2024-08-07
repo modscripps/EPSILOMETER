@@ -43,7 +43,7 @@ end
 
 Meta_Data = obj.Meta_Data;
 if ~isfield(obj,'plot_properties')
-    obj.plot_properties = set_epsi_plot_properties;
+    obj.plot_properties = epsiSetup_set_plot_properties;
     cols = obj.plot_properties.Colors;
 else
     cols = obj.plot_properties.Colors;

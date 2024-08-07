@@ -6,7 +6,7 @@ function [] = plot_epsi(obj)
 %
 
 if ~isfield(obj,'plot_properties')
-    obj.plot_properties = set_epsi_plot_properties;
+    obj.plot_properties = epsiSetup_set_plot_properties;
 end
 if ~isfield(obj,'Meta_Data')
     obj.Meta_Data.mission = '';
