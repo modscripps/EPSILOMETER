@@ -111,7 +111,7 @@ if isclassfield(obj,'ctd')
         plot(ax(6),time_array.ctd,obj.ctd.S,'.','Color',cols.S,'LineWidth',obj.plot_properties.LineWidth);
 
         % Depth and fall speed
-        fall_speed = movmean(obj.ctd.dzdt,100);
+       fall_speed = movmean(obj.ctd.dzdt,100);
         going_down = fall_speed>=0;
         coming_up = fall_speed<0;
         plot(ax(7),time_array.ctd,fall_speed,'.','Color',cols.dPdt,'LineWidth',obj.plot_properties.LineWidth);
@@ -127,8 +127,10 @@ if isclassfield(obj,'ctd')
         if isclassfield(obj,'alt') && ~isempty(obj.alt)
             plot(ax(8),time_array.alt,obj.alt.dst,'.','Color',cols.alt)
             hold(ax(8),'on');
-            too_close = obj.alt.dist<=2;
-            plot(ax(8),time_array.alt(too_close),obj.alt.dst(too_close),'o','r')
+            too_close = obj.alt.dst<=2;
+            if sum(too_close)>0
+                plot(ax(8),time_array.alt(too_close),obj.alt.dst(too_close),'o','r');
+            end
         end
     
     end  

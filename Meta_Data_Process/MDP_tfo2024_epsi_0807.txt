@@ -1,4 +1,8 @@
 latitude     = 38.4;
+ctd_sn       = '0237';
+s1_sn        = '115';
+s2_sn        = '115';
+t1_sn        = '115';
 dof          = 3;
 dof_coh      = 10;
 nfft         = 1024;

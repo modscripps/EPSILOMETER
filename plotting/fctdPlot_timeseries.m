@@ -23,7 +23,7 @@ nDay = nSec/(3600*24);
 
 %% Set plot properties if you don't have them
 if ~isclassfield(obj,'plot_properties')
-    obj.plot_properties = set_epsi_plot_properties;
+    obj.plot_properties = epsiSetup_set_plot_properties;
 end
 
 %% Define time axes for the plot
@@ -76,13 +76,27 @@ if isclassfield(obj,'ctd')
         plot(ax(2),time_array.ctd,obj.ctd.S,'.','Color',cols.S,'LineWidth',obj.plot_properties.LineWidth);
         
         % Fall speed (dPdt)
-        plot(ax(7),time_array.ctd,movmean(obj.ctd.dPdt,100),'.','Color',cols.dPdt,'LineWidth',obj.plot_properties.LineWidth)
+        fall_speed = movmean(obj.ctd.dzdt,100);
+        going_down = fall_speed>=0;
+        coming_up = fall_speed<0;
+        plot(ax(7),time_array.ctd,obj.ctd.z,'.','Color',cols.dPdt,'LineWidth',obj.plot_properties.LineWidth);
+        hold(ax(7),'on')
+        plot(ax(7),time_array.ctd(going_down),obj.ctd.z(going_down),'.','Color',[0.2157 0.4941 0.7216],'LineWidth',obj.plot_properties.LineWidth);
+        plot(ax(7),time_array.ctd(coming_up),obj.ctd.z(coming_up),'.','Color',[0.9686 0.5059 0.7490],'LineWidth',obj.plot_properties.LineWidth);
+        
+        % Add arrows showing up and down
+        annotation(gcf,'arrow',[0.94 0.94], [0.42 0.38],'Color',[0.2157 0.4941 0.7216]);
+        annotation(gcf,'arrow',[0.96 0.96], [0.38 0.42],'Color',[0.9686 0.5059 0.7490]);
 
-    % Pressure and altimiter
-    plot(ax(8),time_array.ctd,obj.ctd.P,'.','Color',cols.P)
-    if isclassfield(obj,'alt') && ~isempty(obj.alt)
-        plot(ax(9),time_array.alt,obj.alt.dst,'.','Color',cols.alt)
-    end
+        % Alitmeter
+        if isclassfield(obj,'alt') && ~isempty(obj.alt)
+            plot(ax(8),time_array.alt,obj.alt.dst,'.','Color',cols.alt)
+            hold(ax(8),'on');
+            too_close = obj.alt.dst<=2;
+            if sum(too_close)>0
+                plot(ax(8),time_array.alt(too_close),obj.alt.dst(too_close),'o','r');
+            end
+        end
     
     end  
 end
@@ -170,8 +184,7 @@ ylabel(ax(1),'T [°C]');
 ylabel(ax(2),'S');
 ylabel(ax(3),'Accel [g]');
 ylabel(ax(5),'Gyro []');
-ylabel(ax(7),'dPdt [dbar/s]');
-ylabel(ax(8),'P [dbar]');
+ylabel(ax(7),'z [m]');
 ylabel(ax(9),'altimeter');
 
 [ax(:).FontSize] = deal(obj.plot_properties.FontSize);
@@ -236,7 +249,7 @@ figure('units','inches','position',[0 0 10 13])
 
     gap = [0.02 0.025];
     margV = [0.045 0.035];
-    margH = [0.1 0.1];
+    margH = [0.12 0.08];
 
     ax(1)=subtightplot(7,1,1,gap,margV,margH); %shear
     ax(2)=subtightplot(7,1,2,gap,margV,margH); %fpo7

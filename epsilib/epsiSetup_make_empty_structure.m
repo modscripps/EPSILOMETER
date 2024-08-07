@@ -44,6 +44,8 @@ obj.ctd.S = emptyCtd;
 obj.ctd.C = emptyCtd;
 obj.ctd.sig = emptyCtd;
 obj.ctd.dPdt = emptyCtd;
+obj.ctd.z = emptyCtd;
+obj.ctd.dzdt = emptyCtd;
 
 obj.alt.time_s = emptyAlt;
 obj.alt.dnum = emptyAlt;

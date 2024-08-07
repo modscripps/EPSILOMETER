@@ -86,7 +86,8 @@ obj = epsi_class(raw_dir,Meta_Data_process_file);
 obj = epsiSetup_make_empty_structure(obj,sec_to_store);
 
 % Add Meta_Data from most recent file 
-obj = find_and_load_meta_data(obj,raw_dir);
+%obj = find_and_load_meta_data(obj,raw_dir); %NC commented out Aug 2024 - I
+%think we get meta data in the previous line
 
 field_list = {'epsi','ctd','alt','vnav','gps'};
 for iField=1:length(field_list)
