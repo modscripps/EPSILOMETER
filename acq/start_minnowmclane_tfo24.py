@@ -12,7 +12,7 @@ import serial
 import time
 
 # -----------------------------------------------------------------------------------
-port_name="tty.usbserial-FT8FTW0AI"
+port_name="tty.usbserial-FT8FW0AI"
 mission_name="TFO2024"
 hours_ahead_of_gmt=0
 vehicle_name="mclane"

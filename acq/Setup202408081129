@@ -24,5 +24,5 @@ CTD.output_format=24
 %FILES
 %RecHeader.totalDrops=4
 Ascii_dataFile.runname='ef1_'
-Ascii_dataFile.path='/Users/Shared/FCTD_EPSI/RAW/'
+Ascii_dataFile.path='/Users/Shared/FCTD_EPSI/RAW'
 Ascii_dataFile.dataFileSize=5000000
