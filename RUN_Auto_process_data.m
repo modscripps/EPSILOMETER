@@ -37,7 +37,7 @@ switch instrument
     case 'epsi'
         input_struct.depth_array = 0:500;
     case 'fctd'
-        input_struct.depth_array = 0:1000;
+        input_struct.depth_array = 0:3000;
 end
 
 % Set command window color

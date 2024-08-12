@@ -24,6 +24,7 @@ function [data] = mod_som_read_epsi_files_v4(filename,Meta_Data)
 %   epsi  (intermediate processing in 'efe' structure)
 %   ctd   (intermediate processing in 'sbe' structure)
 %   alt   (intermediate processing in 'alti' structure)
+%   isap   (intermediate processing in 'isap' structure)
 %   act   (intermediate processing in 'actu' structure)
 %   vnav  (intermediate processing in 'vecnav' structure)
 %   gps   (intermediate processing in 'gpsmeta' structure
@@ -35,13 +36,14 @@ function [data] = mod_som_read_epsi_files_v4(filename,Meta_Data)
 % 11/28/21 aleboyer@ucsd.edu  updated from v3
 % Nicole Couto adapted from Arnaud LeBoyer's mod_som_read_epsi_raw.m
 % June 2021
+% 2024/08/08 aleboyer: adding isap struct
 % -------------------------------------------------------------------------
 
 % Define a constant for salinity calculation
 c3515 = 42.914;
 
 %% Open file and save contents as 'str'
-%fprintf("   Open %s \r\n",filename)
+fprintf("   Open %s \r\n",filename)
 fid = fopen(filename);
 fseek(fid,0,1);
 frewind(fid);
@@ -62,9 +64,13 @@ if isempty(ind_sbe_start)
     [ind_sbe_start, ind_sbe_stop]        = regexp(str,'\$SB41([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
 end
 [ind_alt_start      , ind_alt_stop]      = regexp(str,'\$ALT([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
+[ind_isap_start      , ind_isap_stop]      = regexp(str,'\$ISAP([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
 [ind_act_start      , ind_act_stop]      = regexp(str,'\$ACTU([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
 [ind_vnav_start     , ind_vnav_stop]     = regexp(str,'\$VNMAR([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
 [ind_gps_start      , ind_gps_stop]      = regexp(str,'\$GPGGA([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
+if isempty(ind_gps_start)
+    [ind_gps_start      , ind_gps_stop]      = regexp(str,'\$INGGA([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
+end
 [ind_seg_start      , ind_seg_stop]      = regexp(str,'\$SEGM([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
 [ind_spec_start     , ind_spec_stop]     = regexp(str,'\$SPEC([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
 [ind_avgspec_start  , ind_avgspec_stop]  = regexp(str,'\$AVGS([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
@@ -465,7 +471,7 @@ else
     
 end %end loop if there is ctd data
 
-%% Altimeter
+%% MOD  Altimeter
 if isempty(ind_alt_start)
     no_data_types = [no_data_types,'alt'];
     alt=[];
@@ -551,6 +557,100 @@ else
     
     % Order alt fields
     alt = orderfields(alt,{'dnum','time_s','dst','hab'});
+    
+end %end loop if there is alt data
+
+%% ISA500
+if isempty(ind_isap_start)
+    no_data_types = [no_data_types,'isap'];
+    isap=[];
+else
+    processed_data_types = [processed_data_types,'isap'];
+    %disp('processing alt data')
+    
+    % ALTI-specific quantities
+    % --------------------------------
+    isa.data.n_blocks       = numel(ind_isap_start);
+    isa.data.recs_per_block = 1;
+    isa.data.n_recs         = isa.data.n_blocks*isa.data.recs_per_block;
+    
+    isa.ten_microsec2sec    = 1e-5;
+    isa.sound_speed         = 1500;
+    
+    % Process ISAP data
+    % --------------------------------
+    
+    % Pre-allocate space for data
+    isap_timestamp  = nan(isa.data.n_recs,1);
+    %alt.time_s and alt.dnum will be created from alt_timestamp once
+    %all its records are filled
+    isap.dst        = nan(isa.data.n_recs,1);
+    
+    % Loop through data blocks and parse strings
+    for iB=1:isa.data.n_blocks
+        
+        % Grab the block of data starting with the header
+        isap_block_str = str(ind_isap_start(iB):ind_isap_stop(iB));
+        
+        % For the altimeter, all the data is actually in the header
+        try
+            isa.hextimestamp.value   = hex2dec(isap_block_str(tag.hextimestamp.inds));
+        catch
+            isa.hextimestamp.value = nan;
+        end
+        try
+            isap_timestamp(iB) = isa.hextimestamp.value;
+        catch
+            isap_timestamp(iB) = nan;
+        end
+        
+        % The altimeter block does not have a hexlengthblock (hexadecimal
+        % length of data block). It has the altimeter reading in that
+        % position
+        isa.hexlengthblock.value = isap_block_str(tag.hexlengthblock.inds);
+        
+        isap.dst(iB) = str2double(isap_block_str(tag.data_offset+ ...
+                                 tag.hextimestamp.length+ ...
+                                 tag.header.offset+ ...
+                                 tag.header.length+2:end-5));
+        % ALB ISAP500 send meters directly
+        % isap.dst(iB) = dst_microsec*isap.ten_microsec2sec*isap.sound_speed;
+        
+        % Calculate actual height above bottom (hab) from altimeter
+        % distance reading. The altimeter is angled at 10 degrees and is positioned 5 ft above the
+        % crashguard. The probes sit 2.02 inches behind the crash guard.
+        % (See Epsi Processing Manual - Altimeter correction for diagram).
+        % convert_dissrate = @(x) ((x-apf.data.dissrate_count0)/apf.data.dissrate_per_bit);
+        feet2meters = @(x) (x*0.3048);
+        inches2meters = @(x) (x*0.0254);
+        angle_deg = Meta_Data.PROCESS.alt_angle_deg;
+        isap_to_crashguard = Meta_Data.PROCESS.alt_dist_from_crashguard_ft;
+        probe_to_crashguard = Meta_Data.PROCESS.alt_probe_dist_from_crashguard_in;
+
+        A = isap.dst(iB);
+        theta = deg2rad(angle_deg);
+        altimeter_height_above_probes = feet2meters(isap_to_crashguard) - ...
+            inches2meters(probe_to_crashguard);
+
+        % alt.hab is the height of the probes above the bottom
+        isap.hab(iB,1) = A*cos(theta) - altimeter_height_above_probes;
+
+    end %end loop through alt blocks
+    
+    % If timestamp has values like 1.6e12, it is in milliseconds since Jan
+    % 1, 1970. Otherwise it's in milliseconds since the start of the record
+    if nanmedian(isap_timestamp)>1e9
+        % time_s - seconds since 1970
+        % dnum - matlab datenum
+        [isap.time_s,isap.dnum] = convert_timestamp(isap_timestamp);
+    else
+        % time_s - seconds since power on
+        isap.time_s = isap_timestamp./1000;
+        isap.dnum = Meta_Data.start_dnum + days(seconds(isap.time_s));
+    end
+    
+    % Order alt fields
+    isap = orderfields(isap,{'dnum','time_s','dst','hab'});
     
 end %end loop if there is alt data
 
@@ -710,6 +810,7 @@ else
         try
             % Grab the block of data starting with the header
             gps_block_str = str(ind_gps_start(iB):ind_gps_stop(iB)); %Moved here by Bethan June 26
+            
             
             % Get the data after the header
             gps_block_data = str(ind_gps_start(iB):ind_gps_stop(iB));
@@ -1721,11 +1822,11 @@ else
     fluor_timestamp   = nan(sensor.data.n_recs,1);
     %ctd.ctdtime and ctd.ctddnum will be created from ctd_timestamp once
     %all its records are filled
-    fluor.bb    = nan(sensor.data.n_recs,1);
-    fluor.chla  = nan(sensor.data.n_recs,1);
-    fluor.fDOM  = nan(sensor.data.n_recs,1);
-    fluor.time_s  = nan(sensor.data.n_recs,1);
-    fluor.dnum  = nan(sensor.data.n_recs,1);
+    fluor.bb     = nan(sensor.data.n_recs,1);
+    fluor.chla   = nan(sensor.data.n_recs,1);
+    fluor.fDOM   = nan(sensor.data.n_recs,1);
+    fluor.dnum   = nan(sensor.data.n_recs,1);
+    fluor.time_s = nan(sensor.data.n_recs,1);
 
     % Initialize datarecord counter
     n_rec = 0;
@@ -1767,13 +1868,13 @@ else
                 rec_fluor=element_fluor(sensor.data.timestamp_length+1:end);
 
                 try
-                    fluor.bb(n_rec)   = hex2dec(rec_fluor(:,1:4));
-                    fluor.chla(n_rec) = hex2dec(rec_fluor(:,(1:4)+4));
-                    fluor.fDOM(n_rec) = hex2dec(rec_fluor(:,(1:4)+8));
+                    fluor.bb(n_rec,1)   = hex2dec(rec_fluor(:,1:4));
+                    fluor.chla(n_rec,1) = hex2dec(rec_fluor(:,(1:4)+4));
+                    fluor.fDOM(n_rec,1) = hex2dec(rec_fluor(:,(1:4)+8));
                 catch
-                    fluor.bb(n_rec)   = nan;
-                    fluor.chla(n_rec) = nan;
-                    fluor.fDOM(n_rec) = nan;
+                    fluor.bb(n_rec,1)   = nan;
+                    fluor.chla(n_rec,1) = nan;
+                    fluor.fDOM(n_rec,1) = nan;
                 end
 
                 % If timestamp has values like 1.6e12, it is in milliseconds since Jan
@@ -1781,15 +1882,19 @@ else
                 if nanmedian(fluor_timestamp)>1e9
                     % time_s - seconds since 1970
                     % dnum - matlab datenum
-                    [fluor.time_s(n_rec),fluor.dnum(n_rec)] = convert_timestamp(fluor_timestamp(n_rec));
+                    [fluor.time_s(n_rec,1),fluor.dnum(n_rec,1)] = convert_timestamp(fluor_timestamp(n_rec));
                 else
                     % time_s - seconds since power on
                     if ~isempty(gps)
-                        fluor.dnum(n_rec) = gps.dnum(end);
-                        fluor.time_s(n_rec) = (fluor.dnum(n_rec)-fluor.dnum(1)).*86400;
+                        fluor.dnum(n_rec,1) = gps.dnum(end,1);
+                        fluor.time_s(n_rec,1) = (fluor.dnum(n_rec,1)-fluor.dnum(1)).*86400;
                     else
-                        fluor.time_s(n_rec) = fluor_timestamp(n_rec)./1000;
-                        fluor.dnum(n_rec) = Meta_Data.start_dnum + days(seconds(fluor.time_s(n_rec)));
+                        fluor.time_s = fluor_timestamp(n_rec)./1000;
+                        try % 7/14/24 Tridente time_s is a scalar so this line doesnt work
+                        fluor.dnum = Meta_Data.start_dnum + days(seconds(fluor.time_s(n_rec,1)));
+                        catch
+                            fluor.dnum = Meta_Data.start_dnum;
+                        end
                     end
                 end
 
@@ -1797,7 +1902,6 @@ else
         end %end if fluor data block is the correct size
     end %end loop through fluor blocks
 end %end loop if there is fluor data
-
 
 %% Process ttv data
 % $TTVP00000188449d43f100000046*2C00000188449d43f100:28:07 447 ms-000000050 ps,+650 mV,+651 mV,078, 078 *12"
@@ -1930,7 +2034,7 @@ fprintf(['   processed data for: ' repmat('%s ',1,length(processed_data_types)),
 fprintf(['   no data for:        ' repmat('%s ',1,length(no_data_types)), '\n'], no_data_types{:})
 
 % Combine all data
-make data epsi ctd alt act vnav gps seg spec avgspec dissrate apf fluor ttv
+make data epsi ctd alt isap act vnav gps seg spec avgspec dissrate apf fluor ttv
 
 
 end
@@ -2022,6 +2126,7 @@ end
 %% FCTD header parsing function
 %  parse all the lines in the header of the file
 function FCTD = FastCTD_ASCII_parseheader(FID)
+1
 FCTD = [];
 fgetl(FID);
 s=fgetl(FID);

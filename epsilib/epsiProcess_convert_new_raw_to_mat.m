@@ -45,11 +45,13 @@ function [matData] = epsiProcess_convert_new_raw_to_mat(dirs,Meta_Data,varargin)
 % Updated 2011 06 21 by San Nguyen
 % Updated 2012 09 29 by San Nguyen for EquatorMix2012
 % Adapted 2021-23 by Nicole Couto for Epsilometer data
+% Adapted 2024-08-08 by aleboyer for ISA500
 
 % NC - Make matData for output even if there is no new data
 matData.epsi  = [];
 matData.ctd   = [];
 matData.alt   = [];
+matData.isap   = [];
 matData.act   = [];
 matData.vnav  = [];
 matData.gps   = [];
@@ -255,17 +257,6 @@ if ~isempty(myASCIIfiles)
                 % of the raw data has already been converted
                 % (DO NOTHING.)
 
-                % % For debugging
-                % debug.base_name{i} = base;
-                % debug.rawraw_date(i) = myRAWRAWfile.datenum;
-                % debug.rawraw_bytes(i) = myRAWRAWfile.bytes;
-                % debug.raw_date(i) = myASCIIfiles(i).datenum;
-                % debug.raw_bytes(i) = myASCIIfiles(i).bytes;
-                % debug.mat_date(i) = myMATfile.datenum;
-                % debug.mat_bytes(i) = myMATfile.bytes;
-                % debug.conversion_happens(i) = 0;
-                % % End of debugging
-
 
             elseif (~isempty(myMATfile) && myASCIIfiles(i).bytes>raw_file_info.bytes) || isempty(myMATfile)
                 % If the MAT file exists already but is older than the raw data
@@ -302,8 +293,7 @@ if ~isempty(myASCIIfiles)
 
                 % Save data in .mat file
                 save(fullfile(MatDir,base),'-struct','matData')
-                %fprintf(1,'%s: Wrote  %s.mat\n',datestr(now,'YY.mm.dd HH:MM:SS'),base);
-                fprintf(1,'   %s\n',datestr(now,'YY.mm.dd HH:MM:SS'));
+                fprintf(1,'%s: Wrote  %s.mat\n',datestr(now,'YY.mm.dd HH:MM:SS'),base);
 
                 %Empty contents of matData structure
                 use matData

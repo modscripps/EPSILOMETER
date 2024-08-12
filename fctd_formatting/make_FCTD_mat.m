@@ -68,7 +68,7 @@ else
 end
 
 if ~isempty(fluor) && isfield(fluor,'time_s')
-    diff_not_neg = [0, diff(fluor.dnum)]>0;
+    diff_not_neg = [0; diff(fluor.dnum)]>0;
     keep = ~isnan(fluor.dnum) & ~isinf(fluor.dnum) & diff_not_neg;
     FCTD.bb(:,1)=interp1(fluor.dnum(keep),fluor.bb(keep,1),ctd.dnum);
     FCTD.chla(:,1)=interp1(fluor.dnum(keep),fluor.chla(keep,1),ctd.dnum);
@@ -81,7 +81,8 @@ end
 
 
 % Extra outputs for specific cruise setups
-if strcmp(cruise_specifics,'blt_2021');
+% if strcmp(cruise_specifics,'blt_2021');
+if strcmp(cruise_specifics,'tfo_2024');
     % Microconductivity and Fluorometer
     %
     % On BLT 2021, microconductivity sensor was on shear
