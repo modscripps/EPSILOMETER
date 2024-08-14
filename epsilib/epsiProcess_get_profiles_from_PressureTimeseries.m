@@ -131,7 +131,11 @@ for downCast=[1,0]
 
     % Find jumps in indiced to indicate end of profile
     keep = [find(diff([profiling_end_criteria,numel(profiling_start_criteria)+10]) > 1),length(profiling_end_criteria)];
-    profiling_end = sort(profiling_end_criteria(keep));
+    try
+        profiling_end = sort(profiling_end_criteria(keep));
+    catch
+        profiling_end = [];
+    end
 
     % Initialize variables to store start and end points of profiles
     startcast = [];

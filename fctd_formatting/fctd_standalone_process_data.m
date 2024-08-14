@@ -22,13 +22,13 @@
 
 % Change these for each deployment
 instrument = 'epsi';
-input_struct.process_dir = '/Volumes/My Drive/DATA/TFO/2024/re-processed/20240811_d3_A2along/';
+input_struct.process_dir = '/Volumes/My Drive/DATA/TFO/2024/re-processed/20240809_d2_deeptest/';
 input_struct.str_to_match = 'EPSI24';
 
 % -------------------------------------------------------------------------
 
 % These will probably be the same for the whole cruise
-input_struct.raw_dir = '/Volumes/My Drive/DATA/TFO/2024/re-processed/20240811_d3_A2along/raw/';
+input_struct.raw_dir = '/Volumes/My Drive/DATA/TFO/2024/re-processed/20240809_d2_deeptest/raw/';
 input_struct.Meta_Data_process_file = '~/ARNAUD/SCRIPPS/EPSILOMETER/Meta_Data_Process/MDP_tfo_2024.txt';
 input_struct.refresh_time_sec =  5*60;
 input_struct.cruise_specifics = 'tfo_2024';
