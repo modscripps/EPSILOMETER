@@ -30,6 +30,8 @@ classdef epsi_class < handle
     end
     methods
         function obj=epsi_class(varargin)
+
+            
             if nargin<1
                 data_path = pwd;
                 Meta_Data_process_file = []; %Default Meta_Data process file not specified

@@ -67,6 +67,9 @@ end
 [ind_isap_start      , ind_isap_stop]      = regexp(str,'\$ISAP([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
 [ind_act_start      , ind_act_stop]      = regexp(str,'\$ACTU([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
 [ind_vnav_start     , ind_vnav_stop]     = regexp(str,'\$VNMAR([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
+if isempty(ind_vnav_start)
+    [ind_vnav_start     , ind_vnav_stop]     = regexp(str,'\$VNYPR([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
+end
 [ind_gps_start      , ind_gps_stop]      = regexp(str,'\$GPGGA([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
 if isempty(ind_gps_start)
     [ind_gps_start      , ind_gps_stop]      = regexp(str,'\$INGGA([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
@@ -703,14 +706,17 @@ else
     vnav_timestamp   = nan(vecnav.data.n_recs,1);
     %vnav.time_s and vnav.dnum will be created from vnav_timestamp once
     %all its records are filled
-    vnav.compass = nan(vecnav.data.n_recs,1);
-    vnav.acceleration = nan(vecnav.data.n_recs,1);
-    vnav.gyro = nan(vecnav.data.n_recs,1);
+    vnav.compass = nan(vecnav.data.n_recs,3);
+    vnav.acceleration = nan(vecnav.data.n_recs,3);
+    vnav.gyro = nan(vecnav.data.n_recs,3);
+    vnav.yaw = nan(vecnav.data.n_recs,1);
+    vnav.pitch = nan(vecnav.data.n_recs,1);
+    vnav.roll = nan(vecnav.data.n_recs,1);
     
     %     % Grab the block of data starting with the header
     %     vnav_block_str = str(ind_vnav_start(iB):ind_vnav_stop(iB));
     %     %Commented out and moved below by Bethan June 26
-    
+    Lsample=length(str(ind_vnav_start(iB):ind_vnav_stop(iB)));
     
     % Loop through data blocks and parse strings
     for iB=1:vecnav.data.n_blocks
@@ -719,7 +725,8 @@ else
         vnav_block_str = str(ind_vnav_start(iB):ind_vnav_stop(iB)); %Moved here by Bethan June 26
         % For the vecnav, we use the hexadecimal timestamp that comes before
         % $VNMAR
-        vnav_timestamp(iB) = hex2dec(str(ind_time_start(iB):ind_time_stop(iB)));
+        % vnav_timestamp(iB) = hex2dec(str(ind_time_start(iB):ind_time_stop(iB)));
+        vnav_timestamp(iB) = hex2dec(str(ind_vnav_start(iB)-16:ind_vnav_start(iB)-1));
         
         % Get the data after the header
         vnav_block_data = str(ind_vnav_start(iB):ind_vnav_stop(iB)-tag.chksum.length);
@@ -728,10 +735,17 @@ else
         data_split = strsplit(vnav_block_data,',');
         
         % Compass, acceleration, and gyro each have x, y, and z components
-        for iC=1:3
-            vnav.compass(iB,iC)=str2double(data_split{1,iC+1}); %Compass (x,y,z) units = gauss
-            vnav.acceleration(iB,iC)=str2double(data_split{1,iC+4}); %Acceleration (x,y,x) units = m/s^2
-            vnav.gyro(iB,iC)=str2double(data_split{1,iC+7}); %Gyro (x,y,z) units = rad/s
+        switch Lsample
+            case 38 %yaw pitch roll
+                vnav.yaw(iB)   = str2double(data_split{2});
+                vnav.pitch(iB) = str2double(data_split{3});
+                vnav.roll(iB)  = str2double(data_split{4});
+            otherwise
+                for iC=1:3
+                    vnav.compass(iB,iC)=str2double(data_split{1,iC+1}); %Compass (x,y,z) units = gauss
+                    vnav.acceleration(iB,iC)=str2double(data_split{1,iC+4}); %Acceleration (x,y,x) units = m/s^2
+                    vnav.gyro(iB,iC)=str2double(data_split{1,iC+7}); %Gyro (x,y,z) units = rad/s
+                end
         end
         
     end
@@ -749,7 +763,7 @@ else
     end
     
     % Order vnav fields
-    vnav = orderfields(vnav,{'dnum','time_s','compass','acceleration','gyro'});
+    vnav = orderfields(vnav,{'dnum','time_s','compass','acceleration','gyro','yaw','pitch','roll'});
     
 end %end loop if there is vnav data
 
@@ -1923,20 +1937,14 @@ else
     ttv.data.sample_freq      = 16;
     ttv.data.sample_period    = 1/ttv.data.sample_freq;
     ttv.data.n_blocks         = numel(ind_ttv_start);
-    ttv.data.recs_per_block   = 1;
+    ttv.data.recs_per_block   = 10;
     ttv.data.n_recs           = ttv.data.n_blocks*ttv.data.recs_per_block;
     ttv.data.timestamp_length = 16;
     % ALB I have to change this
-    ttv.data.length           = 70;   
+    ttv.data.length           = 37;   
 
     processed_data_types = [processed_data_types,'ttv'];
 
-    ttv.data.sample_period    = 1/ttv.data.sample_freq;
-    ttv.data.n_blocks         = numel(ind_ttv_start);
-    %ALB hard coded number of element per record
-    ttv.data.recs_per_block   = 1;
-    ttv.data.n_recs           = ttv.data.n_blocks*ttv.data.recs_per_block;
-    ttv.data.timestamp_length = 16;
     
     
     % Process ttv data
@@ -1946,15 +1954,10 @@ else
     ttv_timestamp   = nan(ttv.data.n_recs,1);
     %ctd.ctdtime and ctd.ctddnum will be created from ctd_timestamp once
     %all its records are filled
-    ttv.hh     = nan(ttv.data.n_recs,1);
-    ttv.mm     = nan(ttv.data.n_recs,1);
-    ttv.ss     = nan(ttv.data.n_recs,1);
-    ttv.aaa    = nan(ttv.data.n_recs,1);
-    ttv.tof    = nan(ttv.data.n_recs,1);
-    ttv.rup    = nan(ttv.data.n_recs,1);
-    ttv.rdwn   = nan(ttv.data.n_recs,1);
-    ttv.ampup  = nan(ttv.data.n_recs,1);
-    ttv.ampdwn = nan(ttv.data.n_recs,1);
+    ttv.tof_up   = nan(ttv.data.n_recs,1);
+    ttv.tof_down = nan(ttv.data.n_recs,1);
+    ttv.dtof     = nan(ttv.data.n_recs,1);
+    ttv.vfr      = nan(ttv.data.n_recs,1); %(volume flow rate)
     
     % Initialize datarecord counter
     n_rec = 0;
@@ -1968,8 +1971,6 @@ else
         % Get the header timestamp and length of data block
         ttv.hextimestamp.value   = hex2dec(ttv_block_str(tag.hextimestamp.inds));
         ttv.hexlengthblock.value = hex2dec(ttv_block_str(tag.hexlengthblock.inds));
-        %ALB by assing hard coded length
-        ttv.data.length           = ttv.hexlengthblock.value-16;%?maybe that works
 
         % Get the data after the header.
         ttv_block_data = ttv_block_str(tag.data_offset:end-tag.chksum.length);
@@ -1981,9 +1982,9 @@ else
             % Where do 16 and 24 come from?
             ttv_block_data=reshape(ttv_block_data,16+ttv.data.length,ttv.data.recs_per_block).';
 
-            %00000188449d433600:28:07 262 ms-000000043 ps,+650 mV,+649 mV,079, 078 *4B
-            parse_ttv_block_data=sscanf(ttv_block_data,'%016x%02f:%02f:%02f %03f ms%010f ps,%04f mV,%04f mV,%03f, %03f');
-            if length(parse_ttv_block_data)==10
+            % '00000191536bd52000000000,00000000,00000000,C09DBC00'
+            parse_ttv_block_data=sscanf(ttv_block_data.','%016x%08x,%08x,%08x,%08x\r\n');
+            if length(parse_ttv_block_data)==ttv.data.recs_per_block*5 % 5 data: timestamp, tofup, tofdown, dtof, vfr (volume flow rate) 
 
                 for iR=1:ttv.data.recs_per_block
 
@@ -2000,16 +2001,13 @@ else
 
                     % Everything after that is the data
                     rec_ttv=element_ttv(ttv.data.timestamp_length+1:end);
+                    % parse_ttv_block_data=sscanf(rec_ttv,'%08x,%08x,%08x,%08x\r\n');
+                    parse_ttv_block_data=strsplit(rec_ttv,',');
 
-                    ttv.hh(n_rec)   = parse_ttv_block_data(2);
-                    ttv.mm(n_rec)   = parse_ttv_block_data(3);
-                    ttv.ss(n_rec)   = parse_ttv_block_data(4);
-                    ttv.aaa(n_rec)  = parse_ttv_block_data(5);
-                    ttv.tof(n_rec)  = parse_ttv_block_data(6);
-                    ttv.ampup(n_rec)  = parse_ttv_block_data(7);
-                    ttv.ampdwn(n_rec) = parse_ttv_block_data(8);
-                    ttv.rup(n_rec)  = parse_ttv_block_data(9);
-                    ttv.rdwn(n_rec) = parse_ttv_block_data(10);
+                    ttv.tof_up(n_rec)   = hex2dec(parse_ttv_block_data{1});
+                    ttv.tof_down(n_rec) = hex2dec(parse_ttv_block_data{2});
+                    ttv.dtof(n_rec)     = hex2dec(parse_ttv_block_data{3});
+                    ttv.vfr(n_rec)      = hex2dec(parse_ttv_block_data{4});
 
                     % If timestamp has values like 1.6e12, it is in milliseconds since Jan
                     % 1, 1970. Otherwise it's in milliseconds since the start of the record

@@ -22,13 +22,13 @@
 
 % Change these for each deployment
 instrument = 'epsi';
-input_struct.process_dir = '/Volumes/My Drive/DATA/TFO/2024/re-processed/20240809_d2_deeptest/';
+input_struct.process_dir = '/Volumes/My Drive/DATA/TFO/2024/20240811_d7_CrossGS_SIOS_SION/';
 input_struct.str_to_match = 'EPSI24';
 
 % -------------------------------------------------------------------------
 
 % These will probably be the same for the whole cruise
-input_struct.raw_dir = '/Volumes/My Drive/DATA/TFO/2024/re-processed/20240809_d2_deeptest/raw/';
+input_struct.raw_dir = '/Volumes/My Drive/DATA/TFO/2024/20240811_d7_CrossGS_SIOS_SION/raw/';
 input_struct.Meta_Data_process_file = '~/ARNAUD/SCRIPPS/EPSILOMETER/Meta_Data_Process/MDP_tfo_2024.txt';
 input_struct.refresh_time_sec =  5*60;
 input_struct.cruise_specifics = 'tfo_2024';
@@ -146,8 +146,8 @@ if isfield(input_struct,'str_to_match')
 else
     file_list = dir(fullfile(dirs.raw_incoming,'EPSI*'));
 end
-eval(['!cp ' fullfile(file_list(1).folder,file_list(1).name) ' ' dirs.raw_copy]);
-
+% eval(['!cp ' fullfile(file_list(1).folder,file_list(1).name) ' ' dirs.raw_copy]);
+[SUCCESS,MESSAGE,MESSAGEID] = copyfile(fullfile(file_list(1).folder,file_list(1).name),dirs.raw_copy);
 % % Initialize epsi_class in process_dir and create blank structures to fill
 % % with data
 % obj = epsi_class(process_dir,Meta_Data_process_file);
