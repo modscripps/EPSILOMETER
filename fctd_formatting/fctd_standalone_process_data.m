@@ -147,6 +147,7 @@ else
     file_list = dir(fullfile(dirs.raw_incoming,'EPSI*'));
 end
 % eval(['!cp ' fullfile(file_list(1).folder,file_list(1).name) ' ' dirs.raw_copy]);
+
 [SUCCESS,MESSAGE,MESSAGEID] = copyfile(fullfile(file_list(1).folder,file_list(1).name),dirs.raw_copy);
 % % Initialize epsi_class in process_dir and create blank structures to fill
 % % with data

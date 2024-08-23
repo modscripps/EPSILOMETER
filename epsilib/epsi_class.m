@@ -31,7 +31,8 @@ classdef epsi_class < handle
     methods
         function obj=epsi_class(varargin)
 
-            
+            % ALB Ideally all Meta_Data buisness should be written in the
+            % .modraw so we can remove all these dependance.  
             if nargin<1
                 data_path = pwd;
                 Meta_Data_process_file = []; %Default Meta_Data process file not specified
@@ -230,6 +231,8 @@ classdef epsi_class < handle
 
                         end
 
+                        % ALB this could be removed when reading Meta_Data
+                        % from modraw (if SBE cal coef and epsi cal coef are printed there)
                         % NC added on NORSE 2023 - add serial numbers
                         % defined in Meta_Data_Process file
                         try
@@ -285,6 +288,8 @@ classdef epsi_class < handle
                             fprintf('Copied bench_config to data directory. \n')
                         end
 
+                        % ALB this could be removed when reading Meta_Data
+                        % from modraw (if SBE cal coef and epsi cal coef are printed there)
                         % NC added on NORSE 2023 - add serial numbers
                         % defined in Meta_Data_Process file
                         try
@@ -316,6 +321,8 @@ classdef epsi_class < handle
                     % Read PROCESS Meta_Data from default text file
                     obj.f_read_MetaProcess(Meta_Data_process_file);
 
+                    % ALB this could be removed when reading Meta_Data
+                    % from modraw (if SBE cal coef and epsi cal coef are printed there)
                     % NC added on NORSE 2023 - add serial numbers
                     % defined in Meta_Data_Process file
                     try
@@ -341,7 +348,7 @@ classdef epsi_class < handle
             obj.Meta_Data = epsiSetup_set_epsi_paths(obj.Meta_Data);
 
             % Also, print all the directories just to be sure
-            disp('... These are your directories:')
+            % disp('... These are your directories:')
             %fprintf('process path: %s \n',obj.Meta_Data.paths.process_library);
             %fprintf('data path: %s \n',obj.Meta_Data.paths.data);
             %fprintf('calibration path: %s \n',obj.Meta_Data.paths.calibration);

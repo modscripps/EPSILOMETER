@@ -100,9 +100,9 @@ save(fullfile(fctd_mat_dir,'FCTDgrid'),'FCTDgrid','FCTDup','FCTDdown')
 
 end %end concatenate_fctd_data
 
-% -------------------------------------------------------------------------
-function [FCTD] = add_microconductivity(FCTD)
+% -------------------------------------------------------------------------function [FCTD] = add_microconductivity(FCTD)
 
+function [FCTD] = add_microconductivity(FCTD)
 % Check for chi data
 if isfield(FCTD,'uConductivity') && ~isfield(FCTD,'chi')
     

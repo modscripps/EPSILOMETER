@@ -2004,10 +2004,21 @@ else
                     % parse_ttv_block_data=sscanf(rec_ttv,'%08x,%08x,%08x,%08x\r\n');
                     parse_ttv_block_data=strsplit(rec_ttv,',');
 
-                    ttv.tof_up(n_rec)   = hex2dec(parse_ttv_block_data{1});
-                    ttv.tof_down(n_rec) = hex2dec(parse_ttv_block_data{2});
-                    ttv.dtof(n_rec)     = hex2dec(parse_ttv_block_data{3});
-                    ttv.vfr(n_rec)      = hex2dec(parse_ttv_block_data{4});
+                    % Convert the hexadecimal string to uint32
+                    % ttv.tof_up(n_rec)   = uint32(hex2dec(parse_ttv_block_data{1}([7 8 5 6 3 4 1 2])));
+                    % ttv.tof_down(n_rec) = uint32(hex2dec(parse_ttv_block_data{2}([7 8 5 6 3 4 1 2])));
+                    % ttv.dtof(n_rec)     = uint32(hex2dec(parse_ttv_block_data{3}([7 8 5 6 3 4 1 2])));
+                    % ttv.vfr(n_rec)      = uint32(hex2dec(parse_ttv_block_data{4}([7 8 5 6 3 4 1 2])));
+                    ttv.tof_up(n_rec)   = double(typecast(uint32(hex2dec(parse_ttv_block_data{1})),'single'));
+                    ttv.tof_down(n_rec) = double(typecast(uint32(hex2dec(parse_ttv_block_data{2})),'single'));
+                    ttv.dtof(n_rec)     = double(typecast(uint32(hex2dec(parse_ttv_block_data{3})),'single'));
+                    ttv.vfr(n_rec)      = double(typecast(uint32(hex2dec(parse_ttv_block_data{4})),'single'));
+                    % Convert the uint32 to single precision float
+                    % ttv.tof_up(n_rec)   = typecast(ttv.tof_up(n_rec),'single');
+                    % ttv.tof_down(n_rec) = typecast(ttv.tof_down(n_rec),'single');
+                    % ttv.dtof(n_rec)     = typecast(ttv.dtof(n_rec),'single');
+                    % ttv.vfr(n_rec)      = typecast(ttv.tof_vfr(n_rec),'single');
+
 
                     % If timestamp has values like 1.6e12, it is in milliseconds since Jan
                     % 1, 1970. Otherwise it's in milliseconds since the start of the record
