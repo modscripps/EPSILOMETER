@@ -20,9 +20,28 @@
 %  .refresh_time_sec = (default 5*60), refresh period in seconds 
 %  .version       = (default 4), version of mod_som_read_epsi_files.m to use 
 % -------------------------------------------------------------------------
+path2setup='~/ARNAUD/SCRIPPS/EPSILOMETER/acq/fctd_epsi_acq/build/fctd_epsi/Build/Products/Debug/Setup';
+fid=fopen(path2setup,'r');
+fseek(fid,0,1);
+frewind(fid);
+str = fread(fid,'*char')';
+fclose(fid);
+newSetup_flag=contains(str,'CTD.fishflag=');
+if newSetup_flag
+    fishflag_str      = str(strfind(str,'CTD.fishflag=')+(0:100));
+    fishflag_str      = fishflag_str(1:find(uint8(fishflag_str)==10,1,'first'));
+    fishflag_name      = strsplit(fishflag_str,'=');
+    fishflag_name      = fishflag_name{2}(2:end-2);
+    instrument = fishflag_name;
+
+else
+    % instrument = 'fctd';
+    % instrument = 'fctd_tridente';
+    instrument = 'epsi';
+
+end
 
 % Change these for each deployment
-instrument = 'epsi';
 input_struct.process_dir = '/Users/Shared/FCTD_EPSI/RAW';
 input_struct.str_to_match = 'EPSI24';
 

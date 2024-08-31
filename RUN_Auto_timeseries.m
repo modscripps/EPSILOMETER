@@ -22,9 +22,30 @@
 
 % -------------------------------------------------------------------------
 % --- USER CHOICES --------------------------------------------------------
-% instrument = 'fctd';
-% instrument = 'fctd_tridente';
-instrument = 'epsi';
+% --- From ftcd_epsi/Setup   -------------------------------------------------------
+%TODO give a folder path to Setup
+path2setup='~/ARNAUD/SCRIPPS/EPSILOMETER/acq/fctd_epsi_acq/build/fctd_epsi/Build/Products/Debug/Setup';
+fid=fopen(path2setup,'r');
+fseek(fid,0,1);
+frewind(fid);
+str = fread(fid,'*char')';
+fclose(fid);
+newSetup_flag=contains(str,'CTD.fishflag=');
+if newSetup_flag
+    fishflag_str      = str(strfind(str,'CTD.fishflag=')+(0:100));
+    fishflag_str      = fishflag_str(1:find(uint8(fishflag_str)==10,1,'first'));
+    fishflag_name      = strsplit(fishflag_str,'=');
+    fishflag_name      = fishflag_name{2}(2:end-2);
+    instrument = fishflag_name;
+
+else
+    % instrument = 'fctd';
+    % instrument = 'fctd_tridente';
+    instrument = 'epsi';
+
+end
+
+
 
 % Also plot spectra?
 include_spectra = 0;
@@ -52,7 +73,7 @@ input_struct.refresh_time_sec = 2;
 
 % Run the realtime plotting script on a timer
 switch instrument
-    case 'epsi'
+    case {'epsi','EPSI'}
         if ~include_spectra
             epsiAuto_timeseries
         elseif include_spectra
