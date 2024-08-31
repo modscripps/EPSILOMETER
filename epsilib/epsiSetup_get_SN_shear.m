@@ -1,4 +1,4 @@
-function [Meta_Data] = set_SN_shear(Meta_Data)
+function [Meta_Data] = epsiSetup_get_SN_shear(Meta_Data)
 % Set shear probe number and get calibration data
 
 % NC 10/7/21 - Check for 'AFE' or 'epsi' strucutre in Meta_Data. Add

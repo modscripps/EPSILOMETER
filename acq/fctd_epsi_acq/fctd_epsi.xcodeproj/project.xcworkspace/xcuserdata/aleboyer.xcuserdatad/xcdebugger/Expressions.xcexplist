@@ -9,23 +9,18 @@
          contextName = "acq_package_w_data_f:ctd.c">
          <PersistentStrings>
             <PersistentString
-               value = "data_length">
+               value = "dataStrPtr">
             </PersistentString>
             <PersistentString
                value = "payloadSize">
             </PersistentString>
             <PersistentString
-               value = "dataStrPtr">
+               value = "data_length">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
       <ContextState
-         contextName = "FishCTD_AcquireData:ctd.c">
-         <PersistentStrings>
-            <PersistentString
-               value = "(uint32_t) timevalue">
-            </PersistentString>
-         </PersistentStrings>
+         contextName = "acq_package_header_f:ctd.c">
       </ContextState>
       <ContextState
          contextName = "GetFishCTDCal_fromfish:ctd.c">
@@ -36,15 +31,23 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
+         contextName = "FishCTD_AcquireData:ctd.c">
+         <PersistentStrings>
+            <PersistentString
+               value = "strcmp(fishCTDPtr-&gt;CTDPortName,fishCTDPtr-&gt;CommandPortName)">
+            </PersistentString>
+            <PersistentString
+               value = "(uint32_t) timevalue">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
          contextName = "GetFishProbeCal:ctd.c">
          <PersistentStrings>
             <PersistentString
                value = "strPtr = strtok(NULL,sep)">
             </PersistentString>
          </PersistentStrings>
-      </ContextState>
-      <ContextState
-         contextName = "acq_package_header_f:ctd.c">
       </ContextState>
    </ContextStates>
 </VariablesViewState>

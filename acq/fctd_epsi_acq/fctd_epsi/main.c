@@ -268,7 +268,7 @@ int OpenSerialPort4AllSensors(fctd_epsi_ptr_t FCTDPtr)
 
         //ALB 2024/08/20 Initialize port to send command to fish
         //TODO how do I do if the read and command port are the same.
-        if (strcmp(FCTDPtr->fish.CTDPortName,FCTDPtr->fish.CommandPortName)==1){
+        if (strcmp(FCTDPtr->fish.CTDPortName,FCTDPtr->fish.CommandPortName)!=0){
             InitSerialPort(&FCTDPtr->fish.SerialPort4Command, FCTDPtr->fish.CommandPortName);
             SetOptionSerialPort4FishCommand(&FCTDPtr->fish);
             if ((OpenSerialPort(&((FCTDPtr)->fish.SerialPort4Command)))!=0)    // != 0 -> failed
@@ -423,7 +423,8 @@ int ReadSetupFile(fctd_epsi_ptr_t fctd_epsi_ptr)
 		{
 			strPtr = strtok(NULL,sep);	// get number
 			baudrate = atoi(strPtr);		// convert string to number
-			fctd_epsi_ptr->fish.SerialPort4CTD.speed = baudrate;
+			fctd_epsi_ptr->fish.SerialPort4CTD.speed     = baudrate;
+            fctd_epsi_ptr->fish.SerialPort4Command.speed = baudrate;
 		}
 		if (!strcmp("CTD.printData",strPtr))	// diplay CTD data
 		{

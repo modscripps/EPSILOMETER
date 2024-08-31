@@ -62,9 +62,12 @@ end
 
 % Find freuencies for applying lowpass filter
 lowpass_cutoff_Hz = 1/numSec_lowpass;
+Fc=lowpass_cutoff_Hz./(sampling_rate_Hz/2);
+[b,a]=cheby2(3,20,Fc,"low");
 
 % Lowpass filter the pressure, and get dpdt
-p_lowpass = lowpass(fillgaps(p),lowpass_cutoff_Hz,sampling_rate_Hz);
+% p_lowpass = lowpass(fillgaps(p),lowpass_cutoff_Hz,sampling_rate_Hz);
+p_lowpass = filtfilt(b,a,fillgaps(p));
 dpdt_mid = diff(p_lowpass)./dt;
 dpdt = interp1(linspace(0,1,length(dpdt_mid)),dpdt_mid,linspace(0,1,length(p)));
 
@@ -261,7 +264,7 @@ end
 %% If you're using downcasts startprof/endprof = startdown/enddown. 
 % If you're using upcasts, startprof/endprof = startup/endup
 % If you're using both, startprof/endprof = startdown/enddown and startup/endup
-switch Meta_Data.PROCESS.profile_dir
+switch Meta_Data.paths.profiles
     case 'down'
         PT.startprof = PT.startdown;
         PT.endprof = PT.enddown;

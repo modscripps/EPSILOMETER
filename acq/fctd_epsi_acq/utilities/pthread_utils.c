@@ -109,7 +109,7 @@ void *stop_ftcd_epsi_f(void *arg)
 		{
             fprintf(stdout, "som.stop\r\n");
             sprintf(som_cmd,"%s\r\n","som.stop");
-            if (strcmp(fCTDPtr->fish.CTDPortName,fCTDPtr->fish.CommandPortName)==1){
+            if (strcmp(fCTDPtr->fish.CTDPortName,fCTDPtr->fish.CommandPortName)!=0){
                 numBytes = write(fCTDPtr->fish.SerialPort4Command.spd, som_cmd, strlen(som_cmd));
             }else{
                 numBytes = write(fCTDPtr->fish.SerialPort4CTD.spd, som_cmd, strlen(som_cmd));
@@ -124,13 +124,21 @@ void *stop_ftcd_epsi_f(void *arg)
 			fCTDPtr->done = TRUE;
 			if(fCTDPtr->ctd_flag) {
                 fCTDPtr->fish.Done = TRUE;
+                if (strcmp(fCTDPtr->fish.CTDPortName,fCTDPtr->fish.CommandPortName)!=0){
+                    
+                    fprintf(stdout, "Closing Command port.\n");
+                    RealeaseSPRead(&fCTDPtr->fish.SerialPort4Command);
+                }
+                fprintf(stdout, "Closing CTD port.\n");
                 RealeaseSPRead(&fCTDPtr->fish.SerialPort4CTD);
             }
 			if(fCTDPtr->pcode_flag){
                 fCTDPtr->pcode.PCodeDone = TRUE;
+                fprintf(stdout, "Closing pcode.\n");
                 RealeaseSPRead(&fCTDPtr->pcode.SerialPort4PCode);
             }
 			if(fCTDPtr->network.TCPIPSocket.fdTCPIP)
+                fprintf(stdout, "Closing TCPIP socket.\n");
                 close(fCTDPtr->network.TCPIPSocket.fdTCPIP);	// to terminate accept()
 		}
 	}

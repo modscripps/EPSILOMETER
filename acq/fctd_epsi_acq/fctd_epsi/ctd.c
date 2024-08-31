@@ -683,20 +683,28 @@ Boolean FishCTD_AcquireData(fish_ctd_ptr_t fishCTDPtr)
             timevalue = timev_ptr->tv_sec;
             fprintf(stdout, "time.set %u\r\n",(uint32_t) timevalue);
             sprintf(som_cmd,"time.set %u\r\n",(uint32_t) timevalue);
-            if (strcmp(fishCTDPtr->CTDPortName,fishCTDPtr->CommandPortName)==1){
+            if (strcmp(fishCTDPtr->CTDPortName,fishCTDPtr->CommandPortName)!=0){
                 numBytes = write(fishCTDPtr->SerialPort4Command.spd, som_cmd, strlen(som_cmd));
             }else{
                 numBytes = write(fishCTDPtr->SerialPort4CTD.spd, som_cmd, strlen(som_cmd));
             }
-                
+            while (delay>0){
+                delay--;
+            }
+            delay=0xFFFF;
+
 
             fprintf(stdout, "som.telemetry\r\n");
             sprintf(som_cmd,"som.telemetry\r\n");
-            if (strcmp(fishCTDPtr->CTDPortName,fishCTDPtr->CommandPortName)==1){
+            if (strcmp(fishCTDPtr->CTDPortName,fishCTDPtr->CommandPortName)!=0){
                 numBytes = write(fishCTDPtr->SerialPort4Command.spd, som_cmd, strlen(som_cmd));
             }else{
                 numBytes = write(fishCTDPtr->SerialPort4CTD.spd, som_cmd, strlen(som_cmd));
             }
+            while (delay>0){
+                delay--;
+            }
+            delay=0xFFFF;
 
 
 //            status = acq_package_w_data_f(fishCTDPtr,data_str,&data_length);
@@ -707,25 +715,34 @@ Boolean FishCTD_AcquireData(fish_ctd_ptr_t fishCTDPtr)
 
                 fprintf(stdout, "som.epsi\r\n");
                 sprintf(som_cmd,"som.epsi\r\n");
-                if (strcmp(fishCTDPtr->CTDPortName,fishCTDPtr->CommandPortName)==1){
+                if (strcmp(fishCTDPtr->CTDPortName,fishCTDPtr->CommandPortName)!=0){
                     numBytes = write(fishCTDPtr->SerialPort4Command.spd, som_cmd, strlen(som_cmd));
                 }else{
                     numBytes = write(fishCTDPtr->SerialPort4CTD.spd, som_cmd, strlen(som_cmd));
                 }
+                while (delay>0){
+                    delay--;
+                }
+                delay=0xFFFF;
 
 
             }else if(strcmp(fishCTDPtr->fish_flag,"FCTD")==0){
                 fprintf(stdout, "som.fctd\r\n");
                 sprintf(som_cmd,"som.fctd\r\n");
-                if (strcmp(fishCTDPtr->CTDPortName,fishCTDPtr->CommandPortName)==1){
+                if (strcmp(fishCTDPtr->CTDPortName,fishCTDPtr->CommandPortName)!=0){
                     numBytes = write(fishCTDPtr->SerialPort4Command.spd, som_cmd, strlen(som_cmd));
                 }else{
                     numBytes = write(fishCTDPtr->SerialPort4CTD.spd, som_cmd, strlen(som_cmd));
                 }
+                while (delay>0){
+                    delay--;
+                }
+                delay=0xFFFF;
+
             }
             fprintf(stdout, "som.start\r\n");
             sprintf(som_cmd,"som.start\r\n");
-            if (strcmp(fishCTDPtr->CTDPortName,fishCTDPtr->CommandPortName)==1){
+            if (strcmp(fishCTDPtr->CTDPortName,fishCTDPtr->CommandPortName)!=0){
                 numBytes = write(fishCTDPtr->SerialPort4Command.spd, som_cmd, strlen(som_cmd));
             }else{
                 numBytes = write(fishCTDPtr->SerialPort4CTD.spd, som_cmd, strlen(som_cmd));
@@ -852,34 +869,8 @@ Boolean FishCTD_AcquireData(fish_ctd_ptr_t fishCTDPtr)
                             memcpy(&fishCTDPtr->FastCTDSetup.ctd_coeff.strcal,"$",1);
                             memcpy(&fishCTDPtr->FastCTDSetup.ctd_coeff.strcal[1],(uint8_t*)&data_str,data_length);
                             fishCTDPtr->FastCTDSetup.ctd_coeff.strcal_length=data_length+1;
-//                            if((fp = fopen(&fishCTDPtr->SaveSetup_name, "w"))==NULL)
-//                            {
-//                                fprintf(stderr,"Could not open file %s for writing: %d - %s\n",&fishCTDPtr->SaveSetup_name,errno, strerror(errno));
-//                                  return 0;
-//                            }
-//
-//                            if(fp_data)
-//                            {
-//                                if((numBytesWr=fwrite(confstr,1,strlen(confstr),fp_data))==-1)
-//                                {
-//                                    fprintf(stderr,"ERROR! Can not write setup data file\n");
-//                                    return 0;
-//                                }
-//                                total_chars += numBytesWr;
-//                            }
-//                            else
-//                            {
-//                                strncat(str,confstr,sizeof(confstr)-strlen(confstr)-1);
-//                                total_chars = (int)strlen(str);
-//                            }
-//                        }
-//                        if (fp) {fclose(fp);fp = NULL;}
-//
-//                            if (fp) fclose(fp);
 
-                            
-                            
-                            
+                                                                            
                         }
                         if((*(uint32_t*)data_str_ptr=='4EFE') |
                            (*(uint32_t*)data_str_ptr=='3EFE'))
@@ -950,7 +941,7 @@ Boolean FishCTD_AcquireData(fish_ctd_ptr_t fishCTDPtr)
                             //                                fishCTDPtr->AltCirBuff[indx].AltTime = hex2int_n(data_str+ALT_HEX_STR_POS,4)*1.0;
                             fishCTDPtr->LatestAltTime = fishCTDPtr->AltCirBuff[indx].altimeter_time;
                         }
-                        
+
                         break;   //end of case 'SB49' & 'SBE41'
                     case 'UTCA':  // "$ACTU" // San 2021 06 21
                     case 'TLOV':  // "$VOLT" // San 2021 06 21
@@ -1248,7 +1239,7 @@ int GetFishCTDCal_fromfish(fish_ctd_ptr_t fishCTDPtr)
     fprintf(stdout, "sbe.real 1\r\n");
     sprintf(som_cmd,"sbe.real 1\r\n");
     
-    if (strcmp(fishCTDPtr->CTDPortName,fishCTDPtr->CommandPortName)==1){
+    if (strcmp(fishCTDPtr->CTDPortName,fishCTDPtr->CommandPortName)!=0){
         numBytes = write(fishCTDPtr->SerialPort4Command.spd, som_cmd, strlen(som_cmd));
     }else{
         numBytes = write(fishCTDPtr->SerialPort4CTD.spd, som_cmd, strlen(som_cmd));

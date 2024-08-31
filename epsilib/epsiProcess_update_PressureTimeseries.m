@@ -5,6 +5,8 @@ if ~exist(fullfile(dirname, 'PressureTimeseries.mat'),'file')
     %sec/hour)*(16 Hz). If the deployment ends up being longer than 24
     %hours, the array will keep growing at every iteration and can slow
     %down processing speed.
+    
+    % ALB TODO use Meta_Data to define array length.
     arrayLength = 24*3600*16;
 
     % If it's the first time, make a big array of 'emptyFlag'

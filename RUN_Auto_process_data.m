@@ -23,16 +23,16 @@
 
 % Change these for each deployment
 instrument = 'epsi';
-input_struct.process_dir = '/Users/Shared/EPSI_PROCESSING/ASTRAL2024/Processed/24_0513_test';
+input_struct.process_dir = '/Users/Shared/FCTD_EPSI/RAW';
 input_struct.str_to_match = 'EPSI24';
 
 % -------------------------------------------------------------------------
 
 % These will probably be the same for the whole cruise
-input_struct.raw_dir = '/Users/Shared/EPSI_PROCESSING/ASTRAL2024/Processed/RAW_full_cruise';
-input_struct.Meta_Data_process_file = 'Volumes/Software_ASTRAL2024/EPSILOMETER/Meta_Data_Process/MDP_astral_2024.txt';
-input_struct.refresh_time_sec =  5*60;
-input_struct.cruise_specifics = 'tfo_2023';
+input_struct.raw_dir = '/Users/Shared/FCTD_EPSI/RAW/raw';
+input_struct.Meta_Data_process_file = '/Users/aleboyer/ARNAUD/SCRIPPS/EPSILOMETER/Meta_Data_Process/MDP_tfo_2024.txt';
+input_struct.refresh_time_sec =  1*60;
+input_struct.cruise_specifics = 'tfo_2024';
 switch instrument
     case 'epsi'
         input_struct.depth_array = 0:500;
@@ -41,8 +41,7 @@ switch instrument
 end
 
 % Set command window color
-set_window_color('cyan')
-
+% set_window_color('cyan')
 % Run the processing script on a timer
 switch instrument
     case 'epsi'

@@ -1,5 +1,5 @@
 %% Plot temperature, epsilon, and chi with density contours
-data=load(fullfile(ec.Meta_Data.paths.profiles,'griddedProfiles'));
+% data=load(fullfile(ec.Meta_Data.paths.profiles,'griddedProfiles'));
 
 data.GRID.bottom_depth=filloutliers(data.GRID.bottom_depth,'linear');
 close all

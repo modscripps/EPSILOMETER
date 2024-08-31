@@ -22,9 +22,9 @@
 
 % -------------------------------------------------------------------------
 % --- USER CHOICES --------------------------------------------------------
-instrument = 'fctd';
+% instrument = 'fctd';
 % instrument = 'fctd_tridente';
-%instrument = 'epsi';
+instrument = 'epsi';
 
 % Also plot spectra?
 include_spectra = 0;
@@ -32,12 +32,12 @@ include_spectra = 0;
 % Meta_Data process file (make sure this file has the correct serial
 % numbers for CTD, s1, s2, t1, t2. If you're running fctd, you can leave
 % s1, s2, t1, t2 = '115')
-Meta_Data_process_file = 'MDP_tfo2024_fctd_0807.txt';
+Meta_Data_process_file = 'MDP_tfo_2024.txt';
 
 % These probably will be the same for the whole cruise
 
-input_struct.raw_dir = '/Users/ncouto/Desktop/OCEAN';
-Meta_Data_process_dir = '~/GitHub/EPSILOMETER/Meta_Data_Process';
+input_struct.raw_dir = '/Users/Shared/FCTD_EPSI/RAW';
+Meta_Data_process_dir = '/Users/aleboyer/ARNAUD/SCRIPPS/EPSILOMETER/Meta_Data_Process';
 
 %input_struct.raw_dir = '/Users/Shared/EPSI_PROCESSING/TFO2024/Realtime_RAW/';
 %Meta_Data_process_dir = '/Volumes/Software_TFO2024/EPSILOMETER/Meta_Data_Process/';
@@ -48,7 +48,7 @@ input_struct.refresh_time_sec = 2;
 % -------------------------------------------------------------------------
 
 % Set command window color
-set_window_color('yellow')
+% set_window_color('yellow')
 
 % Run the realtime plotting script on a timer
 switch instrument

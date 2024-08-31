@@ -129,7 +129,7 @@ if isclassfield(obj,'ctd')
             hold(ax(8),'on');
             too_close = obj.alt.dst<=2;
             if sum(too_close)>0
-                plot(ax(8),time_array.alt(too_close),obj.alt.dst(too_close),'o','r');
+                plot(ax(8),time_array.alt(too_close),obj.alt.dst(too_close),'or');
             end
         end
     

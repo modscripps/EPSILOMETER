@@ -21,14 +21,14 @@
 % -------------------------------------------------------------------------
 
 % Change these for each deployment
-instrument = 'epsi';
-input_struct.process_dir = '/Volumes/My Drive/DATA/TFO/2024/20240811_d7_CrossGS_SIOS_SION/';
+instrument = 'fctd';
+input_struct.process_dir = '/Volumes/My Drive/DATA/TFO/RR2410/fctd_epsi/20240811_d7_CrossGS_SIOS_SION/';
 input_struct.str_to_match = 'EPSI24';
 
 % -------------------------------------------------------------------------
 
 % These will probably be the same for the whole cruise
-input_struct.raw_dir = '/Volumes/My Drive/DATA/TFO/2024/20240811_d7_CrossGS_SIOS_SION/raw/';
+input_struct.raw_dir = '/Volumes/My Drive/DATA/TFO/RR2410/fctd_epsi/20240811_d7_CrossGS_SIOS_SION/raw/';
 input_struct.Meta_Data_process_file = '~/ARNAUD/SCRIPPS/EPSILOMETER/Meta_Data_Process/MDP_tfo_2024.txt';
 input_struct.refresh_time_sec =  5*60;
 input_struct.cruise_specifics = 'tfo_2024';
@@ -169,5 +169,6 @@ ec = epsi_class(process_dir,Meta_Data_process_file);
 
 disp([datestr(now) ': Converting new raw files to mat...']);
 epsiProcess_convert_new_raw_to_mat(dirs,ec.Meta_Data,"noSync","doFCTD","fileStr",str_to_match,"cruise_specifics",cruise_specifics);
+addpath(genpath('~/ARNAUD/SCRIPPS/FastCTD_MATLAB/'))
 plot_fctd_sections;
 

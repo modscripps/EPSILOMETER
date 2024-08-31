@@ -50,7 +50,7 @@ cb(3).Label.String = 'Chla';
 % N^2
 ax(4) = subtightplot(4,1,4);
 %pcolorjw(FCTDgrid.time,FCTDgrid.depth,((FCTDgrid.chla)/2^16-0.5)*500.0);
-[bfrq,vort,p_ave] = sw_bfrq(FCTDgrid.salinity,FCTDgrid.temperature,FCTDgrid.pressure,12);
+[bfrq,vort,p_ave] = sw_bfrq(FCTDgrid.salinity,FCTDgrid.temperature,FCTDgrid.pressure,mean(FCTDgrid.latitude,'omitmissing'));
 pcolorjw(FCTDgrid.time(iplot),p_ave(:,1),real(log10(bfrq(:,iplot))));
 colormap(ax(4),cmocean('speed'))
 ax(4).CLim = ([-5.5 -2.5]);

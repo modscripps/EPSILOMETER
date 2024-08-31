@@ -44,79 +44,99 @@ if ~isempty(myFileIdx)
     % and merge them.
     if length(myFileIdx)==1
         try
-            load([Meta_Data.paths.mat_data '/' TimeIndex.filenames{myFileIdx} '.mat']);
+            MatData=load([Meta_Data.paths.mat_data '/' TimeIndex.filenames{myFileIdx} '.mat']);
         catch
             error(['Can''t load ' TimeIndex.filenames{myFileIdx}])
         end
     elseif length(myFileIdx)>1
         % Load the first file and name the structures 'Out'
         try
-            load([Meta_Data.paths.mat_data '/' TimeIndex.filenames{myFileIdx(1)} '.mat']);
+            MatData=load([Meta_Data.paths.mat_data '/' TimeIndex.filenames{myFileIdx(1)} '.mat']);
         catch
             error(['Can''t load ' TimeIndex.filenames{myFileIdx(1)}])
         end
-        if exist('epsi','var')
-            epsiOut = epsi;
+        if isfield(MatData,'epsi')
+            epsiOut = MatData.epsi;
             clear epsi
         end
-        if exist('ctd','var')
-            ctdOut = ctd;
+        if isfield(MatData,'ctd')
+            ctdOut = MatData.ctd;
             clear ctd
         end
-        if exist('alt','var')
-            altOut = alt;
+        if isfield(MatData,'alt')
+            altOut = MatData.alt;
             clear alt
         end
-        if exist('vnav','var')
-            vnavOut = vnav;
+        if isfield(MatData,'isap')
+            isapOut = MatData.isap;
+            clear alt
+        end
+        if isfield(MatData,'vnav')
+            vnavOut = MatData.vnav;
             clear vnav
         end
-        if exist('ttv','var')
-            ttvOut = ttv;
+        if isfield(MatData,'ttv')
+            ttvOut = MatData.ttv;
+            clear ttv
+        end
+        if isfield(MatData,'gps')
+            gpsOut = MatData.gps;
             clear ttv
         end
         % Load the rest of the files, merging as you go (there shouldn't be
         % more than 2, so this should be pretty fast)
         for iF=2:length(myFileIdx)
             try
-                load([Meta_Data.paths.mat_data '/' TimeIndex.filenames{myFileIdx(iF)} '.mat']);
+                MatData=load([Meta_Data.paths.mat_data '/' TimeIndex.filenames{myFileIdx(iF)} '.mat']);
             catch
                 error(['Can''t load ' TimeIndex.filenames{myFileIdx(iF)}])
             end
-            if exist('epsi','var') && isstruct(epsi)
-                epsiOut = epsiProcess_merge_mat_files(epsiOut,epsi);
+            if isfield(MatData,'epsi') && isstruct(MatData.epsi)
+                epsiOut = epsiProcess_merge_mat_files(epsiOut,MatData.epsi);
             end
-            if exist('ctd','var') && isstruct(ctd)
-                ctdOut = epsiProcess_merge_mat_files(ctdOut,ctd);
+            if isfield(MatData,'ctd') && isstruct(MatData.ctd)
+                ctdOut = epsiProcess_merge_mat_files(ctdOut,MatData.ctd);
             end
-            if exist('alt','var') && isstruct(alt)
-                altOut = epsiProcess_merge_mat_files(altOut,alt);
+            if isfield(MatData,'alt') && isstruct(MatData.alt)
+                altOut = epsiProcess_merge_mat_files(altOut,MatData.alt);
             end
-            if exist('vnav','var') && isstruct(vnav)
-                vnavOut = epsiProcess_merge_mat_files(vnavOut,vnav);
+            if isfield(MatData,'isap') && isstruct(MatData.isap)
+                isapOut = epsiProcess_merge_mat_files(altOut,MatData.isap);
             end
-            if exist('ttv','var') && isstruct(ttv)
-                ttvOut = epsiProcess_merge_mat_files(ttvOut,ttv);
+            if isfield(MatData,'vnav') && isstruct(MatData.vnav)
+                vnavOut = epsiProcess_merge_mat_files(vnavOut,MatData.vnav);
+            end
+            if isfield(MatData,'ttv') && isstruct(MatData.ttv)
+                ttvOut = epsiProcess_merge_mat_files(ttvOut,MatData.ttv);
+            end
+            if isfield(MatData,'gps') && isstruct(MatData.gps)
+                gpsOut = epsiProcess_merge_mat_files(gpsOut,MatData.gps);
             end
         end
         
         % Rename everything
-        if exist('epsi','var')
+        if isfield(MatData,'epsi')
             epsi = epsiOut;
         end
-        if exist('ctd','var')
+        if isfield(MatData,'ctd')
             ctd = ctdOut;
         end
-        if exist('alt','var')
+        if isfield(MatData,'alt')
             alt = altOut;
         end
-        if exist('vnav','var')
+        if isfield(MatData,'isap')
+            isap = isapOut;
+        end
+        if isfield(MatData,'vnav')
             vnav = vnavOut;
         end
-        if exist('vnav','var')
+        if isfield(MatData,'vnav')
             ttv = ttvOut;
         end
-        clear epsiOut ctdOut altOut vnavOut ttvOut
+        if isfield(MatData,'gps')
+            gps = gpsOut;
+        end
+        clear epsiOut ctdOut altOut vnavOut ttvOut isapOut gpsOut
         
     end
     
@@ -132,12 +152,12 @@ if ~isempty(myFileIdx)
             inRange = ctd.time_s>=tRange(1) & ctd.time_s<=tRange(end);
         end
         
-        ctdFields = fields(ctd);
+        ctdFields = fields(MatData.ctd);
         % Don't add any of the '_raw' fields
         notRaw = cell2mat(cellfun(@(C) isempty(strfind(C,'_raw')),ctdFields,'UniformOutput',0));
         ctdFields = ctdFields(notRaw);
         for iField=1:numel(ctdFields)
-            if ~all(isnan(ctd.(ctdFields{iField})))  %NC 2/25/22 - Changed from checking for no nans to checking that it is not ALL nans
+            if ~all(isnan(MatData.ctd.(ctdFields{iField})))  %NC 2/25/22 - Changed from checking for no nans to checking that it is not ALL nans
                 Timeseries.ctd.(ctdFields{iField}) = ctd.(ctdFields{iField})(inRange);
             else
                 Timeseries.ctd.(ctdFields{iField})=[];
@@ -178,7 +198,23 @@ if ~isempty(myFileIdx)
         end
     end
     end
-    
+    %% Add isap to Timeseries
+    if exist('isap','var')
+    if isfield(isap,'dnum') || isfield(isap,'time_s')
+        switch tRangeChoice
+            case 'dnum'
+            inRange = isap.dnum>=tRange(1) & isap.dnum<=tRange(end);
+            case 'time_s'
+            inRange = isap.time_s>=tRange(1) & isap.time_s<=tRange(end);
+        end
+        isapFields = fields(isap);
+        for iField=1:numel(isapFields)
+            Timeseries.isap.(isapFields{iField}) = isap.(isapFields{iField})(inRange);
+        end
+    end
+    end
+
+
     %% Add vnav to Timeseries
     if exist('vnav','var')
         
@@ -232,7 +268,9 @@ if ~isempty(myFileIdx)
 
     
     %% Add Meta_Data
-    Timeseries.Meta_Data = Meta_Data;
+    % ALB I am using the Meta_Data from the modmat.
+    % I think it is fime to use any of them (many modmat per profiles) for a profile 
+    Timeseries.Meta_Data = MatData.Meta_Data;
     
 else
     Timeseries = [];

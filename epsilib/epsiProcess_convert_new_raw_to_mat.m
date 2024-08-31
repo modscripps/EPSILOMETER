@@ -51,7 +51,7 @@ function [matData] = epsiProcess_convert_new_raw_to_mat(dirs,Meta_Data,varargin)
 matData.epsi  = [];
 matData.ctd   = [];
 matData.alt   = [];
-matData.isap   = [];
+matData.isap  = [];
 matData.act   = [];
 matData.vnav  = [];
 matData.gps   = [];
@@ -107,14 +107,16 @@ while (n_items > 0)
             index = index +1;
             n_items = n_items-1;
         case 2 %doFCTD
-            idxFlag = find(cell2mat(cellfun(@(C) ~isempty(strfind(C,'doFCTD')),varargin,'uniformoutput',0)));
+            idx_char=find(cellfun(@(x) (ischar(x)|isstring(x)),varargin));
+            idxFlag = idx_char(cell2mat(cellfun(@(C) contains(C,'doFCTD'),varargin(idx_char),'uniformoutput',0)));
             doFCTD = true;
             index = index+1;
             n_items = n_items-1;
         case 3 %calc_micro
             % Find the index of varargin that = 'calc_micro'. The following
             % index contains the version number
-            idxFlag = find(cell2mat(cellfun(@(C) ~isempty(strfind(C,'calc_micro')),varargin,'uniformoutput',0)));
+            idx_char=find(cellfun(@(x) (ischar(x)|isstring(x)),varargin));
+            idxFlag = idx_char(cell2mat(cellfun(@(C) contains(C,'calc_micro'),varargin(idx_char),'uniformoutput',0)));
             calc_micro = varargin{idxFlag+1};
             index = index+2;
             n_items = n_items-2;
@@ -122,14 +124,16 @@ while (n_items > 0)
             fileStr = true;
             % Find the index of varargin that = 'fileStr'. The following
             % index contains 'str_to_match'
-            idxFlag = find(cell2mat(cellfun(@(C) ~isempty(strfind(C,'fileStr')),varargin,'uniformoutput',0)));
+            idx_char=find(cellfun(@(x) (ischar(x)|isstring(x)),varargin));
+            idxFlag = idx_char(cell2mat(cellfun(@(C) contains(C,'fileStr'),varargin(idx_char),'uniformoutput',0)));
             str_to_match = varargin{idxFlag+1};
             index = index+2; %+2 because the following varargin will str_to_match
             n_items = n_items-2;
         case 5 %version % NC 10/11/21 - added optional version input
             % Find the index of varargin that = 'version'. The following
             % index contains the version number
-            idxFlag = find(cell2mat(cellfun(@(C) ~isempty(strfind(C,'version')),varargin,'uniformoutput',0)));
+            idx_char=find(cellfun(@(x) (ischar(x)|isstring(x)),varargin));
+            idxFlag = idx_char(cell2mat(cellfun(@(C) contains(C,'version'),varargin(idx_char),'uniformoutput',0)));
             version = varargin{idxFlag+1};
             index = index+2; %+2 because the following varargin will be the version number
             n_items = n_items-2;
@@ -138,7 +142,8 @@ while (n_items > 0)
             index = index+1;
             n_items = n_items-1;
         case 7 %cruise_specifics
-            idxFlag = find(cell2mat(cellfun(@(C) ~isempty(strfind(C,'cruise_specifics')),varargin,'uniformoutput',0)));
+            idx_char=find(cellfun(@(x) (ischar(x)|isstring(x)),varargin));
+            idxFlag = idx_char(cell2mat(cellfun(@(C) contains(C,'cruise_specifics'),varargin(idx_char),'uniformoutput',0)));
             cruise_specifics = varargin{idxFlag+1};
             index = index+2; %+2 because the following varargin will be the version number
             n_items = n_items-2;
@@ -195,19 +200,6 @@ if rSync
         ind = find(match,1,'first');
         first_file = fullfile(dirs.raw_incoming,names{ind});
         %end
-
-        % Workaround because rsync won't repeat copying a file
-        %com = sprintf('/usr/bin/rsync -av  --include ''%s'' --exclude ''*'' %s %s',suffixSearch,RawDir,RawDirDuplicate);  %The exclude was useful before... but now it actually excludes everything. Leaving this commented in case I need it again
-        %com = sprintf('/usr/bin/rsync -av  --include ''%s'' %s %s',suffixSearch,RawDir,RawDirDuplicate);  %NC - rsync only the files with the str_to_search and suffix
-
-        %     % Rsync the files to a directory for later profile processing
-        %     if ~exist(fullfile(dirs.processing,'raw'),'dir')
-        %         mkdir(fullfile(dirs.processing,'raw'));
-        %     end
-        %     com = sprintf('/usr/bin/rsync -au --progress --files-from=<(find %s -newer %s -type f -exec basename {} %s) %s %s',RawDir,first_file,'\;',RawDir,fullfile(dirs.processing,'raw'));
-        %     fprintf(1,'Running: %s\n',com);
-        %     unix(com);
-        %     fprintf(1,'Done\n');
 
         % Rsync the files to a directory specific to the deployment
         if ~exist(dirs.raw_copy,'dir')
@@ -313,7 +305,7 @@ if ~isempty(myASCIIfiles)
 
                 % Update pressure timeseries
                 if ~isempty(ctd) && isfield(ctd,'dnum')
-                    epsiProcess_update_PressureTimeseries(Meta_Data,MatDir,ctd,Meta_Data.PROCESS.profile_dir)
+                    epsiProcess_update_PressureTimeseries(Meta_Data,MatDir,ctd,Meta_Data.paths.profiles)
                 end
 
                 % Save file for FCTD Format %%%%%% (Bethan 20 June 2021)

@@ -1,6 +1,6 @@
 %TCPIP port for send and receive data
 %TCPIPSocket.portnum=2342
-UDPSocket.portnum=50210
+%UDPSocket.portnum=50210
 %SENSOR SETUP
 
 % experiement name

@@ -29,7 +29,12 @@ if exist(fullfile(fctd_mat_dir,'FCTDall.mat'),'file')==2 %If FCTDall already exi
     
 else % If FCTDall doesn't already exist
     % Load the first file and add microconductivity data
-    load(fullfile(fctd_mat_dir,file_list{1}));
+    load(fullfile(fctd_mat_dir,file_list{1}),'FCTD');
+
+    % %ALB hack TFO2024 to remove chi field and reprocess
+    % FCTD=rmfield(FCTD,'chi');
+    % FCTD=rmfield(FCTD,'chi2');
+
     FCTD = add_microconductivity(FCTD);
     
     % Save data with chi
@@ -43,7 +48,11 @@ for iF=2:length(file_list)
     fprintf(sprintf('Adding file %3.0f of %3.0f to FCTDall \n',iF,length(file_list)));
     
     % Load file and add microconductivity data
-    load(fullfile(fctd_mat_dir,file_list{iF}));
+    load(fullfile(fctd_mat_dir,file_list{iF}),'FCTD');
+    % %ALB hack TFO2024 to remove chi field and reprocess
+    % FCTD=rmfield(FCTD,'chi');
+    % FCTD=rmfield(FCTD,'chi2');
+
     FCTD = add_microconductivity(FCTD);
     
     % Save data with chi
@@ -69,6 +78,7 @@ save(fullfile(fctd_mat_dir,'FCTDall'),'FCTDall')
 %% Grid data and save
 % NC May 2023 - grid both up and downcast data
 % Get downcasts and upcasts
+
 FCTDdown = FastCTD_GridData(FCTDall,'downcast');
 FCTDup = FastCTD_GridData(FCTDall,'upcast');
 
@@ -109,6 +119,7 @@ if isfield(FCTD,'uConductivity') && ~isfield(FCTD,'chi')
     % Load chi_param
     chi_param=FCTD_DefaultChiParam;
     chi_param.fs=320;
+    chi_param.min_spd=0.01; %TFO RR2410 upcast have a slow last part of up cast.
     
     % Reshape the data into a long vector
     FCTD.ucon=reshape(FCTD.uConductivity',20*length(FCTD.time),1)/2^24;
@@ -118,6 +129,7 @@ if isfield(FCTD,'uConductivity') && ~isfield(FCTD,'chi')
     
     % Convert microconductivity to chi
     FCTD = add_chi_microMHA_v2(FCTD,chi_param);
+
     
 end
 

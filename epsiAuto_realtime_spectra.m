@@ -28,7 +28,7 @@ plotSec = 30; %Number of seconds of data that will be plotted in timeseries
 tscan = 4; %Length of scan in seconds
 centerScan = tscan/2; %Plotted spectra will be centered tscan/2 seconds from the end of the timeseries
 str_to_match = '*';
-CTD_SN = '0057';
+CTD_SN = '0237';
 
 % Directory containing streaming raw data
 rawDir = '/Users/Shared/FCTD_EPSI/RAW';

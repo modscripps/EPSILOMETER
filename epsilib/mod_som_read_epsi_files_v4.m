@@ -53,10 +53,103 @@ fclose(fid);
 % Get time now
 Meta_Data.start_dnum = now;
 
+%% Get experiment, cruise, vehicle, pressure case and fish flag from setup, 
+newSetup_flag=contains(str,'CTD.experiment=');
+if newSetup_flag
+    experiment_str    = str(strfind(str,'CTD.experiment=')+(0:100));
+    cruise_str        = str(strfind(str,'CTD.cruise=')+(0:100));
+    vehicle_str       = str(strfind(str,'CTD.vehicle=')+(0:100));
+    pressure_case_str = str(strfind(str,'CTD.fish_pc=')+(0:100));
+    fishflag_str      = str(strfind(str,'CTD.fishflag=')+(0:100));
+
+    experiment_str    = experiment_str(1:find(uint8(experiment_str)==10,1,'first'));
+    cruise_str        = cruise_str(1:find(uint8(cruise_str)==10,1,'first'));
+    vehicle_str       = vehicle_str(1:find(uint8(vehicle_str)==10,1,'first'));
+    pressure_case_str = pressure_case_str(1:find(uint8(pressure_case_str)==10,1,'first'));
+    fishflag_str      = fishflag_str(1:find(uint8(fishflag_str)==10,1,'first'));
+
+    experiment_name    = strsplit(experiment_str,'=');
+    cruise_name        = strsplit(cruise_str,'=');
+    vehicle_name       = strsplit(vehicle_str,'=');
+    pressure_case_name = strsplit(pressure_case_str,'=');
+    fishflag_name      = strsplit(fishflag_str,'=');
+
+
+    experiment_name    = experiment_name{2}(1:end-2);
+    cruise_name        = cruise_name{2}(1:end-2);
+    vehicle_name       = vehicle_name{2}(1:end-2);
+    pressure_case_name = pressure_case_name{2}(1:end-2);
+    fishflag_name      = fishflag_name{2}(1:end-2);
+else
+    experiment_name    = [];
+    cruise_name        = [];
+    vehicle_name       = [];
+    pressure_case_name = [];
+    fishflag_name      = [];
+
+end
+
+%% get CTD cal coef
+header_length=strfind(str,'END_FCTD_HEADER_START_RUN');
+str_SBEcalcoef_header=str(strfind(str,'SERIALNO'):header_length);
+if ~isempty(str_SBEcalcoef_header)
+    SBEcal=get_CalSBE_from_modraw_header(str_SBEcalcoef_header);
+    Meta_Data.CTD.cal=SBEcal;
+else
+    fprintf("SBE cal coef are missing in file %s ",filename)    
+    listfile=dir(Meta_Data.paths.raw_data);
+    list_fullfilename=fullfile({listfile.folder},{listfile.name});
+    idx_file=find(cellfun(@(x) strcmp(x,filename),list_fullfilename));
+    count=0;
+    %ALB If SBEcal missing  ALB using the SBEcal from the previous 10 modraw
+    %files
+    while isempty(str_SBEcalcoef_header)
+        count=count+1;
+        fprintf("  Using Open %s \r\n",list_fullfilename{idx_file-count})
+        fid1 = fopen(list_fullfilename{idx_file-count});
+        fseek(fid1,0,1);
+        frewind(fid1);
+        str1 = fread(fid1,'*char')';
+        fclose(fid1);
+        % get CTD cal coef
+        header_length=strfind(str1,'END_FCTD_HEADER_START_RUN');
+        str_SBEcalcoef_header=str1(strfind(str1,'SERIALNO'):header_length);
+        if ~isempty(str_SBEcalcoef_header)
+            SBEcal=get_CalSBE_from_modraw_header(str_SBEcalcoef_header);
+        end
+        if count>10
+            error("No SBE data in modraw %s. \n Check the file ",filename)
+        end
+    end
+
+end
+%% get Epsi probe Serial Numbers from Header
+str_EPSICHANNEL_start  = strfind(str,'Fish probes serial numbers');
+str_EPSICHANNEL_end    = strfind(str,'end probes serial numbers');
+str_EPSICHANNEL_header = str(str_EPSICHANNEL_start:str_EPSICHANNEL_end-8);
+epsi_probes=[];
+if ~isempty(str_EPSICHANNEL_header)
+    epsi_probes=parse_epsi_channel_string(str_EPSICHANNEL_header);
+    Meta_Data.AFE.t1=epsi_probes.ch1;
+    Meta_Data.AFE.t2=epsi_probes.ch2;
+    Meta_Data.AFE.s1=epsi_probes.ch3;
+    Meta_Data.AFE.s2=epsi_probes.ch4;
+else
+    warning('No Epsi probe serial number in file %s',filename)
+
+end
+
 
 %% Get indices and tokens for each data type you will process
 % ind_*_start  = starting indices of all matches
 % ind_*_end    = ending indices of all matches
+
+[ind_som_start, ind_som_stop]            = regexp(str,'\$SOM3([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
+[ind_dcal_start, ind_dcal_stop]          = regexp(str,'\$DCAL([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
+[ind_gps_start      , ind_gps_stop]      = regexp(str,'\$GPGGA([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
+if isempty(ind_gps_start)
+    [ind_gps_start      , ind_gps_stop]  = regexp(str,'\$INGGA([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
+end
 
 [ind_efe_start, ind_efe_stop]            = regexp(str,'\$EFE([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
 [ind_sbe_start, ind_sbe_stop]            = regexp(str,'\$SB49([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
@@ -68,11 +161,7 @@ end
 [ind_act_start      , ind_act_stop]      = regexp(str,'\$ACTU([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
 [ind_vnav_start     , ind_vnav_stop]     = regexp(str,'\$VNMAR([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
 if isempty(ind_vnav_start)
-    [ind_vnav_start     , ind_vnav_stop]     = regexp(str,'\$VNYPR([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
-end
-[ind_gps_start      , ind_gps_stop]      = regexp(str,'\$GPGGA([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
-if isempty(ind_gps_start)
-    [ind_gps_start      , ind_gps_stop]      = regexp(str,'\$INGGA([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
+    [ind_vnav_start     , ind_vnav_stop] = regexp(str,'\$VNYPR([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
 end
 [ind_seg_start      , ind_seg_stop]      = regexp(str,'\$SEGM([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
 [ind_spec_start     , ind_spec_stop]     = regexp(str,'\$SPEC([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
@@ -132,6 +221,118 @@ tag.laptoptime.indx = get_inds(tag.laptoptime);
 %% Start a list of processed and unprocessed data types
 processed_data_types = {};
 no_data_types = {};
+
+%% Process setup SOM3 data
+if isempty(ind_som_start)
+    no_data_types = [no_data_types,'setup'];
+    setup=[];
+else
+    str_setup=str(ind_som_start+32:ind_som_stop-5);
+    % str_setup=str(ind_som_start:ind_som_stop);
+    setup=mod_som_read_setup_from_raw(str_setup);
+    Meta_Data=epsiSetup_fill_meta_data(Meta_Data,setup);
+
+    if ~isempty(epsi_probes)
+        Meta_Data.AFE.t1.SN=epsi_probes.ch1.SN;
+        Meta_Data.AFE.t1.cal=epsi_probes.ch1.cal;
+        Meta_Data.AFE.t2.SN=epsi_probes.ch2.SN;
+        Meta_Data.AFE.t2.cal=epsi_probes.ch2.cal;
+        Meta_Data.AFE.s1.SN=epsi_probes.ch3.SN;
+        Meta_Data.AFE.s1.cal=epsi_probes.ch3.cal;
+        Meta_Data.AFE.s2.SN=epsi_probes.ch4.SN;
+        Meta_Data.AFE.s2.cal=epsi_probes.ch4.cal;
+    end
+    
+    if newSetup_flag
+        Meta_Data.experiment_name    = experiment_name;
+        Meta_Data.cruise_name        = cruise_name;
+        Meta_Data.vehicle_name       = vehicle_name;
+        Meta_Data.pressure_case_name = pressure_case_name;
+        Meta_Data.fishflag_name      = fishflag_name;
+    end
+
+end
+if isempty(ind_dcal_start)
+end
+
+%% GPS data We have to start with GPS because we need latitude 
+if isempty(ind_gps_start)
+    no_data_types = [no_data_types,'gps'];
+    gps = [];
+else
+    processed_data_types = [processed_data_types,'gps'];
+    %disp('processing gps data')
+    
+    % GPS-specific quantities
+    % ---------------------------
+    gpsmeta.data.n_blocks = numel(ind_gps_start);
+    gpsmeta.data.recs_per_block = 1;
+    gpsmeta.data.n_recs = gpsmeta.data.n_blocks*gpsmeta.data.recs_per_block;
+    
+    ind_time_start = ind_gps_start-10;
+    ind_time_stop  = ind_gps_start-1;
+    
+    % San added these GPS steps. Here, he reads the file header to get system time.
+    % You'll use this to correct the gps timestamp.
+    FID = fopen(filename,'r');
+    if FID<0
+        error('MATLAB:FastCTD_ReadASCII:FileError', 'Could not open file %s',fname);
+    end
+    
+    % NC 7/22/21 Problem! FastCTD_ASCII_parseheader doesn't work if there is
+    % no header. It might be fixed by moving the "if there is gps data" line
+    % above this step.
+    FCTD = FastCTD_ASCII_parseheader(FID);
+    
+    %convert time to MATLAB time
+    if FCTD.header.offset_time < 0
+        FCTD.header.offset_time = correctNegativeTime(FCTD.header.offset_time)/86400+datenum(1970,1,1);
+    else
+        FCTD.header.offset_time = FCTD.header.offset_time/86400+datenum(1970,1,1);
+    end
+    if FCTD.header.system_time < 0
+        FCTD.header.system_time = correctNegativeTime(FCTD.header.system_time)/86400/100+FCTD.header.offset_time;
+    else
+        FCTD.header.system_time = FCTD.header.system_time/86400/100+FCTD.header.offset_time;
+    end
+    
+    fclose(FID);
+    
+    % Process GPS data
+    % ---------------------------
+    
+    % Pre-allocate space for data
+    gps.dnum   = nan(gpsmeta.data.n_recs,1);
+    
+    gps.latitude = nan(gpsmeta.data.n_recs,1);
+    gps.longitude = nan(gpsmeta.data.n_recs,1);
+    
+    % Loop through data blocks and parse strings
+    for iB=1:gpsmeta.data.n_blocks
+        try
+            % Grab the block of data starting with the header
+            gps_block_str = str(ind_gps_start(iB):ind_gps_stop(iB)); %Moved here by Bethan June 26
+            
+            
+            % Get the data after the header
+            gps_block_data = str(ind_gps_start(iB):ind_gps_stop(iB));
+            
+            % Split the data into parts
+            data_split = strsplit(gps_block_data,',');
+            
+            gps.dnum(iB) = str2double(str(ind_time_start(iB):ind_time_stop(iB)))/100/24/3600+FCTD.header.offset_time;
+            
+            gps.latitude(iB) = floor(str2double(data_split{3})/100) + mod(str2double(data_split{3}),100)/60; % then add minutes
+            gps.latitude(iB) = gps.latitude(iB).*(2*strcmpi(data_split{4},'N')-1); % check for north or south
+            
+            gps.longitude(iB) = floor(str2double(data_split{5})/100) + mod(str2double(data_split{5}),100)/60; % then add minutes
+            gps.longitude(iB) = gps.longitude(iB).*(2*strcmpi(data_split{6},'E')-1); % check for East or West (if west multiply by -1)
+        catch err
+            iB
+        end
+    end
+    
+end %end loop if there is gps data
 
 
 %% Process EFE data
@@ -315,10 +516,9 @@ else
     switch Meta_Data.CTD.name
         case{"SBE49","SBE","S49","SB49"}
             sbe.data.format      = 'eng';
-            %sbe.data.length      = 22;
             sbe.data.length      = 24; %It's 24 for BLT data
             sbe.data.sample_freq = 16;
-            sbe.cal              = Meta_Data.CTD.cal;
+            sbe.cal              = SBEcal; % SBEcal is readfrom the Header of the modraw
         case{"SBE41","S41","SB41"}
             sbe.data.format      = 'PTS';
             sbe.data.length      = 28;
@@ -452,7 +652,13 @@ else
             if ~isfield(Meta_Data.PROCESS,'latitude')
                 error('Need latitude to get depth from pressure data. Add to MetaProcess text file.')
             else
-                ctd.z    = sw_dpth(ctd.P,Meta_Data.PROCESS.latitude);
+                % ALB add the gps data if it exists. 
+                if isfield(gps,'latitude')
+                    ctd_lat  = interp1(gps.dnum,gps.latitude,ctd.dnum);
+                    ctd.z    = sw_dpth(ctd.P,ctd_lat);
+                else
+                    ctd.z    = sw_dpth(ctd.P,Meta_Data.PROCESS.latitude);
+                end
                 ctd.dzdt = [0; diff(ctd.z)./diff(ctd.time_s)];
             end
             
@@ -767,84 +973,6 @@ else
     
 end %end loop if there is vnav data
 
-%% GPS data
-if isempty(ind_gps_start)
-    no_data_types = [no_data_types,'gps'];
-    gps = [];
-else
-    processed_data_types = [processed_data_types,'gps'];
-    %disp('processing gps data')
-    
-    % GPS-specific quantities
-    % ---------------------------
-    gpsmeta.data.n_blocks = numel(ind_gps_start);
-    gpsmeta.data.recs_per_block = 1;
-    gpsmeta.data.n_recs = gpsmeta.data.n_blocks*gpsmeta.data.recs_per_block;
-    
-    ind_time_start = ind_gps_start-10;
-    ind_time_stop  = ind_gps_start-1;
-    
-    % San added these GPS steps. Here, he reads the file header to get system time.
-    % You'll use this to correct the gps timestamp.
-    FID = fopen(filename,'r');
-    if FID<0
-        error('MATLAB:FastCTD_ReadASCII:FileError', 'Could not open file %s',fname);
-    end
-    
-    % NC 7/22/21 Problem! FastCTD_ASCII_parseheader doesn't work if there is
-    % no header. It might be fixed by moving the "if there is gps data" line
-    % above this step.
-    FCTD = FastCTD_ASCII_parseheader(FID);
-    
-    %convert time to MATLAB time
-    if FCTD.header.offset_time < 0
-        FCTD.header.offset_time = correctNegativeTime(FCTD.header.offset_time)/86400+datenum(1970,1,1);
-    else
-        FCTD.header.offset_time = FCTD.header.offset_time/86400+datenum(1970,1,1);
-    end
-    if FCTD.header.system_time < 0
-        FCTD.header.system_time = correctNegativeTime(FCTD.header.system_time)/86400/100+FCTD.header.offset_time;
-    else
-        FCTD.header.system_time = FCTD.header.system_time/86400/100+FCTD.header.offset_time;
-    end
-    
-    fclose(FID);
-    
-    % Process GPS data
-    % ---------------------------
-    
-    % Pre-allocate space for data
-    gps.dnum   = nan(gpsmeta.data.n_recs,1);
-    
-    gps.latitude = nan(gpsmeta.data.n_recs,1);
-    gps.longitude = nan(gpsmeta.data.n_recs,1);
-    
-    % Loop through data blocks and parse strings
-    for iB=1:gpsmeta.data.n_blocks
-        try
-            % Grab the block of data starting with the header
-            gps_block_str = str(ind_gps_start(iB):ind_gps_stop(iB)); %Moved here by Bethan June 26
-            
-            
-            % Get the data after the header
-            gps_block_data = str(ind_gps_start(iB):ind_gps_stop(iB));
-            
-            % Split the data into parts
-            data_split = strsplit(gps_block_data,',');
-            
-            gps.dnum(iB) = str2double(str(ind_time_start(iB):ind_time_stop(iB)))/100/24/3600+FCTD.header.offset_time;
-            
-            gps.latitude(iB) = floor(str2double(data_split{3})/100) + mod(str2double(data_split{3}),100)/60; % then add minutes
-            gps.latitude(iB) = gps.latitude(iB).*(2*strcmpi(data_split{4},'N')-1); % check for north or south
-            
-            gps.longitude(iB) = floor(str2double(data_split{5})/100) + mod(str2double(data_split{5}),100)/60; % then add minutes
-            gps.longitude(iB) = gps.longitude(iB).*(2*strcmpi(data_split{6},'E')-1); % check for East or West (if west multiply by -1)
-        catch err
-            iB
-        end
-    end
-    
-end %end loop if there is gps data
 
 %% Process SEGM data
 if isempty(ind_seg_start)
@@ -2043,7 +2171,7 @@ fprintf(['   processed data for: ' repmat('%s ',1,length(processed_data_types)),
 fprintf(['   no data for:        ' repmat('%s ',1,length(no_data_types)), '\n'], no_data_types{:})
 
 % Combine all data
-make data epsi ctd alt isap act vnav gps seg spec avgspec dissrate apf fluor ttv
+make data epsi ctd alt isap act vnav gps seg spec avgspec dissrate apf fluor ttv Meta_Data
 
 
 end
@@ -2179,3 +2307,26 @@ end
 
 return
 end
+
+function cha=parse_epsi_channel_string(str_EPSICHANNEL_header)
+
+    lines_EPSICHANNEL=strsplit(str_EPSICHANNEL_header,'\n');
+    cha.ch1=parse_single_epsi_channel(lines_EPSICHANNEL{2});
+    cha.ch2=parse_single_epsi_channel(lines_EPSICHANNEL{3});
+    cha.ch3=parse_single_epsi_channel(lines_EPSICHANNEL{4});
+    cha.ch4=parse_single_epsi_channel(lines_EPSICHANNEL{5});
+end
+
+function cha=parse_single_epsi_channel(lines_EPSICHANNEL)
+cha.str=lines_EPSICHANNEL;
+cha.SN = cha.str(6:8);
+calib_str=strsplit(cha.str(11:end),',');
+if length(calib_str)==1
+    cha.cal=0;
+elseif(length(calib_str)==3)
+    cha.datecal=calib_str{1};
+    cha.cal=str2double(calib_str{2});
+    cha.cap=str2double(calib_str{3});
+end
+end
+

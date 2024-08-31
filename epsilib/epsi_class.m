@@ -16,7 +16,7 @@ classdef epsi_class < handle
     %               contains raw, mat, etc)
     %   Meta_Data_Process_file = path to .txt file with Meta_Data.PROCESS
     %                            values
-
+    %%
     properties
         Meta_Data %read from config file
         filedir
@@ -28,11 +28,10 @@ classdef epsi_class < handle
         gps
         ttv
     end
+    %%
     methods
         function obj=epsi_class(varargin)
 
-            % ALB Ideally all Meta_Data buisness should be written in the
-            % .modraw so we can remove all these dependance.  
             if nargin<1
                 data_path = pwd;
                 Meta_Data_process_file = []; %Default Meta_Data process file not specified
@@ -55,343 +54,84 @@ classdef epsi_class < handle
                 end
             end
 
-            %             % removed archive+path
-            %             spltpath=strsplit(path,':');
-            %             try
-            %                 archived_path=spltpath{~cellfun(@isempty, ...
-            %                     cellfun(@(x) ...
-            %                     strfind(x,'archived_scripts'),spltpath, ...
-            %                     'UniformOutput',false))};
-            %                 if ~isempty(archived_path)
-            %                     rmpath(genpath(archived_path));
-            %                 end
-            %             catch
-            %             end
+            % NC 4/23/23
+            % If Meta_Data_Process file is specified, add it toepsi
+            % Meta_Data paths and read it
+            % 
+            if exist('Meta_Data_process_file','var')
+                if ~isempty(Meta_Data_process_file)
+                    obj.Meta_Data.paths.process_library = Meta_Data_process_file;
+                    obj.f_read_MetaProcess(Meta_Data_process_file);
+                else
+                    obj.Meta_Data.paths.process_library = '';
+                end
+            end
 
+            %%
             % Check to see if Meta_Data is already defined
             checkMD = dir(fullfile(data_path,'Meta_Data.mat'));
-
+            %%
             repeat = 1; %Initialize repeat flag to use if Meta_Data path names were not made on this machine
             while repeat==1
 
                 if ~isempty(checkMD) %Meta_Data already exists
 
-                    %fprintf('Initializing epsi_class with previously created Meta_Data \n')
-                    load(fullfile(data_path,'Meta_Data'))
-                    obj.Meta_Data = Meta_Data;
-
-                    % Meta_Data includes the path to the epsi processing
-                    % library, but if the data was processed on another
-                    % machine, you won't have access to it.
-                    % Find the epsi library on your machine and add it as process path
-                    spltpath=strsplit(path,':');
-                    epsilib_path=spltpath{~cellfun(@isempty, ...
-                        cellfun(@(x) ...
-                        strfind(x,'epsilib'),spltpath, ...
-                        'UniformOutput',false))};
-                    obj.Meta_Data.paths.process_library=fileparts(epsilib_path);
-                    obj.Meta_Data.paths.calibration = fullfile(obj.Meta_Data.paths.process_library,'CALIBRATION','ELECTRONICS');
-
-                    % Always redefine the data path as the current
-                    % directory or the directory you input
-                    obj.Meta_Data.paths.data=data_path;
-                    obj.Meta_Data.paths.raw_data = fullfile(data_path,'raw');
-                    obj.Meta_Data.paths.mat_data = fullfile(data_path,'mat');
-                    obj.Meta_Data.paths.profiles = fullfile(data_path,'profles');
-                    obj.Meta_Data.paths.figures = fullfile(data_path,'figs');
-
-                    obj.Meta_Data = epsiSetup_get_raw_suffix(obj.Meta_Data);
-
-                    % NC 4/23/23
-                    % If Meta_Data_Process file is specified, add it to
-                    % Meta_Data paths and read it
-                    if exist('Meta_Data_process_file','var')
-                        if ~isempty(Meta_Data_process_file)
-                            obj.Meta_Data.paths.process_library = Meta_Data_process_file;
-                            obj.f_read_MetaProcess(Meta_Data_process_file);
-                        end
-                    end
-
-                    % Check that Meta_Data has everything you need. If it's
-                    % missing something, set repeat=0 and checkMD=[]
-                    if  isdir(obj.Meta_Data.paths.process_library) && ...
-                            isdir(obj.Meta_Data.paths.data) && ...
-                            isdir(obj.Meta_Data.paths.calibration) && ...
-                            isclassfield(obj.Meta_Data.paths,'raw_data') && ...
-                            isclassfield(obj.Meta_Data.PROCESS,'nb_channels') && ...
-                            isclassfield(obj.Meta_Data.PROCESS,'nfft')
-                        Meta_Data = obj.Meta_Data;
-                        %                         save(fullfile(obj.Meta_Data.paths.data,'Meta_Data'),'Meta_Data');
-
-                        repeat = 0; %Stop repeating. Keep this Meta_Data.
-                    else
-                        checkMD = []; %Some parts are missing. Repeat to make new Meta_Data.
-                    end
+                    [repeat,obj]=epsi_class_MetaData_alreadyexist(data_path,obj);
 
                 elseif isempty(checkMD) %Meta_Data, epsi, and ctd .mat files do not already exist
 
-                    %fprintf('Initializing epsi_class and creating new Meta_Data \n')
-                    repeat = 0;
-
-                    % Define data path
-                    obj.Meta_Data.paths.data     = data_path;
-                    obj.Meta_Data.paths.raw_data = fullfile(data_path,'raw');
-                    obj.Meta_Data.paths.mat_data = fullfile(data_path,'mat');
-                    obj.Meta_Data.paths.profiles = fullfile(data_path,'profles');
-                    obj.Meta_Data.paths.figures  = fullfile(data_path,'figs');
-
-                    % Find the epsi library and add it as process path
-                    spltpath=strsplit(path,':');
-                    epsilib_path=spltpath{~cellfun(@isempty, ...
-                        cellfun(@(x) ...
-                        strfind(x,'epsilib'),spltpath, ...
-                        'UniformOutput',false))};
-                    obj.Meta_Data.paths.process_library=fileparts(epsilib_path);
-                    addpath(genpath(obj.Meta_Data.paths.process_library));
-                    rmpath(genpath(fullfile(obj.Meta_Data.paths.process_library,'archived_scripts')))
-
-                    % Add calibrations path
-                    obj.Meta_Data.paths.calibration = fullfile(obj.Meta_Data.paths.process_library,'CALIBRATION','ELECTRONICS');
-
-                    % Read PROCESS Meta_Data from text file -
-                    % if one is not specified, use the default
-                    if isempty(Meta_Data_process_file)
-                        if isclassfield(obj.Meta_Data,'PROCESS')
-
-                            if ~isclassfield(obj.Meta_Data.PROCESS,'filename')
-                                Meta_Data_process_file = fullfile(obj.Meta_Data.paths.process_library,'Meta_Data_Process','Meta_Data_Process.txt');
-                            else
-                                % Use the .txt file save in Meta_Data, but find it
-                                % in the current user's path
-                                [~,fname,fsuffix] = fileparts(obj.Meta_Data.PROCESS.filename);
-                                Meta_Data_process_file = fullfile(obj.Meta_Data.paths.process_library,...
-                                    'Meta_Data_Process',[fname,fsuffix]);
-                            end
-                        else
-                            Meta_Data_process_file = fullfile(obj.Meta_Data.paths.process_library,'Meta_Data_Process','Meta_Data_Process.txt');
-                        end
-
-                    else
-                        Meta_Data_process_file = Meta_Data_process_file;
-                    end
-
-
-                    obj.f_read_MetaProcess(Meta_Data_process_file);
-
-                    obj.Meta_Data = epsiSetup_set_epsi_paths(obj.Meta_Data);
-                    obj.Meta_Data = epsiSetup_get_raw_suffix(obj.Meta_Data);
-
-
-                    % NC TO DO:
-                    % ADD A 4TH OPTION TO READ SETUP AND METADATA FROM YAML FILE
-                    %
-                    % There are three cases for getting configuration data
-                    % and Meta_Data
-                    %   1) Binary (?) config info is in the first raw file (done by
-                    %   typing settings.stream during data aquistion,
-                    %   header is $SOM3). Extra Meta_Data for processing is
-                    %   in a Meta_Data_Process file.
-                    %   2) Binary (?) config info is in a file called
-                    %   *config*. Extra Meta_Data for processing is
-                    %   in a Meta_Data_Process file.
-                    %   3) All Meta_Data is in a csv file called Log_*.csv
-
-                    % Is there a log csv file? Is there a config file? Or
-                    % is config data inside the raw data files?
-                    dir_has_log = dir(fullfile(data_path,'Log*.csv'));
-                    dir_has_config = dir(fullfile(data_path,'*config*'));
-
-                    if ~isempty(dir_has_log) %if there is a log file...
-
-                        try
-                            obj.Meta_Data = create_metadata_from_deployment_log_v2(dir_has_log.name);
-                            obj.Meta_Data.AFE=obj.Meta_Data.epsi;
-                        catch err
-
-                            for j = 1:length(err.stack)
-                                disp([num2str(j) ' ' err.stack(j).name ' ' num2str(err.stack(j).line)]);
-                            end
-                            warning('Failed to find config data (1)')
-                            return
-                        end
-
-                    elseif ~isempty(dir_has_config) %if there is a config file...
-                        try
-                            % Sometimes there is a hidden file
-                            % '._bench_config'. Get rid of that if it's there.
-                            % You can just use dir_has_config(end).name and
-                            % that will always take the last file in that
-                            % directory that matches '*config*'
-                            setup=mod_som_read_setup_from_config(dir_has_config(end).name);
-                        catch err
-                            for j = 1:length(err.stack)
-                                disp([num2str(j) ' ' err.stack(j).name ' ' num2str(err.stack(j).line)]);
-                            end
-                            error('Failed to find config data (2)')
-
-                        end
-
-                        % ALB this could be removed when reading Meta_Data
-                        % from modraw (if SBE cal coef and epsi cal coef are printed there)
-                        % NC added on NORSE 2023 - add serial numbers
-                        % defined in Meta_Data_Process file
-                        try
-                            setup.S49.sn = obj.Meta_Data.PROCESS.ctd_sn;
-                            setup.EFE.sensors{1}.sn = obj.Meta_Data.PROCESS.t1_sn;
-                            setup.EFE.sensors{2}.sn = obj.Meta_Data.PROCESS.t2_sn;
-                            setup.EFE.sensors{3}.sn = obj.Meta_Data.PROCESS.s1_sn;
-                            setup.EFE.sensors{4}.sn = obj.Meta_Data.PROCESS.s2_sn;
-                        catch
-                        end
-
-                        % Fill Meta Data from setup data
-                        try
-                            obj.Meta_Data = epsiSetup_fill_meta_data(obj.Meta_Data,setup);
-
-                            %fprintf('Meta_Data.paths.process_library is %s \n',obj.Meta_Data.paths.process_library);
-                            %fprintf('Meta_Data.paths.data is %s \n',obj.Meta_Data.paths.data);
-                        catch err
-
-                            for j = 1:length(err.stack)
-                                disp([num2str(j) ' ' err.stack(j).name ' ' num2str(err.stack(j).line)]);
-                            end
-                            warning('fill_meta_data failed (2)')
-                            return
-                        end
-
-                    else %if there is no log file or config file, look for config data inside the raw files
-                        % TODO 10/7/21 - Loop through more that just the
-                        % first file to look for $SOM3
-
-                        try
-                            setupfile=dir(fullfile(obj.Meta_Data.paths.raw_data,...
-                                ['*' obj.Meta_Data.rawfileSuffix]));
-                            setup=mod_som_read_setup_from_raw(fullfile(setupfile(5).folder,setupfile(5).name));
-                        catch err
-                            for j = 1:length(err.stack)
-                                disp([num2str(j) ' ' err.stack(j).name ' ' num2str(err.stack(j).line)]);
-                            end
-                            warning(['Failed to read config data (3) - '...
-                                'this is often because mod_som_read_setup_from raw does not '...
-                                'have the correct offsets and lengths. When changes are made on '...
-                                'the hardware side, they have to be made here too.'])
-
-                            % Copy bench_config to data directory
-                            sourceFile = fullfile(obj.Meta_Data.paths.process_library,'config_files','bench_config');
-                            destinationDir = obj.Meta_Data.paths.data;
-                            copyfile(sourceFile, destinationDir);
-
-                            % Read setup data from bench_config
-                            dir_has_config = dir(fullfile(data_path,'*config*'));
-                            setup=mod_som_read_setup_from_config(dir_has_config.name);
-
-                            fprintf('Copied bench_config to data directory. \n')
-                        end
-
-                        % ALB this could be removed when reading Meta_Data
-                        % from modraw (if SBE cal coef and epsi cal coef are printed there)
-                        % NC added on NORSE 2023 - add serial numbers
-                        % defined in Meta_Data_Process file
-                        try
-                            setup.S49.sn = obj.Meta_Data.PROCESS.ctd_sn;
-                            setup.EFE.sensors{1}.sn = obj.Meta_Data.PROCESS.t1_sn;
-                            setup.EFE.sensors{2}.sn = obj.Meta_Data.PROCESS.t2_sn;
-                            setup.EFE.sensors{3}.sn = obj.Meta_Data.PROCESS.s1_sn;
-                            setup.EFE.sensors{4}.sn = obj.Meta_Data.PROCESS.s2_sn;
-                        catch
-                        end
-
-                        % Fill Meta Data from setup data
-                        try
-                            obj.Meta_Data = epsiSetup_fill_meta_data(obj.Meta_Data,setup);
-
-                            %fprintf('Meta_Data.paths.process_library is %s \n',obj.Meta_Data.paths.process_library);
-                            %fprintf('Meta_Data.paths.data is %s \n',obj.Meta_Data.paths.data);
-                        catch err
-                            for j = 1:length(err.stack)
-                                disp([num2str(j) ' ' err.stack(j).name ' ' num2str(err.stack(j).line)]);
-                            end
-                            warning('fill_meta_data failed (3)')
-                            return
-                        end
-
-                    end
-
-                    % Set epsi paths and define suffix for raw files
-                    % Read PROCESS Meta_Data from default text file
-                    obj.f_read_MetaProcess(Meta_Data_process_file);
-
-                    % ALB this could be removed when reading Meta_Data
-                    % from modraw (if SBE cal coef and epsi cal coef are printed there)
-                    % NC added on NORSE 2023 - add serial numbers
-                    % defined in Meta_Data_Process file
-                    try
-                        setup.S49.sn = obj.Meta_Data.PROCESS.ctd_sn;
-                        setup.EFE.sensors{1}.sn = obj.Meta_Data.PROCESS.t1_sn;
-                        setup.EFE.sensors{2}.sn = obj.Meta_Data.PROCESS.t2_sn;
-                        setup.EFE.sensors{3}.sn = obj.Meta_Data.PROCESS.s1_sn;
-                        setup.EFE.sensors{4}.sn = obj.Meta_Data.PROCESS.s2_sn;
-                    catch
-                    end
-
-                    obj.Meta_Data = epsiSetup_set_epsi_paths(obj.Meta_Data);
-                    obj.Meta_Data = epsiSetup_get_raw_suffix(obj.Meta_Data);
-                    Meta_Data = obj.Meta_Data;
-                    save(fullfile(obj.Meta_Data.paths.data,'Meta_Data'),'Meta_Data');
+                    [repeat,obj]=epsi_class_MetaData_doesnot_exist(data_path,obj);
 
                 end
             end
-
+            %%
             % Always reset epsi paths to current directory. Otherwise you
             % could end up reprocessing things in an old directory you
-            % tried to move away from (personal experiece)
+            % tried to move away from (personal experience)
             obj.Meta_Data = epsiSetup_set_epsi_paths(obj.Meta_Data);
 
-            % Also, print all the directories just to be sure
-            % disp('... These are your directories:')
-            %fprintf('process path: %s \n',obj.Meta_Data.paths.process_library);
-            %fprintf('data path: %s \n',obj.Meta_Data.paths.data);
-            %fprintf('calibration path: %s \n',obj.Meta_Data.paths.calibration);
-            %fprintf('raw data path: %s \n',obj.Meta_Data.paths.raw_data);
-            %fprintf('mat data path: %s \n',obj.Meta_Data.paths.mat_data);
-            %fprintf('profiles path: %s \n',obj.Meta_Data.paths.profiles);
-            %fprintf('... \n')
-            if isfield(Meta_Data.PROCESS,'filename')
-                %fprintf('Meta_Data.PROCESS information comes from %s \n',obj.Meta_Data.PROCESS.filename)
-            end
-            if isfield(Meta_Data.PROCESS,'profile_dir')
-                %fprintf('Profiles are going %s \n',upper(obj.Meta_Data.PROCESS.profile_dir))
-            end
+            % if isfield(Meta_Data.PROCESS,'filename')
+            %     %fprintf('Meta_Data.PROCESS information comes from %s \n',obj.Meta_Data.PROCESS.filename)
+            % end
+            % if isfield(Meta_Data.PROCESS,'profile_dir')
+            %     %fprintf('Profiles are going %s \n',upper(obj.Meta_Data.PROCESS.profile_dir))
+            % end
             %fprintf('... \n')
 
             % NC - check for s1 and s2 cal values. For newer deployments that have Meta_Data.AFE structure, if they're
             % 0, manually input all probe numbers.
             % NC 10/7/21 - Check for 'AFE' or 'epsi' strucutre in Meta_Data. Add
             % calibratation to the appropriate structure.
-            obj.Meta_Data=mod_som_get_shear_probe_calibration_v2(obj.Meta_Data);
-            if isclassfield(obj.Meta_Data,'AFE') && ~isclassfield(obj.Meta_Data,'epsi')
-                field_name = 'AFE';
-            elseif isclassfield(obj.Meta_Data,'epsi') && ~isclassfield(obj.Meta_Data,'AFE')
-                field_name = 'epsi';
-            elseif isclassfield(obj.Meta_Data,'epsi') && isclassfield(obj.Meta_Data,'AFE')
-                field_name = 'epsi';
-            else
-                field_name = [];
-            end
-            if ~isempty(field_name)
-                obj.Meta_Data = obj.f_getSNshear;
-                obj.Meta_Data = obj.f_getSNtemp;
-            end
+            %
+            %ALB 2024/08/23 this steps is dangerous because 
+            % either the meta data exist and it has the cal coef
+            % or this steps will fetch the current calibration coef 
+            % which could be different (i.e, we are drilling and potting old probes to make new ones) 
+            % obj.Meta_Data=mod_som_get_shear_probe_calibration_v2(obj.Meta_Data);
+            % if isclassfield(obj.Meta_Data,'AFE') && ~isclassfield(obj.Meta_Data,'epsi')
+            %     field_name = 'AFE';
+            % elseif isclassfield(obj.Meta_Data,'epsi') && ~isclassfield(obj.Meta_Data,'AFE')
+            %     field_name = 'epsi';
+            % elseif isclassfield(obj.Meta_Data,'epsi') && isclassfield(obj.Meta_Data,'AFE')
+            %     field_name = 'epsi';
+            % else
+            %     field_name = [];
+            % end
+            % if ~isempty(field_name)
+            %     obj.Meta_Data = obj.f_getSNshear;
+            %     obj.Meta_Data = obj.f_getSNtemp;
+            % end
 
             % Read PROCESS Meta_Data from default text file -
             % if one is not specified, use the default
-            if isempty(Meta_Data_process_file)  && ~isclassfield(Meta_Data.PROCESS,'filename')
-                Meta_Data_process_file = fullfile(obj.Meta_Data.paths.process_library,'Meta_Data_Process','Meta_Data_Process.txt');
-            elseif isclassfield(Meta_Data.PROCESS,'filename')
-                [~,filename,suffix] = fileparts(obj.Meta_Data.PROCESS.filename);
-                Meta_Data_process_file = fullfile(obj.Meta_Data.paths.process_library,'Meta_Data_Process',[filename,suffix]);
-            end
-            obj.f_read_MetaProcess(Meta_Data_process_file);
+            % ALB why are we re-doing that here. It is done above. 
+            % if isempty(Meta_Data_process_file)  && ~isclassfield(Meta_Data.PROCESS,'filename')
+            %     Meta_Data_process_file = fullfile(obj.Meta_Data.paths.process_library,'Meta_Data_Process','Meta_Data_Process.txt');
+            % elseif isclassfield(Meta_Data.PROCESS,'filename')
+            %     [~,filename,suffix] = fileparts(obj.Meta_Data.PROCESS.filename);
+            %     Meta_Data_process_file = fullfile(obj.Meta_Data.paths.process_library,'Meta_Data_Process',[filename,suffix]);
+            % end
+            % obj.f_read_MetaProcess(Meta_Data_process_file);
 
             % Define filedir as path to raw data
             obj.filedir=obj.Meta_Data.paths.data;
@@ -399,19 +139,23 @@ classdef epsi_class < handle
             % Define plot properties
             obj.f_getPlotProperties;
         end
+
+%%
         function obj=f_read_MetaProcess(obj,filename)
             if nargin==1
                 filename=fullfile(obj.Meta_Data.paths.process_library,'Meta_Data_Process',...
                     'Meta_Data_Process.txt');
             end
             try
-                Meta_Data = epsiSetup_read_MetaProcess(obj.Meta_Data,filename);
+                obj.Meta_Data = epsiSetup_read_MetaProcess(obj.Meta_Data,filename);
             catch
-                Meta_Data = load(filename);
-                Meta_Data=Meta_Data.Meta_Data;
+                % Meta_Data = load(filename);
+                % Meta_Data=Meta_Data.Meta_Data;
+                obj.Meta_Data = load(filename,'Meta_Data');
             end
-            obj.Meta_Data = Meta_Data;
+            % obj.Meta_Data = Meta_Data;
         end
+%%
         function obj=f_readData(obj,varargin)
             % optional arguments:
             %   'version'
@@ -460,21 +204,21 @@ classdef epsi_class < handle
                     case 1 %calc_micro
                         % Find the index of varargin that = 'calc_micro'
                         % and set calc_micro to 1
-                        idxFlag = find(cell2mat(cellfun(@(C) ~isempty(strfind(C,'calc_micro')),varargin,'uniformoutput',0)));
+                        idxFlag = find(cell2mat(cellfun(@(C) contains(C,'calc_micro'),varargin,'uniformoutput',0)));
                         calc_micro = 1;
                         index = index+1;
                         n_items = n_items-1;
                     case 2 %version
                         % Find the index of varargin that = 'version'. The following
                         % index contains the version number
-                        idxFlag = find(cell2mat(cellfun(@(C) ~isempty(strfind(C,'version')),varargin,'uniformoutput',0)));
+                        idxFlag = find(cell2mat(cellfun(@(C) contains(C,'version'),varargin,'uniformoutput',0)));
                         version_number = varargin{idxFlag+1};
                         index = index+2; %+2 because the following varargin will be the version number
                         n_items = n_items-2;
                     case 3 %make_FCTD
                         % Find the index of varargin that = 'make_FCTD' and
                         % set make_FCTD to 1
-                        idxFlag = find(cell2mat(cellfun(@(C) ~isempty(strfind(C,'make_FCTD')),varargin,'uniformoutput',0)));
+                        idxFlag = find(cell2mat(cellfun(@(C) contains(C,'make_FCTD'),varargin,'uniformoutput',0)));
                         make_FCTD = 1;
                         index = index+2;
                         n_items = n_items-2;
@@ -517,12 +261,14 @@ classdef epsi_class < handle
             end
 
         end
+        %%
         function obj=f_getLastData(obj)
             obj.f_readData;
             obj.epsi = obj.f_getLastEpsi();
             obj.ctd = obj.f_getLastCtd();
             obj.alt = obj.f_getLastAlt();
         end
+        %%
         function obj=f_getLastEpsi(obj)
             load(fullfile(obj.Meta_Data.paths.mat_data,'TimeIndex'));
             [~,idxLast] = max(TimeIndex.timeEnd);
@@ -534,6 +280,8 @@ classdef epsi_class < handle
                 obj=[];
             end
         end
+
+        %%
         function obj=f_getLastCtd(obj)
             load(fullfile(obj.Meta_Data.paths.mat_data,'TimeIndex'));
             [~,idxLast] = max(TimeIndex.timeEnd);
@@ -545,6 +293,7 @@ classdef epsi_class < handle
                 obj=[];
             end
         end
+        %%
         function obj=f_getLastAlt(obj)
             load(fullfile(obj.Meta_Data.paths.mat_data,'TimeIndex'));
             [~,idxLast] = max(TimeIndex.timeEnd);
@@ -556,10 +305,11 @@ classdef epsi_class < handle
                 obj=[];
             end
         end
+        %%
         function GRID = f_loadGrid(obj)
             load(fullfile(obj.Meta_Data.paths.profiles,'griddedProfiles'))
         end
-
+%%
         function obj=f_getFileData(obj,fileNumOrName)
             % fileNumOrName is an array of file indices of the list of raw
             % files Or the name of the file
@@ -604,6 +354,7 @@ classdef epsi_class < handle
             obj.ctd = data.ctd;
             obj.alt = data.alt;
         end
+        %%
         function obj=f_getFileEpsi(obj,fileName)
             data = load(fileName,'epsi');
             if isstruct(data.epsi)
@@ -612,6 +363,7 @@ classdef epsi_class < handle
                 obj=[];
             end
         end
+        %%
         function obj=f_getFileCtd(obj,fileName)
             data = load(fileName,'ctd');
             if isstruct(data.ctd)
@@ -620,6 +372,7 @@ classdef epsi_class < handle
                 obj=[];
             end
         end
+        %%
         function obj=f_getFileAlt(obj,fileName)
             data = load(fileName,'alt');
             if isstruct(data.alt)
@@ -628,16 +381,20 @@ classdef epsi_class < handle
                 obj=[];
             end
         end
+        %%
         function var_timeseries = f_get_var_timeseries(obj,var_name)
             var_timeseries = epsiProcess_get_var_timeseries(obj,var_name);
         end
+        %%
         function var_timeseries = f_plot_var_timeseries(obj,var_name);
             var_timeseries = epsiPlot_var_timeseries(obj,var_name);
         end
+        %%
         function obj=f_getPlotProperties(obj)
             % Set default plot properties (fonts, colors, sizes)
             obj.plot_properties = epsiSetup_set_plot_properties;
         end
+        %%
         function obj=f_getSNshear(obj)
             % Input shear probe serial numbers into Meta_Data and get
             % latest calibration values (Sv)
@@ -648,6 +405,7 @@ classdef epsi_class < handle
             %             Meta_Data  = obj.Meta_Data;
             obj = epsiSetup_get_SN_shear(obj.Meta_Data);
         end
+        %%
         function obj=f_getSNtemp(obj)
             % Input temperature probe serial numbers into Meta_Data and get
             % latest calibration values (Sv)
@@ -658,6 +416,7 @@ classdef epsi_class < handle
             %             Meta_Data  = obj.Meta_Data;
             obj = epsiSetup_get_SN_temp(obj.Meta_Data);
         end
+        %%
         function f_plotCtd(obj)
             figure
             ax(1)=subplot(311);
@@ -682,12 +441,15 @@ classdef epsi_class < handle
 
 
         end
+        %%
         function f_plot_epsi_detrended(obj)
             plot_epsi_detrended(obj);
         end
+        %%
         function f_plotEpsi(obj)
             plot_epsi(obj);
         end
+        %%
         function f_plotAlti(obj)
             figure
             if isclassfield(obj,'ctd') %NC equivalent of is field for class structure
@@ -712,6 +474,7 @@ classdef epsi_class < handle
                 plot(obj.alt.alttime,obj.alt.dst,'.r');
             end
         end
+        %%
         function f_plotPressureTimeseries(obj)
             fileName = fullfile(obj.Meta_Data.paths.mat_data,'PressureTimeseries.mat');
             load(fileName);
@@ -729,6 +492,7 @@ classdef epsi_class < handle
                 datestr(nanmax(PressureTimeseries.dnum))]);
             grid on
         end
+        %%
         function f_plotFallSpeed(obj)
             figure
             plot(obj.ctd.time_s,obj.ctd.dPdt,'.')
@@ -737,15 +501,18 @@ classdef epsi_class < handle
             xlabel('time_s (seconds)')
             ylabel('dPdt')
         end
+        %%
         function f_plotEpsiCtd(obj,saveFig)
             if nargin<2
                 saveFig=0;
             end
             epsiPlot_epsi_ctd_alt_timeseries(obj,saveFig)
         end
+        %%
         function [ax] = f_plot_epsi_map_and_sections(obj,varargin)
             [ax] = plot_epsi_map_and_sections(obj,varargin);
         end
+        %%
         function  [P11,f,noise,ax]=f_plot_spectra_at_tMid(obj,tmid,tscan,nSec,makeFig,saveFig,replaceData,ax)
             % Plots 30-sec timeseries from all channels and spectra from
             % user-defined tscan
@@ -782,7 +549,7 @@ classdef epsi_class < handle
 
             [P11,f,noise,ax] = epsiPlot_spectra_at_tMid(obj,tmid,tscan,nSec,makeFig,saveFig,replaceData,ax);
         end
-
+%%
 
         function  [P11,f,noise]=f_calibrateEpsi(obj,tmid,tscan,makeFig,saveFig,replaceData,ax)
             % Plots 30-sec timeseries from all channels and spectra from
@@ -819,6 +586,7 @@ classdef epsi_class < handle
             end
             [P11,f,noise,ax] = mod_som_calibrate_epsi_tMid(obj,tmid,tscan,makeFig,saveFig,replaceData,ax);
         end
+        %%
         function f_plotEpsitime(obj)
             figure
             ax(1)=axes;
@@ -831,50 +599,7 @@ classdef epsi_class < handle
             set(ax(1),'Fontsize',obj.plot_properties.FontSize,'FontName',obj.plot_properties.FontName)
             linkaxes(ax,'x')
         end
-        %         function f_createProfiles(obj)
-        %             EPSI_create_profiles_v2(obj.Meta_Data,...
-        %                 obj.Meta_Data.PROCESS.Prmin_prof,...
-        %                 obj.Meta_Data.PROCESS.Prcrit_prof,...
-        %                 obj.Meta_Data.PROCESS.userConfirmsProfiles)
-        %
-        %             load(fullfile(obj.Meta_Data.paths.profiles,['Profiles_' obj.Meta_Data.deployment]));
-        %
-        %             switch obj.Meta_Data.vehicle_name
-        %                 case 'FISH'
-        %                     datachoice = 'datadown';
-        %                     idxchoice = 'down';
-        %                 case 'WW'
-        %                     datachoice = 'dataup';
-        %                     idxchoice = 'up';
-        %                 otherwise
-        %                     datachoice = 'datadown';
-        %                     idxchoice = 'down';
-        %             end
-        %
-        %             for iProf=1:length(CTDProfiles.(datachoice))
-        %                 EPSI = EpsiProfiles.(datachoice){iProf};
-        %                 CTD = CTDProfiles.(datachoice){iProf};
-        %                 Profile = mod_epsilometer_merge_profile(obj.Meta_Data,CTD,EPSI);
-        %                 Profile.profNum = iProf;
-        %                 save(fullfile(obj.Meta_Data.paths.profiles,sprintf('Profile%03.0f',iProf)),'Profile','-v7.3');
-        %             end
-        %         end
-
-        %         function obj = f_getProfileIndices(obj)
-        %             % USAGE
-        %             %   obj.f_getProfileIndices
-        %             %
-        %             % - Epsi_MakeMatFromRaw saves a merged pressure timeseries along
-        %             % with individual .mat files and Epsi_MATFile_TimeIndex.
-        %             % - This step takes the merged Epsi_PressureTimeseries and
-        %             % separates into downcasts and upcasts (still to do)
-        %             % - Saves Epsi_PressureTimeseries.mat in Meta_Data.paths.mat_data
-        %             MATpath = obj.Meta_Data.paths.mat_data;
-        %             CTD = EPSI_get_CTD_profile_indices(MATpath);
-        %             obj = CTD;
-        %             fprintf('... Epsi_PressureTimeseries saved in %s \n',MATpath)
-        %         end
-
+        %%
         function obj = f_calibrateTemperature(obj)
             % USAGE
             %   obj.Meta_Data = f_calibrateTemperature(obj);
@@ -954,6 +679,7 @@ classdef epsi_class < handle
             end
 
         end
+        %%
         function obj = f_computeTurbulence(obj,Profile_or_profNum,saveData)
             % obj = f_computeTurbulence(obj,Profile_or_profNum,saveData)
             % Compute turbulence quantities (epsilon, chi, etc)
@@ -989,6 +715,7 @@ classdef epsi_class < handle
                 end
             end
         end
+        %%
         function obj = f_processNewProfiles(obj,varargin)
             % obj = f_processNewProfiles(obj,varargin)
             %
@@ -999,21 +726,26 @@ classdef epsi_class < handle
 
             % If there are not yet any temperature calibration values,
             % calibrate the temperature probes.
-            if obj.Meta_Data.AFE.t1.cal==0 && obj.Meta_Data.AFE.t2.cal==0
-                obj = f_calibrateTemperature(obj);
-            end
+            % ALB this steps need to be done later. We can not keep dTdv
+            % for a whole section when re-processing. 
+            % if obj.Meta_Data.AFE.t1.cal==0 && obj.Meta_Data.AFE.t2.cal==0
+            %     obj = f_calibrateTemperature(obj);
+            % end
+            
             if nargin>1
                 obj = epsiProcess_processNewProfiles(obj,varargin);
             else
                 obj = epsiProcess_processNewProfiles(obj);
             end
         end
+        %%
         function obj = f_makeNewProfiles(obj)
             % obj = f_makeNewProfiles(obj)
             %
             % Makes new profiles but does not compute turbulence variables
             obj = epsiProcess_makeNewProfiles(obj);
         end
+        %%
         function obj = f_interpolateProfileToP(obj,Profile,z)
             % obj = f_interpolateProfileToP(Profile,P)
             %
@@ -1023,9 +755,11 @@ classdef epsi_class < handle
             griddedProfile = epsiProcess_interpolate_Profile_to_P(Profile,z);
             obj = griddedProfile;
         end
+        %%
         function obj = f_gridProfiles(obj,z)
             obj = epsiProcess_gridProfiles(obj,z);
         end
+        %%
         function obj = f_cropTimeseries(obj,tMin,tMax)
             % Get a piece of timeseries structure that you can use to compute
             % turbulence variables.
@@ -1046,17 +780,20 @@ classdef epsi_class < handle
             Timeseries = epsiProcess_crop_timeseries(Meta_Data,tRange);
             obj = Timeseries;
         end
+        %%
         function f_plotProfileSpectra(obj,Profile,depth,saveFig)
             if nargin<3
                 saveFig=0;
             end
             plot_profile_and_spectra(Profile,depth,saveFig)
         end
+        %%
         function f_clearProcessedData(obj)
             delete(fullfile(obj.Meta_Data.paths.mat_data,'*.mat'))
             delete(fullfile(obj.Meta_Data.paths.profiles,'*.mat'))
             delete(fullfile(obj.Meta_Data.paths.data,'Meta_Data.mat'));
         end
+        %%
         function f_check_spectra(obj,id_profile) %Arnaud's version
             % Plots a profile that you can click on to get a spectra
             if nargin<2
@@ -1064,6 +801,7 @@ classdef epsi_class < handle
             end
             check_spectra(id_profile);
         end
+        %%
         function f_plot_profile_and_spectra(obj,id_profile) %Nicole's version.  Requires obj as input
             % Plots a profile that you can click on to get a spectra
             if nargin<2
@@ -1071,10 +809,40 @@ classdef epsi_class < handle
             end
             epsiPlot_profile_and_spectra(obj,id_profile);
         end
+        %%
         function f_check_grid_spectra(obj)
             % Plots a grid that you can click on to get a profile and the
             % spectra where you clicked
             check_grid_spectra();
+        end
+        function f_add_MetaData_fromProfile_to_matmodraw(obj)
+            % ALB
+            % For backward compatibility, I am reading the MetaData form existing
+            % profiles in Profile/ and adding this MetaData structure into the
+            % modraw.mat files. So when we reprocess the data everything is "tied" to
+            % the modraw.mat
+
+            % WARNING I have to be in the section folder
+            % i.e., the "local" data folder which CAN BE DIFFERENT from
+            % Profile.Meta_Data.paths.data
+            response=input("Are you in the deployment directory? (y/n)","s");
+            switch response
+                case{"y","yes","oui"}
+                    listProfile=dir(fullfile('profiles','Profile*.mat'));
+                    fprintf('%i Profiles to process \n',length(listProfile))
+                    for f=1:length(listProfile)
+                        wh_profile=fullfile(listProfile(f).folder, ...
+                                            listProfile(f).name);
+                        fprintf('Processing %s\n',wh_profile)
+                        load(wh_profile,'Profile')
+                        add_MetaData_from_epsiProfiles_to_modraw(Profile)
+                    end
+                case{"n","no","non"}
+                    response=input("New directory [full path]?","s");
+                    cd(response);
+                    obj.f_add_MetaData_fromProfile_to_matmodraw;
+            end
+                    
         end
     end %end methods
 end %end classdef

@@ -23,35 +23,42 @@ shearcal_path = strrep(localpath,'//','/');
 
 % path2file1 = sprintf([shearcal_path '/%s/Calibration_%s.txt'], Meta_Data.(field_name).s1.SN, Meta_Data.(field_name).s1.SN);
 % path2file2 = sprintf([shearcal_path '/%s/Calibration_%s.txt'], Meta_Data.(field_name).s2.SN, Meta_Data.(field_name).s2.SN);
-
+try
 path2file1 = fullfile(shearcal_path,Meta_Data.(field_name).s1.SN,sprintf('Calibration_%s.txt',Meta_Data.(field_name).s1.SN));
 path2file2 = fullfile(shearcal_path,Meta_Data.(field_name).s2.SN,sprintf('Calibration_%s.txt',Meta_Data.(field_name).s2.SN));
+catch
+path2file1 = fullfile(shearcal_path,Meta_Data.(field_name).s1.SN.',sprintf('Calibration_%s.txt',Meta_Data.(field_name).s1.SN.'));
+path2file2 = fullfile(shearcal_path,Meta_Data.(field_name).s2.SN.',sprintf('Calibration_%s.txt',Meta_Data.(field_name).s2.SN.'));
+end
+    
 
-
-try
-fid1=fopen(path2file1,'r');
-Cal1=textscan(fid1,'%s %f %f','Delimiter',',','headerline',1);
-Meta_Data.(field_name).s1.cal=Cal1{2}(end);
-fclose(fid1);
-catch err
-    if strcmp(err.identifier,'MATLAB:FileIO:InvalidFid')
-        warning(['Cannot find ' path2file1])
-    else
-        warning(['Loading ' path2file1 ' failed'])
+if ~strcmp(Meta_Data.(field_name).s1.SN,'000')
+    try
+        fid1=fopen(path2file1,'r');
+        Cal1=textscan(fid1,'%s %f %f','Delimiter',',','headerline',1);
+        Meta_Data.(field_name).s1.cal=Cal1{2}(end);
+        fclose(fid1);
+    catch err
+        if strcmp(err.identifier,'MATLAB:FileIO:InvalidFid')
+            warning(['Cannot find ' path2file1])
+        else
+            warning(['Loading ' path2file1 ' failed'])
+        end
     end
 end
 
-try
-fid2=fopen(path2file2,'r');
-Cal2=textscan(fid2,'%s %f %f','Delimiter',',','headerline',1);
-Meta_Data.(field_name).s2.cal=Cal2{2}(end);
-fclose(fid2);
-catch err
-    if strcmp(err.identifier,'MATLAB:FileIO:InvalidFid')
-        warning(['Cannot find ' path2file2])
-    else
-        warning(['Loading ' path2file2 ' failed'])
+if ~strcmp(Meta_Data.(field_name).s2.SN,'000')
+    try
+        fid2=fopen(path2file2,'r');
+        Cal2=textscan(fid2,'%s %f %f','Delimiter',',','headerline',1);
+        Meta_Data.(field_name).s2.cal=Cal2{2}(end);
+        fclose(fid2);
+    catch err
+        if strcmp(err.identifier,'MATLAB:FileIO:InvalidFid')
+            warning(['Cannot find ' path2file2])
+        else
+            warning(['Loading ' path2file2 ' failed'])
+        end
     end
 end
-
 end
