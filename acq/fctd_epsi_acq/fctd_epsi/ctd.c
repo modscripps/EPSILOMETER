@@ -753,6 +753,14 @@ Boolean FishCTD_AcquireData(fish_ctd_ptr_t fishCTDPtr)
             }
             delay=0xFFFF;
             
+            //ALB releasing the Command port so we can set actuator from python on another terminal
+            //ALB I need to reopen it when we do som.stop.
+            if (strcmp(fishCTDPtr->CTDPortName,fishCTDPtr->CommandPortName)!=0){
+                fprintf(stdout, "Closing Command port.\n");
+                RealeaseSPRead(&fishCTDPtr->SerialPort4Command);
+            }
+
+            
             fishCTDPtr->CTDPhase = find_sync;
             break;
 
@@ -845,6 +853,7 @@ Boolean FishCTD_AcquireData(fish_ctd_ptr_t fishCTDPtr)
                     case '0FPA': // actual TAG = 'APF0', we have to read '0FPA'
                     case '1FPA': // actual TAG = 'APF1', we have to read '1FPA'
                     case '2FPA': // actual TAG = 'APF2', we have to read '2FPA'
+                    case '1VTT': // actual TAG = 'TTVP', we have to read 'PVTT'
                     case 'PVTT': // actual TAG = 'TTVP', we have to read 'PVTT'
                     case 'POCE': // actual TAG = 'ECOP', we have to read 'POCE'
                     case 'PASI': // actual TAG = 'APF0', we have to read 'ISAP' for ISA500 altimeter

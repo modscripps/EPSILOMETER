@@ -53,6 +53,41 @@ fclose(fid);
 % Get time now
 Meta_Data.start_dnum = now;
 
+%% Get indices and tokens for each data type you will process
+% ind_*_start  = starting indices of all matches
+% ind_*_end    = ending indices of all matches
+
+[ind_som_start, ind_som_stop]            = regexp(str,'\$SOM3([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
+[ind_dcal_start, ind_dcal_stop]          = regexp(str,'\$DCAL([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
+[ind_gps_start      , ind_gps_stop]      = regexp(str,'\$GPGGA([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
+if isempty(ind_gps_start)
+    [ind_gps_start      , ind_gps_stop]  = regexp(str,'\$INGGA([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
+end
+
+[ind_efe_start, ind_efe_stop]            = regexp(str,'\$EFE([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
+[ind_sbe_start, ind_sbe_stop]            = regexp(str,'\$SB49([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
+if isempty(ind_sbe_start)
+    [ind_sbe_start, ind_sbe_stop]        = regexp(str,'\$SB41([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
+end
+[ind_alt_start      , ind_alt_stop]      = regexp(str,'\$ALT([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
+[ind_isap_start      , ind_isap_stop]      = regexp(str,'\$ISAP([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
+[ind_act_start      , ind_act_stop]      = regexp(str,'\$ACTU([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
+[ind_vnav_start     , ind_vnav_stop]     = regexp(str,'\$VNMAR([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
+if isempty(ind_vnav_start)
+    [ind_vnav_start     , ind_vnav_stop] = regexp(str,'\$VNYPR([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
+end
+[ind_seg_start      , ind_seg_stop]      = regexp(str,'\$SEGM([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
+[ind_spec_start     , ind_spec_stop]     = regexp(str,'\$SPEC([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
+[ind_avgspec_start  , ind_avgspec_stop]  = regexp(str,'\$AVGS([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
+[ind_dissrate_start , ind_dissrate_stop] = regexp(str,'\$RATE([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
+[ind_apf0_start     , ind_apf0_stop]     = regexp(str,'\$APF0([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
+[ind_apf1_start     , ind_apf1_stop]     = regexp(str,'\$APF1([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
+[ind_apf2_start     , ind_apf2_stop]     = regexp(str,'\$APF2([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
+[ind_fluor_start    , ind_fluor_stop]    = regexp(str,'\$ECOP([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
+[ind_ttv_start      , ind_ttv_stop]      = regexp(str,'\$TTV1([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
+
+
+
 %% Get experiment, cruise, vehicle, pressure case and fish flag from setup, 
 newSetup_flag=contains(str,'CTD.experiment=');
 if newSetup_flag
@@ -96,29 +131,31 @@ if ~isempty(str_SBEcalcoef_header)
     SBEcal=get_CalSBE_from_modraw_header(str_SBEcalcoef_header);
     Meta_Data.CTD.cal=SBEcal;
 else
-    fprintf("SBE cal coef are missing in file %s ",filename)    
-    listfile=dir(Meta_Data.paths.raw_data);
-    list_fullfilename=fullfile({listfile.folder},{listfile.name});
-    idx_file=find(cellfun(@(x) strcmp(x,filename),list_fullfilename));
-    count=0;
-    %ALB If SBEcal missing  ALB using the SBEcal from the previous 10 modraw
-    %files
-    while isempty(str_SBEcalcoef_header)
-        count=count+1;
-        fprintf("  Using Open %s \r\n",list_fullfilename{idx_file-count})
-        fid1 = fopen(list_fullfilename{idx_file-count});
-        fseek(fid1,0,1);
-        frewind(fid1);
-        str1 = fread(fid1,'*char')';
-        fclose(fid1);
-        % get CTD cal coef
-        header_length=strfind(str1,'END_FCTD_HEADER_START_RUN');
-        str_SBEcalcoef_header=str1(strfind(str1,'SERIALNO'):header_length);
-        if ~isempty(str_SBEcalcoef_header)
-            SBEcal=get_CalSBE_from_modraw_header(str_SBEcalcoef_header);
-        end
-        if count>10
-            error("No SBE data in modraw %s. \n Check the file ",filename)
+    if ~isempty(ind_sbe_start)
+        fprintf("SBE cal coef are missing in file %s ",filename)
+        listfile=dir(Meta_Data.paths.raw_data);
+        list_fullfilename=fullfile({listfile.folder},{listfile.name});
+        idx_file=find(cellfun(@(x) strcmp(x,filename),list_fullfilename));
+        count=0;
+        %ALB If SBEcal missing  ALB using the SBEcal from the previous 10 modraw
+        %files
+        while isempty(str_SBEcalcoef_header)
+            count=count+1;
+            fprintf("  Using Open %s \r\n",list_fullfilename{idx_file-count})
+            fid1 = fopen(list_fullfilename{idx_file-count});
+            fseek(fid1,0,1);
+            frewind(fid1);
+            str1 = fread(fid1,'*char')';
+            fclose(fid1);
+            % get CTD cal coef
+            header_length=strfind(str1,'END_FCTD_HEADER_START_RUN');
+            str_SBEcalcoef_header=str1(strfind(str1,'SERIALNO'):header_length);
+            if ~isempty(str_SBEcalcoef_header)
+                SBEcal=get_CalSBE_from_modraw_header(str_SBEcalcoef_header);
+            end
+            if count>10
+                error("No SBE data in modraw %s. \n Check the file ",filename)
+            end
         end
     end
 
@@ -144,34 +181,34 @@ end
 % ind_*_start  = starting indices of all matches
 % ind_*_end    = ending indices of all matches
 
-[ind_som_start, ind_som_stop]            = regexp(str,'\$SOM3([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
-[ind_dcal_start, ind_dcal_stop]          = regexp(str,'\$DCAL([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
-[ind_gps_start      , ind_gps_stop]      = regexp(str,'\$GPGGA([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
-if isempty(ind_gps_start)
-    [ind_gps_start      , ind_gps_stop]  = regexp(str,'\$INGGA([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
-end
-
-[ind_efe_start, ind_efe_stop]            = regexp(str,'\$EFE([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
-[ind_sbe_start, ind_sbe_stop]            = regexp(str,'\$SB49([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
-if isempty(ind_sbe_start)
-    [ind_sbe_start, ind_sbe_stop]        = regexp(str,'\$SB41([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
-end
-[ind_alt_start      , ind_alt_stop]      = regexp(str,'\$ALT([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
-[ind_isap_start      , ind_isap_stop]      = regexp(str,'\$ISAP([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
-[ind_act_start      , ind_act_stop]      = regexp(str,'\$ACTU([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
-[ind_vnav_start     , ind_vnav_stop]     = regexp(str,'\$VNMAR([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
-if isempty(ind_vnav_start)
-    [ind_vnav_start     , ind_vnav_stop] = regexp(str,'\$VNYPR([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
-end
-[ind_seg_start      , ind_seg_stop]      = regexp(str,'\$SEGM([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
-[ind_spec_start     , ind_spec_stop]     = regexp(str,'\$SPEC([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
-[ind_avgspec_start  , ind_avgspec_stop]  = regexp(str,'\$AVGS([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
-[ind_dissrate_start , ind_dissrate_stop] = regexp(str,'\$RATE([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
-[ind_apf0_start     , ind_apf0_stop]     = regexp(str,'\$APF0([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
-[ind_apf1_start     , ind_apf1_stop]     = regexp(str,'\$APF1([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
-[ind_apf2_start     , ind_apf2_stop]     = regexp(str,'\$APF2([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
-[ind_fluor_start    , ind_fluor_stop]    = regexp(str,'\$ECOP([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
-[ind_ttv_start      , ind_ttv_stop]      = regexp(str,'\$TTVP([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
+% [ind_som_start, ind_som_stop]            = regexp(str,'\$SOM3([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
+% [ind_dcal_start, ind_dcal_stop]          = regexp(str,'\$DCAL([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
+% [ind_gps_start      , ind_gps_stop]      = regexp(str,'\$GPGGA([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
+% if isempty(ind_gps_start)
+%     [ind_gps_start      , ind_gps_stop]  = regexp(str,'\$INGGA([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
+% end
+% 
+% [ind_efe_start, ind_efe_stop]            = regexp(str,'\$EFE([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
+% [ind_sbe_start, ind_sbe_stop]            = regexp(str,'\$SB49([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
+% if isempty(ind_sbe_start)
+%     [ind_sbe_start, ind_sbe_stop]        = regexp(str,'\$SB41([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
+% end
+% [ind_alt_start      , ind_alt_stop]      = regexp(str,'\$ALT([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
+% [ind_isap_start      , ind_isap_stop]      = regexp(str,'\$ISAP([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
+% [ind_act_start      , ind_act_stop]      = regexp(str,'\$ACTU([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
+% [ind_vnav_start     , ind_vnav_stop]     = regexp(str,'\$VNMAR([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
+% if isempty(ind_vnav_start)
+%     [ind_vnav_start     , ind_vnav_stop] = regexp(str,'\$VNYPR([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
+% end
+% [ind_seg_start      , ind_seg_stop]      = regexp(str,'\$SEGM([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
+% [ind_spec_start     , ind_spec_stop]     = regexp(str,'\$SPEC([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
+% [ind_avgspec_start  , ind_avgspec_stop]  = regexp(str,'\$AVGS([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
+% [ind_dissrate_start , ind_dissrate_stop] = regexp(str,'\$RATE([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
+% [ind_apf0_start     , ind_apf0_stop]     = regexp(str,'\$APF0([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
+% [ind_apf1_start     , ind_apf1_stop]     = regexp(str,'\$APF1([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
+% [ind_apf2_start     , ind_apf2_stop]     = regexp(str,'\$APF2([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
+% [ind_fluor_start    , ind_fluor_stop]    = regexp(str,'\$ECOP([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
+% [ind_ttv_start      , ind_ttv_stop]      = regexp(str,'\$TTVP([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
 
 %$fluor0000000000045cf00000001c*6B0000000000045ceXXXXYYYYZZZZ*57
 %% Define the header tag format
@@ -2065,7 +2102,7 @@ else
     ttv.data.sample_freq      = 16;
     ttv.data.sample_period    = 1/ttv.data.sample_freq;
     ttv.data.n_blocks         = numel(ind_ttv_start);
-    ttv.data.recs_per_block   = 10;
+    ttv.data.recs_per_block   = 1;
     ttv.data.n_recs           = ttv.data.n_blocks*ttv.data.recs_per_block;
     ttv.data.timestamp_length = 16;
     % ALB I have to change this

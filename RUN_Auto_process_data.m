@@ -37,7 +37,7 @@ if newSetup_flag
 else
     % instrument = 'fctd';
     % instrument = 'fctd_tridente';
-    instrument = 'epsi';
+    instrument = input('what fish are we using? [epsi,fctd]');
 
 end
 

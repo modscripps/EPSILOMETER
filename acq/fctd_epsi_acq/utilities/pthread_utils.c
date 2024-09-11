@@ -2,6 +2,7 @@
 
 // Globals for PThreadUtils
 int threads_total = 0;
+enum acq_state {start_som=0,find_sync=1, id_tag};
 //static int LastFishIsDown = 0;
 /*
 ** FUNCTION NAME: FastCTDCreateThreads(pthread_t* threadList, FastCTDStructPtr fctd)
@@ -100,13 +101,51 @@ void *stop_ftcd_epsi_f(void *arg)
     ssize_t    numBytes = 0;    // Number of bytes read or written
     uint32_t delay=0xFFFFFF;
 
+
 	fctd_epsi_t *fCTDPtr = (fctd_epsi_ptr_t)arg;
 	while(!fCTDPtr->done)
 	{
 		gc = getchar();
- 
-		if (gc=='q' || gc=='s') 
+
+        //ALB adding a key to simply restart acquiring data without restart the fish.
+        //ALB This is in case the TCPIP com with the Ipad (and/or Matlab time series is not updating)
+        if (gc=='r')
+        {
+            if (strcmp(fCTDPtr->fish.CTDPortName,fCTDPtr->fish.CommandPortName)!=0){
+                fprintf(stdout, "opening Command Port\r\n");
+                InitSerialPort(&fCTDPtr->fish.SerialPort4Command, fCTDPtr->fish.CommandPortName);
+                SetOptionSerialPort4FishCommand(&fCTDPtr->fish);
+                if ((OpenSerialPort(&((fCTDPtr)->fish.SerialPort4Command)))!=0)    // != 0 -> failed
+                    fprintf(stdout, "Cannot open Command Port before re-setting data acquisition\r\n");
+                //ALB Delay to re-open the command port
+                while (delay>0){
+                    delay--;
+                }
+                delay=0xFFFFFF;
+            }
+            fCTDPtr->fish.CTDPhase = find_sync;
+            read_ctd_data_from_port_f(fCTDPtr);
+
+        }
+        
+		if (gc=='q' || gc=='s')
 		{
+            
+            if (strcmp(fCTDPtr->fish.CTDPortName,fCTDPtr->fish.CommandPortName)!=0){
+                fprintf(stdout, "opening Command Port\r\n");
+                InitSerialPort(&fCTDPtr->fish.SerialPort4Command, fCTDPtr->fish.CommandPortName);
+                SetOptionSerialPort4FishCommand(&fCTDPtr->fish);
+                if ((OpenSerialPort(&((fCTDPtr)->fish.SerialPort4Command)))!=0)    // != 0 -> failed
+                    fprintf(stdout, "Cannot open Command Port before quitting\r\n");
+                //ALB Delay to re-open the command port
+                while (delay>0){
+                    delay--;
+                }
+                delay=0xFFFFFF;
+
+            }
+
+            
             fprintf(stdout, "som.stop\r\n");
             sprintf(som_cmd,"%s\r\n","som.stop");
             if (strcmp(fCTDPtr->fish.CTDPortName,fCTDPtr->fish.CommandPortName)!=0){
@@ -117,7 +156,8 @@ void *stop_ftcd_epsi_f(void *arg)
             while (delay>0){
                 delay--;
             }
-
+            delay=0xFFFFFF;
+            
             fprintf(stdout, "Quitting FastCTD DAQ.\n");
 
  

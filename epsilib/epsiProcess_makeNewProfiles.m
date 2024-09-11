@@ -25,7 +25,11 @@ end
 % obj.f_getProfileIndices;
 
 % Load PressureTimeseries
-load(fullfile(obj.Meta_Data.paths.mat_data,'PressureTimeseries.mat'))
+load(fullfile(obj.Meta_Data.paths.mat_data,'PressureTimeseries.mat'),'PressureTimeseries')
+
+%ALB to comment latter
+PressureTimeseries.startprof=PressureTimeseries.startdown;
+PressureTimeseries.endprof=PressureTimeseries.enddown;
 
 % Look for the current list of profiles
 profList = dir(fullfile(obj.Meta_Data.paths.profiles,'Profile*.mat'));

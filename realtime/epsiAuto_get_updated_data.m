@@ -23,7 +23,7 @@ else
     data = newData;
 
     % List data fields to add obj
-    periphNames = {'epsi','ctd','alt','vnav','gps'};
+    periphNames = {'epsi','ctd','alt','vnav','gps','ttv'};
 
     %% Get indices and lengths of old and new data for all peripherals
     for p=1:length(periphNames)

@@ -156,7 +156,7 @@ obj.Meta_Data = epsiSetup_read_MetaProcess(obj.Meta_Data,...
 % Apply TMAX to structure tMax. Since the instruments sample at different
 % rates, these will become slightly different from each other in the loop
 % as new data come in.
-field_list = {'epsi','ctd','alt','vnav','gps'};
+field_list = {'epsi','ctd','alt','vnav','gps','ttv','isap'};
 for iField=1:length(field_list)
     tMax.(field_list{iField}) = TMAX;
 end

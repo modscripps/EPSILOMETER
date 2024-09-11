@@ -128,6 +128,67 @@
 			<key>uniqueIdentifier</key>
 			<string>2F6814C2-4B36-4568-AC98-912F50C3028C</string>
 		</dict>
+		<key>606B3138-7E69-4AD0-9DA9-00C1430E6C28</key>
+		<dict>
+			<key>auxiliaryLogUniqueIdentifier</key>
+			<string>37804012-FE6A-4B6C-9EB6-24FF8B87C7CF</string>
+			<key>auxiliaryObservable</key>
+			<dict>
+				<key>highLevelStatus</key>
+				<string>W</string>
+				<key>totalNumberOfAnalyzerIssues</key>
+				<integer>0</integer>
+				<key>totalNumberOfErrors</key>
+				<integer>0</integer>
+				<key>totalNumberOfTestFailures</key>
+				<integer>0</integer>
+				<key>totalNumberOfWarnings</key>
+				<integer>3</integer>
+			</dict>
+			<key>className</key>
+			<string>IDESchemeActionsInvocationRecord</string>
+			<key>documentTypeString</key>
+			<string>&lt;nil&gt;</string>
+			<key>domainType</key>
+			<string>com.apple.dt.IDE.LaunchSchemeAction</string>
+			<key>fileName</key>
+			<string>Run-fctd_epsi-2024.09.02_21-16-47--0700.xcresult</string>
+			<key>hasAuxiliaryLog</key>
+			<true/>
+			<key>hasConsoleLog</key>
+			<true/>
+			<key>hasPrimaryLog</key>
+			<true/>
+			<key>primaryObservable</key>
+			<dict>
+				<key>highLevelStatus</key>
+				<string>W</string>
+				<key>totalNumberOfAnalyzerIssues</key>
+				<integer>0</integer>
+				<key>totalNumberOfErrors</key>
+				<integer>0</integer>
+				<key>totalNumberOfTestFailures</key>
+				<integer>0</integer>
+				<key>totalNumberOfWarnings</key>
+				<integer>3</integer>
+			</dict>
+			<key>schemeIdentifier-containerName</key>
+			<string>fctd_epsi project</string>
+			<key>schemeIdentifier-schemeName</key>
+			<string>fctd_epsi</string>
+			<key>schemeIdentifier-sharedScheme</key>
+			<integer>1</integer>
+			<key>signature</key>
+			<string>Run fctd_epsi</string>
+			<key>timeStartedRecording</key>
+			<real>747029807.10859799</real>
+			<key>timeStoppedRecording</key>
+			<real>0.0</real>
+			<key>title</key>
+			<string>Run fctd_epsi</string>
+			<key>uniqueIdentifier</key>
+			<string>606B3138-7E69-4AD0-9DA9-00C1430E6C28</string>
+		</dict>
 		<key>65CAF158-02F5-4CC0-970F-FABEC2A3F3B5</key>
 		<dict>
 			<key>auxiliaryLogUniqueIdentifier</key>
