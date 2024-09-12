@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>logFormatVersion</key>
+	<integer>10</integer>
+	<key>logs</key>
+	<dict>
+		<key>2A5D1531-5A6C-40C1-8D7D-3244071F97CB</key>
+		<dict>
+			<key>className</key>
+			<string>IDEActivityLogMajorGroupSection</string>
+			<key>documentTypeString</key>
+			<string>&lt;nil&gt;</string>
+			<key>domainType</key>
+			<string>Xcode.IDEActivityLogDomainType.target.product-type.tool</string>
+			<key>fileName</key>
+			<string>2A5D1531-5A6C-40C1-8D7D-3244071F97CB.xcactivitylog</string>
+			<key>hasPrimaryLog</key>
+			<true/>
+			<key>primaryObservable</key>
+			<dict>
+				<key>highLevelStatus</key>
+				<string>S</string>
+			</dict>
+			<key>signature</key>
+			<string>fctd_epsi-cdrjptcmygifdwbrqsmcxwxhdpmc</string>
+			<key>timeStartedRecording</key>
+			<real>744586815.24796903</real>
+			<key>timeStoppedRecording</key>
+			<real>744586816.72679496</real>
+			<key>title</key>
+			<string>Build target fctd_epsi</string>
+			<key>uniqueIdentifier</key>
+			<string>2A5D1531-5A6C-40C1-8D7D-3244071F97CB</string>
+		</dict>
+		<key>5CCDE310-C81B-4D5C-8C7D-CAFF3C89E3AF</key>
+		<dict>
+			<key>className</key>
+			<string>IDEActivityLogMajorGroupSection</string>
+			<key>documentTypeString</key>
+			<string>&lt;nil&gt;</string>
+			<key>domainType</key>
+			<string>Xcode.IDEActivityLogDomainType.target.product-type.tool</string>
+			<key>fileName</key>
+			<string>5CCDE310-C81B-4D5C-8C7D-CAFF3C89E3AF.xcactivitylog</string>
+			<key>hasPrimaryLog</key>
+			<true/>
+			<key>primaryObservable</key>
+			<dict>
+				<key>highLevelStatus</key>
+				<string>W</string>
+			</dict>
+			<key>signature</key>
+			<string>fctd_epsi-agqhegicurzwdfdcovlcmgxkwvqw</string>
+			<key>timeStartedRecording</key>
+			<real>680948866.51166797</real>
+			<key>timeStoppedRecording</key>
+			<real>680948866.906039</real>
+			<key>title</key>
+			<string>Build target fctd_epsi</string>
+			<key>uniqueIdentifier</key>
+			<string>5CCDE310-C81B-4D5C-8C7D-CAFF3C89E3AF</string>
+		</dict>
+	</dict>
+	<key>preserveOldLogs</key>
+	<true/>
+</dict>
+</plist>

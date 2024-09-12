@@ -74,7 +74,8 @@ dirs.raw_incoming = raw_dir;
 dirs.raw_copy  = fullfile(process_dir,'raw');
 dirs.mat       = fullfile(process_dir,'mat');
 experiment_dir = fileparts(process_dir);
-dirs.fctd_mat  = fullfile(experiment_dir,'FCTDmat');
+dirs.fctd_cruise  = fullfile(experiment_dir,'FCTDmat');
+dirs.fctd_deployment = fullfile(process_dir,'fctd_mat');
 dirs.fctd_rot  = fullfile(experiment_dir,'FCTDrot');
 
 % Create directories if they don't exist
@@ -87,8 +88,11 @@ end
 if ~exist(dirs.mat,'dir')
     eval([ '!mkdir ' strrep(dirs.mat,' ','\ ')]);
 end
-if ~exist(dirs.fctd_mat,'dir')
-    eval([ '!mkdir ' strrep(dirs.fctd_mat,' ','\ ')]);
+if ~exist(dirs.fctd_cruise,'dir')
+    eval([ '!mkdir ' strrep(dirs.fctd_cruise,' ','\ ')]);
+end
+if ~exist(dirs.fctd_deployment,'dir')
+    eval([ '!mkdir ' strrep(dirs.fctd_deployment,' ','\ ')]);
 end
 if ~exist(dirs.fctd_rot,'dir')
     eval([ '!mkdir ' strrep(dirs.fctd_rot,' ','\ ')]);
@@ -133,7 +137,7 @@ EpsiConvert_timer.TimerFcn = [...
     'else, '...
     'disp([datestr(now) '': Converting new raw files to mat...'']); '...
     'try, '...
-    'epsiProcess_convert_new_raw_to_mat(dirs,ec.Meta_Data,"doFCTD",dirs.fctd_mat,"fileStr",str_to_match);' ...
+    'epsiProcess_convert_new_raw_to_mat(dirs,ec.Meta_Data,"doFCTD","fileStr",str_to_match);' ...
     'catch err, '...
     'display_error_stack(err); '...
     's=1; '...

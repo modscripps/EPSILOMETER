@@ -24,6 +24,7 @@ function [data] = mod_som_read_epsi_files_v4(filename,Meta_Data)
 %   epsi  (intermediate processing in 'efe' structure)
 %   ctd   (intermediate processing in 'sbe' structure)
 %   alt   (intermediate processing in 'alti' structure)
+%   isap   (intermediate processing in 'isap' structure)
 %   act   (intermediate processing in 'actu' structure)
 %   vnav  (intermediate processing in 'vecnav' structure)
 %   gps   (intermediate processing in 'gpsmeta' structure
@@ -35,13 +36,14 @@ function [data] = mod_som_read_epsi_files_v4(filename,Meta_Data)
 % 11/28/21 aleboyer@ucsd.edu  updated from v3
 % Nicole Couto adapted from Arnaud LeBoyer's mod_som_read_epsi_raw.m
 % June 2021
+% 2024/08/08 aleboyer: adding isap struct
 % -------------------------------------------------------------------------
 
 % Define a constant for salinity calculation
 c3515 = 42.914;
 
 %% Open file and save contents as 'str'
-fprintf("Open %s \r\n",filename)
+fprintf("   Open %s \r\n",filename)
 fid = fopen(filename);
 fseek(fid,0,1);
 frewind(fid);
@@ -51,10 +53,16 @@ fclose(fid);
 % Get time now
 Meta_Data.start_dnum = now;
 
-
 %% Get indices and tokens for each data type you will process
 % ind_*_start  = starting indices of all matches
 % ind_*_end    = ending indices of all matches
+
+[ind_som_start, ind_som_stop]            = regexp(str,'\$SOM3([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
+[ind_dcal_start, ind_dcal_stop]          = regexp(str,'\$DCAL([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
+[ind_gps_start      , ind_gps_stop]      = regexp(str,'\$GPGGA([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
+if isempty(ind_gps_start)
+    [ind_gps_start      , ind_gps_stop]  = regexp(str,'\$INGGA([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
+end
 
 [ind_efe_start, ind_efe_stop]            = regexp(str,'\$EFE([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
 [ind_sbe_start, ind_sbe_stop]            = regexp(str,'\$SB49([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
@@ -62,10 +70,12 @@ if isempty(ind_sbe_start)
     [ind_sbe_start, ind_sbe_stop]        = regexp(str,'\$SB41([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
 end
 [ind_alt_start      , ind_alt_stop]      = regexp(str,'\$ALT([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
+[ind_isap_start      , ind_isap_stop]      = regexp(str,'\$ISAP([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
 [ind_act_start      , ind_act_stop]      = regexp(str,'\$ACTU([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
-%[ind_vnav_start     , ind_vnav_stop]     = regexp(str,'\$VNMAR([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
-[ind_vnav_start     , ind_vnav_stop]     = regexp(str,'\$VNYMR([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
-[ind_gps_start      , ind_gps_stop]      = regexp(str,'\$GPGGA([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
+[ind_vnav_start     , ind_vnav_stop]     = regexp(str,'\$VNMAR([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
+if isempty(ind_vnav_start)
+    [ind_vnav_start     , ind_vnav_stop] = regexp(str,'\$VNYPR([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
+end
 [ind_seg_start      , ind_seg_stop]      = regexp(str,'\$SEGM([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
 [ind_spec_start     , ind_spec_stop]     = regexp(str,'\$SPEC([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
 [ind_avgspec_start  , ind_avgspec_stop]  = regexp(str,'\$AVGS([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
@@ -74,7 +84,131 @@ end
 [ind_apf1_start     , ind_apf1_stop]     = regexp(str,'\$APF1([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
 [ind_apf2_start     , ind_apf2_stop]     = regexp(str,'\$APF2([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
 [ind_fluor_start    , ind_fluor_stop]    = regexp(str,'\$ECOP([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
-[ind_ttv_start      , ind_ttv_stop]      = regexp(str,'\$TTVP([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
+[ind_ttv_start      , ind_ttv_stop]      = regexp(str,'\$TTV1([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
+
+
+
+%% Get experiment, cruise, vehicle, pressure case and fish flag from setup, 
+newSetup_flag=contains(str,'CTD.experiment=');
+if newSetup_flag
+    experiment_str    = str(strfind(str,'CTD.experiment=')+(0:100));
+    cruise_str        = str(strfind(str,'CTD.cruise=')+(0:100));
+    vehicle_str       = str(strfind(str,'CTD.vehicle=')+(0:100));
+    pressure_case_str = str(strfind(str,'CTD.fish_pc=')+(0:100));
+    fishflag_str      = str(strfind(str,'CTD.fishflag=')+(0:100));
+
+    experiment_str    = experiment_str(1:find(uint8(experiment_str)==10,1,'first'));
+    cruise_str        = cruise_str(1:find(uint8(cruise_str)==10,1,'first'));
+    vehicle_str       = vehicle_str(1:find(uint8(vehicle_str)==10,1,'first'));
+    pressure_case_str = pressure_case_str(1:find(uint8(pressure_case_str)==10,1,'first'));
+    fishflag_str      = fishflag_str(1:find(uint8(fishflag_str)==10,1,'first'));
+
+    experiment_name    = strsplit(experiment_str,'=');
+    cruise_name        = strsplit(cruise_str,'=');
+    vehicle_name       = strsplit(vehicle_str,'=');
+    pressure_case_name = strsplit(pressure_case_str,'=');
+    fishflag_name      = strsplit(fishflag_str,'=');
+
+
+    experiment_name    = experiment_name{2}(1:end-2);
+    cruise_name        = cruise_name{2}(1:end-2);
+    vehicle_name       = vehicle_name{2}(1:end-2);
+    pressure_case_name = pressure_case_name{2}(1:end-2);
+    fishflag_name      = fishflag_name{2}(1:end-2);
+else
+    experiment_name    = [];
+    cruise_name        = [];
+    vehicle_name       = [];
+    pressure_case_name = [];
+    fishflag_name      = [];
+
+end
+
+%% get CTD cal coef
+header_length=strfind(str,'END_FCTD_HEADER_START_RUN');
+str_SBEcalcoef_header=str(strfind(str,'SERIALNO'):header_length);
+if ~isempty(str_SBEcalcoef_header)
+    SBEcal=get_CalSBE_from_modraw_header(str_SBEcalcoef_header);
+    Meta_Data.CTD.cal=SBEcal;
+else
+    if ~isempty(ind_sbe_start)
+        fprintf("SBE cal coef are missing in file %s ",filename)
+        listfile=dir(Meta_Data.paths.raw_data);
+        list_fullfilename=fullfile({listfile.folder},{listfile.name});
+        idx_file=find(cellfun(@(x) strcmp(x,filename),list_fullfilename));
+        count=0;
+        %ALB If SBEcal missing  ALB using the SBEcal from the previous 10 modraw
+        %files
+        while isempty(str_SBEcalcoef_header)
+            count=count+1;
+            fprintf("  Using Open %s \r\n",list_fullfilename{idx_file-count})
+            fid1 = fopen(list_fullfilename{idx_file-count});
+            fseek(fid1,0,1);
+            frewind(fid1);
+            str1 = fread(fid1,'*char')';
+            fclose(fid1);
+            % get CTD cal coef
+            header_length=strfind(str1,'END_FCTD_HEADER_START_RUN');
+            str_SBEcalcoef_header=str1(strfind(str1,'SERIALNO'):header_length);
+            if ~isempty(str_SBEcalcoef_header)
+                SBEcal=get_CalSBE_from_modraw_header(str_SBEcalcoef_header);
+            end
+            if count>10
+                error("No SBE data in modraw %s. \n Check the file ",filename)
+            end
+        end
+    end
+
+end
+%% get Epsi probe Serial Numbers from Header
+str_EPSICHANNEL_start  = strfind(str,'Fish probes serial numbers');
+str_EPSICHANNEL_end    = strfind(str,'end probes serial numbers');
+str_EPSICHANNEL_header = str(str_EPSICHANNEL_start:str_EPSICHANNEL_end-8);
+epsi_probes=[];
+if ~isempty(str_EPSICHANNEL_header)
+    epsi_probes=parse_epsi_channel_string(str_EPSICHANNEL_header);
+    Meta_Data.AFE.t1=epsi_probes.ch1;
+    Meta_Data.AFE.t2=epsi_probes.ch2;
+    Meta_Data.AFE.s1=epsi_probes.ch3;
+    Meta_Data.AFE.s2=epsi_probes.ch4;
+else
+    warning('No Epsi probe serial number in file %s',filename)
+
+end
+
+
+%% Get indices and tokens for each data type you will process
+% ind_*_start  = starting indices of all matches
+% ind_*_end    = ending indices of all matches
+
+% [ind_som_start, ind_som_stop]            = regexp(str,'\$SOM3([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
+% [ind_dcal_start, ind_dcal_stop]          = regexp(str,'\$DCAL([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
+% [ind_gps_start      , ind_gps_stop]      = regexp(str,'\$GPGGA([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
+% if isempty(ind_gps_start)
+%     [ind_gps_start      , ind_gps_stop]  = regexp(str,'\$INGGA([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
+% end
+% 
+% [ind_efe_start, ind_efe_stop]            = regexp(str,'\$EFE([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
+% [ind_sbe_start, ind_sbe_stop]            = regexp(str,'\$SB49([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
+% if isempty(ind_sbe_start)
+%     [ind_sbe_start, ind_sbe_stop]        = regexp(str,'\$SB41([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
+% end
+% [ind_alt_start      , ind_alt_stop]      = regexp(str,'\$ALT([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
+% [ind_isap_start      , ind_isap_stop]      = regexp(str,'\$ISAP([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
+% [ind_act_start      , ind_act_stop]      = regexp(str,'\$ACTU([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
+% [ind_vnav_start     , ind_vnav_stop]     = regexp(str,'\$VNMAR([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
+% if isempty(ind_vnav_start)
+%     [ind_vnav_start     , ind_vnav_stop] = regexp(str,'\$VNYPR([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
+% end
+% [ind_seg_start      , ind_seg_stop]      = regexp(str,'\$SEGM([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
+% [ind_spec_start     , ind_spec_stop]     = regexp(str,'\$SPEC([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
+% [ind_avgspec_start  , ind_avgspec_stop]  = regexp(str,'\$AVGS([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
+% [ind_dissrate_start , ind_dissrate_stop] = regexp(str,'\$RATE([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
+% [ind_apf0_start     , ind_apf0_stop]     = regexp(str,'\$APF0([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
+% [ind_apf1_start     , ind_apf1_stop]     = regexp(str,'\$APF1([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
+% [ind_apf2_start     , ind_apf2_stop]     = regexp(str,'\$APF2([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
+% [ind_fluor_start    , ind_fluor_stop]    = regexp(str,'\$ECOP([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
+% [ind_ttv_start      , ind_ttv_stop]      = regexp(str,'\$TTVP([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
 
 %$fluor0000000000045cf00000001c*6B0000000000045ceXXXXYYYYZZZZ*57
 %% Define the header tag format
@@ -124,6 +258,118 @@ tag.laptoptime.indx = get_inds(tag.laptoptime);
 %% Start a list of processed and unprocessed data types
 processed_data_types = {};
 no_data_types = {};
+
+%% Process setup SOM3 data
+if isempty(ind_som_start)
+    no_data_types = [no_data_types,'setup'];
+    setup=[];
+else
+    str_setup=str(ind_som_start+32:ind_som_stop-5);
+    % str_setup=str(ind_som_start:ind_som_stop);
+    setup=mod_som_read_setup_from_raw(str_setup);
+    Meta_Data=epsiSetup_fill_meta_data(Meta_Data,setup);
+
+    if ~isempty(epsi_probes)
+        Meta_Data.AFE.t1.SN=epsi_probes.ch1.SN;
+        Meta_Data.AFE.t1.cal=epsi_probes.ch1.cal;
+        Meta_Data.AFE.t2.SN=epsi_probes.ch2.SN;
+        Meta_Data.AFE.t2.cal=epsi_probes.ch2.cal;
+        Meta_Data.AFE.s1.SN=epsi_probes.ch3.SN;
+        Meta_Data.AFE.s1.cal=epsi_probes.ch3.cal;
+        Meta_Data.AFE.s2.SN=epsi_probes.ch4.SN;
+        Meta_Data.AFE.s2.cal=epsi_probes.ch4.cal;
+    end
+    
+    if newSetup_flag
+        Meta_Data.experiment_name    = experiment_name;
+        Meta_Data.cruise_name        = cruise_name;
+        Meta_Data.vehicle_name       = vehicle_name;
+        Meta_Data.pressure_case_name = pressure_case_name;
+        Meta_Data.fishflag_name      = fishflag_name;
+    end
+
+end
+if isempty(ind_dcal_start)
+end
+
+%% GPS data We have to start with GPS because we need latitude 
+if isempty(ind_gps_start)
+    no_data_types = [no_data_types,'gps'];
+    gps = [];
+else
+    processed_data_types = [processed_data_types,'gps'];
+    %disp('processing gps data')
+    
+    % GPS-specific quantities
+    % ---------------------------
+    gpsmeta.data.n_blocks = numel(ind_gps_start);
+    gpsmeta.data.recs_per_block = 1;
+    gpsmeta.data.n_recs = gpsmeta.data.n_blocks*gpsmeta.data.recs_per_block;
+    
+    ind_time_start = ind_gps_start-10;
+    ind_time_stop  = ind_gps_start-1;
+    
+    % San added these GPS steps. Here, he reads the file header to get system time.
+    % You'll use this to correct the gps timestamp.
+    FID = fopen(filename,'r');
+    if FID<0
+        error('MATLAB:FastCTD_ReadASCII:FileError', 'Could not open file %s',fname);
+    end
+    
+    % NC 7/22/21 Problem! FastCTD_ASCII_parseheader doesn't work if there is
+    % no header. It might be fixed by moving the "if there is gps data" line
+    % above this step.
+    FCTD = FastCTD_ASCII_parseheader(FID);
+    
+    %convert time to MATLAB time
+    if FCTD.header.offset_time < 0
+        FCTD.header.offset_time = correctNegativeTime(FCTD.header.offset_time)/86400+datenum(1970,1,1);
+    else
+        FCTD.header.offset_time = FCTD.header.offset_time/86400+datenum(1970,1,1);
+    end
+    if FCTD.header.system_time < 0
+        FCTD.header.system_time = correctNegativeTime(FCTD.header.system_time)/86400/100+FCTD.header.offset_time;
+    else
+        FCTD.header.system_time = FCTD.header.system_time/86400/100+FCTD.header.offset_time;
+    end
+    
+    fclose(FID);
+    
+    % Process GPS data
+    % ---------------------------
+    
+    % Pre-allocate space for data
+    gps.dnum   = nan(gpsmeta.data.n_recs,1);
+    
+    gps.latitude = nan(gpsmeta.data.n_recs,1);
+    gps.longitude = nan(gpsmeta.data.n_recs,1);
+    
+    % Loop through data blocks and parse strings
+    for iB=1:gpsmeta.data.n_blocks
+        try
+            % Grab the block of data starting with the header
+            gps_block_str = str(ind_gps_start(iB):ind_gps_stop(iB)); %Moved here by Bethan June 26
+            
+            
+            % Get the data after the header
+            gps_block_data = str(ind_gps_start(iB):ind_gps_stop(iB));
+            
+            % Split the data into parts
+            data_split = strsplit(gps_block_data,',');
+            
+            gps.dnum(iB) = str2double(str(ind_time_start(iB):ind_time_stop(iB)))/100/24/3600+FCTD.header.offset_time;
+            
+            gps.latitude(iB) = floor(str2double(data_split{3})/100) + mod(str2double(data_split{3}),100)/60; % then add minutes
+            gps.latitude(iB) = gps.latitude(iB).*(2*strcmpi(data_split{4},'N')-1); % check for north or south
+            
+            gps.longitude(iB) = floor(str2double(data_split{5})/100) + mod(str2double(data_split{5}),100)/60; % then add minutes
+            gps.longitude(iB) = gps.longitude(iB).*(2*strcmpi(data_split{6},'E')-1); % check for East or West (if west multiply by -1)
+        catch err
+            iB
+        end
+    end
+    
+end %end loop if there is gps data
 
 
 %% Process EFE data
@@ -307,10 +553,9 @@ else
     switch Meta_Data.CTD.name
         case{"SBE49","SBE","S49","SB49"}
             sbe.data.format      = 'eng';
-            %sbe.data.length      = 22;
             sbe.data.length      = 24; %It's 24 for BLT data
             sbe.data.sample_freq = 16;
-            sbe.cal              = Meta_Data.CTD.cal;
+            sbe.cal              = SBEcal; % SBEcal is readfrom the Header of the modraw
         case{"SBE41","S41","SB41"}
             sbe.data.format      = 'PTS';
             sbe.data.length      = 28;
@@ -444,7 +689,13 @@ else
             if ~isfield(Meta_Data.PROCESS,'latitude')
                 error('Need latitude to get depth from pressure data. Add to MetaProcess text file.')
             else
-                ctd.z    = sw_dpth(ctd.P,Meta_Data.PROCESS.latitude);
+                % ALB add the gps data if it exists. 
+                if isfield(gps,'latitude')
+                    ctd_lat  = interp1(gps.dnum,gps.latitude,ctd.dnum);
+                    ctd.z    = sw_dpth(ctd.P,ctd_lat);
+                else
+                    ctd.z    = sw_dpth(ctd.P,Meta_Data.PROCESS.latitude);
+                end
                 ctd.dzdt = [0; diff(ctd.z)./diff(ctd.time_s)];
             end
             
@@ -466,7 +717,7 @@ else
     
 end %end loop if there is ctd data
 
-%% Altimeter
+%% MOD  Altimeter
 if isempty(ind_alt_start)
     no_data_types = [no_data_types,'alt'];
     alt=[];
@@ -555,6 +806,100 @@ else
     
 end %end loop if there is alt data
 
+%% ISA500
+if isempty(ind_isap_start)
+    no_data_types = [no_data_types,'isap'];
+    isap=[];
+else
+    processed_data_types = [processed_data_types,'isap'];
+    %disp('processing alt data')
+    
+    % ALTI-specific quantities
+    % --------------------------------
+    isa.data.n_blocks       = numel(ind_isap_start);
+    isa.data.recs_per_block = 1;
+    isa.data.n_recs         = isa.data.n_blocks*isa.data.recs_per_block;
+    
+    isa.ten_microsec2sec    = 1e-5;
+    isa.sound_speed         = 1500;
+    
+    % Process ISAP data
+    % --------------------------------
+    
+    % Pre-allocate space for data
+    isap_timestamp  = nan(isa.data.n_recs,1);
+    %alt.time_s and alt.dnum will be created from alt_timestamp once
+    %all its records are filled
+    isap.dst        = nan(isa.data.n_recs,1);
+    
+    % Loop through data blocks and parse strings
+    for iB=1:isa.data.n_blocks
+        
+        % Grab the block of data starting with the header
+        isap_block_str = str(ind_isap_start(iB):ind_isap_stop(iB));
+        
+        % For the altimeter, all the data is actually in the header
+        try
+            isa.hextimestamp.value   = hex2dec(isap_block_str(tag.hextimestamp.inds));
+        catch
+            isa.hextimestamp.value = nan;
+        end
+        try
+            isap_timestamp(iB) = isa.hextimestamp.value;
+        catch
+            isap_timestamp(iB) = nan;
+        end
+        
+        % The altimeter block does not have a hexlengthblock (hexadecimal
+        % length of data block). It has the altimeter reading in that
+        % position
+        isa.hexlengthblock.value = isap_block_str(tag.hexlengthblock.inds);
+        
+        isap.dst(iB) = str2double(isap_block_str(tag.data_offset+ ...
+                                 tag.hextimestamp.length+ ...
+                                 tag.header.offset+ ...
+                                 tag.header.length+2:end-5));
+        % ALB ISAP500 send meters directly
+        % isap.dst(iB) = dst_microsec*isap.ten_microsec2sec*isap.sound_speed;
+        
+        % Calculate actual height above bottom (hab) from altimeter
+        % distance reading. The altimeter is angled at 10 degrees and is positioned 5 ft above the
+        % crashguard. The probes sit 2.02 inches behind the crash guard.
+        % (See Epsi Processing Manual - Altimeter correction for diagram).
+        % convert_dissrate = @(x) ((x-apf.data.dissrate_count0)/apf.data.dissrate_per_bit);
+        feet2meters = @(x) (x*0.3048);
+        inches2meters = @(x) (x*0.0254);
+        angle_deg = Meta_Data.PROCESS.alt_angle_deg;
+        isap_to_crashguard = Meta_Data.PROCESS.alt_dist_from_crashguard_ft;
+        probe_to_crashguard = Meta_Data.PROCESS.alt_probe_dist_from_crashguard_in;
+
+        A = isap.dst(iB);
+        theta = deg2rad(angle_deg);
+        altimeter_height_above_probes = feet2meters(isap_to_crashguard) - ...
+            inches2meters(probe_to_crashguard);
+
+        % alt.hab is the height of the probes above the bottom
+        isap.hab(iB,1) = A*cos(theta) - altimeter_height_above_probes;
+
+    end %end loop through alt blocks
+    
+    % If timestamp has values like 1.6e12, it is in milliseconds since Jan
+    % 1, 1970. Otherwise it's in milliseconds since the start of the record
+    if nanmedian(isap_timestamp)>1e9
+        % time_s - seconds since 1970
+        % dnum - matlab datenum
+        [isap.time_s,isap.dnum] = convert_timestamp(isap_timestamp);
+    else
+        % time_s - seconds since power on
+        isap.time_s = isap_timestamp./1000;
+        isap.dnum = Meta_Data.start_dnum + days(seconds(isap.time_s));
+    end
+    
+    % Order alt fields
+    isap = orderfields(isap,{'dnum','time_s','dst','hab'});
+    
+end %end loop if there is alt data
+
 
 %% Actuator
 if isempty(ind_act_start)
@@ -604,15 +949,17 @@ else
     vnav_timestamp   = nan(vecnav.data.n_recs,1);
     %vnav.time_s and vnav.dnum will be created from vnav_timestamp once
     %all its records are filled
-    vnav.compass = nan(vecnav.data.n_recs,1); %TODO : initialize with three columns prior to filling below (l.636)
-    vnav.acceleration = nan(vecnav.data.n_recs,1);
-    vnav.gyro = nan(vecnav.data.n_recs,1);
-    vnav.ypr = nan(vecnav.data.n_recs,1);
+    vnav.compass = nan(vecnav.data.n_recs,3);
+    vnav.acceleration = nan(vecnav.data.n_recs,3);
+    vnav.gyro = nan(vecnav.data.n_recs,3);
+    vnav.yaw = nan(vecnav.data.n_recs,1);
+    vnav.pitch = nan(vecnav.data.n_recs,1);
+    vnav.roll = nan(vecnav.data.n_recs,1);
     
     %     % Grab the block of data starting with the header
     %     vnav_block_str = str(ind_vnav_start(iB):ind_vnav_stop(iB));
     %     %Commented out and moved below by Bethan June 26
-    
+    Lsample=length(str(ind_vnav_start(iB):ind_vnav_stop(iB)));
     
     % Loop through data blocks and parse strings
     for iB=1:vecnav.data.n_blocks
@@ -620,8 +967,9 @@ else
         % Grab the block of data starting with the header
         vnav_block_str = str(ind_vnav_start(iB):ind_vnav_stop(iB)); %Moved here by Bethan June 26
         % For the vecnav, we use the hexadecimal timestamp that comes before
-        % $VNMAR -->  Oct. 26: $VNYMR since angles were added to outputs
-        vnav_timestamp(iB) = hex2dec(str(ind_time_start(iB):ind_time_stop(iB)));
+        % $VNMAR
+        % vnav_timestamp(iB) = hex2dec(str(ind_time_start(iB):ind_time_stop(iB)));
+        vnav_timestamp(iB) = hex2dec(str(ind_vnav_start(iB)-16:ind_vnav_start(iB)-1));
         
         % Get the data after the header
         vnav_block_data = str(ind_vnav_start(iB):ind_vnav_stop(iB)-tag.chksum.length);
@@ -630,11 +978,17 @@ else
         data_split = strsplit(vnav_block_data,',');
         
         % Compass, acceleration, and gyro each have x, y, and z components
-        for iC=1:3
-            vnav.ypr(iB,iC)=str2double(data_split{1,iC+1}); %Orientation in Euler 321 sequence (yaw, pitch, roll) units = degrees
-            vnav.compass(iB,iC)=str2double(data_split{1,iC+4}); %Compass (x,y,z) units = gauss
-            vnav.acceleration(iB,iC)=str2double(data_split{1,iC+7}); %Acceleration (x,y,x) units = m/s^2
-            vnav.gyro(iB,iC)=str2double(data_split{1,iC+10}); %Gyro (x,y,z) units = rad/s
+        switch Lsample
+            case 38 %yaw pitch roll
+                vnav.yaw(iB)   = str2double(data_split{2});
+                vnav.pitch(iB) = str2double(data_split{3});
+                vnav.roll(iB)  = str2double(data_split{4});
+            otherwise
+                for iC=1:3
+                    vnav.compass(iB,iC)=str2double(data_split{1,iC+1}); %Compass (x,y,z) units = gauss
+                    vnav.acceleration(iB,iC)=str2double(data_split{1,iC+4}); %Acceleration (x,y,x) units = m/s^2
+                    vnav.gyro(iB,iC)=str2double(data_split{1,iC+7}); %Gyro (x,y,z) units = rad/s
+                end
         end
         
     end
@@ -652,87 +1006,10 @@ else
     end
     
     % Order vnav fields
-    vnav = orderfields(vnav,{'dnum','time_s','ypr','compass','acceleration','gyro'});
+    vnav = orderfields(vnav,{'dnum','time_s','compass','acceleration','gyro','yaw','pitch','roll'});
     
 end %end loop if there is vnav data
 
-%% GPS data
-if isempty(ind_gps_start)
-    no_data_types = [no_data_types,'gps'];
-    gps = [];
-else
-    processed_data_types = [processed_data_types,'gps'];
-    %disp('processing gps data')
-    
-    % GPS-specific quantities
-    % ---------------------------
-    gpsmeta.data.n_blocks = numel(ind_gps_start);
-    gpsmeta.data.recs_per_block = 1;
-    gpsmeta.data.n_recs = gpsmeta.data.n_blocks*gpsmeta.data.recs_per_block;
-    
-    ind_time_start = ind_gps_start-10;
-    ind_time_stop  = ind_gps_start-1;
-    
-    % San added these GPS steps. Here, he reads the file header to get system time.
-    % You'll use this to correct the gps timestamp.
-    FID = fopen(filename,'r');
-    if FID<0
-        error('MATLAB:FastCTD_ReadASCII:FileError', 'Could not open file %s',fname);
-    end
-    
-    % NC 7/22/21 Problem! FastCTD_ASCII_parseheader doesn't work if there is
-    % no header. It might be fixed by moving the "if there is gps data" line
-    % above this step.
-    FCTD = FastCTD_ASCII_parseheader(FID);
-    
-    %convert time to MATLAB time
-    if FCTD.header.offset_time < 0
-        FCTD.header.offset_time = correctNegativeTime(FCTD.header.offset_time)/86400+datenum(1970,1,1);
-    else
-        FCTD.header.offset_time = FCTD.header.offset_time/86400+datenum(1970,1,1);
-    end
-    if FCTD.header.system_time < 0
-        FCTD.header.system_time = correctNegativeTime(FCTD.header.system_time)/86400/100+FCTD.header.offset_time;
-    else
-        FCTD.header.system_time = FCTD.header.system_time/86400/100+FCTD.header.offset_time;
-    end
-    
-    fclose(FID);
-    
-    % Process GPS data
-    % ---------------------------
-    
-    % Pre-allocate space for data
-    gps.dnum   = nan(gpsmeta.data.n_recs,1);
-    
-    gps.latitude = nan(gpsmeta.data.n_recs,1);
-    gps.longitude = nan(gpsmeta.data.n_recs,1);
-    
-    % Loop through data blocks and parse strings
-    for iB=1:gpsmeta.data.n_blocks
-        try
-            % Grab the block of data starting with the header
-            gps_block_str = str(ind_gps_start(iB):ind_gps_stop(iB)); %Moved here by Bethan June 26
-            
-            % Get the data after the header
-            gps_block_data = str(ind_gps_start(iB):ind_gps_stop(iB));
-            
-            % Split the data into parts
-            data_split = strsplit(gps_block_data,',');
-            
-            gps.dnum(iB) = str2double(str(ind_time_start(iB):ind_time_stop(iB)))/100/24/3600+FCTD.header.offset_time;
-            
-            gps.latitude(iB) = floor(str2double(data_split{3})/100) + mod(str2double(data_split{3}),100)/60; % then add minutes
-            gps.latitude(iB) = gps.latitude(iB).*(2*strcmpi(data_split{4},'N')-1); % check for north or south
-            
-            gps.longitude(iB) = floor(str2double(data_split{5})/100) + mod(str2double(data_split{5}),100)/60; % then add minutes
-            gps.longitude(iB) = gps.longitude(iB).*(2*strcmpi(data_split{6},'E')-1); % check for East or West (if west multiply by -1)
-        catch err
-            iB
-        end
-    end
-    
-end %end loop if there is gps data
 
 %% Process SEGM data
 if isempty(ind_seg_start)
@@ -846,6 +1123,7 @@ if isempty(ind_spec_start)
     no_data_types = [no_data_types,'spec'];
     spec=[];
 else
+    try
     processed_data_types = [processed_data_types,'spec'];
     %disp('processing spec data')
     
@@ -944,7 +1222,10 @@ else
     
     % Sort epsi fields
     spec = orderfields(spec,{'dnum','freq','time_s','t1_volt','s1_volt','a3_g','data','channels','checksum'});
-    
+    catch
+        no_data_types = [no_data_types,'spec'];
+        spec=[];
+    end
 end %end spec
 
 
@@ -1450,7 +1731,6 @@ end %end apf
 %% Process APF data
 if (isempty(ind_apf2_start))
     no_data_types = [no_data_types,'apf2'];
-    disp('no apf2')
 else
     processed_data_types = [processed_data_types,'apf2'];
     %time, pressure, dpdt, epsilon, chi, avg_t, avg_s, avg_a
@@ -1463,7 +1743,6 @@ else
     ind_apf_stop=ind_apf2_stop;
     
     sampling_freq=160;
-    
     
     % Pre-allocate space for data
     apf.data.n_blocks           = numel(ind_apf_start); %Number of data blocks beginning with $EFE
@@ -1722,9 +2001,11 @@ else
     fluor_timestamp   = nan(sensor.data.n_recs,1);
     %ctd.ctdtime and ctd.ctddnum will be created from ctd_timestamp once
     %all its records are filled
-    fluor.bb    = nan(sensor.data.n_recs,1);
-    fluor.chla  = nan(sensor.data.n_recs,1);
-    fluor.fDOM  = nan(sensor.data.n_recs,1);
+    fluor.bb     = nan(sensor.data.n_recs,1);
+    fluor.chla   = nan(sensor.data.n_recs,1);
+    fluor.fDOM   = nan(sensor.data.n_recs,1);
+    fluor.dnum   = nan(sensor.data.n_recs,1);
+    fluor.time_s = nan(sensor.data.n_recs,1);
 
     % Initialize datarecord counter
     n_rec = 0;
@@ -1766,29 +2047,33 @@ else
                 rec_fluor=element_fluor(sensor.data.timestamp_length+1:end);
 
                 try
-                    fluor.bb(n_rec)   = hex2dec(rec_fluor(:,1:4));
-                    fluor.chla(n_rec) = hex2dec(rec_fluor(:,(1:4)+4));
-                    fluor.fDOM(n_rec) = hex2dec(rec_fluor(:,(1:4)+8));
+                    fluor.bb(n_rec,1)   = hex2dec(rec_fluor(:,1:4));
+                    fluor.chla(n_rec,1) = hex2dec(rec_fluor(:,(1:4)+4));
+                    fluor.fDOM(n_rec,1) = hex2dec(rec_fluor(:,(1:4)+8));
                 catch
-                    fluor.bb(n_rec)   = nan;
-                    fluor.chla(n_rec) = nan;
-                    fluor.fDOM(n_rec) = nan;
+                    fluor.bb(n_rec,1)   = nan;
+                    fluor.chla(n_rec,1) = nan;
+                    fluor.fDOM(n_rec,1) = nan;
                 end
 
                 % If timestamp has values like 1.6e12, it is in milliseconds since Jan
                 % 1, 1970. Otherwise it's in milliseconds since the start of the record
-                if median(fluor_timestamp,'omitmissing')>1e9
+                if nanmedian(fluor_timestamp)>1e9
                     % time_s - seconds since 1970
                     % dnum - matlab datenum
-                    [fluor.time_s(n_rec),fluor.dnum(n_rec)] = convert_timestamp(fluor_timestamp(n_rec));
+                    [fluor.time_s(n_rec,1),fluor.dnum(n_rec,1)] = convert_timestamp(fluor_timestamp(n_rec));
                 else
                     % time_s - seconds since power on
                     if ~isempty(gps)
-                        fluor.dnum(n_rec) = gps.dnum(end);
-                        fluor.time_s(n_rec) = (fluor.dnum(n_rec)-fluor.dnum(1)).*86400;
+                        fluor.dnum(n_rec,1) = gps.dnum(end,1);
+                        fluor.time_s(n_rec,1) = (fluor.dnum(n_rec,1)-fluor.dnum(1)).*86400;
                     else
                         fluor.time_s = fluor_timestamp(n_rec)./1000;
-                        fluor.dnum = Meta_Data.start_dnum + days(seconds(fluor.time_s(nrec)));
+                        try % 7/14/24 Tridente time_s is a scalar so this line doesnt work
+                        fluor.dnum = Meta_Data.start_dnum + days(seconds(fluor.time_s(n_rec,1)));
+                        catch
+                            fluor.dnum = Meta_Data.start_dnum;
+                        end
                     end
                 end
 
@@ -1796,7 +2081,6 @@ else
         end %end if fluor data block is the correct size
     end %end loop through fluor blocks
 end %end loop if there is fluor data
-
 
 %% Process ttv data
 % $TTVP00000188449d43f100000046*2C00000188449d43f100:28:07 447 ms-000000050 ps,+650 mV,+651 mV,078, 078 *12"
@@ -1823,14 +2107,11 @@ else
     ttv.data.n_recs           = ttv.data.n_blocks*ttv.data.recs_per_block;
     ttv.data.timestamp_length = 16;
     % ALB I have to change this
-    ttv.data.samplelength     = 72;   
-
+    ttv.data.length           = 37;   
 
     processed_data_types = [processed_data_types,'ttv'];
 
-    ttv.data.sample_period    = 1/ttv.data.sample_freq;
-    ttv.data.n_blocks         = numel(ind_ttv_start);
-
+    
     
     % Process ttv data
     % --------------------------------
@@ -1839,15 +2120,10 @@ else
     ttv_timestamp   = nan(ttv.data.n_recs,1);
     %ctd.ctdtime and ctd.ctddnum will be created from ctd_timestamp once
     %all its records are filled
-    ttv.hh     = nan(ttv.data.n_recs,1);
-    ttv.mm     = nan(ttv.data.n_recs,1);
-    ttv.ss     = nan(ttv.data.n_recs,1);
-    ttv.aaa    = nan(ttv.data.n_recs,1);
-    ttv.tof    = nan(ttv.data.n_recs,1);
-    ttv.rup    = nan(ttv.data.n_recs,1);
-    ttv.rdwn   = nan(ttv.data.n_recs,1);
-    ttv.ampup  = nan(ttv.data.n_recs,1);
-    ttv.ampdwn = nan(ttv.data.n_recs,1);
+    ttv.tof_up   = nan(ttv.data.n_recs,1);
+    ttv.tof_down = nan(ttv.data.n_recs,1);
+    ttv.dtof     = nan(ttv.data.n_recs,1);
+    ttv.vfr      = nan(ttv.data.n_recs,1); %(volume flow rate)
     
     % Initialize datarecord counter
     n_rec = 0;
@@ -1861,8 +2137,6 @@ else
         % Get the header timestamp and length of data block
         ttv.hextimestamp.value   = hex2dec(ttv_block_str(tag.hextimestamp.inds));
         ttv.hexlengthblock.value = hex2dec(ttv_block_str(tag.hexlengthblock.inds));
-        %ALB by assing hard coded length
-        ttv.data.length           = ttv.hexlengthblock.value-16;%?maybe that works
 
         % Get the data after the header.
         ttv_block_data = ttv_block_str(tag.data_offset:end-tag.chksum.length);
@@ -1875,10 +2149,9 @@ else
             % ttv_block_data=reshape(ttv_block_data,16+ttv.data.length,ttv.data.recs_per_block).';
             ttv_block_data=reshape(ttv_block_data,ttv.data.samplelength,ttv.data.recs_per_block).';
 
-            %00000188449d433600:28:07 262 ms-000000043 ps,+650 mV,+649 mV,079, 078 *4B
-            for iR=1:ttv.data.recs_per_block
-                parse_ttv_block_data=sscanf(ttv_block_data(iR,:),'%016x%02f:%02f:%02f %03f ms%010f ps,%04f mV,%04f mV,%03f, %03f\r\n');
-                if length(parse_ttv_block_data)==10
+            % '00000191536bd52000000000,00000000,00000000,C09DBC00'
+            parse_ttv_block_data=sscanf(ttv_block_data.','%016x%08x,%08x,%08x,%08x\r\n');
+            if length(parse_ttv_block_data)==ttv.data.recs_per_block*5 % 5 data: timestamp, tofup, tofdown, dtof, vfr (volume flow rate) 
 
 
                     % Count up the record number
@@ -1894,16 +2167,24 @@ else
 
                     % Everything after that is the data
                     rec_ttv=element_ttv(ttv.data.timestamp_length+1:end);
+                    % parse_ttv_block_data=sscanf(rec_ttv,'%08x,%08x,%08x,%08x\r\n');
+                    parse_ttv_block_data=strsplit(rec_ttv,',');
 
-                    ttv.hh(n_rec)   = parse_ttv_block_data(2);
-                    ttv.mm(n_rec)   = parse_ttv_block_data(3);
-                    ttv.ss(n_rec)   = parse_ttv_block_data(4);
-                    ttv.aaa(n_rec)  = parse_ttv_block_data(5);
-                    ttv.tof(n_rec)  = parse_ttv_block_data(6);
-                    ttv.ampup(n_rec)  = parse_ttv_block_data(7);
-                    ttv.ampdwn(n_rec) = parse_ttv_block_data(8);
-                    ttv.rup(n_rec)  = parse_ttv_block_data(9);
-                    ttv.rdwn(n_rec) = parse_ttv_block_data(10);
+                    % Convert the hexadecimal string to uint32
+                    % ttv.tof_up(n_rec)   = uint32(hex2dec(parse_ttv_block_data{1}([7 8 5 6 3 4 1 2])));
+                    % ttv.tof_down(n_rec) = uint32(hex2dec(parse_ttv_block_data{2}([7 8 5 6 3 4 1 2])));
+                    % ttv.dtof(n_rec)     = uint32(hex2dec(parse_ttv_block_data{3}([7 8 5 6 3 4 1 2])));
+                    % ttv.vfr(n_rec)      = uint32(hex2dec(parse_ttv_block_data{4}([7 8 5 6 3 4 1 2])));
+                    ttv.tof_up(n_rec)   = double(typecast(uint32(hex2dec(parse_ttv_block_data{1})),'single'));
+                    ttv.tof_down(n_rec) = double(typecast(uint32(hex2dec(parse_ttv_block_data{2})),'single'));
+                    ttv.dtof(n_rec)     = double(typecast(uint32(hex2dec(parse_ttv_block_data{3})),'single'));
+                    ttv.vfr(n_rec)      = double(typecast(uint32(hex2dec(parse_ttv_block_data{4})),'single'));
+                    % Convert the uint32 to single precision float
+                    % ttv.tof_up(n_rec)   = typecast(ttv.tof_up(n_rec),'single');
+                    % ttv.tof_down(n_rec) = typecast(ttv.tof_down(n_rec),'single');
+                    % ttv.dtof(n_rec)     = typecast(ttv.dtof(n_rec),'single');
+                    % ttv.vfr(n_rec)      = typecast(ttv.tof_vfr(n_rec),'single');
+
 
                     % If timestamp has values like 1.6e12, it is in milliseconds since Jan
                     % 1, 1970. Otherwise it's in milliseconds since the start of the record
@@ -1924,21 +2205,11 @@ else
 end %end loop if there is ttv data
 
 
-
-fprintf(['processed data for: ' repmat('%s ',1,length(processed_data_types)), '\n'], processed_data_types{:})
-fprintf(['no data for:        ' repmat('%s ',1,length(no_data_types)), '\n'], no_data_types{:})
-
-% Combine all data
-make data epsi ctd alt act vnav gps seg spec avgspec dissrate apf fluor ttv
-
-
-
-
-fprintf(['processed data for: ' repmat('%s ',1,length(processed_data_types)), '\n'], processed_data_types{:})
-fprintf(['no data for:        ' repmat('%s ',1,length(no_data_types)), '\n'], no_data_types{:})
+fprintf(['   processed data for: ' repmat('%s ',1,length(processed_data_types)), '\n'], processed_data_types{:})
+fprintf(['   no data for:        ' repmat('%s ',1,length(no_data_types)), '\n'], no_data_types{:})
 
 % Combine all data
-make data epsi ctd alt act vnav gps seg spec avgspec dissrate apf fluor ttv
+make data epsi ctd alt isap act vnav gps seg spec avgspec dissrate apf fluor ttv Meta_Data
 
 
 end
@@ -2030,6 +2301,7 @@ end
 %% FCTD header parsing function
 %  parse all the lines in the header of the file
 function FCTD = FastCTD_ASCII_parseheader(FID)
+1
 FCTD = [];
 fgetl(FID);
 s=fgetl(FID);
@@ -2073,3 +2345,26 @@ end
 
 return
 end
+
+function cha=parse_epsi_channel_string(str_EPSICHANNEL_header)
+
+    lines_EPSICHANNEL=strsplit(str_EPSICHANNEL_header,'\n');
+    cha.ch1=parse_single_epsi_channel(lines_EPSICHANNEL{2});
+    cha.ch2=parse_single_epsi_channel(lines_EPSICHANNEL{3});
+    cha.ch3=parse_single_epsi_channel(lines_EPSICHANNEL{4});
+    cha.ch4=parse_single_epsi_channel(lines_EPSICHANNEL{5});
+end
+
+function cha=parse_single_epsi_channel(lines_EPSICHANNEL)
+cha.str=lines_EPSICHANNEL;
+cha.SN = cha.str(6:8);
+calib_str=strsplit(cha.str(11:end),',');
+if length(calib_str)==1
+    cha.cal=0;
+elseif(length(calib_str)==3)
+    cha.datecal=calib_str{1};
+    cha.cal=str2double(calib_str{2});
+    cha.cap=str2double(calib_str{3});
+end
+end
+

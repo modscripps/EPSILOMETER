@@ -36,8 +36,8 @@ if isfield(Profile_or_profNum,'gps') && ~isempty(Profile_or_profNum.gps)
     n_sec = 10;
     idx = round(gps_sec_int*n_sec);
     nGPS = length(Profile_or_profNum.gps.latitude);
-    Profile.latitude = nanmean(Profile_or_profNum.gps.latitude(1:min([idx,nGPS])));
-    Profile.longitude = nanmean(Profile_or_profNum.gps.longitude(1:min([idx,nGPS])));
+    Profile.latitude  = mean(Profile_or_profNum.gps.latitude(1:min([idx,nGPS])),'omitmissing');
+    Profile.longitude = mean(Profile_or_profNum.gps.longitude(1:min([idx,nGPS])),'omitmissing');
 end
 
 %% Get epsi sampling frequency

@@ -9,10 +9,11 @@ end
 % Make some empty obj strucutures approximating their relative size. These
 % don't have to be totally accurate. 
 emptyEpsi = nan(nSec*320,1); % epsi samples at 320 Hz
-emptyCtd = nan(nSec*16,1); % ctd samples at 16 Hz
-emptyAlt = nan(nSec,1); % alt samples around 1 Hz
+emptyCtd  = nan(nSec*16,1); % ctd samples at 16 Hz
+emptyAlt  = nan(nSec,1); % alt samples around 1 Hz
 emptyVnav = nan(nSec*40,1); %vnav samples around 40 Hz
-emptyGps = nan(nSec,1); % alt samples around 1 Hz
+emptyGps  = nan(nSec,1); % alt samples around 1 Hz
+emptyTtv  = nan(nSec*20,1); %Ti ttv samples around 20 Hz
 
 obj.epsi.time_s = emptyEpsi;
 obj.epsi.dnum = emptyEpsi;
@@ -44,18 +45,28 @@ obj.ctd.S = emptyCtd;
 obj.ctd.C = emptyCtd;
 obj.ctd.sig = emptyCtd;
 obj.ctd.dPdt = emptyCtd;
+obj.ctd.z = emptyCtd;
+obj.ctd.dzdt = emptyCtd;
 
 obj.alt.time_s = emptyAlt;
 obj.alt.dnum = emptyAlt;
 obj.alt.dst = emptyAlt;
 
-obj.vnav.time_s = emptyVnav;
-obj.vnav.dnum = emptyVnav;
-obj.vnav.compass = repmat(emptyVnav,1,3);
+obj.vnav.time_s       = emptyVnav;
+obj.vnav.dnum         = emptyVnav;
+obj.vnav.compass      = repmat(emptyVnav,1,3);
 obj.vnav.acceleration = repmat(emptyVnav,1,3);
-obj.vnav.gyro = repmat(emptyVnav,1,3);
+obj.vnav.gyro         = repmat(emptyVnav,1,3);
 
-obj.gps.dnum = emptyGps;
-obj.gps.latitude = emptyGps;
+obj.ttv.time_s    = emptyTtv;
+obj.ttv.dnum      = emptyTtv;
+obj.ttv.dtof     = emptyTtv;
+obj.ttv.tof_up   = emptyTtv;
+obj.ttv.tof_down = emptyTtv;
+obj.ttv.vfr      = emptyTtv;
+
+
+obj.gps.dnum      = emptyGps;
+obj.gps.latitude  = emptyGps;
 obj.gps.longitude = emptyGps;
 

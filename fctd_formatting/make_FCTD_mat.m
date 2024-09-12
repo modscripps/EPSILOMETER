@@ -55,15 +55,34 @@ end
 if ~isempty(gps) && isfield(gps,'dnum')
     % Sometimes there's a weirdness here with non-unique gps.dnum
     [~,iU] = unique(gps.dnum);
-    FCTD.longitude=interp1(gps.dnum(iU),gps.longitude(iU),ctd.dnum);
-    FCTD.latitude=interp1(gps.dnum(iU),gps.latitude(iU),ctd.dnum);
+    if ~isempty(iU)
+        FCTD.longitude=interp1(gps.dnum(iU),gps.longitude(iU),ctd.dnum);
+        FCTD.latitude=interp1(gps.dnum(iU),gps.latitude(iU),ctd.dnum);
+    else
+        FCTD.longitude=nan(length(ctd.dnum),1);
+        FCTD.latitude=nan(length(ctd.dnum),1);
+    end
 else
     FCTD.longitude=nan(length(ctd.dnum),1);
     FCTD.latitude=nan(length(ctd.dnum),1);
 end
 
+if ~isempty(fluor) && isfield(fluor,'time_s')
+    diff_not_neg = [0; diff(fluor.dnum)]>0;
+    keep = ~isnan(fluor.dnum) & ~isinf(fluor.dnum) & diff_not_neg;
+    FCTD.bb(:,1)=interp1(fluor.dnum(keep),fluor.bb(keep,1),ctd.dnum);
+    FCTD.chla(:,1)=interp1(fluor.dnum(keep),fluor.chla(keep,1),ctd.dnum);
+    FCTD.fDOM(:,1)=interp1(fluor.dnum(keep),fluor.fDOM(keep,1),ctd.dnum);
+else
+    FCTD.bb=nan(length(ctd.dnum),1);
+    FCTD.chla=nan(length(ctd.dnum),1);
+    FCTD.fDOM=nan(length(ctd.dnum),1);
+end
+
+
 % Extra outputs for specific cruise setups
-if strcmp(cruise_specifics,'blt_2021');
+% if strcmp(cruise_specifics,'blt_2021');
+if strcmp(cruise_specifics,'tfo_2024');
     % Microconductivity and Fluorometer
     %
     % On BLT 2021, microconductivity sensor was on shear
@@ -96,6 +115,7 @@ if strcmp(cruise_specifics,'blt_2021');
         disp(['No fluorometer data ' base]);
     end
 end
+
 if strcmp(cruise_specifics,'tfo_2023')
     % On TFO Seamounts in 2023, we had microconductivity on shear channel 2
     % and a tridente fluorometer on ???

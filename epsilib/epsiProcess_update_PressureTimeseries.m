@@ -5,6 +5,8 @@ if ~exist(fullfile(dirname, 'PressureTimeseries.mat'),'file')
     %sec/hour)*(16 Hz). If the deployment ends up being longer than 24
     %hours, the array will keep growing at every iteration and can slow
     %down processing speed.
+    
+    % ALB TODO use Meta_Data to define array length.
     arrayLength = 24*3600*16;
 
     % If it's the first time, make a big array of 'emptyFlag'
@@ -39,7 +41,7 @@ elseif exist(fullfile(dirname, 'PressureTimeseries.mat'),'file')
 end
 
 % Define (or redefine) the upcasts and downcasts
-[PressureTimeseries] = epsiProcess_get_profiles_from_PressureTimeseries(PressureTimeseries,Meta_Data,profile_dir);
+[PressureTimeseries] = epsiProcess_get_profiles_from_PressureTimeseries(PressureTimeseries,Meta_Data);
 save(fullfile(dirname, 'PressureTimeseries.mat'),'PressureTimeseries');
 
 end

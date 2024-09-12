@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<VariablesViewState
+   version = "1.0">
+   <ContextStates>
+      <ContextState
+         contextName = "parse_ctd_data_2_f:ctd.c">
+         <PersistentStrings>
+            <PersistentString
+               value = "parsing_str[45]">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "acq_package_w_data_f:ctd.c">
+         <PersistentStrings>
+            <PersistentString
+               value = "data_str[32+2325]">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "CurrentFishData:ctd.c">
+      </ContextState>
+      <ContextState
+         contextName = "tcp_ip_server_f:pthread_utils.c">
+         <PersistentStrings>
+            <PersistentString
+               value = "WinchPtr-&gt;TCPIPSocket.remoteSocketfd">
+            </PersistentString>
+            <PersistentString
+               value = "fCTDPtr-&gt;network.TCPIPSocket.remoteSocketfd">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "write_ctd_data_to_file_f:pthread_utils.c">
+         <PersistentStrings>
+            <PersistentString
+               value = "fctd_ptr-&gt;fish.ctd_cir_buff[indx]">
+            </PersistentString>
+            <PersistentString
+               value = "fctd_ptr-&gt;fish.SOM_Write2BufferIndx">
+            </PersistentString>
+            <PersistentString
+               value = "fctd_ptr-&gt;fish.ctd_cir_buff">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+   </ContextStates>
+</VariablesViewState>

@@ -22,9 +22,30 @@
 
 % -------------------------------------------------------------------------
 % --- USER CHOICES --------------------------------------------------------
-instrument = 'fctd';
-% instrument = 'fctd_tridente';
-%instrument = 'epsi';
+% --- From ftcd_epsi/Setup   -------------------------------------------------------
+%TODO give a folder path to Setup
+path2setup='~/ARNAUD/SCRIPPS/EPSILOMETER/acq/fctd_epsi_acq/build/fctd_epsi/Build/Products/Debug/Setup';
+fid=fopen(path2setup,'r');
+fseek(fid,0,1);
+frewind(fid);
+str = fread(fid,'*char')';
+fclose(fid);
+newSetup_flag=contains(str,'CTD.fishflag=');
+if newSetup_flag
+    fishflag_str      = str(strfind(str,'CTD.fishflag=')+(0:100));
+    fishflag_str      = fishflag_str(1:find(uint8(fishflag_str)==10,1,'first'));
+    fishflag_name      = strsplit(fishflag_str,'=');
+    fishflag_name      = fishflag_name{2}(2:end-2);
+    instrument = fishflag_name;
+
+else
+    % instrument = 'fctd';
+    % instrument = 'fctd_tridente';
+    instrument = input('what fish are we using? [epsi,fctd]');
+
+end
+
+
 
 % Also plot spectra?
 include_spectra = 0;
@@ -32,12 +53,12 @@ include_spectra = 0;
 % Meta_Data process file (make sure this file has the correct serial
 % numbers for CTD, s1, s2, t1, t2. If you're running fctd, you can leave
 % s1, s2, t1, t2 = '115')
-Meta_Data_process_file = 'MDP_tfo2024_fctd_0807.txt';
+Meta_Data_process_file = 'MDP_tfo_2024.txt';
 
 % These probably will be the same for the whole cruise
 
-input_struct.raw_dir = '/Users/ncouto/Desktop/OCEAN';
-Meta_Data_process_dir = '~/GitHub/EPSILOMETER/Meta_Data_Process';
+input_struct.raw_dir = '/Users/Shared/FCTD_EPSI/RAW';
+Meta_Data_process_dir = '/Users/aleboyer/ARNAUD/SCRIPPS/EPSILOMETER/Meta_Data_Process';
 
 %input_struct.raw_dir = '/Users/Shared/EPSI_PROCESSING/TFO2024/Realtime_RAW/';
 %Meta_Data_process_dir = '/Volumes/Software_TFO2024/EPSILOMETER/Meta_Data_Process/';
@@ -48,11 +69,11 @@ input_struct.refresh_time_sec = 2;
 % -------------------------------------------------------------------------
 
 % Set command window color
-set_window_color('yellow')
+% set_window_color('yellow')
 
 % Run the realtime plotting script on a timer
 switch instrument
-    case 'epsi'
+    case {'epsi','EPSI'}
         if ~include_spectra
             epsiAuto_timeseries
         elseif include_spectra

@@ -5,6 +5,7 @@ GRID.mission = Profile.Meta_Data.mission;
 GRID.vehicle_name = Profile.Meta_Data.vehicle_name;
 % GRID.station = Profile.Meta_Data.station;
 GRID.deployment = Profile.Meta_Data.deployment;
+GRID.filenames = Profile.filenames;
 
 varList0 = {'profNum','dnum','latitude','longitude'};
 varList1 = {'w','t','s','th','sgth','epsilon_final','epsi_qc'}; %epsilon_final becomes epsilon

@@ -271,17 +271,17 @@ if  plotData
     figure
     hold on
     if ~isempty(indt1)
-        loglog(epsi_f,P11_epsi_TF_mean_calibrated(indt1,:),'c','linewidth',2,'displayname','t1')
+        p1 = loglog(epsi_f,P11_epsi_TF_mean_calibrated(indt1,:),'c','linewidth',2,'displayname','t1');
     end
-    loglog(ctd_f,P11_ctd_mean,'r','linewidth',2,'displayname','CTD')
+    p2 = loglog(ctd_f,P11_ctd_mean,'r','linewidth',2,'displayname','CTD');
     %loglog(1/3:1/3:160,noise,'m','linewidth',2)
     %loglog(epsi_k,10.^(mmp_noise).*dTdV(1).^2,'m--','linewidth',2)
     try
-    loglog(epsi_f,A1,'Color',.8* [1 1 1],'linewidth',2,'displayname','raw(Volt^2/Hz)')
-    loglog(epsi_f,AA1,'Color',.6* [1 1 1],'linewidth',2,'displayname','corrected (Volt^2/Hz)')
+    p3 = loglog(epsi_f,A1,'Color',.8* [1 1 1],'linewidth',2,'displayname','raw(Volt^2/Hz)');
+    p4 = loglog(epsi_f,AA1,'Color',.6* [1 1 1],'linewidth',2,'displayname','corrected (Volt^2/Hz)');
     catch
-    loglog(epsi_f,A2,'Color',.8* [1 1 1],'linewidth',2,'displayname','raw(Volt^2/Hz)')
-    loglog(epsi_f,AA2,'Color',.6* [1 1 1],'linewidth',2,'displayname','corrected (Volt^2/Hz)')
+    p3 = loglog(epsi_f,A2,'Color',.8* [1 1 1],'linewidth',2,'displayname','raw(Volt^2/Hz)');
+    p4 = loglog(epsi_f,AA2,'Color',.6* [1 1 1],'linewidth',2,'displayname','corrected (Volt^2/Hz)');
     end
     %loglog(epsi_k,B,'Color',.4* [1 1 1],'linewidth',2)
     if ~isempty(indt1)
@@ -303,7 +303,7 @@ if  plotData
     end
     title(titleStr,'fontsize',20)
 
-    legend('location','northeast')
+    legend([p1,p2,p3,p4(1)],'location','northeast')
     grid on
     ylim([1e-13 1])
     xlim([1/15 170])
@@ -324,13 +324,13 @@ if  plotData
     figure
     hold on
     if ~isempty(indt2)
-        loglog(epsi_f,P11_epsi_TF_mean_calibrated(indt2,:),'c','linewidth',2,'displayname','t2')
+        p1 = loglog(epsi_f,P11_epsi_TF_mean_calibrated(indt2,:),'c','linewidth',2,'displayname','t2');
     end
-    loglog(ctd_f,P11_ctd_mean,'r','linewidth',2,'displayname','CTD')
+    p2 = loglog(ctd_f,P11_ctd_mean,'r','linewidth',2,'displayname','CTD');
     %loglog(1/3:1/3:160,noise,'m','linewidth',2)
     %loglog(epsi_k,10.^(mmp_noise).*dTdV(1).^2,'m--','linewidth',2)
-    loglog(epsi_f,A2,'Color',.8* [1 1 1],'linewidth',2,'displayname','raw(Volt^2/Hz)')
-    loglog(epsi_f,AA2,'Color',.6* [1 1 1],'linewidth',2,'displayname','corrected (Volt^2/Hz)')
+    p3 = loglog(epsi_f,A2,'Color',.8* [1 1 1],'linewidth',2,'displayname','raw(Volt^2/Hz)');
+    p4 = loglog(epsi_f,AA2,'Color',.6* [1 1 1],'linewidth',2,'displayname','corrected (Volt^2/Hz)');
     %loglog(epsi_k,B,'Color',.4* [1 1 1],'linewidth',2)
     if ~isempty(indt2)
         %    loglog(epsi_k,P11_T(indt2,:),'Color',.1* [1 1 1],'linewidth',2)
@@ -350,7 +350,7 @@ if  plotData
     end
     title(titleStr,'fontsize',20)
     
-    legend('location','northeast')
+    legend([p1,p2,p3,p4(1)],'location','northeast')
     grid on
     ylim([1e-13 1])
     xlim([1/15 170])

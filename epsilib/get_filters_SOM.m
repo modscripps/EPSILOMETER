@@ -46,7 +46,7 @@ H.electshear= epsi_ca*gain_ca;%
 %H.electshear= epsi_ca*10.^(gain_ca/20);% 
 H.gainshear=1;
 H.adcshear=H.gainshear.* Hs1filter;
-H.shear=(H.electshear .* H.adcshear).^2;
+H.shear=(H.electshear(:) .* H.adcshear(:)).^2;
 
 %% FPO7 channels
 
@@ -54,17 +54,17 @@ H.gainFPO7=1;
 H.electFPO7 = H.gainFPO7.*Ht1filter;
 %speed% convert to m/s
 %tau=0.005 * speed^(-0.32); % thermistor time constant
-H.magsq=@(speed)(1 ./ (1+((2*pi*(0.005 * speed^(-0.32))).*f).^2)); % magnitude-squared no units
-H.phase=@(speed)(-2*atan( 2*pi*f*(0.005 * speed^(-0.32))));   % no units
+H.magsq=@(speed)(1 ./ (1+((2*pi*(0.005 * speed^(-0.32))).*f(:)).^2)); % magnitude-squared no units
+H.phase=@(speed)(-2*atan( 2*pi*f(:)*(0.005 * speed^(-0.32))));   % no units
 try
 switch Meta_Data.AFE.temp_circuit
     case {'Tdiff','tdiff'}
         Tdiff_filter = load('FILTER/Tdiff_filt.mat');
         Tdiff_H = interp1(Tdiff_filter.freq,Tdiff_filter.coef_filt ,f);
         H.Tdiff=Tdiff_H;
-        H.FPO7=@(speed)(H.electFPO7.^2 .* H.magsq(speed) .* H.Tdiff.^2);
+        H.FPO7=@(speed)(H.electFPO7(:).^2 .* H.magsq(speed) .* H.Tdiff.^2);
     otherwise
-        H.FPO7=@(speed)(H.electFPO7.^2 .* H.magsq(speed));
+        H.FPO7=@(speed)(H.electFPO7(:).^2 .* H.magsq(speed));
 end
 catch
     switch Meta_Data.MAP.temperature
@@ -72,9 +72,9 @@ catch
             Tdiff_filter = load('FILTER/Tdiff_filt.mat');
             Tdiff_H = interp1(Tdiff_filter.freq,Tdiff_filter.coef_filt ,f);
             H.Tdiff=Tdiff_H;
-            H.FPO7=@(speed)(H.electFPO7.^2 .* H.magsq(speed) .* H.Tdiff.^2);
+            H.FPO7=@(speed)(H.electFPO7(:).^2 .* H.magsq(speed) .* H.Tdiff(:).^2);
         otherwise
-            H.FPO7=@(speed)(H.electFPO7.^2 .* H.magsq(speed));
+            H.FPO7=@(speed)(H.electFPO7(:).^2 .* H.magsq(speed));
     end
 end
 
@@ -82,6 +82,6 @@ end
 
 %% Accel channels
 H.gainAccel  = 1;
-H.electAccel = (H.gainAccel.*Ha1filter).^2;
+H.electAccel = (H.gainAccel(:).*Ha1filter(:)).^2;
 
 end

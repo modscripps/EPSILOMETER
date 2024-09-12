@@ -68,13 +68,13 @@ else
 end
 
 % Define the directories for epsiProcess_convert_new_raw_to_mat
-dirs.raw_incoming   = raw_dir;
-dirs.raw_copy       = fullfile(process_dir,'raw');
-dirs.mat            = fullfile(process_dir,'mat');
-experiment_dir      = fileparts(process_dir);
-dirs.fctd_cruise    = fullfile(experiment_dir,'FCTDmat');
+dirs.raw_incoming = raw_dir;
+dirs.raw_copy  = fullfile(process_dir,'raw');
+dirs.mat       = fullfile(process_dir,'mat');
+experiment_dir = fileparts(process_dir);
+dirs.fctd_cruise  = fullfile(experiment_dir,'FCTDmat');
 dirs.fctd_deployment = fullfile(process_dir,'fctd_mat');
-dirs.fctd_rot       = fullfile(experiment_dir,'FCTDrot');
+dirs.fctd_rot  = fullfile(experiment_dir,'FCTDrot');
 
 % Create directories if they don't exist
 if ~exist(process_dir,'dir')
@@ -95,6 +95,7 @@ end
 if ~exist(dirs.fctd_rot,'dir')
     eval([ '!mkdir ' strrep(dirs.fctd_rot,' ','\ ')]);
 end
+
 
 % Copy a bench_config into process_dir
 eval(['!cp /Users/Shared/EPSI_PROCESSING/Processed/0522_fctd_d5/bench_config ' process_dir]);

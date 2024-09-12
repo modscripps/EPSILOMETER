@@ -37,8 +37,16 @@ end
 % end
 
 % Load PressureTimeseries
-load(fullfile(obj.Meta_Data.paths.mat_data,'PressureTimeseries.mat'))
+load(fullfile(obj.Meta_Data.paths.mat_data,'PressureTimeseries.mat'),'PressureTimeseries')
 
+%ALB VErsion control issue. The ESPIlib on  DEV3 has a slightly
+%different EPSIlib version
+if(~isfield(PressureTimeseries,'startprof') && isfield(PressureTimeseries,'startdown'))
+    PressureTimeseries.startprof=PressureTimeseries.startdown;
+    PressureTimeseries.endprof=PressureTimeseries.startup;
+else
+    error('PressureTimeseries has the wrong format')
+end
 % Look for the current list of profiles
 profList = dir(fullfile(obj.Meta_Data.paths.profiles,'Profile*.mat'));
 profNumChar = cell2mat(cellfun(@(C) C(8:10),{profList(:).name},'uniformoutput',0).');
@@ -74,6 +82,7 @@ for iProf=1:length(PressureTimeseries.startprof)
         Profile = obj.f_cropTimeseries(tMin,tMax);
         Profile.profNum = iProf;
 
+        %ALB I do not know yet how to deal with dTdV with the new design. 
         if iProf==1 && Profile.Meta_Data.AFE.t1.cal==0 && Profile.Meta_Data.AFE.t2.cal==0
             warning(sprintf(['\n !!!!!!!!! \n'...
                 'The calibration value (dTdV) for both temperature probes is 0.\n',...

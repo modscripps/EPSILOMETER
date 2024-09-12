@@ -22,8 +22,7 @@ fileList = dir(fullfile(obj.Meta_Data.paths.profiles,'Profile*.mat'));
 for iFile=1:length(fileList)
 
     disp(sprintf('Gridding %03.0f of %03.f',iFile,length(fileList)))
-
-    load(fullfile(obj.Meta_Data.paths.profiles,fileList(iFile).name))
+    load(fullfile(obj.Meta_Data.paths.profiles,fileList(iFile).name));
 
     if isfield(Profile,'pr') && ~isempty(Profile.pr)%Only add to
 
@@ -35,8 +34,17 @@ for iFile=1:length(fileList)
         if grid_exists
             varList = fields(GRID);
             for iVar=1:length(varList)
-                if ~strcmp(varList{iVar},'mission') && ~strcmp(varList{iVar},'vehicle_name') && ~strcmp(varList{iVar},'deployment')
-                    GRID.(varList{iVar})(:,end+1) = gridNew.(varList{iVar});
+                % temporarily ignores lat and lon to fix gps error
+                if sum(strcmp(varList{iVar},{'mission','vehicle_name','deployment','filenames'}))==0
+                    if (isfield(gridNew,varList{iVar}))
+                        GRID.(varList{iVar})(:,end+1) = gridNew.(varList{iVar});
+                    else
+                        if(sum(strcmp(varList{iVar},{'bottom_depth','profNum','dnum','latitude','longitude'})))
+                            GRID.(varList{iVar})(:,end+1) = NaN;
+                        else
+                            GRID.(varList{iVar})(:,end+1) = NaN(size(gridNew.z));
+                        end
+                    end
                 end
 
             end
@@ -59,7 +67,7 @@ for iFile=1:length(fileList)
         for iVar=1:length(varList)
             if ~strcmp(varList{iVar},'mission') && ~strcmp(varList{iVar},'vehicle_name') ...
                     && ~strcmp(varList{iVar},'deployment') && ~strcmp(varList{iVar},'pr') ...
-                    && ~strcmp(varList{iVar},'z')
+                    && ~strcmp(varList{iVar},'z') && ~strcmp(varList{iVar},'filenames')
                 GRID.(varList{iVar}) = GRID.(varList{iVar})(:,profNumX(u));
             end
         end
@@ -71,9 +79,11 @@ for iFile=1:length(fileList)
         GRID.mission = GRID.mission(:).';
         GRID.vehicle_name = GRID.vehicle_name(:).';
         GRID.deployment = GRID.deployment(:).';
-
-    end %End loop through profiles
-
+        GRID.filenames{iFile} = Profile.filenames;
+        
     saveName = fullfile(obj.Meta_Data.paths.profiles,'griddedProfiles.mat');
     save(saveName,'GRID');
-end
+
+    end %End if there is Profile.pr field
+
+end %End loop through profiles

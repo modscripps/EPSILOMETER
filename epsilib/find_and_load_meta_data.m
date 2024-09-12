@@ -64,11 +64,23 @@ else %if there is no log file or config file, look for config data inside the ra
         for j = 1:length(err.stack)
             disp([num2str(j) ' ' err.stack(j).name ' ' num2str(err.stack(j).line)]);
         end
-        error(['Failed to read config data (3) - '...
+        warning(['Failed to read config data (3) - '...
             'this is often because mod_som_read_setup_from raw does not '...
             'have the correct offsets and lengths. When changes are made on '...
             'the hardware side, they have to be made here too.'])
+        
+        % Copy bench_config to data directory
+        sourceFile = fullfile(obj.Meta_Data.paths.process_library,'config_files','bench_config');
+        destinationDir = obj.Meta_Data.paths.data;
+        copyfile(sourceFile, destinationDir);
+        
+        % Read setup data from bench_config
+        dir_has_config = dir(fullfile(data_path,'*config*'));
+        setup=mod_som_read_setup_from_config(dir_has_config.name);
+
+        fprintf('Copied bench_config to data directory. \n')
     end
+
     % Fill Meta Data from setup data
     try
         obj.Meta_Data = epsiSetup_fill_meta_data(obj.Meta_Data,setup);

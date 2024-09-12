@@ -1,16 +1,16 @@
 %read config file
-function setup=mod_som_read_setup_from_raw(filepath)
+function setup=mod_som_read_setup_from_raw(str)
 
-fid=fopen(filepath);
-total_str = fread(fid,'*char');
-
-% NC 13 Aug 2022 - Save filepath so you can open it up again later to get the SBE number
-setup.filepath = filepath;
-
-[ind_settings_start,ind_settings_stop, ind_settings_tokens] = regexp(total_str.','\$SOM3([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end','tokenExtents');
-
+% fid=fopen(filepath);
+% total_str = fread(fid,'*char');
 % 
-str=total_str(ind_settings_start+32:ind_settings_stop-5);
+% % NC 13 Aug 2022 - Save filepath so you can open it up again later to get the SBE number
+% setup.filepath = filepath;
+% 
+% [ind_settings_start,ind_settings_stop, ind_settings_tokens] = regexp(total_str.','\$SOM3([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end','tokenExtents');
+% 
+% % 
+% str=total_str(ind_settings_start+32:ind_settings_stop-5);
 conv16d=@(x) (x(2).*256+x(1));
 conv32d=@(x) (x(4).*256^3+x(3).*256^2+x(2).*256+x(1));
 %%
@@ -30,7 +30,7 @@ firmware_length=40-1;
 
 gitid_offset=firmware_offset+firmware_length+1;
 switch setup.size
-    case 864    
+    case {864,896}    
         gitid_length=24-1;
     otherwise
         gitid_length=0-1;
@@ -63,7 +63,7 @@ setup.firmware=str(firmware_offset+(0:firmware_length)).';
 setup.firmware=setup.firmware(uint8(setup.firmware)>0);
 
 switch setup.size
-    case 864
+    case {864,896}    
         setup.gitid=str(firmware_offset+(0:firmware_length)).';
     otherwise
         setup.gitid=[];
@@ -85,57 +85,82 @@ setup.initialize_flag=conv32d(double(uint8(str(initialize_flag_offset+(0:initial
 setup.start_dnum = 0;
 
 %%
-nb_module=1;
-unpack=true;
-module{nb_module}.index=initialize_flag_offset+4;
-while unpack
-    module{nb_module}.size=conv32d(double(uint8(str(module{nb_module}.index+(0:3)))));
-    module{nb_module}.str=str(module{nb_module}.index+(0:module{nb_module}.size-1));
-%     if (length(str)-(module{nb_module}.index+module{nb_module}.size)<6)%TDO make it so I am sure length(str) == the end of the modules.
+% nb_module=1;
+% unpack=true;
+% module{nb_module}.index=initialize_flag_offset+4;
+% while unpack
+%     module{nb_module}.size=conv32d(double(uint8(str(module{nb_module}.index+(0:3)))));
+%     module{nb_module}.str=str(module{nb_module}.index+(0:module{nb_module}.size-1));
+%     if module{end}.size==0%TDO make it so I am sure length(str) == the end of the modules.
 %         unpack=false;
-    if module{end}.size==0%TDO make it so I am sure length(str) == the end of the modules.
-        unpack=false;
-    else
-        nb_module=nb_module+1;
-        module{nb_module}.index=module{nb_module-1}.index+module{nb_module-1}.size+mod(module{nb_module-1}.size,4);
-    end
-end
-nb_module=nb_module-1;
+%     else
+%         nb_module=nb_module+1;
+%         module{nb_module}.index=module{nb_module-1}.index+module{nb_module-1}.size+mod(module{nb_module-1}.size,4);        
+%     end
+% end
+
+
+% nb_module=nb_module-1;
 %% parse modules
 modules_headers=["CALENDAR","CAL", ...
-                 "EFE","EFE3","EFE4", ...
+                 "EFE", ...
                  "SBE","SBE49","SBE41","S49","S41","SB49","SB41", ...
                  "SDIO", ...
-                 "VOLT","VOL","VOLT" ...
-                 "ALT","ALTI",];
+                 "VOLT", ...
+                 "ALTI"];
+for i=1:length(modules_headers)
+    wh_module=modules_headers{i};
+    idx_module=strfind(str,wh_module);
+    if ~isempty(idx_module)
+        module.size=conv32d(double(uint8(str(idx_module+(-4:-1)))));
+        module.str=str(idx_module-4+(0:module.size-1));
 
-for i=1:nb_module
-    id_module=cellfun(@(x)(strfind(module{i}.str.',x)),modules_headers,'un',0);
-    id_module=~cellfun(@isempty,id_module);
-    try
-        wh_module=modules_headers{id_module};
-        setup.(wh_module).str=module{i}.str;
         switch wh_module
             case {"CALENDAR","CAL","$CAL"}
-                setup.(wh_module)=parse_calendar_module(setup.(wh_module));
+                setup.(wh_module)=parse_calendar_module(module);
             case {"SEFE","EFE","EFE3","EFE4"}
-                setup.(wh_module)=parse_efe_module(setup.(wh_module));
+                setup.(wh_module)=parse_efe_module(module);
             case "SDIO"
-                setup.(wh_module)=parse_sdio_module(setup.(wh_module));
+                setup.(wh_module)=parse_sdio_module(module);
             case {"SBE49","SBE","S49","SB49"}
-                setup.(wh_module)=parse_sbe49_module(setup.(wh_module));
+                setup.(wh_module)=parse_sbe49_module(module);
             case {"SBE41","S41","SB41"}
-                setup.(wh_module)=parse_sbe49_module(setup.(wh_module));
+                setup.(wh_module)=parse_sbe49_module(module);
             case {"ALT","ALTI"}
-                setup.(wh_module)=parse_altimeter_module(setup.(wh_module));
+                setup.(wh_module)=parse_altimeter_module(module);
             case {"VOLT","VOL"}
-                setup.(wh_module)=parse_voltage_module(setup.(wh_module));
+                setup.(wh_module)=parse_voltage_module(module);
         end
-    catch
-        fprintf("No module name for %s.\r",module{i}.str(1:10))
     end
-end %end loop through modules
+end
 
+% for i=1:nb_module
+%     id_module=cellfun(@(x)(strfind(module{i}.str,x)),modules_headers,'un',0);
+%     id_module=~cellfun(@isempty,id_module);
+%     try
+%         wh_module=modules_headers{id_module};
+%         setup.(wh_module).str=module{i}.str;
+%         switch wh_module
+%             case {"CALENDAR","CAL","$CAL"}
+%                 setup.(wh_module)=parse_calendar_module(setup.(wh_module));
+%             case {"SEFE","EFE","EFE3","EFE4"}
+%                 setup.(wh_module)=parse_efe_module(setup.(wh_module));
+%             case "SDIO"
+%                 setup.(wh_module)=parse_sdio_module(setup.(wh_module));
+%             case {"SBE49","SBE","S49","SB49"}
+%                 setup.(wh_module)=parse_sbe49_module(setup.(wh_module));
+%             case {"SBE41","S41","SB41"}
+%                 setup.(wh_module)=parse_sbe49_module(setup.(wh_module));
+%             case {"ALT","ALTI"}
+%                 setup.(wh_module)=parse_altimeter_module(setup.(wh_module));
+%             case {"VOLT","VOL"}
+%                 setup.(wh_module)=parse_voltage_module(setup.(wh_module));
+%         end
+%     catch
+%         fprintf("No module name for %s.\r",module{i}.str(1:10))
+%     end
+% end %end loop through modules
+% 
 end %end mod_som_read_setup_from_raw
 
 %% CALENDAR
@@ -464,28 +489,20 @@ end
 
 
 function sensor=parse_efe_sensor(str)
-offset=1;
 conv16d=@(x) (x(2).*256+x(1));
 conv32d=@(x) (x(4).*256^3+x(3).*256^2+x(2).*256+x(1));
 
-
-sensor.name = str(offset+(0:2)).';
-sensor.name = sensor.name(uint8(sensor.name)>0);%str can be paded with null (uint8 0);
-switch sensor.name
-    case 'ch1'
-        sensor.name='t1';
-    case 'ch2'
-        sensor.name='t2';
-    case 'ch3'
-        sensor.name='s1';
-    case 'ch4'
-        sensor.name='s2';
-    case 'ch5'
-        sensor.name='a1';
-    case 'ch6'
-        sensor.name='a2';
-    case 'ch7'
-        sensor.name='a3';
+sensor_names={'t1','t2','s1','s2','a1','a2','a3','fluor','cond'};
+% sensor.name = str(offset+(0:2)).';
+% sensor.name = sensor.name(uint8(sensor.name)>0);%str can be paded with null (uint8 0);
+for n=1:length(sensor_names)
+    wh_name=sensor_names{n};
+    idx_name=strfind(str,wh_name);
+    if~isempty(idx_name)
+        offset=idx_name;
+        sensor.name=str(idx_name+(0:3));
+        sensor.name=sensor.name(uint8(sensor.name)>0);
+    end
 end
 sensor.sn   = str(offset+(4:6)).';
 offset=offset+2;
