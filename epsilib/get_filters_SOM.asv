@@ -8,8 +8,8 @@ function H=get_filters_SOM(Meta_Data,f)
 %  coding
 % Feb 2019 ALB
 
-forig=f;
 if contains(Meta_Data.vehicle_name,'sa_apex')
+    forig=f;
     Fs_epsi=320;
     [~,f]  =  pwelch(0*(1:Meta_Data.PROCESS.nfft),...
     Meta_Data.PROCESS.nfft,[], ...
@@ -40,14 +40,6 @@ switch Meta_Data.Firmware.ADCfilter
 end
 end
 
-if contains(Meta_Data.vehicle_name,'sa_apex')
-        Hs1filter=interp1(f,Hs1filter ,forig);
-        Ht1filter=interp1(f,Ht1filter ,forig);
-        Ha1filter=interp1(f,Ha1filter ,forig);
-end
-f=forig;
-
-
 % shear channels
 %charge amp filter
 
@@ -56,6 +48,7 @@ f=forig;
 
 %ca_filter = load('FILTER/charge_coeffilt_09312019.mat'); %from network analysis
 ca_filter = load('charge_coeffilt.mat'); %from network analysis
+
 epsi_ca   = interp1(ca_filter.freq,ca_filter.coef_filt ,f);
 %gain_ca   = -(max(20*log10(epsi_ca))+2.5); %TODO set a coef to get a -2.5dB TF as a first approx. I might get fancier by getting probe Cap
 %gain_ca   = -(max(20*log10(epsi_ca))-2.5); %try with a 0 dB gain.

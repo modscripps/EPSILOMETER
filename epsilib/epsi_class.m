@@ -621,7 +621,7 @@ classdef epsi_class < handle
                     obj.Meta_Data.PROCESS.profile_dir = 'down';
                     datachoice = 'datadown';
                     idxchoice = 'down';
-                case {'ww','seacycler','apex'}
+                case {'ww','seacycler','apex','sa_apex'}
                     obj.Meta_Data.PROCESS.profile_dir = 'up';
                     datachoice = 'dataup';
                     idxchoice = 'up';
@@ -657,7 +657,7 @@ classdef epsi_class < handle
                     pRange = PressureTimeseries.P(PressureTimeseries.endprof) -...
                         PressureTimeseries.P(PressureTimeseries.startprof);
                     % Find the longest profile
-                    [~,idxProf] = max(pRange);
+                    [~,idxProf] = max(abs(pRange));
 
                     % Get (and merge if necessary) .mat data for this profile
                     tMin = PressureTimeseries.dnum(PressureTimeseries.startprof(idxProf));
@@ -704,14 +704,14 @@ classdef epsi_class < handle
             if ~any([isfield(obj.Meta_Data.PROCESS,'nfft'),isclassfield(obj.Meta_Data.PROCESS,'nfft')])
                 obj.Meta_Data= obj.f_read_MetaProcess();
             end
-            Meta_Data = obj.Meta_Data;
+            % Meta_Data = obj.Meta_Data;
             if ~process_all_profiles
-                obj = mod_epsilometer_calc_turbulence_v2(Meta_Data,Profile_or_profNum,saveData);
+                obj = mod_epsilometer_calc_turbulence_v2(obj.Meta_Data,Profile_or_profNum,saveData);
             elseif process_all_profiles
-                profile_list = dir(fullfile(Meta_Data.paths.profiles,'Profile*.mat'));
+                profile_list = dir(fullfile(obj.Meta_Data.paths.profiles,'Profile*.mat'));
                 for p=1:length(profile_list)
-                    fprintf('Building Profile%03.0f of %03.0f\n',p,length(profile_list))
-                    obj = mod_epsilometer_calc_turbulence_v2(Meta_Data,p,saveData);
+                    fprintf('Building Profile%04.0f of %04.0f\n',p,length(profile_list))
+                    obj = mod_epsilometer_calc_turbulence_v2(obj.Meta_Data,p,saveData);
                 end
             end
         end

@@ -50,7 +50,7 @@ a = sqrt(2*q)*2*pi*k/kb;
 %uppera(i) = erf(a(i)/sqrt(2),Inf)*sqrt(pi/2);
 %    uppera(i) = erf(a(i)/sqrt(2))*sqrt(pi/2);
 %end
-uppera = erf(a/sqrt(2))*sqrt(pi/2);
+uppera = erfc(a/sqrt(2))*sqrt(pi/2);
 g = 2*pi*a.*(exp(-a.^2/2) - a.*uppera);
 Psg = sqrt(q/2)*(chi/kb/D)*g;
 Psg(find(Psg<=0))=0;

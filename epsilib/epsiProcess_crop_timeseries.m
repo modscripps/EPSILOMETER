@@ -48,6 +48,8 @@ if ~isempty(myFileIdx)
         catch
             error(['Can''t load ' TimeIndex.filenames{myFileIdx}])
         end
+        use MatData;
+
     elseif length(myFileIdx)>1
         % Load the first file and name the structures 'Out'
         try
@@ -270,7 +272,11 @@ if ~isempty(myFileIdx)
     %% Add Meta_Data
     % ALB I am using the Meta_Data from the modmat.
     % I think it is fime to use any of them (many modmat per profiles) for a profile 
-    Timeseries.Meta_Data = MatData.Meta_Data;
+    try
+        Timeseries.Meta_Data = MatData.Meta_Data;
+    catch
+        Timeseries.Meta_Data = [];
+    end
     
 else
     Timeseries = [];

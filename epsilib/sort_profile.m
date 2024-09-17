@@ -73,6 +73,10 @@ fieldOrder = {'profNum';...
 commonFields = fieldOrder(ismember(fieldOrder,fieldNames));
 
 % Sort Profile in the order of commonFields
-Profile = orderfields(Profile,commonFields);
+try
+    Profile = orderfields(Profile,commonFields);
+catch
+    disp("l.79 sort_profile.m : orderfields does not have all the fields names. NOT A PROBLEM.")
+end
           
 end

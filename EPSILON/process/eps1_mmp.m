@@ -44,12 +44,16 @@ method=0; % we are not in the inertial subrange.
 % dKI=0.2;
 % KI=(2:dKI:10); % wavenumber array for interpolation
 
-% kmin=2;
-if k(1)==0
-    kmin=k(2);
-else
-    kmin=k(1);
-end
+
+% kmin =3 cpm for Apex
+kmin=3;
+% kmin =2 cpm for normal operations
+%kmin=2;
+% if k(1)==0
+%     kmin=k(2);
+% else
+%     kmin=k(1);
+% end
 
 
 % dk=nanmean(diff(k));

@@ -8,7 +8,7 @@ w = abs(scan.w);
 
 nfft=Meta_Data.PROCESS.nfft;
 try
-Fs=Meta_Data.PROCESS.Fs_epsi;
+    Fs=Meta_Data.PROCESS.Fs_epsi;
 catch
    Fs=Meta_Data.AFE.FS; 
 end
@@ -68,12 +68,12 @@ Pt_T_f = (Pt_volt_f*(dTdV^2)) ./ filter_TF;
 Pt_Tg_k = ((2*pi*k).^2).*Pt_T_f.*w; %NC 9/2/21 - frequency spectrum should be MULTIPLIED by w, not divided
 
 % Calculate chi
-dk = nanmean(diff(k));
+dk = mean(diff(k),'omitmissing');
 fc_index = FPO7_cutoff(f,Pt_volt_f,FPO7noise);
 fc = f(find(f<=f(fc_index),1,'last'));
 kc = fc/w;
 krange = find(k<=k(fc_index));
-chi = 6*scan.ktemp*dk.*nansum(Pt_Tg_k(krange));
+chi = 6*scan.ktemp*dk.*sum(Pt_Tg_k(krange),'omitmissing');
 
 % high signal flag: The cut off frequency is very high. 
 % this could mean that the whole scan is corrupt since the spectrum is way

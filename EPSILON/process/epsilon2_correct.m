@@ -8,8 +8,8 @@ ler=log10(eps_res);
 if ler <= -6 % adjust shear with missing variance
 	lf_eps=0;
 
-    [kpan,Ppan] = panchev(eps_res,kvis);
-%     [Ppan,kpan]=nasmyth(eps_res,kvis);
+    % [kpan,Ppan] = panchev(eps_res,kvis);
+    [Ppan,kpan]=nasmyth(eps_res,kvis);
 
     idx_kmax2=find(kpan>=kmax,1,'first');
     idx_kmax1=find(kpan>=kmin,1,'first');

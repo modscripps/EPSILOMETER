@@ -163,7 +163,7 @@ if isfinite(scan.(shear_channel))
         interp_Ppan=interp1(kpan(~isnan(Ppan_co)),Ppan_co(~isnan(Ppan_co)),kin);
         Ppan_co=interp1(kpan(~isnan(Ppan_co)),Ppan_co(~isnan(Ppan_co)),k);
         
-        fom=log(Pxx(:)./interp_Ppan(:));
+        fom=log10(Pxx(:)./interp_Ppan(:));
         mad_spec=mad(fom);
         fom=mad_spec./sig_lnS./Tm;
 
