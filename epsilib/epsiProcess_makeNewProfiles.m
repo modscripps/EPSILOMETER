@@ -28,8 +28,8 @@ end
 load(fullfile(obj.Meta_Data.paths.mat_data,'PressureTimeseries.mat'),'PressureTimeseries')
 
 %ALB to comment latter
-PressureTimeseries.startprof=PressureTimeseries.startdown;
-PressureTimeseries.endprof=PressureTimeseries.enddown;
+% PressureTimeseries.startprof=PressureTimeseries.startdown;
+% PressureTimeseries.endprof=PressureTimeseries.enddown;
 
 % Look for the current list of profiles
 profList = dir(fullfile(obj.Meta_Data.paths.profiles,'Profile*.mat'));
@@ -37,7 +37,7 @@ profNumChar = cell2mat(cellfun(@(C) C(8:10),{profList(:).name},'uniformoutput',0
 if ~isempty(profNumChar)
     lastProfNum = str2double(profNumChar(end,:));
     % Load the last profile
-    lastProf = load(fullfile(obj.Meta_Data.paths.profiles,sprintf('Profile%03.f',lastProfNum)));
+    lastProf = load(fullfile(obj.Meta_Data.paths.profiles,sprintf('Profile%04.f',lastProfNum)));
     
     % Does the last profile have all its data? Or was more collected in the
     % last batch of files?
@@ -61,7 +61,7 @@ for iProf=1:length(PressureTimeseries.startprof)
             profIdx = PressureTimeseries.startprof(iProf):PressureTimeseries.endprof(iProf);
             tMin = PressureTimeseries.dnum(PressureTimeseries.startprof(iProf));
             tMax = PressureTimeseries.dnum(profIdx(end));
-            fprintf('Building Profile%03.0f of %03.0f\n',iProf,length(PressureTimeseries.startprof))
+            fprintf('Building Profile%04.0f of %04.0f\n',iProf,length(PressureTimeseries.startprof))
             
             Profile = obj.f_cropTimeseries(tMin,tMax);
             Profile.profNum = iProf;
@@ -70,7 +70,7 @@ for iProf=1:length(PressureTimeseries.startprof)
             Profile = sort_profile(Profile);
 
             % Save new profile
-            saveName = fullfile(obj.Meta_Data.paths.profiles,sprintf('Profile%03.0f',iProf));
+            saveName = fullfile(obj.Meta_Data.paths.profiles,sprintf('Profile%04.0f',iProf));
             save(saveName,'Profile');
             clear Profile
     end

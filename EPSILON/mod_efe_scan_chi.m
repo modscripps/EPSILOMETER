@@ -1,4 +1,5 @@
-function [Pt_volt_f,Pt_Tg_k,chi,f,k,fc,kc,flag_tg_fc]=mod_efe_scan_chi(scan,fpo7_channel,Meta_Data,h_freq,FPO7noise)
+% function [Pt_volt_f,Pt_Tg_k,chi,f,k,fc,kc,flag_tg_fc]=mod_efe_scan_chi(scan,fpo7_channel,Meta_Data,h_freq,FPO7noise)
+function scan = mod_efe_scan_chi(scan,fpo7_channel,Meta_Data,h_freq,FPO7noise)
 
 
 % -------------------------------------------------------------------------
@@ -79,3 +80,18 @@ chi = 6*scan.ktemp*dk.*sum(Pt_Tg_k(krange),'omitmissing');
 % this could mean that the whole scan is corrupt since the spectrum is way
 % above the noise floor.
 flag_tg_fc = fc_index<round(.95*length(f));
+
+
+% % Put new variables in the structure
+% varList = {'Pt_volt_f','Pt_Tg_k','chi','fc','kc','flag_tg_fc'};
+% for iVar=1:numel(varList)
+%     scan.(varList{iVar}).(currChannel(1:2)) = eval(varList{iVar});
+% end
+
+scan.Pt_volt_f.(fpo7_channel)  = Pt_volt_f;
+scan.Pt_Tg_k.(fpo7_channel)    = Pt_Tg_k;
+scan.chi.(fpo7_channel)        = chi;
+scan.fc.(fpo7_channel)         = fc;
+scan.kc.(fpo7_channel)         = kc;
+scan.flag_tg_fc.(fpo7_channel) = flag_tg_fc;
+

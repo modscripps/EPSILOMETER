@@ -132,7 +132,7 @@ if ~isempty(myFileIdx)
         if isfield(MatData,'vnav')
             vnav = vnavOut;
         end
-        if isfield(MatData,'vnav')
+        if isfield(MatData,'ttv')
             ttv = ttvOut;
         end
         if isfield(MatData,'gps')

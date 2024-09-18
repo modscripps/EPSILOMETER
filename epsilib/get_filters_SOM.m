@@ -55,7 +55,7 @@ f=forig;
 % calibrator gain 2.5 dB ~ Vout/Vin=1.33 for a shear probe of 750pF
 
 %ca_filter = load('FILTER/charge_coeffilt_09312019.mat'); %from network analysis
-ca_filter = load('charge_coeffilt.mat'); %from network analysis
+ca_filter = load('cap1nFres200Meg_5KohmInput.mat'); %from network analysis
 epsi_ca   = interp1(ca_filter.freq,ca_filter.coef_filt ,f);
 %gain_ca   = -(max(20*log10(epsi_ca))+2.5); %TODO set a coef to get a -2.5dB TF as a first approx. I might get fancier by getting probe Cap
 %gain_ca   = -(max(20*log10(epsi_ca))-2.5); %try with a 0 dB gain.

@@ -80,12 +80,12 @@ end
 
 switch tempChoice
     case 'Tdiff'
-            Meta_Data.PROCESS.FPO7noise=load(fullfile(calibration_path,'FPO7_noise.mat'),'n0','n1','n2','n3');
+        Meta_Data.PROCESS.FPO7noise=load(fullfile(calibration_path,'FPO7_noise.mat'),'n0','n1','n2','n3');
     otherwise
-            Meta_Data.PROCESS.FPO7noise=load(fullfile(calibration_path,'FPO7_notdiffnoise.mat'),'n0','n1','n2','n3');
-    end
-    FPO7noise   = Meta_Data.PROCESS.FPO7noise;
+        Meta_Data.PROCESS.FPO7noise=load(fullfile(calibration_path,'FPO7_notdiffnoise.mat'),'n0','n1','n2','n3');
+end
 
+FPO7noise   = Meta_Data.PROCESS.FPO7noise;
 end
 
 channels    = Meta_Data.PROCESS.timeseries;
@@ -122,21 +122,21 @@ if ind_ctdscan(1)>0 && ...
         scan.(varList{iVar}) = eval(varList{iVar});
     end
 
-    scan.pr     = nanmean(Profile.ctd.P(ind_ctdscan));
-    scan.z      = nanmean(Profile.ctd.z(ind_ctdscan));
-    scan.t      = nanmean(Profile.ctd.T(ind_ctdscan));
-    scan.s      = nanmean(real(Profile.ctd.S(ind_ctdscan)));
+    scan.pr     = mean(Profile.ctd.P(ind_ctdscan),'omitmissing');
+    scan.z      = mean(Profile.ctd.z(ind_ctdscan),'omitmissing');
+    scan.t      = mean(Profile.ctd.T(ind_ctdscan),'omitmissing');
+    scan.s      = mean(real(Profile.ctd.S(ind_ctdscan)),'omitmissing');
     try
-        scan.th     = nanmean(Profile.ctd.th(ind_ctdscan));
-        scan.sgth   = nanmean(Profile.ctd.sgth(ind_ctdscan));
+        scan.th     = mean(Profile.ctd.th(ind_ctdscan),'omitmissing');
+        scan.sgth   = mean(Profile.ctd.sgth(ind_ctdscan),'omitmissing');
     catch
         scan.th     = nan;
         scan.sgth   = nan;
     end
     if isfield(Profile.ctd,'dnum')
-        scan.dnum   = nanmean(Profile.ctd.dnum(ind_ctdscan));
+        scan.dnum   = mean(Profile.ctd.dnum(ind_ctdscan),'omitmissing');
     else
-        scan.time_s = nanmean(Profile.ctd.time_s(ind_ctdscan));
+        scan.time_s = mean(Profile.ctd.time_s(ind_ctdscan),'omitmissing');
     end
 
     %ALB add pitch and roll 03/06/2023
@@ -268,18 +268,19 @@ if ind_ctdscan(1)>0 && ...
     for iChan=1:numel(chanList)
         currChannel = chanList{iChan};
 
-        [Ps_volt_f,Ps_velocity_f,Ps_shear_k,Ps_shear_co_k,  ...
-         epsilon,epsilon_co,method       ...
-         f,k,fc,kc,Ppan,Ppan_co,fom,calib_volt,calib_vel] = ...
-            mod_efe_scan_epsilon(scan,currChannel,Meta_Data);
+        scan = mod_efe_scan_epsilon(scan,currChannel,Meta_Data);
 
-
-        % Put new variables in the structure
-        varList = {'Ps_volt_f','Ps_velocity_f','Ps_shear_k','Ps_shear_co_k',...
-            'epsilon','epsilon_co','fc','kc','Ppan','Ppan_co','fom','calib_volt','calib_vel','method'};
-        for iVar=1:numel(varList)
-            scan.(varList{iVar}).(currChannel(1:2)) = eval(varList{iVar});
-        end
+        %ALB Modification 09182024. Only retrun scan in the above.
+        % [Ps_volt_f,Ps_velocity_f,Ps_shear_k,Ps_shear_co_k,  ...
+        %  epsilon,epsilon_co,method       ...
+        %  f,k,fc,kc,Ppan,Ppan_co,fom,calib_volt,calib_vel] = ...
+        %     mod_efe_scan_epsilon(scan,currChannel,Meta_Data);
+        % % Put new variables in the structure
+        % varList = {'Ps_volt_f','Ps_velocity_f','Ps_shear_k','Ps_shear_co_k',...
+        %     'epsilon','epsilon_co','fc','kc','Ppan','Ppan_co','fom','calib_volt','calib_vel','method'};
+        % for iVar=1:numel(varList)
+        %     scan.(varList{iVar}).(currChannel(1:2)) = eval(varList{iVar});
+        % end
 
     end
 
@@ -291,50 +292,20 @@ if ind_ctdscan(1)>0 && ...
     chanList = Meta_Data.PROCESS.timeseries(idxT);
     for iChan=1:numel(chanList)
         currChannel = chanList{iChan};
-        chanFieldName = sprintf('%sspectra',currChannel);
+        % chanFieldName = sprintf('%sspectra',currChannel);
 
-        [Pt_volt_f,Pt_Tg_k,chi,f,k,fc,kc,flag_tg_fc] = ...
-            mod_efe_scan_chi(scan,currChannel,Meta_Data,h_freq,FPO7noise);
+        scan = mod_efe_scan_chi(scan,currChannel,Meta_Data,h_freq,FPO7noise);
 
-        % Put new variables in the structure
-        varList = {'Pt_volt_f','Pt_Tg_k','chi','fc','kc','flag_tg_fc'};
-        for iVar=1:numel(varList)
-            scan.(varList{iVar}).(currChannel(1:2)) = eval(varList{iVar});
-        end
+        %ALB Modification 09182024. Only retrun scan in the above.
+        % [Pt_volt_f,Pt_Tg_k,chi,f,k,fc,kc,flag_tg_fc] = ...
+        %     mod_efe_scan_chi(scan,currChannel,Meta_Data,h_freq,FPO7noise);
+        % 
+        % % Put new variables in the structure
+        % varList = {'Pt_volt_f','Pt_Tg_k','chi','fc','kc','flag_tg_fc'};
+        % for iVar=1:numel(varList)
+        %     scan.(varList{iVar}).(currChannel(1:2)) = eval(varList{iVar});
+        % end
     end
-%     %% quality control param
-%     scan.epsi_qc=[1 1]; % good data
-%     if ((scan.epsilon_co.s1/scan.epsilon_co.s2)>3)
-%         scan.epsi_qc=scan.epsi_qc+ [1 0];
-%     end
-%     if ((scan.epsilon_co.s2/scan.epsilon_co.s1)>3)
-%         scan.epsi_qc=scan.epsi_qc+ [0 1];
-%     end
-%     if (scan.fom.s1>3)
-%         scan.epsi_qc=scan.epsi_qc+ [1 0];
-%     end
-%     if (scan.fom.s2>3)
-%         scan.epsi_qc=scan.epsi_qc+ [0 1];
-%     end
-%     if (scan.epsilon_co.s1==1e-11)
-%         scan.epsi_qc=scan.epsi_qc+ [1 0];
-%     end
-%     if (scan.epsilon_co.s2==1e-11)
-%         scan.epsi_qc=scan.epsi_qc+ [0 1];
-%     end
-% 
-%     %% final epsilon product
-%     if scan.epsi_qc(1)==scan.epsi_qc(2)
-%         %good epsilons we use the mean of both epsilons
-%         epsilons=[scan.epsilon_co.s1 scan.epsilon_co.s2];
-%         scan.epsilon_final = mean(epsilons,'omitnan');
-%         scan.epsi_qc_final=1;
-%     else
-%         %otherwise the estimate with the small QC
-%         epsilons=[scan.epsilon_co.s1 scan.epsilon_co.s2];
-%         scan.epsilon_final = epsilons(scan.epsi_qc==min(scan.epsi_qc));
-%         scan.epsi_qc_final=min(scan.epsi_qc);
-%     end
 
     %% Add variable descriptions and units
     % ---------------------------------------------------------------------

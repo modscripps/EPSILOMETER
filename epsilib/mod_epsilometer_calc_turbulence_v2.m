@@ -241,6 +241,7 @@ Profile.th             = nan(nbscan,1);
 Profile.sgth           = nan(nbscan,1);
 Profile.epsilon_final  = nan(nbscan,1);
 Profile.kvis           = nan(nbscan,1);
+Profile.ktemp          = nan(nbscan,1);
 Profile.sumPa.a1       = nan(nbscan,1);
 Profile.sumPa.a2       = nan(nbscan,1);
 Profile.sumPa.a3       = nan(nbscan,1);
@@ -345,7 +346,8 @@ for p = 1:nbscan % p is the scan index.
         Profile.sh_fc(p,2) = scan.fc.s2(2); %only saving the shear_co limit ALB 03/06/2023 the 2nd idx is the shear_co
         Profile.sh_kc(p,1) = scan.kc.s1(2); 
         Profile.sh_kc(p,2) = scan.kc.s2(2); 
-        Profile.kvis(p,1) = scan.kvis;
+        Profile.kvis(p,1)  = scan.kvis;
+        Profile.ktemp(p,1) = scan.ktemp;
         
         if isfield(scan.chi,'t1')
             Profile.chi(p,1)   = scan.chi.t1;

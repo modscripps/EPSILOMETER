@@ -15,14 +15,6 @@ function [scan] = get_scan_spectra(Profile,id_scan)
 %
 % Nicole Couto | June 2020
 %
-% ALB: adding the multivariate vibration correction.
-%      It should get rid of the acceleration and coherence channel
-%      selection.
-%      I am following Goodman2006:
-%      "On Measuring the Terms of the Turbulent Kinetic
-%      Energy Budget from an AUV". JTECH
-% aleboyer@ucsd.edu |
-% ALB: 11/20/2021
 % ALB: I am getting rid of tscan which is redondant with nfft.
 % -------------------------------------------------------------------------
 %% Gather some data
@@ -88,12 +80,12 @@ end
 
 switch tempChoice
     case 'Tdiff'
-            Meta_Data.PROCESS.FPO7noise=load(fullfile(calibration_path,'FPO7_noise.mat'),'n0','n1','n2','n3');
+        Meta_Data.PROCESS.FPO7noise=load(fullfile(calibration_path,'FPO7_noise.mat'),'n0','n1','n2','n3');
     otherwise
-            Meta_Data.PROCESS.FPO7noise=load(fullfile(calibration_path,'FPO7_notdiffnoise.mat'),'n0','n1','n2','n3');
-    end
-    FPO7noise   = Meta_Data.PROCESS.FPO7noise;
+        Meta_Data.PROCESS.FPO7noise=load(fullfile(calibration_path,'FPO7_notdiffnoise.mat'),'n0','n1','n2','n3');
+end
 
+FPO7noise   = Meta_Data.PROCESS.FPO7noise;
 end
 
 channels    = Meta_Data.PROCESS.timeseries;
@@ -130,22 +122,33 @@ if ind_ctdscan(1)>0 && ...
         scan.(varList{iVar}) = eval(varList{iVar});
     end
 
-    scan.pr     = nanmean(Profile.ctd.P(ind_ctdscan));
-    scan.z      = nanmean(Profile.ctd.z(ind_ctdscan));
-    scan.t      = nanmean(Profile.ctd.T(ind_ctdscan));
-    scan.s      = nanmean(Profile.ctd.S(ind_ctdscan));
+    scan.pr     = mean(Profile.ctd.P(ind_ctdscan),'omitmissing');
+    scan.z      = mean(Profile.ctd.z(ind_ctdscan),'omitmissing');
+    scan.t      = mean(Profile.ctd.T(ind_ctdscan),'omitmissing');
+    scan.s      = mean(real(Profile.ctd.S(ind_ctdscan)),'omitmissing');
     try
-        scan.th     = nanmean(Profile.ctd.th(ind_ctdscan));
-        scan.sgth   = nanmean(Profile.ctd.sgth(ind_ctdscan));
+        scan.th     = mean(Profile.ctd.th(ind_ctdscan),'omitmissing');
+        scan.sgth   = mean(Profile.ctd.sgth(ind_ctdscan),'omitmissing');
     catch
         scan.th     = nan;
         scan.sgth   = nan;
     end
     if isfield(Profile.ctd,'dnum')
-        scan.dnum   = nanmean(Profile.ctd.dnum(ind_ctdscan));
+        scan.dnum   = mean(Profile.ctd.dnum(ind_ctdscan),'omitmissing');
     else
-        scan.time_s = nanmean(Profile.ctd.time_s(ind_ctdscan));
+        scan.time_s = mean(Profile.ctd.time_s(ind_ctdscan),'omitmissing');
     end
+
+    %ALB add pitch and roll 03/06/2023
+    %scan pitch and roll
+    % NC - since pitch and roll are new additions to
+    % mod_epsilometer_calc_turbulence_v2.m, first make sure they are in the
+    % Profile structure (so  script still works for old  datasets)
+    if isfield(Profile.epsi,'pitch')
+        scan.pitch = mean(Profile.epsi.pitch(ind_scan),'omitnan');
+        scan.roll  = mean(Profile.epsi.roll(ind_scan),'omitnan');
+    end
+
     % NC 17 July 2021 - the functions nu and kt want pressure in MPa, not
     % db. Convert to MPa before calculating kinematic viscosity and thermal
     % diffusivity.
@@ -167,68 +170,64 @@ if ind_ctdscan(1)>0 && ...
                 scan.(currChannel)=Profile.epsi.(currChannel)(ind_scan);
             case {'s1_volt','s2_volt'}
                 scan.(currChannel)=Profile.epsi.(currChannel)(ind_scan); % time series in m.s^{-2}
-                % despike
-                Profile.Meta_Data.PROCESS.movmean_window_time=.5;
-                Fc=.1/Fs_epsi/2; % cutoff freq at .1 Hz (high pass of the charga amp)
-                [B,A]=cheby2(1,20,Fc,'high');
-                data1=diff(scan.(currChannel));
-                data1=filtfilt(B,A,data1);
-                data1=abs(data1);
 
-
-                Fs=320;
-                Fc=50/Fs/2; % cutoff freq at 20 Hz
-                [B,A]=cheby2(3,20,Fc,'low');
-                data2=filtfilt(B,A,data1);
-
-                scan2=abs(data1./data2);
-                rms_scan2=rms(scan2);
-                idx_outlier=find(scan2>5);
-                %                 idx_outlier=find(scan2>rms_scan2);
-                scan3=scan2;
-
-                N=10;%samples or 120 ms (40/Fs)
-                for i=1:length(idx_outlier)
-                    idx_win=idx_outlier(i)+(-N/2:N);
-                    idx_win=idx_win(idx_win>0);
-                    idx_win=idx_win(idx_win<length(data1));
-                    scan3(idx_win)= nan;
-                end
-
-                scan.(currChannel)(isnan(scan3))=nan;
-                scan.(currChannel)=...
-                    fillmissing(scan.(currChannel),'linear');
-
-                if 1==0
-                    close all
-                    ax(1)=subplot(311);
-                    plot(Profile.epsi.(currChannel)(ind_scan));
-                    hold on;
-                    plot(scan.(currChannel))
-                    ax(2)=subplot(312);
-                    plot(data1);
-                    hold on;
-                    plot(data2)
-                    title(currChannel)
-                    ax(3)=subplot(313);plot(scan2);hold on;plot(scan2.*0+5,'k--')
-                    linkaxes(ax,'x')
-                    pause
-                end
+                % % THIS DESPIKING MADE THINGS WORSE ON ASTRAL 2024 -
+                % % COMMENTING OUT UNTIL WE FIND A BETTER SOLUTION
+                % ---------------------------------------------------------
+                % % despike
+                % Profile.Meta_Data.PROCESS.movmean_window_time=.5;
+                % Fc=.1/Fs_epsi/2; % cutoff freq at .1 Hz (high pass of the charga amp)
+                % [B,A]=cheby2(1,20,Fc,'high');
+                % data1=diff(scan.(currChannel));
+                % data1=filtfilt(B,A,data1);
+                % data1=abs(data1);
+                % 
+                % 
+                % Fs=320;
+                % Fc=50/Fs/2; % cutoff freq at 20 Hz
+                % [B,A]=cheby2(3,20,Fc,'low');
+                % data2=filtfilt(B,A,data1);
+                % 
+                % scan2=abs(data1./data2);
+                % rms_scan2=rms(scan2);
+                % idx_outlier=find(scan2>5);
+                % %                 idx_outlier=find(scan2>rms_scan2);
+                % scan3=scan2;
+                % 
+                % N=10;%samples or 120 ms (40/Fs)
+                % for i=1:length(idx_outlier)
+                %     idx_win=idx_outlier(i)+(-N/2:N);
+                %     idx_win=idx_win(idx_win>0);
+                %     idx_win=idx_win(idx_win<length(data1));
+                %     scan3(idx_win)= nan;
+                % end
+                % 
+                % scan.(currChannel)(isnan(scan3))=nan;
+                % scan.(currChannel)=...
+                %     fillmissing(scan.(currChannel),'linear');
+                % 
+                % if 1==0
+                %     close all
+                %     ax(1)=subplot(311);
+                %     plot(Profile.epsi.(currChannel)(ind_scan));
+                %     hold on;
+                %     plot(scan.(currChannel))
+                %     ax(2)=subplot(312);
+                %     plot(data1);
+                %     hold on;
+                %     plot(data2)
+                %     title(currChannel)
+                %     ax(3)=subplot(313);plot(scan2);hold on;plot(scan2.*0+5,'k--')
+                %     linkaxes(ax,'x')
+                %     pause
+                % end
+                % --------------------------------------------------------
+                
         end
     end
 
     %% Compute spectra for acceleration channels
     % ---------------------------------------------------------------------
-    % Add full profile coherences
-    scan.Cs1a3_full = Profile.Cs1a3_full;
-    scan.Cs2a3_full = Profile.Cs2a3_full;
-    if (Meta_Data.PROCESS.multivariate)
-        scan.Cs1a_mv=Profile.Cs1a_mv(id_scan,:);
-        scan.Cs2a_mv=Profile.Cs2a_mv(id_scan,:);
-    else
-        scan.Cs1a_mv=Profile.Cs1a3_full.*nan;
-        scan.Cs2a_mv=Profile.Cs1a3_full.*nan;
-    end%end if Meta_Data.PROCESS.multivariate=1
 
 
     %ALB I am keeping accel spectra and Coh becasue it could be useful for
@@ -270,14 +269,14 @@ if ind_ctdscan(1)>0 && ...
         currChannel = chanList{iChan};
 
         [Ps_volt_f,Ps_velocity_f,Ps_shear_k,Ps_shear_co_k,  ...
-         epsilon,epsilon_co,       ...
+         epsilon,epsilon_co,method       ...
          f,k,fc,kc,Ppan,Ppan_co,fom,calib_volt,calib_vel] = ...
             mod_efe_scan_epsilon(scan,currChannel,Meta_Data);
 
 
         % Put new variables in the structure
-        varList = {'Ps_volt_f','Ps_velocity_f','Ps_shear_k','Ps_shear_co_k','Ps_shear_mv_k',...
-            'epsilon','epsilon_co','epsilon_mv','fc','kc','Ppan','Ppan_co','fom','calib_volt','calib_vel'};
+        varList = {'Ps_volt_f','Ps_velocity_f','Ps_shear_k','Ps_shear_co_k',...
+            'epsilon','epsilon_co','fc','kc','Ppan','Ppan_co','fom','calib_volt','calib_vel','method'};
         for iVar=1:numel(varList)
             scan.(varList{iVar}).(currChannel(1:2)) = eval(varList{iVar});
         end
@@ -303,39 +302,39 @@ if ind_ctdscan(1)>0 && ...
             scan.(varList{iVar}).(currChannel(1:2)) = eval(varList{iVar});
         end
     end
-    %% quality control param
-    scan.epsi_qc=[1 1]; % good data
-    if ((scan.epsilon_co.s1/scan.epsilon_co.s2)>3)
-        scan.epsi_qc=scan.epsi_qc+ [1 0];
-    end
-    if ((scan.epsilon_co.s2/scan.epsilon_co.s1)>3)
-        scan.epsi_qc=scan.epsi_qc+ [0 1];
-    end
-    if (scan.fom.s1>3)
-        scan.epsi_qc=scan.epsi_qc+ [1 0];
-    end
-    if (scan.fom.s2>3)
-        scan.epsi_qc=scan.epsi_qc+ [0 1];
-    end
-    if (scan.epsilon_co.s1==1e-11)
-        scan.epsi_qc=scan.epsi_qc+ [1 0];
-    end
-    if (scan.epsilon_co.s2==1e-11)
-        scan.epsi_qc=scan.epsi_qc+ [0 1];
-    end
-
-    %% final epsilon product
-    if scan.epsi_qc(1)==scan.epsi_qc(2)
-        %good epsilons we use the mean of both epsilons
-        epsilons=[scan.epsilon_co.s1 scan.epsilon_co.s2];
-        scan.epsilon_final = mean(epsilons,'omitnan');
-        scan.epsi_qc_final=1;
-    else
-        %otherwise the estimate with the small QC
-        epsilons=[scan.epsilon_co.s1 scan.epsilon_co.s2];
-        scan.epsilon_final = epsilons(scan.epsi_qc==min(scan.epsi_qc));
-        scan.epsi_qc_final=min(scan.epsi_qc);
-    end
+%     %% quality control param
+%     scan.epsi_qc=[1 1]; % good data
+%     if ((scan.epsilon_co.s1/scan.epsilon_co.s2)>3)
+%         scan.epsi_qc=scan.epsi_qc+ [1 0];
+%     end
+%     if ((scan.epsilon_co.s2/scan.epsilon_co.s1)>3)
+%         scan.epsi_qc=scan.epsi_qc+ [0 1];
+%     end
+%     if (scan.fom.s1>3)
+%         scan.epsi_qc=scan.epsi_qc+ [1 0];
+%     end
+%     if (scan.fom.s2>3)
+%         scan.epsi_qc=scan.epsi_qc+ [0 1];
+%     end
+%     if (scan.epsilon_co.s1==1e-11)
+%         scan.epsi_qc=scan.epsi_qc+ [1 0];
+%     end
+%     if (scan.epsilon_co.s2==1e-11)
+%         scan.epsi_qc=scan.epsi_qc+ [0 1];
+%     end
+% 
+%     %% final epsilon product
+%     if scan.epsi_qc(1)==scan.epsi_qc(2)
+%         %good epsilons we use the mean of both epsilons
+%         epsilons=[scan.epsilon_co.s1 scan.epsilon_co.s2];
+%         scan.epsilon_final = mean(epsilons,'omitnan');
+%         scan.epsi_qc_final=1;
+%     else
+%         %otherwise the estimate with the small QC
+%         epsilons=[scan.epsilon_co.s1 scan.epsilon_co.s2];
+%         scan.epsilon_final = epsilons(scan.epsi_qc==min(scan.epsi_qc));
+%         scan.epsi_qc_final=min(scan.epsi_qc);
+%     end
 
     %% Add variable descriptions and units
     % ---------------------------------------------------------------------
@@ -375,8 +374,9 @@ if ind_ctdscan(1)>0 && ...
     scan.varInfo.k = {'wavenumber','cycles m^-^1'};
     scan.varInfo.fc  = {'cutoff frequency, 1=uncorrected, 2=coherence-corrected', 'Hz'};
     scan.varInfo.kc = {'cutoff wavenumber, 1=uncorrected, 2=coherence-corrected', 'cpm'};
-    scan.varInfo.Cs1a3_full = {'coherence betwen s1 and a3 channels between Meta_Data.PROCESS.Prmin and Meta_Data.PROCESS.Prmax',''};
-    scan.varInfo.Cs2a3_full = {'coherence betwen s2 and a3 channels between Meta_Data.PROCESS.Prmin and Meta_Data.PROCESS.Prmax',''};
+    scan.varInfo.kmin = {'min  wavenumber, 1=uncorrected, 2=coherence-corrected', 'cpm'};
+%     scan.varInfo.Cs1a3_full = {'coherence betwen s1 and a3 channels between Meta_Data.PROCESS.Prmin and Meta_Data.PROCESS.Prmax',''};
+%     scan.varInfo.Cs2a3_full = {'coherence betwen s2 and a3 channels between Meta_Data.PROCESS.Prmin and Meta_Data.PROCESS.Prmax',''};
     scan.varInfo.Pa_g_f = {'accleration frequency power spectrum', '[g]^2 Hz^{-1}'};
     scan.varInfo.sumPa_g = {'integrated Pa_f between Meta_Data.PROCESS.fc1 and Meta_Data.PROCESS.fc2','[g]^2 Hz^{-1}'};
     scan.varInfo.Cs1a = {'coherence between s1 and acceleration channels','unitless'};
@@ -390,7 +390,8 @@ if ind_ctdscan(1)>0 && ...
     scan.varInfo.Ps_shear_co_k  = {'coherence-corrected shear frequency power spectrum (full profile coherence with a3 channel has been removed)', ''};
     scan.varInfo.epsilon = {'turbulent kinetic energy dissipation rate calculated from Ps_shear_k', ''};
     scan.varInfo.epsilon_co = {'turbulent kinetic energy dissipation rate calculated from Ps_shear_co_k', ''};
-    scan.varInfo.epsi_qc = {'quality control flag from epsilon_co. The loweer the better. Flag increase when shear channels do not match and if fom >3, ', ''};
+    scan.varInfo.method = {'inertial subrange:1; 0 otherwise', ''};
+%     scan.varInfo.epsi_qc = {'quality control flag from epsilon_co. The loweer the better. Flag increase when shear channels do not match and if fom >3, ', ''};
     scan.varInfo.fom = {'Figure of Merit: rms of the obs-panchev', ''};
     scan.varInfo.Ppan = {'frequency Panchev curve',''};
     scan.varInfo.Ppan_co = {'frequency Panchev curve',''};
@@ -399,5 +400,7 @@ if ind_ctdscan(1)>0 && ...
     scan.varInfo.chi = {'temperature gradient dissipation rate','°C^2 s^{-1}'};
     scan.varInfo.flag_tg_fc = {'temperature gradient cut off frequency is very high','0/1'};
 
-
+else 
+    p = []; %For debugging
+    
 end %endif scan is not too shallow or too close to the end of the profile
