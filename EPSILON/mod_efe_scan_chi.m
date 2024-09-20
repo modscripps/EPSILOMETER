@@ -88,10 +88,10 @@ flag_tg_fc = fc_index<round(.95*length(f));
 %     scan.(varList{iVar}).(currChannel(1:2)) = eval(varList{iVar});
 % end
 
-scan.Pt_volt_f.(fpo7_channel)  = Pt_volt_f;
-scan.Pt_Tg_k.(fpo7_channel)    = Pt_Tg_k;
-scan.chi.(fpo7_channel)        = chi;
-scan.fc.(fpo7_channel)         = fc;
-scan.kc.(fpo7_channel)         = kc;
-scan.flag_tg_fc.(fpo7_channel) = flag_tg_fc;
+scan.Pt_volt_f.(fpo7_channel(1:2))  = Pt_volt_f;
+scan.Pt_Tg_k.(fpo7_channel(1:2))    = Pt_Tg_k;
+scan.chi.(fpo7_channel(1:2))        = chi;
+scan.fc.(fpo7_channel(1:2))         = fc;
+scan.kc.(fpo7_channel(1:2))         = kc;
+scan.flag_tg_fc.(fpo7_channel(1:2)) = flag_tg_fc;
 

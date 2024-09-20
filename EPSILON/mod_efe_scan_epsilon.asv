@@ -152,8 +152,8 @@ if isfinite(scan.(shear_channel))
     % Get Panchev spectrum
     if ~isempty(epsilon) && ~isnan(epsilon)
 
-        [kpan,Ppan] = panchev(epsilon,scan.kvis);
-        Ppan=interp1(kpan(~isnan(Ppan)),Ppan(~isnan(Ppan)),k);
+        % [kpan,Ppan] = panchev(epsilon,scan.kvis);
+        % Ppan=interp1(kpan(~isnan(Ppan)),Ppan(~isnan(Ppan)),k);
 
         Pxx=Ps_shear_co_k(k>=kmin(2) & k<=kc(2));
         kin=k(k>=kmin(2) & k<=kc(2));
@@ -163,7 +163,7 @@ if isfinite(scan.(shear_channel))
         Tm=0.8+sqrt(1.56/Ns);
         [kpan,Ppan_co] = panchev(epsilon_co,scan.kvis);
         interp_Ppan=interp1(kpan(~isnan(Ppan_co)),Ppan_co(~isnan(Ppan_co)),kin);
-        Ppan_co=interp1(kpan(~isnan(Ppan_co)),Ppan_co(~isnan(Ppan_co)),k);
+        % Ppan_co=interp1(kpan(~isnan(Ppan_co)),Ppan_co(~isnan(Ppan_co)),k);
         
         fom=log10(Pxx(:)./interp_Ppan(:));
         mad_spec=mad(fom);
@@ -171,8 +171,8 @@ if isfinite(scan.(shear_channel))
 
     else
         fom=NaN;
-        Ppan_co=NaN;
-        Ppan=NaN;
+        % Ppan_co=NaN;
+        % Ppan=NaN;
     end
 
 else
@@ -189,8 +189,8 @@ else
     kc = nan;
     kmin = nan;
     fom=NaN;
-    Ppan_co=NaN;
-    Ppan=NaN;
+    % Ppan_co=NaN;
+    % Ppan=NaN;
     calib_volt=nan;
     calib_vel=nan;
 
@@ -203,13 +203,17 @@ end
 %     scan.(varList{iVar}).(currChannel(1:2)) = eval(varList{iVar});
 % end
 
-scan.Ps_volt_f.(shear_channel)=Ps_volt_f;
-scan.Ps_velocity_f.(shear_channel)=Ps_velocity_f;
-scan.Ps_shear_k.(shear_channel)=Ps_shear_k;
-scan.Ps_shear_co_k.(shear_channel)=Ps_shear_co_k;
-scan.epsilon.(shear_channel)=epsilon;
-scan.epsilon_co.(shear_channel)=epsilon_co;
-scan.fc.(shear_channel)=fc;
-scan.kc.(shear_channel)=kc;
-scan.fc.(shear_channel)=fc;
+scan.Ps_volt_f.(shear_channel(1:2))     = Ps_volt_f;
+scan.Ps_velocity_f.(shear_channel(1:2)) = Ps_velocity_f;
+scan.Ps_shear_k.(shear_channel(1:2))    = Ps_shear_k;
+scan.Ps_shear_co_k.(shear_channel(1:2)) = Ps_shear_co_k;
+scan.epsilon.(shear_channel(1:2))       = epsilon;
+scan.epsilon_co.(shear_channel(1:2))    = epsilon_co;
+scan.method.(shear_channel(1:2))        = method;
+scan.fc.(shear_channel(1:2))            = fc;
+scan.kc.(shear_channel(1:2))            = kc;
+scan.kmin.(shear_channel(1:2))          = kmin;
+scan.fom.(shear_channel(1:2))           = fom;
+scan.calib_volt.(shear_channel(1:2))    = calib_volt;
+scan.calib_vel.(shear_channel(1:2))     = calib_vel;
 

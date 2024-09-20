@@ -135,17 +135,20 @@ else
     [Ppan4,~]=nasmyth(eps4,kvis,k);
     [Ppan5,~]=nasmyth(eps5,kvis,k);
     best_fit=...
-        [log10(Psheark(idx_range)./Ppan3(idx_range)) ...
-         log10(Psheark(idx_range)./Ppan4(idx_range))  ...
+        [log10(Psheark(idx_range)./Ppan3(idx_range)); ...
+         log10(Psheark(idx_range)./Ppan4(idx_range)) ; ...
          log10(Psheark(idx_range)./Ppan5(idx_range))];
-     epsilon_best=epsilon_option(mad(best_fit)==min(mad(best_fit)));
+     best_mad_fit=mad(best_deviation_fit);
+    if (log10(eps3)<-9.2)
+        disp ("check low epsilons")
+    end
     
-    mf=epsilon2_correct(epsilon_best, ...
+    mf=epsilon2_correct(epsilon_option(sum_best_deviation_fit==min(sum_best_deviation_fit)), ...
                         kvis,kmin,kc);
-	epsilon=mf*epsilon_best;
-    check_epsi=0;
+	epsilon=mf*epsilon_option(sum_best_deviation_fit==min(sum_best_deviation_fit));
+    check_epsi=1;
     if check_epsi
-        [Ppan6,~]=nasmyth(epsilon_best,kvis,k);
+        [Ppan6,~]=nasmyth(epsilon_option(sum_best_deviation_fit==min(sum_best_deviation_fit)),kvis,k);
         [Ppan,~]=nasmyth(epsilon,kvis,k);
         figure(1)
         cla

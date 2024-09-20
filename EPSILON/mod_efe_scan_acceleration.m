@@ -23,4 +23,4 @@ h_freq=Meta_Data.PROCESS.h_freq;
 
 filter_TF=(h_freq.electAccel);
 Pa   = P./filter_TF;
-sumP=sum(Pa(fe>fc1 & fe<fc2))*nanmean(diff(fe));
+sumP=sum(Pa(fe>fc1 & fe<fc2))*mean(diff(fe),'omitmissing');

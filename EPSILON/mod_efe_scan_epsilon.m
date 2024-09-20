@@ -203,17 +203,17 @@ end
 %     scan.(varList{iVar}).(currChannel(1:2)) = eval(varList{iVar});
 % end
 
-scan.Ps_volt_f.(shear_channel)     = Ps_volt_f;
-scan.Ps_velocity_f.(shear_channel) = Ps_velocity_f;
-scan.Ps_shear_k.(shear_channel)    = Ps_shear_k;
-scan.Ps_shear_co_k.(shear_channel) = Ps_shear_co_k;
-scan.epsilon.(shear_channel)       = epsilon;
-scan.epsilon_co.(shear_channel)    = epsilon_co;
-scan.method.(shear_channel)        = method;
-scan.fc.(shear_channel)            = fc;
-scan.kc.(shear_channel)            = kc;
-scan.kmin.(shear_channel)          = kmin;
-scan.fom.(shear_channel)           = fom;
-scan.calib_volt.(shear_channel)    = calib_volt;
-scan.calib_vel.(shear_channel)     = calib_vel;
+scan.Ps_volt_f.(shear_channel(1:2))     = Ps_volt_f;
+scan.Ps_velocity_f.(shear_channel(1:2)) = Ps_velocity_f;
+scan.Ps_shear_k.(shear_channel(1:2))    = Ps_shear_k;
+scan.Ps_shear_co_k.(shear_channel(1:2)) = Ps_shear_co_k;
+scan.epsilon.(shear_channel(1:2))       = epsilon;
+scan.epsilon_co.(shear_channel(1:2))    = epsilon_co;
+scan.method.(shear_channel(1:2))        = method;
+scan.fc.(shear_channel(1:2))            = fc;
+scan.kc.(shear_channel(1:2))            = kc;
+scan.kmin.(shear_channel(1:2))          = kmin;
+scan.fom.(shear_channel(1:2))           = fom;
+scan.calib_volt.(shear_channel(1:2))    = calib_volt;
+scan.calib_vel.(shear_channel(1:2))     = calib_vel;
 
