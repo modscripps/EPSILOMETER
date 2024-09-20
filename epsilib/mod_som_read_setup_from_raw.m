@@ -492,7 +492,7 @@ function sensor=parse_efe_sensor(str)
 conv16d=@(x) (x(2).*256+x(1));
 conv32d=@(x) (x(4).*256^3+x(3).*256^2+x(2).*256+x(1));
 
-sensor_names={'t1','t2','s1','s2','a1','a2','a3','fluor','cond'};
+sensor_names={'t1','t2','s1','s2','a1','a2','a3','fluor','cond','f1','f2','c1','c2'};
 % sensor.name = str(offset+(0:2)).';
 % sensor.name = sensor.name(uint8(sensor.name)>0);%str can be paded with null (uint8 0);
 for n=1:length(sensor_names)

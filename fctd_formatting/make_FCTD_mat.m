@@ -101,15 +101,22 @@ if strcmp(cruise_specifics,'tfo_2024');
     diff_not_neg = [0;diff(epsi.dnum)]>0;
     keep = ~isnan(epsi.dnum) & ~isinf(epsi.dnum) & diff_not_neg;
 
-    if ~isempty(epsi) && isfield(epsi,'s2_count') && ~isempty(ctd)
-        FCTD.uConductivity=reshape(interp1(epsi.dnum(keep),double(epsi.s2_count(keep)),time_fast),20,[])';
+    % if ~isempty(epsi) && isfield(epsi,'c1_count') && ~isempty(ctd)
+    % ALB 20240901 new version- Now epsi will have a c1)count field for
+    % uconductivity
+    if ~isempty(epsi) && isfield(epsi,'c1_count') && ~isempty(ctd)
+        % FCTD.uConductivity=reshape(interp1(epsi.dnum(keep),double(epsi.s2_count(keep)),time_fast),20,[])';
+        FCTD.uConductivity=reshape(interp1(epsi.dnum(keep),double(epsi.c1_count(keep)),time_fast),20,[])';
     else
         FCTD.uConductivity=nan(length(ctd.dnum),20);
         disp(['No uConductivity data ' myASCIIfiles(i).name]);
     end
 
-    if ~isempty(epsi) && isfield(epsi,'s1_volt')  && ~isempty(ctd)
-        FCTD.fluorometer=reshape(interp1(epsi.dnum(keep),epsi.s1_volt(keep),time_fast),20,[])';
+    % ALB 20240901 new version- Now epsi will have a f1_count field for
+    % analog fluorometer
+    if ~isempty(epsi) && isfield(epsi,'f1_volt')  && ~isempty(ctd)
+        % FCTD.fluorometer=reshape(interp1(epsi.dnum(keep),epsi.s1_volt(keep),time_fast),20,[])';
+        FCTD.fluorometer=reshape(interp1(epsi.dnum(keep),epsi.f1_volt(keep),time_fast),20,[])';
     else
         FCTD.fluorometer=nan(length(ctd.dnum),20);
         disp(['No fluorometer data ' myASCIIfiles(i).name]);

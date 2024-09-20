@@ -72,6 +72,7 @@ if isclassfield(obj,'epsi') && ~isempty(obj.epsi)
     plot(ax(1),time_array.epsi,obj.epsi.t1_volt-nanmean(obj.epsi.t1_volt),'.','Color',cols.t1,'LineWidth',obj.plot_properties.LineWidth,'displayname',sprintf('t1 - %1.1f',nanmean(obj.epsi.t1_volt)));
     hold(ax(1),'on')
     plot(ax(1),time_array.epsi,obj.epsi.t2_volt-nanmean(obj.epsi.t2_volt),'.','Color',cols.t2,'LineWidth',obj.plot_properties.LineWidth,'displayname',sprintf('t2 - %1.1f',nanmean(obj.epsi.t2_volt)));
+    hold(ax(1),'off')
     
 %     % t1 and t2
 %     plot(ax(1),time_array.epsi,obj.epsi.t1_volt,'.','Color',cols.t1,'LineWidth',obj.plot_properties.LineWidth,'displayname','t1');
@@ -111,7 +112,7 @@ if isclassfield(obj,'ctd')
         plot(ax(6),time_array.ctd,obj.ctd.S,'.','Color',cols.S,'LineWidth',obj.plot_properties.LineWidth);
 
         % Depth and fall speed
-       fall_speed = movmean(obj.ctd.dzdt,100);
+       fall_speed = movmean(obj.ctd.dzdt,100,'omitmissing');
         going_down = fall_speed>=0;
         coming_up = fall_speed<0;
         plot(ax(7),time_array.ctd,fall_speed,'.','Color',cols.dPdt,'LineWidth',obj.plot_properties.LineWidth);
@@ -223,7 +224,7 @@ ylabel(ax(2),'Shear [Volt]');
 ylabel(ax(3),'Accel [g]');
 ylabel(ax(5),'T [°C]');
 ylabel(ax(6),'S');
-ylabel(ax(7),'z [m]');
+ylabel(ax(7),'dz/dt [m/s]'); % ALB TODO add z also 
 ylabel(ax(8),'altimeter');
 
 [ax(:).FontSize] = deal(obj.plot_properties.FontSize);

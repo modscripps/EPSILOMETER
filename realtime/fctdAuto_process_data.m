@@ -98,7 +98,7 @@ end
 
 
 % Copy a bench_config into process_dir
-eval(['!cp /Users/Shared/EPSI_PROCESSING/Processed/0522_fctd_d5/bench_config ' process_dir]);
+%eval(['!cp /Users/Shared/EPSI_PROCESSING/Processed/0522_fctd_d5/bench_config ' process_dir]);
 
 % Copy the first file that matches str_to_match from raw_incoming into
 % raw_copy - you need to have one file there for epsi_class to read the

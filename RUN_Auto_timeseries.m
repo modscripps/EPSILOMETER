@@ -24,7 +24,7 @@
 % --- USER CHOICES --------------------------------------------------------
 % --- From ftcd_epsi/Setup   -------------------------------------------------------
 %TODO give a folder path to Setup
-path2setup='~/ARNAUD/SCRIPPS/EPSILOMETER/acq/fctd_epsi_acq/build/fctd_epsi/Build/Products/Debug/Setup';
+path2setup='/Volumes/Software_TFO2024/New_mod_fish_lib/MOD_fish_lib/EPSILOMETER/acq/fctd_epsi_acq/build/fctd_epsi/Build/Products/Debug/Setup';
 fid=fopen(path2setup,'r');
 fseek(fid,0,1);
 frewind(fid);
@@ -57,11 +57,11 @@ Meta_Data_process_file = 'MDP_tfo_2024.txt';
 
 % These probably will be the same for the whole cruise
 
-input_struct.raw_dir = '/Users/Shared/FCTD_EPSI/RAW';
-Meta_Data_process_dir = '/Users/aleboyer/ARNAUD/SCRIPPS/EPSILOMETER/Meta_Data_Process';
+% input_struct.raw_dir = '/Users/Shared/EPSI_PROCESSING/TFO2024/Realtime_RAW/';
+% input_struct.Meta_Data_process_file = '/Volumes/Software_TFO2024/EPSILOMETER/Meta_Data_Process/MDP_tfo_2024.txt';
 
-%input_struct.raw_dir = '/Users/Shared/EPSI_PROCESSING/TFO2024/Realtime_RAW/';
-%Meta_Data_process_dir = '/Volumes/Software_TFO2024/EPSILOMETER/Meta_Data_Process/';
+input_struct.raw_dir = '/Users/Shared/EPSI_PROCESSING/TFO2024/Realtime_RAW/';
+Meta_Data_process_dir = '/Volumes/Software_TFO2024/EPSILOMETER/Meta_Data_Process/';
 input_struct.Meta_Data_process_file = fullfile(Meta_Data_process_dir,Meta_Data_process_file);
 input_struct.refresh_time_sec = 2;
 
@@ -69,8 +69,8 @@ input_struct.refresh_time_sec = 2;
 % -------------------------------------------------------------------------
 
 % Set command window color
-% set_window_color('yellow')
-
+set_window_color('yellow')
+close all;
 % Run the realtime plotting script on a timer
 switch instrument
     case {'epsi','EPSI'}
@@ -79,7 +79,7 @@ switch instrument
         elseif include_spectra
             epsiAuto_timeseries_spectra
         end
-    case 'fctd'
+    case {'fctd','FCTD'}
         fctdAuto_timeseries
     case 'fctd_tridente'
         fctdAuto_timeseries_tridente

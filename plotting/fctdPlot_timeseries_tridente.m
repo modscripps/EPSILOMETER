@@ -60,7 +60,9 @@ elseif replaceData
         end
         
     else
-        ax = setup_figure;
+        if ~contains(ax(4).Tag,'ucond')
+            ax = setup_figure;
+        end
     end 
 end
 cols = obj.plot_properties.Colors;
@@ -84,7 +86,8 @@ if isclassfield(obj,'ctd')
         hold(ax(7),'on')
         plot(ax(7),time_array.ctd(going_down),obj.ctd.z(going_down),'.','Color',[0.2157 0.4941 0.7216],'LineWidth',obj.plot_properties.LineWidth);
         plot(ax(7),time_array.ctd(coming_up),obj.ctd.z(coming_up),'.','Color',[0.9686 0.5059 0.7490],'LineWidth',obj.plot_properties.LineWidth);
-        
+        axis(ax(7),'ij')
+
         % Add arrows showing up and down
         annotation(gcf,'arrow',[0.94 0.94], [0.29 0.25],'Color',[0.2157 0.4941 0.7216]);
         annotation(gcf,'arrow',[0.96 0.96], [0.25 0.29],'Color',[0.9686 0.5059 0.7490]);
@@ -114,6 +117,7 @@ if isclassfield(obj,'epsi')
     plot(ax(6),time_array.epsi,obj.epsi.a2_g,'.','Color',cols.a2,'LineWidth',obj.plot_properties.LineWidth,'displayname','x')
     hold(ax(6),'on')
     plot(ax(6),time_array.epsi,obj.epsi.a3_g,'.','Color',cols.a3,'LineWidth',obj.plot_properties.LineWidth,'displayname','y')
+    hold(ax(6),'off')
 
     % Add legends
     legend(ax(5),'location','northwest')

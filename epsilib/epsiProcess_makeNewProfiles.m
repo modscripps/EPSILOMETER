@@ -53,6 +53,12 @@ elseif isempty(profNumChar)
     lastProfNum = 0;
 end
 
+if (~isfield(PressureTimeseries,'startprof') && ...
+     isfield(PressureTimeseries,'startdown'))
+    PressureTimeseries.startprof = PressureTimeseries.startdown;
+    PressureTimeseries.endprof   = PressureTimeseries.enddown;
+end
+
 
 % Loop through the profile indices in PressureTimeseries. Process the new
 % ones

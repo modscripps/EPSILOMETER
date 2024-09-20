@@ -24,11 +24,11 @@ shearcal_path = strrep(localpath,'//','/');
 % path2file1 = sprintf([shearcal_path '/%s/Calibration_%s.txt'], Meta_Data.(field_name).s1.SN, Meta_Data.(field_name).s1.SN);
 % path2file2 = sprintf([shearcal_path '/%s/Calibration_%s.txt'], Meta_Data.(field_name).s2.SN, Meta_Data.(field_name).s2.SN);
 try
-path2file1 = fullfile(shearcal_path,Meta_Data.(field_name).s1.SN,sprintf('Calibration_%s.txt',Meta_Data.(field_name).s1.SN));
-path2file2 = fullfile(shearcal_path,Meta_Data.(field_name).s2.SN,sprintf('Calibration_%s.txt',Meta_Data.(field_name).s2.SN));
+    path2file1 = fullfile(shearcal_path,Meta_Data.(field_name).s1.SN,sprintf('Calibration_%s.txt',Meta_Data.(field_name).s1.SN));
+    path2file2 = fullfile(shearcal_path,Meta_Data.(field_name).s2.SN,sprintf('Calibration_%s.txt',Meta_Data.(field_name).s2.SN));
 catch
-path2file1 = fullfile(shearcal_path,Meta_Data.(field_name).s1.SN.',sprintf('Calibration_%s.txt',Meta_Data.(field_name).s1.SN.'));
-path2file2 = fullfile(shearcal_path,Meta_Data.(field_name).s2.SN.',sprintf('Calibration_%s.txt',Meta_Data.(field_name).s2.SN.'));
+    path2file1 = fullfile(shearcal_path,Meta_Data.(field_name).s1.SN.',sprintf('Calibration_%s.txt',Meta_Data.(field_name).s1.SN.'));
+    path2file2 = fullfile(shearcal_path,Meta_Data.(field_name).s2.SN.',sprintf('Calibration_%s.txt',Meta_Data.(field_name).s2.SN.'));
 end
     
 

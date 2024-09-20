@@ -1,9 +1,23 @@
 %% Plot temperature, epsilon, and chi with density contours
-% data=load(fullfile(ec.Meta_Data.paths.profiles,'griddedProfiles'));
+data=load(fullfile(ec.Meta_Data.paths.profiles,'griddedProfiles'));
+
+% ALB 2024/08/20 load last Profile to plot it
+last_profileID=data.GRID.profNum(end);
+last_profile_name=sprintf('Profile%03i.mat',last_profileID);
+lastProfile=load(fullfile(ec.Meta_Data.paths.profiles,last_profile_name));
 
 data.GRID.bottom_depth=filloutliers(data.GRID.bottom_depth,'linear');
 close all
-figure('units','inches','position',[0         0   15.3194   13.1111])
+
+% ALB 2024/08/20 Plot last Profile. 
+% Thanks MHA for the plotting function.
+fig1=figure('units','inches','position',[10         0   10.3194   13.1111]);
+QuickEpsiProfilePlotMHA_accel(lastProfile.Profile);
+fig1.PaperPosition=[0 0 10 15];
+print('-dpng2',fullfile(ec.Meta_Data.paths.figures,[last_profile_name(1:end-4) '.png']))
+
+
+figure('units','inches','position',[10         0   15.3194   13.1111])
 
 dnummask=find(~isnan(data.GRID.dnum));
 [~,iun]=unique(data.GRID.dnum(dnummask)); dnummask=dnummask(iun); %size(dnummask)
@@ -17,7 +31,7 @@ irecent=find(dnumm>(dnumm(end)-1));
 dnummask=dnummask(irecent);
 
 % depth limits for plotting
-zlim=[0 300];
+zlim=[0 1500];
 sgf=19.9; % front we are tracking 27 may
 
 ax(1) =subtightplot(nr,nc,1);
@@ -26,7 +40,7 @@ hold on
 %n_fill_bathy(data.GRID.dnum(dnummask),data.GRID.bottom_depth(dnummask))
 [c,ch]=contour(data.GRID.dnum(dnummask),data.GRID.z,real(data.GRID.sgth(:,dnummask))-1e3,[19:.5:30],'color',.5*[1 1 1]);
 [c,ch]=contour(data.GRID.dnum(dnummask),data.GRID.z,real(data.GRID.sgth(:,dnummask))-1e3,sgf*[1 1],'k','linewidth',2);
-caxis([32.9 35.5]) %changed on May 18th 2024 on Thompson Astral 24 cruise
+caxis([34.9 36.5]) %TODO make it a param in RUN_Auto_process
 ylim(ax(1),zlim)
 cax1=colorbar;
 grid(ax(1),'on');

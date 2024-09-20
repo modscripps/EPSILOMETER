@@ -653,6 +653,11 @@ classdef epsi_class < handle
                     %                     pRange = PressureTimeseries.P(PressureTimeseries.enddown) -...
                     %                                 PressureTimeseries.P(PressureTimeseries.startdown);
                     %             end
+                    if contains(obj.Meta_Data.fishflag_name,'EPSI')
+                        PressureTimeseries.startprof=PressureTimeseries.startdown;
+                        PressureTimeseries.endprof=PressureTimeseries.enddown;
+                    else
+                    end
                     profLengths = PressureTimeseries.endprof-PressureTimeseries.startprof;
                     pRange = PressureTimeseries.P(PressureTimeseries.endprof) -...
                         PressureTimeseries.P(PressureTimeseries.startprof);

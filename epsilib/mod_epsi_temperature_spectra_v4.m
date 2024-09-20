@@ -1,6 +1,12 @@
 function Meta_Data=mod_epsi_temperature_spectra_v4(Meta_Data,Profile,saveData,plotData)
 %function Meta_Data=mod_epsi_temperature_spectra_v3(Meta_Data,Profile,Profile,title1,np,dsp,tscan)
 %
+% ALB Sept 1st 2024 
+% With the new version of the epsilib I need to save dTdV in a text files
+% (similar format as Sv for the Sher probes). This is great becasue we will
+% be able to keep track to the dTdV.... which should change a function of
+% CTD so I need to save that too in the text file. 
+%
 % NC Sept 2021 - added dTdV_profile that gives dTdV for each scan length
 % (~50 seconds)
 % NC edited May 2021 to take combined Profile structure as input, instead
@@ -248,6 +254,41 @@ Meta_Data.(field_name).t1.pr = nanmean(pr_CTD.');
 % Save dTdV in Meta_Data
 if saveData
     save(fullfile(Meta_Data.paths.data,'Meta_data.mat'),'Meta_Data');
+    % TODO change this so we append the new dVdT.
+    % Right now I am doing a quick an dirty open write save.
+    %t1
+    calibration_file =  ...
+        sprintf('Calibration_%s.txt',Meta_Data.(field_name).t1.SN);
+    calibration_path =  ...
+        fullfile(Meta_Data.AFE.tempcal_path,Meta_Data.(field_name).t1.SN);
+
+    if ~exist(calibration_path,'dir')
+       mkdir(calibration_path);
+    end
+    fid=fopen(fullfile(calibration_path,calibration_file),"w");
+    calibration_string=sprintf('%s\r\n %03s, %2.1f, %s\r\n',...
+                        datestr(now),Meta_Data.(field_name).t1.SN, ...
+                        dTdV(1), ...
+                        Meta_Data.CTD.cal.SN);
+    fwrite(fid,calibration_string);
+    fclose(fid);
+    % t2
+    calibration_file =  ...
+        sprintf('Calibration_%s.txt',Meta_Data.(field_name).t2.SN);
+    calibration_path =  ...
+        fullfile(Meta_Data.AFE.tempcal_path,Meta_Data.(field_name).t2.SN);
+
+    if ~exist(calibration_path,'dir')
+       mkdir(calibration_path);
+    end
+    fid=fopen(fullfile(calibration_path,calibration_file),"w");
+    calibration_string=sprintf('%s\r\n %03s, %2.1f, %s\r\n',...
+                        datestr(now),Meta_Data.(field_name).t2.SN, ...
+                        dTdV(2), ...
+                        Meta_Data.CTD.cal.SN);
+    fwrite(fid,calibration_string);
+    fclose(fid);
+    
 end
 
 % Plot data
@@ -293,7 +334,7 @@ if  plotData
     ylabel('C^2/Hz','fontsize',20)
 
     % Title for figure
-    titleStr = strrep([Meta_Data.mission ' ' Meta_Data.vehicle_name ' ' Meta_Data.deployment],'_','\_');
+    titleStr = strrep([Meta_Data.cruise_name ' ' Meta_Data.vehicle_name ' ' Meta_Data.deployment],'_','\_');
     if isfield(Profile,'profNum')
         titleStr={sprintf('%s cast %i - temperature_ ',titleStr,Profile.profNum);...
             sprintf('dTdV = %2.2f',dTdV(1))};
@@ -340,7 +381,7 @@ if  plotData
     xlabel('Hz','fontsize',20)
     ylabel('C^2/Hz','fontsize',20)
     % Title for figure
-    titleStr = strrep([Meta_Data.mission ' ' Meta_Data.vehicle_name ' ' Meta_Data.deployment],'_','\_');
+    titleStr = strrep([Meta_Data.cruise_name ' ' Meta_Data.vehicle_name ' ' Meta_Data.deployment],'_','\_');
     if isfield(Profile,'profNum')
         titleStr={sprintf('%s cast %i - temperature_ ',titleStr,Profile.profNum);...
             sprintf('dTdV = %2.2f',dTdV(2))};

@@ -109,6 +109,7 @@ void *stop_ftcd_epsi_f(void *arg)
 
         //ALB adding a key to simply restart acquiring data without restart the fish.
         //ALB This is in case the TCPIP com with the Ipad (and/or Matlab time series is not updating)
+<<<<<<< Updated upstream
         if (gc=='r')
         {
             if (strcmp(fCTDPtr->fish.CTDPortName,fCTDPtr->fish.CommandPortName)!=0){
@@ -127,6 +128,26 @@ void *stop_ftcd_epsi_f(void *arg)
             read_ctd_data_from_port_f(fCTDPtr);
 
         }
+=======
+//        if (gc=='r')
+//        {
+//            if (strcmp(fCTDPtr->fish.CTDPortName,fCTDPtr->fish.CommandPortName)!=0){
+//                fprintf(stdout, "opening Command Port\r\n");
+//                InitSerialPort(&fCTDPtr->fish.SerialPort4Command, fCTDPtr->fish.CommandPortName);
+//                SetOptionSerialPort4FishCommand(&fCTDPtr->fish);
+//                if ((OpenSerialPort(&((fCTDPtr)->fish.SerialPort4Command)))!=0)    // != 0 -> failed
+//                    fprintf(stdout, "Cannot open Command Port before re-setting data acquisition\r\n");
+//                //ALB Delay to re-open the command port
+//                while (delay>0){
+//                    delay--;
+//                }
+//                delay=0xFFFFFF;
+//            }
+//            fCTDPtr->fish.CTDPhase = find_sync;
+//            read_ctd_data_from_port_f(fCTDPtr);
+//
+//        }
+>>>>>>> Stashed changes
         
 		if (gc=='q' || gc=='s')
 		{

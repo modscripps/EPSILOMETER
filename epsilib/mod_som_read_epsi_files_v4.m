@@ -181,6 +181,7 @@ end
 % ind_*_start  = starting indices of all matches
 % ind_*_end    = ending indices of all matches
 
+<<<<<<< Updated upstream
 % [ind_som_start, ind_som_stop]            = regexp(str,'\$SOM3([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
 % [ind_dcal_start, ind_dcal_stop]          = regexp(str,'\$DCAL([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
 % [ind_gps_start      , ind_gps_stop]      = regexp(str,'\$GPGGA([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
@@ -209,6 +210,39 @@ end
 % [ind_apf2_start     , ind_apf2_stop]     = regexp(str,'\$APF2([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
 % [ind_fluor_start    , ind_fluor_stop]    = regexp(str,'\$ECOP([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
 % [ind_ttv_start      , ind_ttv_stop]      = regexp(str,'\$TTVP([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
+=======
+[ind_som_start, ind_som_stop]            = regexp(str,'\$SOM3([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
+[ind_dcal_start, ind_dcal_stop]          = regexp(str,'\$DCAL([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
+[ind_gps_start      , ind_gps_stop]      = regexp(str,'\$GPGGA([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
+if isempty(ind_gps_start)
+    [ind_gps_start      , ind_gps_stop]  = regexp(str,'\$INGGA([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
+end
+
+[ind_efe_start, ind_efe_stop]            = regexp(str,'\$EFE([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
+[ind_sbe_start, ind_sbe_stop]            = regexp(str,'\$SB49([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
+if isempty(ind_sbe_start)
+    [ind_sbe_start, ind_sbe_stop]        = regexp(str,'\$SB41([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
+end
+[ind_alt_start      , ind_alt_stop]      = regexp(str,'\$ALT([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
+[ind_isap_start      , ind_isap_stop]      = regexp(str,'\$ISAP([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
+[ind_act_start      , ind_act_stop]      = regexp(str,'\$ACTU([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
+[ind_vnav_start     , ind_vnav_stop]     = regexp(str,'\$VNMAR([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
+if isempty(ind_vnav_start)
+    [ind_vnav_start     , ind_vnav_stop] = regexp(str,'\$VNYPR([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
+end
+[ind_seg_start      , ind_seg_stop]      = regexp(str,'\$SEGM([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
+[ind_spec_start     , ind_spec_stop]     = regexp(str,'\$SPEC([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
+[ind_avgspec_start  , ind_avgspec_stop]  = regexp(str,'\$AVGS([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
+[ind_dissrate_start , ind_dissrate_stop] = regexp(str,'\$RATE([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
+[ind_apf0_start     , ind_apf0_stop]     = regexp(str,'\$APF0([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
+[ind_apf1_start     , ind_apf1_stop]     = regexp(str,'\$APF1([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
+[ind_apf2_start     , ind_apf2_stop]     = regexp(str,'\$APF2([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
+[ind_fluor_start    , ind_fluor_stop]    = regexp(str,'\$ECOP([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
+[ind_ttv_start      , ind_ttv_stop]      = regexp(str,'\$TTVP([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
+if isempty(ind_ttv_start)
+    [ind_ttv_start      , ind_ttv_stop]      = regexp(str,'\$TTV1([\S\s]+?)\*([0-9A-Fa-f][0-9A-Fa-f])\r\n','start','end');
+end
+>>>>>>> Stashed changes
 
 %$fluor0000000000045cf00000001c*6B0000000000045ceXXXXYYYYZZZZ*57
 %% Define the header tag format
@@ -263,6 +297,8 @@ no_data_types = {};
 if isempty(ind_som_start)
     no_data_types = [no_data_types,'setup'];
     setup=[];
+    setup=mod_som_read_setup_from_config('EPSILOMETER/config_files/bench_config');
+    Meta_Data=epsiSetup_fill_meta_data(Meta_Data,setup);
 else
     str_setup=str(ind_som_start+32:ind_som_stop-5);
     % str_setup=str(ind_som_start:ind_som_stop);
@@ -275,9 +311,21 @@ else
         Meta_Data.AFE.t2.SN=epsi_probes.ch2.SN;
         Meta_Data.AFE.t2.cal=epsi_probes.ch2.cal;
         Meta_Data.AFE.s1.SN=epsi_probes.ch3.SN;
-        Meta_Data.AFE.s1.cal=epsi_probes.ch3.cal;
         Meta_Data.AFE.s2.SN=epsi_probes.ch4.SN;
-        Meta_Data.AFE.s2.cal=epsi_probes.ch4.cal;
+        if epsi_probes.ch3.cal~=0
+            Meta_Data.AFE.s1.cal=epsi_probes.ch3.cal;
+        else
+            AFE=get_shear_calibration(Meta_Data.AFE);
+            Meta_Data.AFE=AFE;
+            %ALB epsi case
+            if isfield(Meta_Data.AFE.s1,'Sv')
+                Meta_Data.AFE.s1.cal=Meta_Data.AFE.s1.Sv;
+                Meta_Data.AFE.s2.cal=Meta_Data.AFE.s2.Sv;
+            else
+            %ALB fctd case
+            % nothing to do so far 
+            end
+        end
     end
     
     if newSetup_flag
@@ -525,6 +573,11 @@ else
         end
         
         % Sort epsi fields
+        if contains(Meta_Data.fishflag_name,'FCTD')
+            epsi = orderfields(epsi,{'dnum','time_s','t1_count','t2_count','f1_count',...
+                'c1_count','a1_count','a2_count','a3_count','t1_volt','t2_volt','f1_volt',...
+                'c1_volt','a1_g','a2_g','a3_g'});
+        else
         try
             epsi = orderfields(epsi,{'dnum','time_s','t1_count','t2_count','s1_count',...
                 's2_count','a1_count','a2_count','a3_count','t1_volt','t2_volt','s1_volt',...
@@ -534,6 +587,7 @@ else
                 'a3_count','a2_count','t1_volt','s1_volt',...
                 'a3_g','a2_g'});
         end
+        end%end of contains FCTD
     end %end if isfield(efe.data,'raw_bytes')
 end %end if there is epsi data
 
@@ -691,12 +745,25 @@ else
             else
                 % ALB add the gps data if it exists. 
                 if isfield(gps,'latitude')
-                    ctd_lat  = interp1(gps.dnum,gps.latitude,ctd.dnum);
-                    ctd.z    = sw_dpth(ctd.P,ctd_lat);
+                    try
+                        if length(gps.latitude)>1
+                            ctd_lat  = interp1(gps.dnum,gps.latitude,ctd.dnum);
+                            ctd.z    = sw_dpth(ctd.P,ctd_lat);
+                        else
+                            ctd_lat  = gps.latitude;
+                            ctd.z    = sw_dpth(ctd.P,ctd_lat);
+                        end
+                    catch
+                        warning("Can not interpolate latitude ctd.num. Line 665 mod_som_read_epsi_v4")
+                    end
                 else
                     ctd.z    = sw_dpth(ctd.P,Meta_Data.PROCESS.latitude);
                 end
+                try
                 ctd.dzdt = [0; diff(ctd.z)./diff(ctd.time_s)];
+                catch
+                    disp('issue with dzdt mod_som_read_epsi_files_v4 l.689')
+                end
             end
             
             if bad_SB41sample_flag==0
@@ -2300,7 +2367,7 @@ end
 %% FCTD header parsing function
 %  parse all the lines in the header of the file
 function FCTD = FastCTD_ASCII_parseheader(FID)
-1
+
 FCTD = [];
 fgetl(FID);
 s=fgetl(FID);
@@ -2318,8 +2385,10 @@ while ~strncmp(s,'%*****END_FCTD',14) && ~feof(FID)
             if strncmp(v,'FCTD_VER',8)
                 eval(['FCTD.header.' lower(v) '=''' val ''';']);
             else
-                disp(obj.message);
-                disp(['Error occured in string: ' s]);
+                if ~contains(v,'$CH')
+                    disp(obj.message);
+                    disp(['Error occured in string: ' s]);
+                end
             end
             
         end

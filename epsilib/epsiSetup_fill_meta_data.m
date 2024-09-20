@@ -95,6 +95,7 @@ for n=1:numel(Meta_Data.PROCESS.channels)
 end
 
 Meta_Data.AFE.shearcal_path=fullfile(Meta_Data.paths.process_library,'CALIBRATION','SHEAR_PROBES');
+Meta_Data.AFE.tempcal_path=fullfile(Meta_Data.paths.process_library,'CALIBRATION','FPO7');
 
 for i=1:Meta_Data.PROCESS.nb_channels
     sensor=setup.(wh_AFE).sensors{i};
@@ -104,7 +105,7 @@ for i=1:Meta_Data.PROCESS.nb_channels
     Meta_Data.AFE.(wh_name).SN=sensor.sn.';
     Meta_Data.AFE.(wh_name).cal=sensor.cal;
     switch wh_name
-        case {'t1','t2','s1','s2'}
+        case {'t1','t2','s1','s2','f1','f2','c1','c2'}
             Meta_Data.AFE.(wh_name).full_range=2.5;
         case {'a1','a2','a3'}
             Meta_Data.AFE.(wh_name).full_range=1.8;
@@ -145,6 +146,11 @@ for i=1:Meta_Data.PROCESS.nb_channels
 
 end
 Meta_Data=mod_som_get_shear_probe_calibration_v2(Meta_Data);
+<<<<<<< Updated upstream
+=======
+Meta_Data=mod_som_get_temp_probe_calibration(Meta_Data);
+
+>>>>>>> Stashed changes
 Meta_Data.AFE.shear='CAmp1.0'; %TODO get info from config file
 
 Meta_Data.Firmware.version='mod_som_som_eferev3_sdio_sampling_app_07152020.sls'; %TODO get info from config file

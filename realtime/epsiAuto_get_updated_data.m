@@ -41,9 +41,18 @@ else
             idxNew.(periph) = data.(periph).(timestamp)>tMaxPrevious.(periph);
             % Get length of new data
             nNew.(periph) = sum(idxNew.(periph));
-            % Get fields to put new data into structures
+            % Get fields to put new data into old structures
             field_list.(periph) = fields(obj.(periph));
         end
+    end
+
+    %% ALB if c1 f1 volt exist = FCTD
+    if find(cellfun(@(x) contains(x,'c1_volt'),fields(data.epsi)))
+        %ALB TODO figure out a way to keep c1_volt and f1_volt 
+        % This does not seem to bother the blue matlab 
+        % (after minor changes in make_FCTD_mat .line 107)
+        data.epsi.s1_volt=data.epsi.f1_volt;
+        data.epsi.s2_volt=data.epsi.c1_volt;
     end
 
     %% Put new data from all peripherals into obj

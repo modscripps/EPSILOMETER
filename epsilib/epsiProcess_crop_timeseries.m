@@ -45,6 +45,7 @@ if ~isempty(myFileIdx)
     if length(myFileIdx)==1
         try
             MatData=load([Meta_Data.paths.mat_data '/' TimeIndex.filenames{myFileIdx} '.mat']);
+            use MatData;
         catch
             error(['Can''t load ' TimeIndex.filenames{myFileIdx}])
         end
