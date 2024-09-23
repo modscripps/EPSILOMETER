@@ -25,24 +25,13 @@ sampling_rate_Hz = 1/dt;
 
 % Set defaults
 numSec_lowpass = 4;
-switch Meta_Data.vehicle_name
-    case 'fctd'
-        % All speed limits should be positive values in m/s (technically db/s)
-        speedLim_down_start_m_s = 0.3;
-        speedLim_down_end_m_s = 0.1;
-        speedLim_up_start_m_s = 0.1;
-        speedLim_up_end_m_s = 0.05;
-        minLength_m = 10;
-        plotFig = 0;
-    case 'wirewalker'
-        % For wirewalker
-        speedLim_down_start_m_s = 0.5;
-        speedLim_down_end_m_s = 0.5;
-        speedLim_up_start_m_s = 0.5;
-        speedLim_up_end_m_s = 0.05;
-        minLength_m = 10;
-        plotFig = 0;
-end
+% All speed limits should be positive values in m/s (technically db/s)
+speedLim_down_start_m_s = 0.3;
+speedLim_down_end_m_s = 0.1;
+speedLim_up_start_m_s = 0.5;
+speedLim_up_end_m_s = 0.05;
+minLength_m = 10;
+plotFig = 0;
 
 % If Meta_Data has any of the profile processing fields specified, switch
 % default values to those.

@@ -1,4 +1,4 @@
-function [PressureTimeseries] = epsiProcess_make_PressureTimeseries(MATdir,str_to_match)
+function [PressureTimeseries] = epsiProcess_make_PressureTimeseries(Meta_Data,MATdir,str_to_match)
 % [PressureTimeseries] = epsiProcess_make_PressureTimeseries(MATdir,str_to_match)
 %
 % Remake pressure timeseries from scratch. Load all the files and
@@ -11,7 +11,8 @@ function [PressureTimeseries] = epsiProcess_make_PressureTimeseries(MATdir,str_t
 fileList = dir(fullfile(MATdir,str_to_match));
 for iF=1:length(fileList)
     load(fullfile(MATdir,fileList(iF).name),'ctd');
-    epsiProcess_update_PressureTimeseries(MATdir,ctd);
+    epsiProcess_update_PressureTimeseries(Meta_Data,MATdir,ctd);
+
 end
 
 

@@ -403,7 +403,7 @@ classdef epsi_class < handle
             %   obj.Meta_Data = f_getSNshear(obj)
 
             %             Meta_Data  = obj.Meta_Data;
-            obj = epsiSetup_get_SN_shear(obj.Meta_Data);
+            obj.Meta_Data = epsiSetup_get_SN_shear(obj.Meta_Data);
         end
         %%
         function obj=f_getSNtemp(obj)
@@ -621,7 +621,7 @@ classdef epsi_class < handle
                     obj.Meta_Data.PROCESS.profile_dir = 'down';
                     datachoice = 'datadown';
                     idxchoice = 'down';
-                case {'ww','seacycler','apex','sa_apex'}
+                case {'ww','seacycler','apex','sa_apex','wirewalker'}
                     obj.Meta_Data.PROCESS.profile_dir = 'up';
                     datachoice = 'dataup';
                     idxchoice = 'up';

@@ -29,6 +29,14 @@ elseif exist(fullfile(dirname, 'PressureTimeseries.mat'),'file')
     idxLast = find(~isnan(PressureTimeseries.dnum),1,'last');
     maxValue = nanmax(PressureTimeseries.dnum(1:idxLast));
 
+    % If all of the previous values were nan, add all new data to the end
+    % (this can happen with epsi on Wirewalker or moorings where the CTD
+    % and epsi are started at different times)
+    if isempty(idxLast)
+        idxLast = length(PressureTimeseries.dnum);
+        maxValue = datenum(2000,1,1,0,0,0);
+    end
+
     newDnum = ctd.dnum(ctd.dnum>maxValue);
     newTime = ctd.time_s(ctd.dnum>maxValue);
     newP = ctd.P(ctd.dnum>maxValue);

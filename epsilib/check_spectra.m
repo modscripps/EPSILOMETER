@@ -1,13 +1,16 @@
 function check_spectra(id_profile)
 
-filename=sprintf('Profile%03i.mat',id_profile);
+filename4=sprintf('Profile%04i.mat',id_profile);
+filename3=sprintf('Profile%03i.mat',id_profile);
 rootpath=strsplit(pwd,'/');
-filepath= ...
-    fullfile('profiles',filename);
-if isfile(filepath)
-    load(filepath);
+filepath4=fullfile(pwd,'profiles',filename4);
+filepath3=fullfile(pwd,'profiles',filename3);
+if isfile(filepath4)
+    load(filepath4);
+elseif isfile(filepath3)
+    load(filepath3)
 else
-    warning(['Can not find ' filepath])
+    warning(['Can not find ' filepath4])
     return
 end
 
