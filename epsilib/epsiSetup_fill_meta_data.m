@@ -146,11 +146,7 @@ for i=1:Meta_Data.PROCESS.nb_channels
 
 end
 Meta_Data=mod_som_get_shear_probe_calibration_v2(Meta_Data);
-<<<<<<< Updated upstream
-=======
-Meta_Data=mod_som_get_temp_probe_calibration(Meta_Data);
 
->>>>>>> Stashed changes
 Meta_Data.AFE.shear='CAmp1.0'; %TODO get info from config file
 
 Meta_Data.Firmware.version='mod_som_som_eferev3_sdio_sampling_app_07152020.sls'; %TODO get info from config file
