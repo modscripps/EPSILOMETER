@@ -1,3 +1,11 @@
+# This repo has been replaced by MOD_fish_lib
+
+If you're here to process a dataset collected after Fall 2024, use the MOD_fish_lib repo instead. 
+This one is kept here as a log of prior processing steps. 
+
+
+
+
 # EPSILOMETER
 aleboyer@ucsd.edu | ncouto@ucsd.edu
 
